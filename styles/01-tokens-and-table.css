@@ -1,0 +1,111 @@
+/* styles/01-tokens-and-table.css */
+
+/* =========================================================
+   Look: a felt-and-arcade card table. A paint swirl churns behind
+   everything, plates and buttons are chunky and raised, shadows are
+   hard, and a light CRT film sits on top. Themes set the swirl, the
+   panel tint and the accent. Buttons keep one fixed palette so they
+   always read the same: green go, gold buy, blue equip, orange back.
+   ========================================================= */
+:root {
+  /* Theme tokens (set from the equipped theme by applyTheme) */
+  --sw-a: #1f5f3a;
+  --sw-b: #0e3b2a;
+  --sw-c: #0a1c16;
+  --panel: #1d3a2e;
+  --panel-2: #26493a;
+  --panel-3: #11241c;
+  --edge: #3b6a55;
+  --ink: #ffffff;
+  --ink-dim: #a9c6b7;
+  --accent: #3ddc3d;
+  --frame: #3b6a55;
+  --board: #111111;
+
+  /* Fixed button palette: face and the darker lip under it */
+  --green: #4bc27a;  --green-lip: #2a7a4b;
+  --red: #ff5a4d;    --red-lip: #a3322a;
+  --blue: #2f9bff;   --blue-lip: #1a5fa3;
+  --gold: #ffb020;   --gold-lip: #a86b00;
+  --orange: #ff8a3d; --orange-lip: #a8531c;
+  --purple: #a46bff; --purple-lip: #5f3aa8;
+
+  --xp: #ffd23f;
+  --heart: #ff4d5a;
+  --heart-empty: rgba(0, 0, 0, 0.45);
+
+  /* Old names other code still reads */
+  --text: var(--ink);
+  --muted: var(--ink-dim);
+  --hud-text: var(--ink);
+  --hud-muted: var(--ink-dim);
+  --hud-chip: var(--panel);
+  --hud-chip-line: var(--edge);
+  --hud-xp: var(--xp);
+  --line: var(--edge);
+  --surface: var(--panel-2);
+
+  --ui: 1;                                  /* scale of everything in and around the board */
+  --stage: min(94vw, calc(100dvh - 190px), 600px);   /* fallback; layoutStage() sets the real size */
+  --rail: 0px;
+  --mui: 1;
+  --bar: 46px;
+  --rail-ui: 1;
+  --display: "Pixelify Sans", ui-monospace, monospace;
+  --body: "Pixelify Sans", ui-rounded, system-ui, sans-serif;
+  --pixel: var(--display);
+  --radius: 0.55em;
+  --lip: 0.28em;
+}
+
+html { overscroll-behavior: none; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: var(--body);
+  background: var(--sw-c);
+  color: var(--ink);
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  font-variant-ligatures: none;
+}
+button, input, textarea { font-variant-ligatures: none; }
+
+body.playing { overflow: hidden; touch-action: none; }
+
+/* ---------- Swirl, flair particles and the CRT film ---------- */
+#bg-swirl, #bg-fx {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: -2;
+}
+#bg-swirl {
+  image-rendering: pixelated;
+  background: radial-gradient(120% 90% at 50% 40%, var(--sw-a), var(--sw-b) 55%, var(--sw-c));
+}
+#bg-fx { z-index: -1; }
+
+#crt {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.13) 0 1px, transparent 1px 3px),
+    radial-gradient(130% 110% at 50% 50%, transparent 58%, rgba(0, 0, 0, 0.5));
+  mix-blend-mode: multiply;
+}
+body.no-crt #crt { display: none; }

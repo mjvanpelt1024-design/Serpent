@@ -1,0 +1,5 @@
+# Flair: Propeller Cap
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Propeller Cap
+slot      = head                 # head, face, cape, body or tail
+priceRank = 5                    # price = flairStep (economy.txt) x this

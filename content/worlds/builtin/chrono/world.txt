@@ -1,0 +1,58 @@
+# ==================================================================
+#  CHRONO RIFT  (chrono)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/chrono.story). New in build 46.
+# ==================================================================
+
+name     = Chrono Rift          # on the map
+label    = Timeless             # a short name for the island
+music    = story                # a track in content/music/music.dat
+medal    = #5ab8e0              # the island's color in menus and medals
+
+[rules]
+speed           = 9                      # squares a second
+edge            = wrap                   # wrap, wall, mirror, endless or maze
+apples          = 3                      # apples on the board at once
+echoes          = true                   # your Echo follows your path
+rot             = 9000                   # ms before an apple rots
+startOrbs       = 3                      # XP orbs at the start
+orbChance       = 0.12                   # chance of another orb every 5 seconds
+description     = Your own path comes back as an Echo that follows behind your tail, so don't cross your recent trail. Apples left too long rot, and a rotten one shrinks you.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 25
+l     = 10
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 4
+[spawns.popsicle]
+max   = 3
+delay = [3000, 7000]
+s     = 25
+[spawns.lightning]
+max   = 2
+delay = [4000, 8000]
+[spawns.hourglass]
+max   = 1
+delay = [11000, 18000]
+[spawns.golden]
+max   = 1
+delay = [14000, 22000]
+
+[nightmare]
+name   = Time Loop
+twist  = Echoes come sooner and last longer, and apples rot almost at once.
+echoes = true
+rot    = 5000                   # ms before an apple rots in this Nightmare
+
+[map]
+x      = 182                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 60
+width  = 26
+colors = [#4a3a6a, #3a2a5a, #1a1430]  # grass, edge, rock
+
+[tree]
+leaves = [#3a2a6a, #5a4a9a, #9fe8ff, #ffffff]  # three leaf colors and the fruit color

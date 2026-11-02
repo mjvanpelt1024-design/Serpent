@@ -1,0 +1,174 @@
+/* styles/09-art-intros-tour.css */
+
+/* ---------- Art pass: the Trophy Hall, the Ledger and the Story book ---------- */
+#ach-banner, #stats-banner { margin: 0.9em auto 0.3em; max-width: 36em; }
+body.menu-full #stage > #screen-achievements, body.menu-full #stage > #screen-stats { --side: max(1em, calc((100vw - 58em) / 2)); }
+
+/* Achievements: wooden plaques nailed to the tortoise's wall, tiers as little medallions */
+#ach-body .ach-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(17em, 1fr)); gap: 0.55em 0.7em; align-items: start; }
+#ach-body .ach-group h3 {
+  grid-column: 1 / -1;
+  position: relative;
+  margin: 1.2em 0.4em 0.2em;
+  padding: 0.4em 1em 0.45em;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 1.05em;
+  color: #fff;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--m) 85%, #fff), var(--m));
+  border-radius: 0.25em;
+  box-shadow: inset 0 -0.2em 0 rgba(0, 0, 0, 0.2), 0 0.2em 0 rgba(0, 0, 0, 0.4);
+  text-shadow: 0 0.08em 0 rgba(0, 0, 0, 0.45);
+}
+#ach-body .ach-group h3::before, #ach-body .ach-group h3::after {
+  content: "";
+  position: absolute;
+  top: 0.35em;
+  width: 0.9em;
+  height: 100%;
+  background: color-mix(in srgb, var(--m) 65%, #000);
+  z-index: -1;
+}
+#ach-body .ach-group h3::before { left: -0.5em; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 40% 50%); }
+#ach-body .ach-group h3::after { right: -0.5em; clip-path: polygon(0 0, 100% 0, 60% 50%, 100% 100%, 0 100%); }
+#ach-body .ach-row {
+  position: relative;
+  margin: 0;
+  color: #fff6e6;
+  background:
+    repeating-linear-gradient(176deg, rgba(0, 0, 0, 0.06) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, #8a5a34, #6a4224);
+  box-shadow: inset 0 0 0 2px #3e2614, inset 0 0.18em 0 rgba(255, 220, 170, 0.25), 0 0.25em 0 rgba(0, 0, 0, 0.4);
+}
+#ach-body .ach-row::before, #ach-body .ach-row::after {
+  content: "";
+  position: absolute;
+  top: 0.4em;
+  width: 0.35em;
+  height: 0.35em;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff2c0, #c8962a 60%, #6a4a10);
+  box-shadow: 0 0.06em 0 rgba(0, 0, 0, 0.5);
+}
+#ach-body .ach-row::before { left: 0.4em; }
+#ach-body .ach-row::after { right: 0.4em; }
+#ach-body .ach-name { color: #fff; text-shadow: 0 0.08em 0 rgba(0, 0, 0, 0.5); }
+#ach-body .ach-prog, #ach-body .ach-desc { color: #f0d8b8; }
+#ach-body .ach-reward { color: #ffd860; }
+#ach-body .ach-row .progress { background: rgba(30, 16, 6, 0.6); box-shadow: inset 0 0.08em 0 rgba(0, 0, 0, 0.5); }
+#ach-body .chip { border-radius: 999px; min-width: 2.2em; text-align: center; background: rgba(30, 16, 6, 0.55); color: rgba(255, 240, 220, 0.45); }
+#ach-body .chip.earned { color: #1a1206; background-image: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.55), transparent 55%); box-shadow: 0 0.12em 0 rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(0, 0, 0, 0.25); }
+
+/* Stats: pages of the beetle's ledger */
+#stats-body { columns: 2 19em; column-gap: 1.1em; }
+#stats-body .stat-group {
+  break-inside: avoid;
+  display: inline-block;
+  width: 100%;
+  color: #3a2e1e;
+  padding: 0.3em 1em 0.6em 1.4em;
+  border-radius: 0.25em 0.6em 0.6em 0.25em;
+  background:
+    linear-gradient(90deg, rgba(160, 40, 40, 0.35) 0 1px, transparent 1px) 1em 0 / 100% 100% no-repeat,
+    repeating-linear-gradient(180deg, transparent 0 1.45em, rgba(70, 110, 170, 0.18) 1.45em calc(1.45em + 1px)),
+    radial-gradient(120% 80% at 70% 10%, rgba(255, 255, 255, 0.4), transparent 60%),
+    #f3ead2;
+  box-shadow: 0 0 0 1px #c9b48a, 3px 3px 0 0 #e2d4b2, 0 0.4em 0 rgba(0, 0, 0, 0.35);
+}
+#stats-body .stat-group h3 { color: #2a1e10; border-bottom: 2px solid #8a7350; padding-bottom: 0.15em; text-shadow: none; }
+#stats-body .stat-row { color: #4a3a26; font-family: Georgia, "Times New Roman", serif; border-top: 1px dotted rgba(120, 90, 40, 0.45); }
+#stats-body .stat-row .val { color: #8a2a2a; font-family: var(--display); font-weight: 400; }
+
+/* Story book: a leather-bound book, opened flat into two pages when there's room */
+#story-body { position: relative; padding: 0.55em; margin-top: 0.8em; border-radius: 0.8em; background: linear-gradient(135deg, #6a2e22, #4a1c14); box-shadow: inset 0 0 0 2px #8a4a30, inset 0 0 0 5px #3a120c, 0 0.45em 0 rgba(0, 0, 0, 0.45); }
+#story-body::after { content: ""; position: absolute; right: 2.2em; top: -0.2em; width: 0.9em; height: 3.4em; background: linear-gradient(180deg, #c0282e, #8a141a); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%); box-shadow: 0 0.2em 0 rgba(0, 0, 0, 0.3); pointer-events: none; }
+#story-body .book-page { margin-top: 0; }
+.book-blank { aspect-ratio: 160 / 60; margin: 0.15em 0 0.65em; border-radius: 0.2em; background: repeating-linear-gradient(45deg, rgba(120, 90, 40, 0.08) 0 6px, transparent 6px 12px); box-shadow: inset 0 0 0 2px rgba(120, 90, 40, 0.25); }
+@media (min-aspect-ratio: 5/4) {
+  body.menu-full #stage > #screen-story { --side: max(1em, calc((100vw - 64em) / 2)); }
+  .book-page { display: grid; grid-template-columns: 1fr 1fr; gap: 2.2em; padding: 1em 1.4em 1em 1.4em; min-height: 20em; border-radius: 0.4em;
+    background:
+      linear-gradient(90deg, transparent calc(50% - 1.6em), rgba(90, 60, 20, 0.28) calc(50% - 0.1em), rgba(60, 40, 10, 0.45) 50%, rgba(90, 60, 20, 0.28) calc(50% + 0.1em), transparent calc(50% + 1.6em)),
+      radial-gradient(120% 80% at 70% 20%, rgba(255, 255, 255, 0.35), transparent 60%),
+      repeating-linear-gradient(0deg, rgba(120, 90, 40, 0.035) 0 1px, transparent 1px 3px),
+      #f3ead2; }
+  .book-page .bp-r { padding-top: 1.4em; }
+  .book-page.turn-next { transform-origin: center; }
+}
+
+
+/* ---------- Something new: the board dims and leans in, the words sit below in the tutorial's teal ---------- */
+:root { --tut: #2ed3c6; --tut-dark: #0d3a38; }
+#game { transition: transform 0.5s cubic-bezier(0.3, 0.8, 0.3, 1); transform-origin: var(--fx, 50%) var(--fy, 50%); }
+#stage.focusing #game { transform: scale(2.1); }
+.focus-vignette { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.45s; z-index: 2; background: radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), transparent 0 13%, rgba(0, 0, 0, 0.35) 22%, rgba(0, 0, 0, 0.8) 46%); }
+#stage.focusing .focus-vignette { opacity: 1; }
+#stage.focusing { cursor: pointer; }
+body.focusing #hud, body.focusing #touch-controls { opacity: 0.4; transition: opacity 0.4s; }
+#hud, #touch-controls { transition: opacity 0.4s; }
+.intro-bubble {
+  position: relative;
+  z-index: 7;
+  display: block;
+  margin: 0.5em auto 0.2em;
+  width: 96%;
+  padding: 0.6em 0.9em 0.65em;
+  border-radius: var(--radius);
+  color: #e9fffc;
+  background: color-mix(in srgb, var(--tut) 20%, var(--panel-3));
+  box-shadow: inset 0 0 0 2px var(--tut), 0 0.22em 0 rgba(0, 0, 0, 0.45), 0 0 1.2em rgba(46, 211, 198, 0.25);
+  text-align: left;
+  line-height: 1.35;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(0.6em) scale(0.96);
+  transition: opacity 0.25s, transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.intro-bubble.show { opacity: 1; transform: none; }
+.intro-bubble[hidden] { display: none; }
+.intro-bubble .ib-who { display: block; font-size: 0.68em; font-weight: 700; color: var(--tut); letter-spacing: 0.04em; text-transform: uppercase; }
+.intro-bubble .ib-title { display: block; font-family: var(--display); font-size: 1.3em; line-height: 1.05; margin: 0.1em 0 0.2em; }
+.intro-bubble .ib-text { display: block; font-size: 0.86em; }
+.intro-bubble .ib-hint { display: block; margin-top: 0.4em; font-size: 0.7em; color: var(--tut); }
+
+
+/* ---------- The tour: everything dims but the one thing to press ---------- */
+.guide[hidden] { display: none; }
+.guide-shade { position: fixed; inset: 0; z-index: 80; background: rgba(4, 10, 12, 0.66); transition: clip-path 0.12s; }
+.guide-shade.pass { pointer-events: none; }
+.guide-ring { position: fixed; z-index: 81; pointer-events: none; border-radius: 0.9em; box-shadow: 0 0 0 3px var(--tut), 0 0 1.4em 0.2em rgba(46, 211, 198, 0.55); animation: guide-ring 1.5s ease-in-out infinite; }
+.guide-ring[hidden] { display: none; }
+@keyframes guide-ring { 50% { box-shadow: 0 0 0 5px var(--tut), 0 0 2em 0.5em rgba(46, 211, 198, 0.75); } }
+.guide-box {
+  position: fixed;
+  z-index: 82;
+  left: 50%;
+  bottom: 1em;
+  width: min(30em, 94vw);
+  transform: translateX(-50%);
+  font-size: calc(15px * var(--mui));
+  padding: 0.7em 0.95em 0.8em;
+  border-radius: 0.9em;
+  color: #e9fffc;
+  background: color-mix(in srgb, var(--tut) 18%, #0b1416);
+  box-shadow: inset 0 0 0 2px var(--tut), 0 0.3em 0 rgba(0, 0, 0, 0.5), 0 0 2em rgba(46, 211, 198, 0.25);
+  line-height: 1.38;
+}
+.guide-box.top { top: calc(var(--bar) + 0.6em); bottom: auto; }
+.guide-box.pop { animation: bubble-pop 0.28s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.gb-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5em; }
+.gb-who { font-size: 0.68em; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tut); }
+.gb-skip { border: 0; background: none; color: rgba(233, 255, 252, 0.6); font: 700 0.7em/1 var(--body); cursor: pointer; padding: 0.3em; }
+.gb-skip:hover { color: #fff; }
+.gb-text { margin: 0.25em 0 0.2em; font-size: 0.92em; }
+.gb-act { display: flex; justify-content: flex-end; margin-top: 0.3em; }
+.gb-next { --face: var(--tut); --lipc: #12807a; color: #062624; }
+.gb-picks { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6em; margin: 0.55em 0 0.2em; }
+.gb-pick { display: flex; flex-direction: column; align-items: center; gap: 0.25em; padding: 0.35em; border: 0; border-radius: 1em; background: rgba(0, 0, 0, 0.3); color: #fff; cursor: pointer; box-shadow: inset 0 0 0 2px rgba(46, 211, 198, 0.45); transition: transform 0.12s; font-family: var(--body); }
+.gb-pick:hover, .gb-pick:focus-visible { transform: scale(1.07); box-shadow: inset 0 0 0 2px var(--tut), 0 0 0.8em rgba(46, 211, 198, 0.5); outline: none; }
+.gb-pick .gb-art { width: 3.6em; height: 3.6em; border-radius: 50%; image-rendering: pixelated; }
+.gb-pick.wide .gb-art { width: 9em; height: auto; border-radius: 0.6em; }
+.gb-pick .gb-name { font-size: 0.66em; font-weight: 700; }
+
+/* ---------- Under the board ---------- */
+#below { width: var(--stage); }

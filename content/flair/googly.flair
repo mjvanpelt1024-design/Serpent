@@ -1,0 +1,5 @@
+# Flair: Googly Eyes
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Googly Eyes
+slot      = face                 # head, face, cape, body or tail
+free      = true                 # given in the tutorial

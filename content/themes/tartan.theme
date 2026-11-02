@@ -1,0 +1,12 @@
+# Theme: Tartan
+name      = Tartan               # the board's own name
+group     = Patterns             # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #18261b              # the main board color
+painter   = tartan               # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#b02032, #1a4a30, #08120c]  # bright, middle and deep paint colors
+highlight = #ebc35a              # the accent color
+particles = snow                 # what drifts over the page
+emblem    = tartan               # its symbol in the Tailor

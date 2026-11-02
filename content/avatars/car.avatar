@@ -1,0 +1,5 @@
+# Avatar: Road Trip
+# Price: avatarStep (economy.txt), by its place in _index.dat
+name       = Road Trip
+picture    = car                  # a picture from src/engine/render/pixel-icons.js
+background = #ffd23f

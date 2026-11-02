@@ -1,0 +1,67 @@
+# ==================================================================
+#  THE VAULT  (treasure)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/treasure.story).
+# ==================================================================
+
+name     = Vault                # on the map
+label    = Treasure             # the old difficulty name
+music    = fast                 # a track in content/music/music.dat
+medal    = #ffcf4d              # the island's color in menus and medals
+
+[rules]
+speed           = 12                   # squares a second
+edge            = wall                 # wrap, wall, mirror, endless or maze
+hazard          = true                 # rocks on the board
+maxPopsicle     = 4                    # popsicles at once
+popsicleEffect  = death                # none, penalty or death
+popsicleDelay   = [2500, 6500]         # [min, max] ms between popsicles
+cell            = 10                   # square size (10 = half size)
+bigSpawns       = true                 # big apples and popsicles
+startOrbs       = 3                    # XP orbs at the start
+orbChance       = 0.12                 # chance of another orb every 5 seconds
+description     = Your snake is half size, so the board feels twice as large. Watch for big apples, and for big popsicles, which are not treasure, whatever they tell you.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 25
+l     = 10
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 8
+s     = 30
+l     = 20
+[spawns.popsicle]
+max   = 4
+delay = [2500, 6500]
+s     = 25
+l     = 30
+[spawns.flea]
+max   = 3
+delay = [3500, 8000]
+s     = 35
+l     = 15
+
+# Power-ups from earlier islands (build 46)
+[spawns.hourglass]
+max   = 1
+delay = [14000, 22000]
+[spawns.golden]
+max   = 1
+delay = [12000, 20000]
+l     = 30
+
+[nightmare]
+name   = Fool's Gold
+twist  = Some big apples are boulders in disguise. Not everything that glitters is lunch.
+
+[map]
+x      = 182                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 158
+width  = 26
+colors = [#dcb45a, #cfa64c, #8a6a28]  # grass, edge, rock
+
+[tree]
+leaves = [#c99a2a, #e0b83a, #ffd860, #fff6c4]  # three leaf colors and the fruit color

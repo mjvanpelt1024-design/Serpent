@@ -1,0 +1,11 @@
+# Theme: Teal
+name      = Teal                 # the board's own name
+group     = Solids               # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #0e3b3b              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#22a09a, #0f4646, #061919]  # bright, middle and deep paint colors
+highlight = #2ee6d6              # the accent color
+particles = bubbles              # what drifts over the page
+emblem    = bubbles              # its symbol in the Tailor

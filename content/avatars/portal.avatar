@@ -1,0 +1,5 @@
+# Avatar: Portal
+# Price: avatarStep (economy.txt), by its place in _index.dat
+name       = Portal
+picture    = portal               # a picture from src/engine/render/pixel-icons.js
+background = #0b1416

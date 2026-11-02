@@ -1,0 +1,15 @@
+# ==================================================================
+#  Double Apples  (doubleapple)
+#  Its price is in content/economy.txt under [items]. What it does is
+#  game code: src/game/flow/item-effects.js.
+# ==================================================================
+
+name        = Double Apples
+description = Apples are worth twice the points for one run. Double the apple, double the guilt.
+island      = classic              # grows on this island's tree
+boost       = true                 # true = used up when a run starts
+
+# Its fruit in the Satchel
+fruit       = berry                # apple, pear, orange, plum, lemon or berry
+color       = #ff5d8f
+icon        = twoapples

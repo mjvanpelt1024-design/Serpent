@@ -1,0 +1,5 @@
+# Skin: Lava
+name     = Lava
+group    = Bands                # its tier in the Tailor (skins/tiers.dat)
+palette  = [#ffd166, #d62828]   # the colors
+seq      = "122"                # the pattern down the body: 1 = first color, 2 = second...

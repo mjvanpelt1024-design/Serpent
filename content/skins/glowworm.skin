@@ -1,0 +1,6 @@
+# Skin: Glowworm
+name     = Glowworm
+group    = Head turners         # its tier in the Tailor (skins/tiers.dat)
+palette  = [#3f6b3f]            # the colors
+seq      = "1"                  # the pattern down the body: 1 = first color, 2 = second...
+head     = #d9ff66              # a different color for the head

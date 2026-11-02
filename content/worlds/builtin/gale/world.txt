@@ -1,0 +1,59 @@
+# ==================================================================
+#  GALE CLIFFS  (gale)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/gale.story). New in build 46.
+# ==================================================================
+
+name     = Gale Cliffs          # on the map
+label    = Windswept            # a short name for the island
+music    = fast                 # a track in content/music/music.dat
+medal    = #d8f0ff              # the island's color in menus and medals
+
+[rules]
+speed           = 10                     # squares a second
+edge            = wall                   # wrap, wall, mirror, endless or maze
+startOrbs       = 3                      # XP orbs at the start
+orbChance       = 0.12                   # chance of another orb every 5 seconds
+description     = When arrows sweep the board, a gust is about to shove your whole snake one square that way. The Lodestone pulls apples and XP toward you.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 25
+l     = 10
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 6
+[spawns.popsicle]
+max   = 3
+delay = [3000, 7000]
+s     = 25
+[spawns.wasp]
+max   = 2
+delay = [5000, 9000]
+[spawns.gust]
+max   = 1
+delay = [5000, 9000]
+[spawns.lodestone]
+max   = 1
+delay = [10000, 16000]
+[spawns.armor]
+max   = 1
+delay = [16000, 24000]
+
+[nightmare]
+name   = Hurricane
+twist  = The wind never stops. Every few seconds, it moves you.
+[nightmare.spawns.gust]
+max   = 1
+delay = [1800, 3000]
+
+[map]
+x      = 138                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 36
+width  = 28
+colors = [#8aa0b0, #7a90a0, #4a5a68]  # grass, edge, rock
+
+[tree]
+leaves = [#6a8a9a, #8aaaba, #d8f0ff, #ffffff]  # three leaf colors and the fruit color

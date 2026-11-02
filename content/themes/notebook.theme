@@ -1,0 +1,13 @@
+# Theme: Notebook
+name      = Notebook             # the board's own name
+group     = Patterns             # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #f5f1e4              # the main board color
+lines     = #b3cbe6              # thin detail lines
+painter   = notebook             # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#a8c0e0, #d98a8a, #2e3a52]  # bright, middle and deep paint colors
+highlight = #ff8a8a              # the accent color
+particles = dust                 # what drifts over the page
+emblem    = notebook             # its symbol in the Tailor

@@ -1,0 +1,5 @@
+# Flair: Rattlesnake Tail
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Rattlesnake Tail
+slot      = tail                 # head, face, cape, body or tail
+priceRank = 6                    # price = flairStep (economy.txt) x this

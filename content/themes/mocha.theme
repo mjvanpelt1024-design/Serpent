@@ -1,0 +1,11 @@
+# Theme: Mocha
+name      = Mocha                # the board's own name
+group     = Solids               # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #3b2a20              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#9a6440, #43301f, #170f0a]  # bright, middle and deep paint colors
+highlight = #e0aa70              # the accent color
+particles = steam                # what drifts over the page
+emblem    = cup                  # its symbol in the Tailor

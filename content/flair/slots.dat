@@ -1,0 +1,10 @@
+# ==================================================================
+#  FLAIR SLOTS: one item each
+# ==================================================================
+
+# slot | shown as
+head | Head
+face | Face
+cape | Clothes
+body | Body pattern
+tail | Tail

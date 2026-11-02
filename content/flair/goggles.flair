@@ -1,0 +1,5 @@
+# Flair: Aviator Goggles
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Aviator Goggles
+slot      = face                 # head, face, cape, body or tail
+priceRank = 29                   # price = flairStep (economy.txt) x this

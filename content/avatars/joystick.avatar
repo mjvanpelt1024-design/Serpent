@@ -1,0 +1,5 @@
+# Avatar: Arcade
+# Price: avatarStep (economy.txt), by its place in _index.dat
+name       = Arcade
+picture    = joystick             # a picture from src/engine/render/pixel-icons.js
+background = #ff8ac4

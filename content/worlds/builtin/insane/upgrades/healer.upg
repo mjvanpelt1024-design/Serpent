@@ -1,0 +1,19 @@
+# ==================================================================
+#  Heart Healer  (healer)
+#  The Ice Parlor tree, crown
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Heart Healer
+description = A chance an apple heals half a heart in Insane. An apple a day, and so on.
+slot        = crown                # trunk, left, right, crown or nightmare
+color       = #ff5d8f
+icon        = cross                # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 0                    # before the first tier
+start       = 4                    # tier 1
+step        = 4                    # added every tier
+tiers       = 10
+format      = {v}%                 # how a value is shown; {v} is the value

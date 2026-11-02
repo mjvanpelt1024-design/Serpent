@@ -1,0 +1,6 @@
+# Skin: 24 Karat
+name     = 24 Karat
+group    = Animated             # its tier in the Tailor (skins/tiers.dat)
+gradient = [#b8860b, #ffd700, #fff4b0]  # colors to blend smoothly along the body
+steps    = 10                   # how many shades the blend has
+animated = 80                   # the pattern scrolls; lower is faster (ms per step)

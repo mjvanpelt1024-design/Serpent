@@ -1,0 +1,5 @@
+# Avatar: Dizzy
+# Price: avatarStep (economy.txt), by its place in _index.dat
+name       = Dizzy
+picture    = spiral               # a picture from src/engine/render/pixel-icons.js
+background = #ffd23f

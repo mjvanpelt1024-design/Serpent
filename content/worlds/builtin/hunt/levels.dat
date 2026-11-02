@@ -1,0 +1,9 @@
+# ==================================================================
+#  Hunting Grounds: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | The Scent | Stalked
+2 | The Chase | Cornered
+3 | The Den | The Pack

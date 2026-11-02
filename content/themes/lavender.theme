@@ -1,0 +1,11 @@
+# Theme: Lavender
+name      = Lavender             # the board's own name
+group     = Solids               # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #d9c8ff              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#bca6ff, #7656d0, #241848]  # bright, middle and deep paint colors
+highlight = #c9b3ff              # the accent color
+particles = sparkle              # what drifts over the page
+emblem    = flower               # its symbol in the Tailor

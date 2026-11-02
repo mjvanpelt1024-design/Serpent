@@ -1,0 +1,73 @@
+# ==================================================================
+#  THE FURNACE  (inferno)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/inferno.story).
+# ==================================================================
+
+name     = Furnace              # on the map
+label    = Inferno              # the old difficulty name
+music    = hot                  # a track in content/music/music.dat
+medal    = #ff4a1a              # the island's color in menus and medals
+
+[rules]
+speed           = 12                   # squares a second
+edge            = wall                 # wrap, wall, mirror, endless or maze
+hazard          = true                 # rocks on the board
+maxPopsicle     = 6                    # popsicles at once
+popsicleEffect  = death                # none, penalty or death
+cell            = 10                   # square size (10 = half size)
+innerWalls      = true                 # walls in the middle
+startOrbs       = 3                    # XP orbs at the start
+orbChance       = 0.12                  # chance of another orb every 5 seconds
+description     = A smaller snake, more popsicles, fire, and walls in the middle of the board. Things are heating up, as things in furnaces tend to.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 25
+l     = 10
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 6
+s     = 30
+l     = 15
+[spawns.popsicle]
+max   = 6
+delay = [1500, 4000]
+s     = 25
+l     = 20
+[spawns.flea]
+max   = 3
+delay = [3500, 8000]
+s     = 35
+l     = 15
+[spawns.fire]
+max   = 4
+delay = [3000, 7000]
+s     = 30
+l     = 20
+
+# Power-ups from earlier islands (build 46)
+[spawns.star]
+max   = 1
+delay = [14000, 22000]
+[spawns.shield]
+max   = 1
+delay = [14000, 22000]
+[spawns.golden]
+max   = 1
+delay = [14000, 22000]
+
+[nightmare]
+name   = Firestorm
+twist  = Fire everywhere, and much of it big. The Furnace has stopped pretending to be anything else.
+
+[map]
+x      = 22                  # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 110
+width  = 28
+colors = [#6a3226, #5c2b22, #2f1410]  # grass, edge, rock
+
+[tree]
+leaves = [#a8320e, #d8501a, #ff8a3d, #ffd23f]  # three leaf colors and the fruit color

@@ -1,0 +1,5 @@
+# Flair: Leopard Spots
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Leopard Spots
+slot      = body                 # head, face, cape, body or tail
+priceRank = 24                   # price = flairStep (economy.txt) x this

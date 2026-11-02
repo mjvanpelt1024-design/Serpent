@@ -1,0 +1,21 @@
+# ==================================================================
+#  Score Boost  (time)
+#  The Great Tree, bough
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Score Boost
+description = More passive points every second, simply for continuing to exist, which is harder than it sounds.
+part        = bough                # trunk, bough, branch or dream
+growsFrom   = xp                   # grows once this reaches the gate tier
+position    = [70, 76]             # where it hangs on the tree picture
+icon        = clock                # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 1                    # before the first tier
+ratio       = 1.03526              # each tier: 3.5% more (x2 over 20 tiers)
+
+tiers       = 20
+format      = x                    # how a value is shown; {v} is the value
+prestige    = mul                  # mul or div: how prestige ranks scale it

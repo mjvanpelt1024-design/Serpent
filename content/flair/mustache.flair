@@ -1,0 +1,5 @@
+# Flair: Mustache
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Mustache
+slot      = face                 # head, face, cape, body or tail
+priceRank = 13                   # price = flairStep (economy.txt) x this

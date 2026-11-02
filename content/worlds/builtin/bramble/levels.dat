@@ -1,0 +1,9 @@
+# ==================================================================
+#  Bramblewood: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Hedgerow | Snagged
+2 | Thicket | Tangled
+3 | Heart of Thorns | Overgrowth

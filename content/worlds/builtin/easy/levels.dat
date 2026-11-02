@@ -1,0 +1,9 @@
+# ==================================================================
+#  The Garden: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Morning Dew | Peckish
+2 | Afternoon Stroll | Famished
+3 | Overgrown | Starving

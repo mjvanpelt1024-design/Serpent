@@ -1,0 +1,5 @@
+# Skin: Neapolitan
+name     = Neapolitan
+group    = Tri-color            # its tier in the Tailor (skins/tiers.dat)
+palette  = [#6b3e26, #f5e1c8, #f4a6b8]  # the colors
+seq      = "123"                # the pattern down the body: 1 = first color, 2 = second...

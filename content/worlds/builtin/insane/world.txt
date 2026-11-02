@@ -1,0 +1,53 @@
+# ==================================================================
+#  THE ICE PARLOR  (insane)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/insane.story).
+# ==================================================================
+
+name     = Ice Parlor           # on the map
+label    = Insane               # the old difficulty name
+music    = tense                # a track in content/music/music.dat
+medal    = #ff5d8f              # the island's color in menus and medals
+item     = revive               # a one-time item that grows on this tree
+
+[rules]
+speed           = 10                   # squares a second
+edge            = wall                 # wrap, wall, mirror, endless or maze
+hazard          = true                 # rocks on the board
+maxPopsicle     = 3                    # popsicles at once
+popsicleEffect  = death                # none, penalty or death
+popsicleDelay   = [3000, 8000]         # [min, max] ms between popsicles
+startOrbs       = 3                     # XP orbs at the start
+orbChance       = 0.12                 # chance of another orb every 5 seconds
+description     = The fastest of the first four. Popsicles here are poisonous, and only your hearts stand between you and an untimely end.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 35
+[spawns.rock]
+count = 4
+[spawns.popsicle]
+max   = 3
+delay = [3000, 8000]
+
+# Power-ups from earlier islands (build 46)
+[spawns.golden]
+max   = 1
+delay = [14000, 24000]
+[spawns.shears]
+max   = 1
+delay = [16000, 26000]
+
+[nightmare]
+name   = No Mercy
+twist  = Every popsicle ends your run. Hearts and upgrades cannot save you. Nothing can. That is rather the point.
+
+[map]
+x      = 116                  # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 238
+width  = 28
+colors = [#e4f6fc, #c4e8f4, #7fb6c9]  # grass, edge, rock
+
+[tree]
+leaves = [#8fd3ea, #c4ecf8, #ffffff, #ff6fb0]  # three leaf colors and the fruit color

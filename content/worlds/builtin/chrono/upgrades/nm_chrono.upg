@@ -1,0 +1,18 @@
+# ==================================================================
+#  Grandfather Clause  (nm_chrono)
+#  Chrono Rift, Nightmare (red) upgrade
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Grandfather Clause
+description = Another chance an Echo flickers out of your way, everywhere. Mostly useful in the Time Loop.
+slot        = nightmare              # trunk, left, right, crown or nightmare
+icon        = moon                   # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 0                      # before the first tier
+start       = 5                      # tier 1
+step        = 5                      # added every tier
+tiers       = 5
+format      = {v}%                   # how a value is shown; {v} is the value

@@ -1,0 +1,9 @@
+# ==================================================================
+#  The Hive: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Honeycomb | Buzzing
+2 | Royal Jelly | Swarming
+3 | The Queen's Chamber | The Swarm

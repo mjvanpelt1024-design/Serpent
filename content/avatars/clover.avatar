@@ -1,0 +1,5 @@
+# Avatar: Clover
+# Price: avatarStep (economy.txt), by its place in _index.dat
+name       = Clover
+picture    = clover               # a picture from src/engine/render/pixel-icons.js
+background = #f2d2a0

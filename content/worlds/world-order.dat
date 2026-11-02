@@ -1,0 +1,28 @@
+# ==================================================================
+#  WORLD ORDER: the islands, in the order they unlock
+#  Each name is a folder in worlds/builtin/. The folder names are save
+#  ids, so keep them; the name players see is in each world.txt.
+# ==================================================================
+
+easy
+classic
+sunflower
+challenge
+bramble
+insane
+hive
+chaos
+thunder
+mirror
+frost
+treasure
+hunt
+endless
+keg
+inferno
+moor
+labyrinth
+clockwork
+chrono
+gale
+maw

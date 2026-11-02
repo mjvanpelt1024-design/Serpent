@@ -1,0 +1,16 @@
+# ==================================================================
+#  Armor Polish  (polish)
+#  Its price is in content/economy.txt under [items]. What it does is
+#  game code: src/game/flow/mechanics.js (resetMechanics).
+# ==================================================================
+
+name        = Armor Polish
+description = Start one run with two extra armor plates, from the Hive onward. Shiny, and much harder to sting.
+island      = hive                 # grows on this island's tree
+boost       = true                 # true = used up when a run starts
+
+# Its fruit in the Satchel
+fruit       = plum                 # apple, pear, orange, plum, lemon or berry
+color       = #c9ced6
+icon        = shield
+badge       = plus

@@ -1,0 +1,47 @@
+# ==================================================================
+#  THE QUARRY  (challenge)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/challenge.story).
+# ==================================================================
+
+name     = Quarry               # on the map
+label    = Challenge            # the old difficulty name
+music    = tense                # a track in content/music/music.dat
+medal    = #ff8c1a              # the island's color in menus and medals
+item     = booster              # a one-time item that grows on this tree
+
+[rules]
+speed           = 7.5                  # squares a second
+edge            = wall                 # wrap, wall, mirror, endless or maze
+hazard          = true                 # rocks on the board
+maxPopsicle     = 1                    # popsicles at once
+popsicleEffect  = penalty              # none, penalty or death
+popsicleDelay   = [3000, 8000]         # [min, max] ms between popsicles
+startOrbs       = 3                     # XP orbs at the start
+orbChance       = 0.12                 # chance of another orb every 5 seconds
+description     = A little faster than Classic, and rocks begin to appear. Bump one and half your score crumbles away like a stale biscuit.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 40
+[spawns.rock]
+count = 3
+
+# Power-ups from earlier islands (build 46)
+[spawns.golden]
+max   = 1
+delay = [14000, 24000]
+
+[nightmare]
+name   = Avalanche
+twist  = Rocks tumble onto the board all game long, big ones included. The sky, it seems, has a grudge.
+
+[map]
+x      = 172                  # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 272
+width  = 28
+colors = [#a3a29c, #8f8e88, #5c5b56]  # grass, edge, rock
+
+[tree]
+leaves = [#6f7f52, #8a9864, #aab486, #d8d8d0]  # three leaf colors and the fruit color

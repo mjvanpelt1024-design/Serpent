@@ -1,0 +1,6 @@
+# Flair: Ancient Scales
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Ancient Scales
+slot      = body                 # head, face, cape, body or tail
+set       = Found all ten relics  # a set it belongs to
+reward    = true                 # not for sale: earned

@@ -1,0 +1,11 @@
+# Theme: Deep Purple
+name      = Deep Purple          # the board's own name
+group     = Solids               # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #2a1250              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#7a46e0, #341866, #120826]  # bright, middle and deep paint colors
+highlight = #b36bff              # the accent color
+particles = sparkle              # what drifts over the page
+emblem    = sparkle              # its symbol in the Tailor

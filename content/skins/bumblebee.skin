@@ -1,0 +1,5 @@
+# Skin: Bumblebee
+name     = Bumblebee
+group    = Stripes              # its tier in the Tailor (skins/tiers.dat)
+palette  = [#facc15, #111111]   # the colors
+seq      = "12"                 # the pattern down the body: 1 = first color, 2 = second...

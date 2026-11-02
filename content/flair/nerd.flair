@@ -1,0 +1,5 @@
+# Flair: Nerd Glasses
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Nerd Glasses
+slot      = face                 # head, face, cape, body or tail
+priceRank = 9                    # price = flairStep (economy.txt) x this

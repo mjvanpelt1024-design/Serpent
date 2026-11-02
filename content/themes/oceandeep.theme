@@ -1,0 +1,13 @@
+# Theme: Ocean Deep
+name      = Ocean Deep           # the board's own name
+group     = Gradients            # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #0f7f8e              # the main board color
+accent    = #0b1d3a              # a second color the pattern uses
+painter   = oceandeep            # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#11909e, #0c3e72, #030d24]  # bright, middle and deep paint colors
+highlight = #3be0d0              # the accent color
+particles = bubbles              # what drifts over the page
+emblem    = fish                 # its symbol in the Tailor

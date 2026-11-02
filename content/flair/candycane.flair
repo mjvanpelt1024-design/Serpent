@@ -1,0 +1,5 @@
+# Flair: Candy Cane
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Candy Cane
+slot      = tail                 # head, face, cape, body or tail
+priceRank = 17                   # price = flairStep (economy.txt) x this

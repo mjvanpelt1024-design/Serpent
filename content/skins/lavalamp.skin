@@ -1,0 +1,6 @@
+# Skin: Lava Lamp
+name     = Lava Lamp
+group    = Animated             # its tier in the Tailor (skins/tiers.dat)
+gradient = [#ff4800, #ffd000]   # colors to blend smoothly along the body
+steps    = 10                   # how many shades the blend has
+animated = 110                  # the pattern scrolls; lower is faster (ms per step)

@@ -1,0 +1,19 @@
+# ==================================================================
+#  Jump Jets  (jets)
+#  The Long Tunnel tree, crown
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Jump Jets
+description = A chance an apple jumps you one extra column in Endless. A small leap, gratefully received.
+slot        = crown                # trunk, left, right, crown or nightmare
+color       = #ff5a61
+icon        = rocket               # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 0                    # before the first tier
+start       = 10                   # tier 1
+step        = 10                   # added every tier
+tiers       = 10
+format      = {v}%                 # how a value is shown; {v} is the value

@@ -1,0 +1,5 @@
+# Flair: Golden Tail
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Golden Tail
+slot      = tail                 # head, face, cape, body or tail
+priceRank = 34                   # price = flairStep (economy.txt) x this

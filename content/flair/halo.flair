@@ -1,0 +1,5 @@
+# Flair: Halo
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Halo
+slot      = head                 # head, face, cape, body or tail
+priceRank = 31                   # price = flairStep (economy.txt) x this

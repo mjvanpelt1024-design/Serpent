@@ -1,0 +1,5 @@
+# Skin: Licorice
+name     = Licorice
+group    = Treats               # its tier in the Tailor (skins/tiers.dat)
+palette  = [#2a2a2a, #d62828]   # the colors
+seq      = "1112"               # the pattern down the body: 1 = first color, 2 = second...

@@ -1,0 +1,107 @@
+# ==================================================================
+#  ECONOMY
+#  Every price in the game comes from these numbers. Change one, save,
+#  and reload the game (F5 in the launcher) to see it everywhere.
+#  docs/DESIGN-46.md explains how they fit together.
+#
+#  Everything is anchored to one number: what a GOOD RUN pays on an
+#  island. Each island pays worldGrowth times the one before it, and
+#  prices are counted in good runs, so the game never gets cheaper or
+#  dearer as the numbers grow.
+#
+#  XP is earned on one save, at the end of each run, from the final score.
+#  Snakebucks (SB) are shared by every save. They stay the same size all
+#  game: the Exchange's rate follows your income instead.
+#  XP buys islands, island upgrades, Nightmares and one-time items.
+#  Snakebucks buy the Great Tree, skins, themes, Flair and avatars.
+# ==================================================================
+
+# ---------------------------------------------------------------- The ladder
+[ladder]
+runXp            = 40                 # XP from a good run on the first island, before upgrades
+worldGrowth      = 1.5                # each island's score multiplier is this many times the last
+nightmareGrowth  = 1.2                # each Nightmare island pays this many times the last
+nightmareStart   = 1.5                # the first Nightmare pays this many times the last island
+
+# ---------------------------------------------------------------- Island trees (XP)
+[trees]
+treeRunsFirst    = 12                 # good runs to grow the whole tree on the first island...
+treeRuns         = 24                 # ...rising evenly to this many on the last, so the start is quick
+tierGrowth       = 1.25               # each tier of a part costs this many times the last
+treeNodeCost     = [1, 1.2, 1.2, 1.5] # trunk, left, right, crown weights
+treeGate         = 3                  # tiers on a part before the parts above it grow
+
+# ---------------------------------------------------------------- Unlocking islands (XP)
+[unlock]
+unlockRunsFirst  = 3                  # the second island costs this many good runs on the first...
+unlockRuns       = 6                  # ...rising evenly to this many for the last island
+unlockTreeShare  = 0.75               # ...and that island's tree must be this much grown (0.75 = 75%)
+
+# ---------------------------------------------------------------- The Nightmare Realm (XP)
+[nightmares]
+nmUnlockRuns       = 8                # a Nightmare island costs this many good runs on the one before
+nmUnlockTreeShare  = 0.6              # ...and the one before's red upgrade must be this much grown
+nmUpgradeRuns      = 12               # good Nightmare runs to grow a whole red upgrade
+
+# ---------------------------------------------------------------- Snakebucks
+[bucks]
+buckPerRun       = 12                 # a good run on your best island trades for this many SB
+minXpPerBuck     = 4                  # the Exchange never gives a Snakebuck for less XP than this
+
+# ---------------------------------------------------------------- The Great Tree (Snakebucks)
+# Tier t of a part costs unit x weight x (1 + tierRise x (t - 1)).
+# A part can only grow as far as your islands allow: tiers you may own =
+# its tiers x islands unlocked / all islands (the dream roots follow the Nightmares).
+[great]
+unit       = 10
+tierRise   = 0.06
+core       = 1                        # Experience Booster, Score Boost, Apple-er Apples
+hearts     = 2                        # Extra Hearts
+every      = 0.8                      # the branches
+all        = 1.2                      # the branches that need every island
+nightmare  = 2                        # the dream roots
+special    = 1.5                      # Scale Armor, Fever Pitch, Molting, Bounty Hunter, Lucky Charms
+
+# ---------------------------------------------------------------- Badges
+# Each badge tier pays both. XP is counted in good runs on your best island.
+[badges]
+badgeBucks     = [1, 2, 4, 8, 15, 25, 40, 60]
+badgeRuns      = [0.25, 0.5, 1, 1.5, 2, 3, 4, 5]
+badgePathBonus = 3                    # finishing a whole path pays its last tier this many times again
+
+# ---------------------------------------------------------------- Bounty Contracts
+[contracts]
+contractRuns   = 0.5                  # XP for a contract, in good runs on that island
+contractBucks  = 3                    # Snakebucks for a contract
+
+# ---------------------------------------------------------------- One-time items (XP)
+# The first one's price, in good runs on your best island.
+[items]
+itemStep     = 0.15                   # each one bought costs this much more (0.15 = 15%)...
+itemStepCap  = 10                     # ...for up to this many purchases
+goldheart    = 0.6
+revive       = 1.2
+booster      = 0.5
+doubleapple  = 0.55
+repellent    = 0.55
+magnet       = 0.6
+polish       = 0.7
+feverdream   = 0.6
+
+# ---------------------------------------------------------------- Renaming (XP)
+[rename]
+runs           = 1                    # renaming your snake costs this many good runs
+
+# ---------------------------------------------------------------- Cosmetics (Snakebucks)
+[cosmetics]
+skinStep       = [3, 2]               # [first skin, added for each one owned]
+backdropStep   = [6, 4]               # same, for themes
+skinTier       = 15                   # unlocking skin tier n costs n x this
+backdropTier   = 40                   # same, for theme tiers
+flairStep      = 6                    # Flair price = this x its priceRank
+avatarStep     = [8, 5]               # [first avatar, added for each one after]
+
+# ---------------------------------------------------------------- Prestige (Snakebucks)
+[prestige]
+rankFee           = [0, 2500, 6000, 12000]  # fee to reach each rank (0, Copper, Silver, Gold)
+strength          = 2                 # each rank makes the core parts' final value this many times stronger

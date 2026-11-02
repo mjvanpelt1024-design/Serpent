@@ -1,0 +1,127 @@
+/* styles/10-layout.css */
+
+/* ---------- Wide screens: the HUD moves to a rail on the left, toasts and
+   touch buttons to a rail on the right, so the board can use the full height ---------- */
+body.wide {
+  display: grid;
+  grid-template-columns: var(--rail) var(--stage) var(--rail);
+  grid-template-rows: 1fr auto;
+  column-gap: var(--rail-gap, 20px);
+  justify-content: center;
+  align-content: center;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+body.wide #hud {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  width: var(--rail);
+  align-self: center;
+  margin: 0;
+  font-size: calc(15px * var(--rail-ui));
+  grid-template-columns: 1fr;
+  justify-items: stretch;
+  gap: 0.8em;
+}
+body.wide #hearts { justify-self: stretch; flex-wrap: wrap; justify-content: center; }
+body.wide #hud-score:not(:empty) { min-width: 0; }
+body.wide #hud-right { justify-self: stretch; flex-direction: column; align-items: stretch; }
+body.wide #xp { flex: none; align-items: stretch; min-width: 0; }
+body.wide .pause-slot { flex: none; width: auto; height: 0; margin: 0; transition: height 0.18s ease, margin-top 0.18s ease; }
+body.wide .pause-slot.open { width: auto; height: 2.7em; margin: 0.8em 0 0; }
+body.wide .pause-btn { width: 100%; height: 2.4em; font-size: 1em; }
+body.wide #xp-line { text-align: center; }
+body.wide #xp-bar { width: auto; }
+body.wide #stage { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+body.wide #below {
+  grid-column: 3;
+  grid-row: 1;
+  width: var(--rail);
+  align-self: start;
+  font-size: calc(15px * var(--rail-ui));
+  padding-top: 0.6em;
+}
+body.wide #toast-slot { min-height: 0; }
+body.wide #toast { position: relative; left: 0; top: 0; width: 100%; max-width: 100%; white-space: normal; text-align: center; transform: translateY(-0.6em) scale(0.92); }
+body.wide #toast.show { transform: none; }
+body.wide #toast.t-narrator, body.wide #toast.t-snake { width: 100%; max-width: 100%; }
+/* ---------- Menus own the whole screen; the board box is only for runs ---------- */
+body.menu-full #stage { visibility: hidden; }
+body.menu-full.menu-main #stage { visibility: visible; }
+body.menu-full #stage > .overlay.active, body.menu-full #stage > .modal.active { visibility: visible; }
+body.menu-full #stage > .overlay {
+  position: fixed;
+  inset: var(--bar) 0 0 0;
+  font-size: calc(15px * var(--mui));
+  --side: max(1em, calc((100vw - 38em) / 2));
+  padding-left: var(--side);
+  padding-right: var(--side);
+  border-radius: 0;
+  line-height: 1.35;
+}
+body.menu-full #stage > #screen-modes { --side: 0px; padding: 0; }
+body.menu-full #stage > #screen-main { inset: 0; }
+body.menu-full #stage > .modal { position: fixed; inset: 0; z-index: 60; font-size: calc(15px * var(--mui)); }
+body.menu-full #hud {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  width: auto;
+  height: var(--bar);
+  margin: 0;
+  padding: 0 0.9em;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.6em;
+  font-size: calc(13px * var(--mui));
+  z-index: 40;
+  background: color-mix(in srgb, var(--panel-3) 94%, transparent);
+  box-shadow: 0 0.2em 0 rgba(0, 0, 0, 0.3);
+}
+body.menu-full.menu-main #hud { background: transparent; box-shadow: none; }
+body.menu-main:not(.wide) { justify-content: center; }
+body.menu-full #hearts, body.menu-full #hud-score, body.menu-full .pause-slot { display: none; }
+body.menu-full #hud-right { flex-direction: row; }
+body.menu-full #xp { padding: 0.3em 0.7em; }
+body.menu-full #below {
+  position: fixed;
+  left: 50%;
+  bottom: 1em;
+  transform: translateX(-50%);
+  width: min(92vw, 30em);
+  z-index: 45;
+  pointer-events: none;
+  font-size: calc(15px * var(--mui));
+  padding: 0;
+}
+body.menu-full #toast-slot { min-height: 0; margin: 0; }
+body.menu-full #toast { position: relative; left: 0; top: 0; width: max-content; max-width: 100%; margin: 0 auto; white-space: normal; text-align: center; transform: translateY(0.6em) scale(0.92); }
+body.menu-full #toast.show { transform: none; }
+body > .confetti { position: fixed; z-index: 55; }
+.sticky { margin: 0 calc(-1 * var(--side, 1em)); padding: 0 var(--side, 1em) 0.6em; }
+
+body.wide #touch-controls {
+  grid-column: 3;
+  grid-row: 2;
+  width: 100%;
+  margin: 0 0 0.6em;
+  align-self: end;
+  font-size: calc(15px * var(--rail-ui));
+}
+#toast-slot { position: relative; min-height: 2.6em; margin-top: 0.3em; }
+#live-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25em 0.8em;
+  padding: 0.4em 0.7em;
+  margin-bottom: 0.3em;
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: inset 0 0 0 2px var(--edge);
+  color: var(--ink);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.72em;
+}
+#live-stats b { color: var(--ink-dim); font-weight: 600; margin-right: 0.3em; }

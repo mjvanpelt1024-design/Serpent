@@ -1,0 +1,3 @@
+# The maze is generated from this seed. 'random' makes a new maze every run;
+# any word or number makes the same maze every time (good for testing).
+random

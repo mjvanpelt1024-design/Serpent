@@ -1,0 +1,9 @@
+# ==================================================================
+#  The Long Tunnel: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | First Mile | Cracks
+2 | Long Haul | Cave-in
+3 | No Return | Crumbling

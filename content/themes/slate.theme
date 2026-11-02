@@ -1,0 +1,11 @@
+# Theme: Slate
+name      = Slate                # the board's own name
+group     = Solids               # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #3b4252              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#61739a, #38425a, #161b26]  # bright, middle and deep paint colors
+highlight = #88c0d0              # the accent color
+particles = rain                 # what drifts over the page
+emblem    = drop                 # its symbol in the Tailor

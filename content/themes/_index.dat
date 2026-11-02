@@ -1,0 +1,48 @@
+# ==================================================================
+#  Themes: the order they appear in the game
+#  One file name per line (without the extension). A file that isn't
+#  listed here is never loaded. Reorder lines to reorder the game.
+# ==================================================================
+
+black
+white
+pink
+purple
+navy
+forest
+maroon
+slate
+teal
+sand
+mintcream
+peach
+lavender
+olive
+mocha
+sunsetsky
+oceandeep
+twilight
+lawn
+blueprint
+notebook
+polka
+stars
+brick
+waves
+tartan
+argyle
+honeycomb
+synthwave
+circuit
+matrix
+chess
+topo
+clouds
+sakura
+icerink
+lavarock
+nebula
+diamondplate
+arcade
+auroranight
+chevron

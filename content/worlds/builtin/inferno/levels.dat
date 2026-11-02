@@ -1,0 +1,9 @@
+# ==================================================================
+#  The Furnace: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Kindling | Smolder
+2 | Blaze | Wildfire
+3 | White Heat | Firestorm

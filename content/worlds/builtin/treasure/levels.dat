@@ -1,0 +1,9 @@
+# ==================================================================
+#  The Vault: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Coin Purse | Gilded
+2 | Strongroom | Glitter
+3 | Dragon's Hoard | Fool's Gold

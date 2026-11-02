@@ -1,0 +1,23 @@
+# ==================================================================
+#  RULES that apply everywhere
+# ==================================================================
+
+# Nightmare pay is set by the ladder in content/economy.txt ([ladder] nightmareStart, nightmareGrowth)
+
+[prestige]
+maxRank        = 3
+rankNames      = [Copper, Silver, Gold]  # names for rank 1, 2, 3
+rankedTracks   = [hearts, welcome, bloomer, allowance, parting, popcontrol, ironstomach, halfheart, bigappetite]  # come back 50% stronger per rank
+
+# The most a ranked upgrade can reach, however many ranks
+[prestige.caps]
+popcontrol   = 90
+ironstomach  = 75
+halfheart    = 90
+bigappetite  = 60
+
+# Ranked values are rounded to steps of this size
+[prestige.rounding]
+welcome    = 1
+allowance  = 1
+hearts     = 0.5

@@ -1,0 +1,57 @@
+# ==================================================================
+#  THE ORCHARD STORM  (chaos)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/chaos.story).
+# ==================================================================
+
+name     = Orchard              # on the map
+label    = Chaos                # the old difficulty name
+music    = fast                 # a track in content/music/music.dat
+medal    = #b36bff              # the island's color in menus and medals
+item     = repellent            # a one-time item that grows on this tree
+
+[rules]
+speed           = 14                   # squares a second
+edge            = wrap                 # wrap, wall, mirror, endless or maze
+hazard          = false                # rocks on the board
+maxPopsicle     = 0                    # popsicles at once
+popsicleEffect  = "none"               # none, penalty or death
+apples          = 10                   # apples on the board at once
+startOrbs       = 3                     # XP orbs at the start
+orbChance       = 0.12                  # chance of another orb every 5 seconds
+description     = Apples everywhere and the fastest snake in the game. You will grow more quickly than you can think, which is rarely a good sign.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 30
+[spawns.apple]
+s     = 25
+[spawns.rock]
+count = 5
+s     = 50
+[spawns.popsicle]
+max   = 3
+delay = [2500, 6000]
+s     = 50
+
+# Power-ups from earlier islands (build 46)
+[spawns.golden]
+max   = 1
+delay = [12000, 20000]
+[spawns.armor]
+max   = 1
+delay = [14000, 22000]
+
+[nightmare]
+name   = Sugar High
+twist  = Every apple makes you a little faster, for good. There is no slowing down. There never was.
+
+[map]
+x      = 26                  # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 216
+width  = 28
+colors = [#4a8e3e, #3f7f35, #2a5622]  # grass, edge, rock
+
+[tree]
+leaves = [#2b6a26, #3f8a35, #5aaa45, #ff3b3b]  # three leaf colors and the fruit color

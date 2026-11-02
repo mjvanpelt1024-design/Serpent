@@ -1,0 +1,5 @@
+# Skin: Jellyfish
+name     = Jellyfish
+group    = Critters             # its tier in the Tailor (skins/tiers.dat)
+palette  = [#c084fc, #f0abfc, #fae8ff]  # the colors
+seq      = "12321"              # the pattern down the body: 1 = first color, 2 = second...

@@ -1,0 +1,16 @@
+# ==================================================================
+#  Fever Dream  (feverdream)
+#  Its price is in content/economy.txt under [items]. What it does is
+#  game code: src/game/flow/mechanics.js (resetMechanics).
+# ==================================================================
+
+name        = Fever Dream
+description = Start one run with the Fever bar full, from Sunflower Fields onward. The first apple sets it off.
+island      = sunflower            # grows on this island's tree
+boost       = true                 # true = used up when a run starts
+
+# Its fruit in the Satchel
+fruit       = lemon                # apple, pear, orange, plum, lemon or berry
+color       = #ff8c1a
+icon        = sun
+badge       = star

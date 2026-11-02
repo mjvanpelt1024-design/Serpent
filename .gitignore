@@ -1,0 +1,23 @@
+# Built by Visual Studio
+launcher/build/
+launcher/packages/
+launcher/.vs/
+*.user
+*.pdb
+*.ilk
+*.iobj
+*.ipdb
+
+# Made by tools/bundle-content.py
+content.bundle.js
+
+# MinGW build output
+launcher/mingw/obj/
+launcher/mingw/shim/
+
+# Python
+__pycache__/
+*.pyc
+
+# Local Claude Code settings
+.claude/settings.local.json

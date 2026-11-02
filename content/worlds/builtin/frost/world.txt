@@ -1,0 +1,59 @@
+# ==================================================================
+#  FROSTBITE FJORD  (frost)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/frost.story). New in build 46.
+# ==================================================================
+
+name     = Frostbite Fjord      # on the map
+label    = Frozen               # a short name for the island
+music    = tense                # a track in content/music/music.dat
+medal    = #bfe8ff              # the island's color in menus and medals
+
+[rules]
+speed           = 9                      # squares a second
+edge            = wall                   # wrap, wall, mirror, endless or maze
+startOrbs       = 3                      # XP orbs at the start
+orbChance       = 0.12                   # chance of another orb every 5 seconds
+description     = Patches of ice: on them you slide straight on and can't turn. Hourglasses freeze every hazard for a few seconds.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 30
+l     = 5
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 3
+[spawns.popsicle]
+max   = 3
+delay = [3000, 7000]
+s     = 30
+[spawns.ice]
+count = 6
+l     = 50
+[spawns.wasp]
+max   = 1
+delay = [7000, 12000]
+[spawns.hourglass]
+max   = 1
+delay = [11000, 18000]
+[spawns.shield]
+max   = 1
+delay = [16000, 26000]
+
+[nightmare]
+name   = Whiteout
+twist  = Ice almost everywhere. Every turn is a gamble you place in advance.
+[nightmare.spawns.ice]
+count = 16
+l     = 60
+
+[map]
+x      = 148                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 182
+width  = 28
+colors = [#e8f4ff, #c8dcf0, #7a8aa0]  # grass, edge, rock
+
+[tree]
+leaves = [#9ad8ff, #bfe8ff, #e8f8ff, #ffffff]  # three leaf colors and the fruit color

@@ -1,0 +1,11 @@
+# Theme: Maroon
+name      = Maroon               # the board's own name
+group     = Solids               # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #3d0f16              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#a82e40, #45121b, #170508]  # bright, middle and deep paint colors
+highlight = #ff5a61              # the accent color
+particles = embers               # what drifts over the page
+emblem    = flame                # its symbol in the Tailor

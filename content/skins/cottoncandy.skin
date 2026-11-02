@@ -1,0 +1,5 @@
+# Skin: Cotton Candy
+name     = Cotton Candy
+group    = Treats               # its tier in the Tailor (skins/tiers.dat)
+gradient = [#ffafcc, #bde0fe]   # colors to blend smoothly along the body
+steps    = 8                    # how many shades the blend has

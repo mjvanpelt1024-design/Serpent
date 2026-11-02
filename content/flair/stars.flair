@@ -1,0 +1,5 @@
+# Flair: Stars
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Stars
+slot      = body                 # head, face, cape, body or tail
+priceRank = 16                   # price = flairStep (economy.txt) x this

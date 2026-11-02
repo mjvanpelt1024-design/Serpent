@@ -1,0 +1,11 @@
+# Theme: Sand
+name      = Sand                 # the board's own name
+group     = Solids               # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #e6d3a3              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#ecc97c, #b88a46, #4a3418]  # bright, middle and deep paint colors
+highlight = #ffd23f              # the accent color
+particles = dust                 # what drifts over the page
+emblem    = sun                  # its symbol in the Tailor

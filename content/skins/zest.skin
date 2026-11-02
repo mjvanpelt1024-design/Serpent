@@ -1,0 +1,5 @@
+# Skin: Zest Stripes
+name     = Zest Stripes
+group    = Stripes              # its tier in the Tailor (skins/tiers.dat)
+palette  = [#3ddc3d, #f5e642]   # the colors
+seq      = "12"                 # the pattern down the body: 1 = first color, 2 = second...

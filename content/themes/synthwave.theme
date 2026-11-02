@@ -1,0 +1,12 @@
+# Theme: Synthwave
+name      = Synthwave            # the board's own name
+group     = Deluxe               # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #1f0b38              # the main board color
+painter   = synthwave            # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#ff2a6d, #6e20b8, #12082a]  # bright, middle and deep paint colors
+highlight = #05d9e8              # the accent color
+particles = rain                 # what drifts over the page
+emblem    = synth                # its symbol in the Tailor

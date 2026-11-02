@@ -1,0 +1,9 @@
+# ==================================================================
+#  Sunflower Fields: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Morning Glory | Wilting
+2 | High Noon | Parched
+3 | Golden Hour | Wilted

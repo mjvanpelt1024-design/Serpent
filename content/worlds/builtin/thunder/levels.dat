@@ -1,0 +1,9 @@
+# ==================================================================
+#  Thunder Peaks: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Rumble | Static
+2 | Downpour | Thunderhead
+3 | The Summit | Supercell

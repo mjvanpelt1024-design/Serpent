@@ -1,0 +1,7 @@
+# Skin: Comet
+name     = Comet
+group    = Head turners         # its tier in the Tailor (skins/tiers.dat)
+gradient = [#e0f7ff, #3a86ff, #2a3a9e]  # colors to blend smoothly along the body
+steps    = 14                   # how many shades the blend has
+fade     = true                 # blend once from head to tail instead of looping
+head     = #ffffff              # a different color for the head

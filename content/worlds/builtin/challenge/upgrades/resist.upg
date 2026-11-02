@@ -1,0 +1,16 @@
+# ==================================================================
+#  Hard Hat  (resist)
+#  The Quarry tree, left branch
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Hard Hat
+description = Rocks and fleas take less of your score (shown for a normal rock). A hat is the first defense against an unkind world.
+slot        = left                 # trunk, left, right, crown or nightmare
+icon        = hardhat              # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 50                   # before the first tier
+values      = [44, 40, 36, 31, 25, 20, 17, 12, 10, 5]  # one per tier
+format      = {v}% loss            # how a value is shown; {v} is the value

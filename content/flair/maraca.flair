@@ -1,0 +1,5 @@
+# Flair: Maraca
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Maraca
+slot      = tail                 # head, face, cape, body or tail
+priceRank = 14                   # price = flairStep (economy.txt) x this

@@ -1,0 +1,11 @@
+# ==================================================================
+#  THEME TIERS, simplest first
+#  Fees: backdropTier (economy.txt) x the tier's position.
+# ==================================================================
+
+# tier
+Starter
+Solids
+Gradients
+Patterns
+Deluxe

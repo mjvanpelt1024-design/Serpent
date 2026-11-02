@@ -1,0 +1,9 @@
+# ==================================================================
+#  The Orchard Storm: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Drizzle | Sweet Tooth
+2 | Downpour | Sugar Rush
+3 | Cloudburst | Sugar High

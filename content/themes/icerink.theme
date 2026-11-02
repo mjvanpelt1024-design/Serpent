@@ -1,0 +1,13 @@
+# Theme: Ice Rink
+name      = Ice Rink             # the board's own name
+group     = Deluxe               # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #e3f4ff              # the main board color
+accent    = #c6e4f7              # a second color the pattern uses
+painter   = icerink              # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#e6f6ff, #92ccef, #204e6c]  # bright, middle and deep paint colors
+highlight = #8fe3ff              # the accent color
+particles = snow                 # what drifts over the page
+emblem    = snow                 # its symbol in the Tailor

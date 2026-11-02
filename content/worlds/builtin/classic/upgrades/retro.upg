@@ -1,0 +1,19 @@
+# ==================================================================
+#  Retro Rewards  (retro)
+#  The Old Yard tree, crown
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Retro Rewards
+description = A chance a full XP orb is worth double in Classic. The old ways had their rewards.
+slot        = crown                # trunk, left, right, crown or nightmare
+color       = #38bdf8
+icon        = joystick             # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 0                    # before the first tier
+start       = 10                   # tier 1
+step        = 10                   # added every tier
+tiers       = 10
+format      = {v}%                 # how a value is shown; {v} is the value

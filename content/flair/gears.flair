@@ -1,0 +1,6 @@
+# Flair: Gears
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Gears
+slot      = body                 # head, face, cape, body or tail
+set       = Steampunk            # a set it belongs to
+priceRank = 28                   # price = flairStep (economy.txt) x this

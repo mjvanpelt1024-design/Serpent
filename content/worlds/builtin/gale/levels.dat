@@ -1,0 +1,9 @@
+# ==================================================================
+#  Gale Cliffs: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Breeze | Squall
+2 | Crosswind | Tempest
+3 | The Edge | Hurricane

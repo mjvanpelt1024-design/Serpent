@@ -1,0 +1,64 @@
+# ==================================================================
+#  POWDER KEG  (keg)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/keg.story). New in build 46.
+# ==================================================================
+
+name     = Powder Keg           # on the map
+label    = Explosive            # a short name for the island
+music    = hot                  # a track in content/music/music.dat
+medal    = #ff8c1a              # the island's color in menus and medals
+
+[rules]
+speed           = 10                     # squares a second
+edge            = wall                   # wrap, wall, mirror, endless or maze
+startOrbs       = 3                      # XP orbs at the start
+orbChance       = 0.12                   # chance of another orb every 5 seconds
+description     = Bombs count down, then blow up everything nearby, rocks included. The Rampage Star lets you smash through anything for a few seconds.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 25
+l     = 10
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 8
+s     = 30
+l     = 20
+[spawns.popsicle]
+max   = 3
+delay = [3000, 7000]
+s     = 25
+[spawns.bomb]
+max   = 3
+delay = [2500, 5000]
+l     = 20
+[spawns.star]
+max   = 1
+delay = [12000, 20000]
+[spawns.lightning]
+max   = 1
+delay = [6000, 12000]
+[spawns.golden]
+max   = 1
+delay = [16000, 24000]
+
+[nightmare]
+name   = Chain Reaction
+twist  = Bombs everywhere, with fuses half as long. Every blast lights the next.
+shortfuse = true
+[nightmare.spawns.bomb]
+max   = 7
+delay = [900, 2000]
+l     = 30
+
+[map]
+x      = 58                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 132
+width  = 26
+colors = [#7a5a3a, #6a4a2a, #3a2a1a]  # grass, edge, rock
+
+[tree]
+leaves = [#5a3a1e, #7a5232, #b07a42, #ffb020]  # three leaf colors and the fruit color

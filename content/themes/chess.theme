@@ -1,0 +1,13 @@
+# Theme: Chessboard
+name      = Chessboard           # the board's own name
+group     = Deluxe               # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #2b2118              # the main board color
+accent    = #3a2d20              # a second color the pattern uses
+painter   = chess                # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#7a5c36, #30251a, #0f0b07]  # bright, middle and deep paint colors
+highlight = #e6c27a              # the accent color
+particles = sparkle              # what drifts over the page
+emblem    = pawn                 # its symbol in the Tailor

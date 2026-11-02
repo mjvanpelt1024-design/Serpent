@@ -1,0 +1,5 @@
+# Skin: Peach Fizz (from the Example Pack)
+name     = Peach Fizz
+group    = Gradients
+gradient = [#ff9a8b, #ff6a88, #ffd56b]
+steps    = 12

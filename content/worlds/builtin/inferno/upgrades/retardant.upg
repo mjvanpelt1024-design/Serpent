@@ -1,0 +1,19 @@
+# ==================================================================
+#  Fire Retardant  (retardant)
+#  The Furnace tree, right branch
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Fire Retardant
+description = Fire's speed boost wears off sooner. Some excitement is best kept brief.
+slot        = right                # trunk, left, right, crown or nightmare
+color       = #ff7a3a
+icon        = extinguisher         # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 0                    # before the first tier
+start       = 8                    # tier 1
+step        = 8                    # added every tier
+tiers       = 10
+format      = {v}% shorter         # how a value is shown; {v} is the value

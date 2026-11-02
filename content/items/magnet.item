@@ -1,0 +1,17 @@
+# ==================================================================
+#  XP Magnet  (magnet)
+#  Its price is in content/economy.txt under [items]. What it does is
+#  game code: src/game/flow/item-effects.js.
+# ==================================================================
+
+name        = XP Magnet
+description = Twice as many XP orbs turn up for one run. They cannot resist you, for now.
+island      = mirror               # grows on this island's tree
+boost       = true                 # true = used up when a run starts
+
+# Its fruit in the Satchel
+fruit       = orange               # apple, pear, orange, plum, lemon or berry
+color       = #4fb8ff
+icon        = magnet
+badge       = plus
+recolor     = [r>b, R>B]

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a1c16">
+<meta name="description" content="Snake, with upgrades, a story, a narrator with opinions, and far too many apples.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Snake">
+<link rel="icon" type="image/png" href="assets/icons/icon-32.png">
+<title>Snake</title>
+<link rel="stylesheet" href="styles/00-fonts.css">
+<link rel="stylesheet" href="styles/01-tokens-and-table.css">
+<link rel="stylesheet" href="styles/02-hud.css">
+<link rel="stylesheet" href="styles/03-board-screens-buttons.css">
+<link rel="stylesheet" href="styles/04-map-and-tabs.css">
+<link rel="stylesheet" href="styles/05-shop-and-hub.css">
+<link rel="stylesheet" href="styles/06-trees.css">
+<link rel="stylesheet" href="styles/07-settings-terminal.css">
+<link rel="stylesheet" href="styles/08-fruit-tailor-satchel.css">
+<link rel="stylesheet" href="styles/09-art-intros-tour.css">
+<link rel="stylesheet" href="styles/10-layout.css">
+<link rel="stylesheet" href="styles/11-achievements-toast-stats.css">
+<link rel="stylesheet" href="styles/12-modals.css">
+<link rel="stylesheet" href="styles/13-touch.css">
+<link rel="stylesheet" href="styles/14-profiles-exchange.css">
+</head>
+<body>
+<canvas id="bg-swirl" aria-hidden="true"></canvas>
+<canvas id="bg-fx" aria-hidden="true"></canvas>
+<div id="crt" aria-hidden="true"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="heart-half" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="50%" stop-color="#ff4d5a"/>
+      <stop offset="50%" stop-color="#000000" stop-opacity="0.45"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<header id="hud">
+  <div id="hearts" role="img" aria-label="Hearts"></div>
+  <div id="hud-score"></div>
+  <div id="hud-right">
+    <div id="xp">
+      <div id="xp-line"><span id="xp-amount">0</span><span class="unit">XP</span><span id="xp-pending" class="xp-pending"></span></div>
+      <div id="xp-bar" hidden><div id="xp-fill"></div></div>
+    </div>
+    <div id="bucks" class="bucks" title="Snakebucks: shared by all your profiles. Trade XP for them at the Exchange on the map."><img class="bk-icon" alt=""><span id="bucks-amount">0</span><span class="unit">SB</span></div>
+    <span class="pause-slot" id="pause-slot"><button id="pause-btn" class="pause-btn" aria-label="Pause" title="Pause (Space)" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+    </button></span>
+  </div>
+</header>
+
+<div id="stage">
+  <canvas id="game" width="400" height="400"></canvas>
+  <div class="focus-vignette" aria-hidden="true"></div>
+
+  <!-- Title screen -->
+  <section id="screen-main" class="overlay" aria-label="Main menu">
+    <div class="panel">
+      <h1 class="title" aria-label="Snake"><span class="seg" style="--i:0;--seg:#2f9e5a" aria-hidden="true">S</span><span class="seg" style="--i:1;--seg:#38b266" aria-hidden="true">n</span><span class="seg" style="--i:2;--seg:#2f9e5a" aria-hidden="true">a</span><span class="seg" style="--i:3;--seg:#38b266" aria-hidden="true">k</span><span class="seg head" style="--i:4;--seg:#4bc27a" aria-hidden="true">e</span></h1>
+      <p class="tagline">A story with far too many apples and no happy ending.</p>
+      <nav class="menu-stack">
+        <button class="btn btn-primary wide" data-go="profiles" data-autofocus>Play</button>
+        <button class="btn half" data-go="settings">Settings</button>
+        <button class="btn btn-red half" id="menu-quit">Quit</button>
+      </nav>
+    </div>
+  </section>
+
+  <!-- Save profiles, and everything they share -->
+  <section id="screen-profiles" class="overlay list" aria-label="Choose a save">
+    <div class="sticky">
+      <div class="screen-head">
+        <button class="btn btn-small" data-back>Back</button>
+        <h2>Choose a save</h2>
+        <span></span>
+      </div>
+    </div>
+    <div id="profiles-body"></div>
+  </section>
+
+  <!-- Difficulty -->
+  <section id="screen-modes" class="overlay map-screen" aria-label="The map">
+    <div class="map-head">
+      <button class="btn btn-small" data-back>Back</button>
+      <h2>The Map</h2>
+      <span class="map-hint" id="map-hint">Drag or scroll to explore</span>
+    </div>
+    <div id="map" class="map">
+      <div id="map-world" class="map-world">
+        <canvas id="map-canvas" width="200" height="200" aria-hidden="true"></canvas>
+        <div id="map-pins"></div>
+      </div>
+      <div id="map-banner" class="map-banner"></div>
+      <button id="map-out" class="map-out" aria-label="See the whole map" title="Whole map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM7 9h6v2H7z"/></svg><span>Whole map</span></button>
+      <div id="map-pop" class="map-pop" role="dialog" aria-live="polite"></div>
+      <div id="map-brief" class="map-brief" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- Upgrades that work everywhere, and Prestige -->
+  <section id="screen-global" class="overlay list" aria-label="Upgrades">
+    <div class="sticky">
+      <div class="screen-head">
+        <button class="btn btn-small" data-back>Back</button>
+        <h2>Upgrades</h2>
+        <span></span>
+      </div>
+      <p class="global-note">These work on every island. Each island's own upgrades grow on its tree.</p>
+    </div>
+    <div id="global-body"></div>
+  </section>
+
+  <!-- Rules -->
+  <section id="screen-rules" class="overlay" aria-label="Rules">
+    <div class="panel">
+      <h2 id="rules-title" class="screen-title"></h2>
+      <p id="rules-text"></p>
+      <p id="rules-mult"></p>
+      <div class="row-buttons">
+        <button class="btn" data-back>Back</button>
+        <button class="btn btn-primary" id="rules-start" data-autofocus>Start</button>
+      </div>
+      <p class="hint" id="rules-hint">Space to start, Esc to go back</p>
+    </div>
+  </section>
+
+  <!-- Game over -->
+  <section id="screen-gameover" class="overlay" aria-label="Game over">
+    <div class="panel">
+      <h2 class="screen-title">Game over</h2>
+      <p id="final-score"></p>
+      <p id="final-extra" hidden></p>
+      <p id="new-best" hidden>New high score!</p>
+      <p id="commentary" hidden></p>
+      <div class="row-buttons">
+        <button class="btn btn-gold" id="gameover-revive" hidden>Revive</button>
+        <button class="btn" id="gameover-menu">Map</button>
+        <button class="btn btn-primary" id="gameover-again" data-autofocus>Play again</button>
+      </div>
+      <p class="hint">Space to play again, Esc for the map</p>
+    </div>
+  </section>
+
+  <!-- Sandbox editor -->
+  <section id="screen-sandbox" class="overlay" aria-label="Sandbox level editor">
+    <div class="sb-head">
+      <button class="btn btn-small" data-back>Back</button>
+      <input id="sb-name" class="text-input sb-name" type="text" maxlength="24" autocomplete="off" spellcheck="false" aria-label="Level name">
+      <button class="btn btn-small" id="sb-rules-btn">Rules</button>
+    </div>
+    <div id="sb-cats" class="subtabs sb-cats" role="tablist" aria-label="Tool categories"></div>
+    <div id="sb-palette" class="sb-palette" role="toolbar" aria-label="Tools"></div>
+    <div id="sb-sizes" class="subtabs sb-sizes" aria-label="Item size"></div>
+    <canvas id="sb-board" class="sb-board" width="300" height="300" aria-label="Level grid. Tap or drag to paint."></canvas>
+    <p id="sb-hint" class="sb-hint"></p>
+    <div class="sb-row">
+      <button class="btn btn-small" id="sb-new">New</button>
+      <button class="btn btn-small" id="sb-save">Save</button>
+      <button class="btn btn-small btn-primary" id="sb-play">Play</button>
+    </div>
+  </section>
+
+  <!-- Sandbox rules -->
+  <div id="sb-rules" class="modal" role="dialog" aria-modal="true" aria-labelledby="rules-title2">
+    <div class="modal-box rules-box">
+      <h3 id="rules-title2">Level rules</h3>
+      <div id="rules-list"></div>
+      <div class="row-buttons"><button class="btn btn-primary" id="rules-done">Done</button></div>
+    </div>
+  </div>
+
+  <!-- Sandbox home: My Levels and Community -->
+  <section id="screen-shelf" class="overlay list" aria-label="Sandbox">
+    <div class="sticky">
+      <div class="screen-head">
+        <button class="btn btn-small" data-back>Back</button>
+        <h2>Sandbox</h2>
+        <span></span>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Level lists">
+        <button class="tab" role="tab" data-shelf="mine" aria-selected="true">My Levels</button>
+        <button class="tab" role="tab" data-shelf="community" aria-selected="false">Community</button>
+      </div>
+      <button class="btn btn-block btn-primary" id="shelf-new">+ New level</button>
+      <div class="shelf-import" id="shelf-import" hidden>
+        <input id="shelf-code" class="text-input" type="text" autocomplete="off" spellcheck="false" placeholder="Paste a level code (SNK2-...)" aria-label="Level code">
+        <button class="btn btn-small" id="shelf-add">Add</button>
+      </div>
+    </div>
+    <div id="shelf-body"></div>
+  </section>
+
+  <!-- Naming -->
+  <section id="screen-name" class="overlay" aria-label="Name your snake">
+    <h2 class="screen-title" id="name-title">Name your snake</h2>
+    <p class="name-sub">Every unfortunate hero needs a name. I insist.</p>
+    <input id="name-input" class="text-input name-input" type="text" maxlength="16" autocomplete="off" spellcheck="false" aria-label="Snake name">
+    <p class="name-note" id="name-note"></p>
+    <div class="row-buttons">
+      <button class="btn" id="name-back" data-back hidden>Back</button>
+      <button class="btn btn-primary" id="name-ok">That's the one</button>
+    </div>
+  </section>
+
+  <!-- Story scenes -->
+  <section id="screen-story" class="overlay list" aria-label="Story book">
+    <div class="sticky">
+      <div class="screen-head">
+        <button class="btn btn-small" data-back>Back</button>
+        <h2>Story book</h2>
+        <span></span>
+      </div>
+    </div>
+    <div id="story-body" aria-live="polite"></div>
+    <div class="book-nav">
+      <button class="btn btn-small" id="book-prev" aria-label="Previous page">&larr; Prev</button>
+      <span id="book-count"></span>
+      <button class="btn btn-small" id="book-next" aria-label="Next page">Next &rarr;</button>
+    </div>
+  </section>
+
+  <!-- Inventory -->
+  <section id="screen-inventory" class="overlay list" aria-label="Inventory">
+    <div class="sticky">
+      <div class="screen-head">
+        <button class="btn btn-small" data-back>Back</button>
+        <h2>Inventory</h2>
+        <span></span>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Inventory sections">
+        <button class="tab" role="tab" data-inv="items" aria-selected="true">Items</button>
+        <button class="tab" role="tab" data-inv="cosmetics" aria-selected="false">Cosmetics</button>
+        <button class="tab" role="tab" data-inv="medals" aria-selected="false">Medals</button>
+      </div>
+      <div class="subtabs" role="tablist" aria-label="Cosmetic types" hidden>
+        <button class="subtab" role="tab" data-invsub="skins" aria-selected="true">Skins</button>
+        <button class="subtab" role="tab" data-invsub="backdrops" aria-selected="false">Themes</button>
+        <button class="subtab" role="tab" data-invsub="flair" aria-selected="false">Flair</button>
+      </div>
+    </div>
+    <div id="inventory-body"></div>
+  </section>
+
+  <!-- Upgrades -->
+  <section id="screen-upgrades" class="overlay list" aria-label="Upgrades">
+    <div class="sticky">
+      <div class="screen-head">
+        <button class="btn btn-small" data-back>Back</button>
+        <h2>The Tailor</h2>
+        <span></span>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Cosmetics">
+        <button class="tab" role="tab" data-ctab="skins" aria-selected="true">Skins</button>
+        <button class="tab" role="tab" data-ctab="backdrops" aria-selected="false">Themes</button>
+        <button class="tab" role="tab" data-ctab="flair" aria-selected="false">Flair</button>
+        <button class="tab" role="tab" data-ctab="avatars" aria-selected="false">Avatars</button>
+      </div>
+    </div>
+    <div id="upgrade-body"></div>
+  </section>
+
+  <!-- An island's upgrade tree -->
+  <section id="screen-tree" class="overlay list" aria-label="Upgrade tree">
+    <div class="sticky">
+      <div class="screen-head">
+        <button class="btn btn-small" data-back>Back</button>
+        <h2 id="tree-title">Tree</h2>
+        <span id="tree-medals"></span>
+      </div>
+    </div>
+    <div class="tree-layout">
+      <div class="tree-view">
+        <canvas id="tree-canvas" width="200" height="150" aria-hidden="true"></canvas>
+        <div id="tree-pins"></div>
+      </div>
+      <div id="tree-card" class="tree-card" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- Achievements -->
+  <section id="screen-achievements" class="overlay list" aria-label="Achievements">
+    <div class="sticky">
+      <div class="screen-head">
+        <button class="btn btn-small" data-back>Back</button>
+        <h2>Achievements</h2>
+        <span class="ach-head-btns"><button class="btn btn-small" id="ach-stats">Stats</button><button class="btn btn-small" id="ach-book">Story book</button></span>
+      </div>
+      <div id="ach-sort" class="subtabs ach-sort" aria-label="Sort badges"></div>
+      <div class="ach-summary">
+        <div class="ach-count"><span>Badges earned</span><strong id="ach-count">0 / 0</strong></div>
+        <div class="progress" role="progressbar" aria-label="Badges earned" id="ach-bar-wrap"><span id="ach-bar"></span></div>
+      </div>
+    </div>
+    <canvas class="book-art scene-banner" id="ach-banner" width="160" height="60" aria-hidden="true"></canvas>
+    <div id="ach-body"></div>
+  </section>
+
+  <!-- Stats -->
+  <section id="screen-stats" class="overlay list" aria-label="Stats">
+    <div class="sticky">
+      <div class="screen-head">
+        <button class="btn btn-small" data-back>Back</button>
+        <h2>Stats</h2>
+        <span></span>
+      </div>
+    </div>
+    <canvas class="book-art scene-banner" id="stats-banner" width="160" height="60" aria-hidden="true"></canvas>
+    <div id="stats-body"></div>
+  </section>
+
+  <!-- Settings -->
+  <section id="screen-settings" class="overlay list" aria-label="Settings">
+    <div class="sticky">
+      <div class="screen-head">
+        <button class="btn btn-small" data-back>Back</button>
+        <h2>Settings</h2>
+        <span></span>
+      </div>
+      <div class="tabs" role="tablist" id="settings-tabs" aria-label="Settings sections"></div>
+    </div>
+    <div id="settings-body"></div>
+    <div id="build-number" class="build"></div>
+  </section>
+
+  <!-- How to play, and About -->
+  <section id="screen-howto" class="overlay" aria-label="How to play">
+    <div class="panel howto">
+      <h2 class="screen-title">How to play</h2>
+      <p><strong>The goal.</strong> Eat apples to grow and score. Walls and your own tail end the run. A red border means walls, green means the edges wrap around, and purple means they mirror.</p>
+      <p><strong>XP.</strong> Your score turns into XP when a run ends, and the glowing squares on the board are XP you can pick up. Spend it in the Shop on upgrades, cosmetics and one-time items.</p>
+      <p><strong>Hazards.</strong> Rocks knock points off your score. Popsicles cost hearts, and with none left the run is over. Fleas bite, fire makes you zoom, and molasses slows you down. A card explains each one the first time you meet it.</p>
+      <p><strong>Pausing.</strong> Tap the pause button above the board, or press Space, Esc or P. The pause menu has Shop and Settings buttons, so you never have to quit a run to spend XP.</p>
+      <p><strong>Prestige.</strong> Max your three core stats, finish the era's upgrades and prestige in the Shop for a permanently stronger snake and much bigger numbers.</p>
+      <p><strong>Nightmares.</strong> Once every mode is open, each gets a Nightmare version with one brutal twist and five times the score.</p>
+      <p><strong>The Sandbox</strong> opens after every mode and Nightmare. Build your own levels, share codes and play other people's.</p>
+      <h3 class="howto-about">About</h3>
+      <p class="howto-credit">An original game. The story, art, soundtrack and narration were all made for it. Thank you for playing.</p>
+      <p class="howto-credit howto-build" id="about-build"></p>
+      <div class="row-buttons"><button class="btn" data-back data-autofocus>Back</button></div>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <section id="screen-controls" class="overlay" aria-label="Controls">
+    <div class="panel">
+      <h2 class="screen-title">Controls</h2>
+      <p><strong>Arrow keys or WASD:</strong> steer the snake (either can be turned off in Settings)</p>
+      <p><strong>Touch:</strong> swipe on the board or use the on-screen pad</p>
+      <p><strong>Menus:</strong> arrow keys move the highlight, Space or Enter selects, Esc goes back</p>
+      <p><strong>Space:</strong> start from the rules screen, or play again after a game over</p>
+      <div class="row-buttons"><button class="btn" data-back data-autofocus>Back</button></div>
+    </div>
+  </section>
+
+  <!-- Dev panel -->
+  <!-- Terminal (secret: tap the version number in Settings five times) -->
+  <section id="screen-console" class="overlay term" aria-label="Terminal">
+    <div class="term-head">
+      <button class="btn btn-small" data-back>Back</button>
+      <span class="term-title">SNAKE//TERMINAL</span>
+      <span id="term-gates" class="term-gates" aria-label="Command groups"></span>
+    </div>
+    <div id="console-log" class="console-log" aria-live="polite"></div>
+    <div class="term-keys">
+      <button class="btn btn-small" data-term="up">Up</button>
+      <button class="btn btn-small" data-term="down">Down</button>
+      <button class="btn btn-small" data-term="tab">Tab</button>
+      <button class="btn btn-small" data-term="clear">Clear</button>
+    </div>
+    <div class="console-input-row">
+      <span class="console-prompt">&gt;&gt;</span>
+      <input id="console-input" class="console-input" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Terminal command" placeholder="group subject.action value   (type help)">
+    </div>
+  </section>
+
+  <!-- Pause -->
+  <div id="pause" class="modal pause" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+    <div class="modal-box pause-box">
+      <h3 id="pause-title">Paused</h3>
+      <p class="pause-score" id="pause-score"></p>
+      <div class="pause-buttons">
+        <button class="btn btn-primary btn-block" id="pause-continue">Continue</button>
+        <div class="pause-row">
+          <button class="btn" id="pause-shop">Tailor</button>
+          <button class="btn" id="pause-settings">Settings</button>
+        </div>
+        <button class="btn btn-block" id="pause-quit">Quit run</button>
+      </div>
+      <p class="hint">Space or Escape to keep playing</p>
+    </div>
+  </div>
+
+  <!-- Save code (back up or restore) -->
+  <div id="savecode" class="modal" role="dialog" aria-modal="true" aria-labelledby="savecode-title">
+    <div class="modal-box savecode-box">
+      <h3 id="savecode-title">Save code</h3>
+      <p id="savecode-help" class="savecode-help"></p>
+      <textarea id="savecode-text" class="savecode-text" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Save code"></textarea>
+      <p id="savecode-msg" class="savecode-msg" aria-live="polite"></p>
+      <div class="row-buttons">
+        <button class="btn" id="savecode-cancel">Close</button>
+        <button class="btn btn-primary" id="savecode-go">Copy code</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Story scene -->
+  <div id="scene" class="modal scene" role="dialog" aria-modal="true" aria-labelledby="scene-title">
+    <div class="modal-box scene-box">
+      <canvas id="scene-art" class="scene-art" width="160" height="60" aria-hidden="true"></canvas>
+      <p class="scene-kicker">From the story book</p>
+      <h3 id="scene-title"></h3>
+      <div id="scene-text" aria-live="polite"></div>
+      <div class="row-buttons">
+        <button class="btn btn-small btn-quiet" id="scene-skip">Skip</button>
+        <span id="scene-count" class="scene-count"></span>
+        <button class="btn btn-primary" id="scene-next">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pick one-time items before a run -->
+  <div id="loadout" class="modal" role="dialog" aria-modal="true" aria-labelledby="loadout-title">
+    <div class="modal-box loadout-box">
+      <h3 id="loadout-title">Bring anything?</h3>
+      <p class="loadout-sub">Boosts are used up when the run starts. Golden hearts only when they take a hit.</p>
+      <div id="loadout-list"></div>
+      <div class="row-buttons">
+        <button class="btn" id="loadout-none">Just play</button>
+        <button class="btn btn-primary" id="loadout-go">Start</button>
+      </div>
+    </div>
+  </div>
+  <div id="countdown" class="countdown" hidden aria-live="assertive"></div>
+
+  <!-- New item introduction (pauses the game) -->
+  <div id="intro" class="modal intro" role="dialog" aria-modal="true" aria-labelledby="intro-title" aria-describedby="intro-text">
+    <div class="modal-box intro-box">
+      <canvas id="intro-art" width="150" height="60" aria-hidden="true"></canvas>
+      <p class="intro-kicker">Something new</p>
+      <h3 id="intro-title"></h3>
+      <p id="intro-text"></p>
+      <button class="btn btn-primary" id="intro-ok">Got it</button>
+      <p class="hint">Space or Enter to keep going</p>
+    </div>
+  </div>
+
+  <!-- Deleting a save: two steps -->
+  <div id="delsave" class="modal delsave" role="alertdialog" aria-modal="true" aria-labelledby="ds-title">
+    <div class="modal-box ds-ask">
+      <h3 id="ds-title">Did you mean to delete this?</h3>
+      <p class="ds-text"><b class="ds-name"></b> and everything on its map, its island trees and its Satchel will be gone. Snakebucks, the Great Tree and the Tailor are shared, so they stay.</p>
+      <div class="row-buttons">
+        <button class="btn btn-danger" id="ds-yes">Yes</button>
+        <button class="btn btn-primary" id="ds-no">No</button>
+      </div>
+    </div>
+    <div class="modal-box ds-type">
+      <h3>Type <span class="ds-word">CONFIRM</span> to confirm</h3>
+      <input id="ds-input" class="ds-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CONFIRM" aria-label="Type CONFIRM to delete">
+      <div class="row-buttons">
+        <button class="btn" id="ds-cancel">Cancel</button>
+        <button class="btn btn-danger" id="ds-confirm" disabled>Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- The Exchange: XP into Snakebucks -->
+  <div id="exchange" class="modal" role="dialog" aria-modal="true" aria-labelledby="ex-title">
+    <div class="modal-box exchange-box">
+      <div id="ex-art" class="ex-art" aria-hidden="true"></div>
+      <h3 id="ex-title">The Exchange</h3>
+      <p class="ex-rate">10 XP buys 1 Snakebuck. Snakebucks are shared by every save and buy the Great Tree and the Tailor's wares.</p>
+      <p id="ex-have" class="ex-have"></p>
+      <input id="ex-range" class="ex-range" type="range" min="0" max="0" step="10" value="0" aria-label="How much XP to trade">
+      <p id="ex-preview" class="ex-preview"></p>
+      <div class="ex-quick"><button class="btn btn-small" id="ex-half">Half</button><button class="btn btn-small" id="ex-all">All of it</button></div>
+      <div class="row-buttons">
+        <button class="btn" id="ex-close">Done</button>
+        <button class="btn btn-gold" id="ex-go">Trade</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset-all confirmation -->
+  <div id="confirm" class="modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+    <div class="modal-box">
+      <h3 id="confirm-title">Reset the whole game?</h3>
+      <p id="confirm-text">This deletes all experience, upgrades, skins, themes, scores, stats and settings. There is no undo.</p>
+      <div class="row-buttons">
+        <button class="btn" id="confirm-cancel">Cancel</button>
+        <button class="btn btn-danger" id="confirm-ok">Reset everything</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="below">
+  <div id="intro-bubble" class="intro-bubble" role="status" aria-live="polite" hidden></div>
+  <div id="toast-slot"><div id="toast" role="status" aria-live="polite"></div>
+  <!-- Tutorial tips, where the bubbles appear -->
+
+  </div>
+  <div id="live-stats" hidden></div>
+</div>
+
+<div id="bubble-card" class="bubble-card" role="dialog" aria-live="polite"></div>
+
+<div id="guide" class="guide" hidden>
+  <div id="guide-shade" class="guide-shade"></div>
+  <div id="guide-ring" class="guide-ring" hidden></div>
+  <div id="guide-box" class="guide-box" role="dialog" aria-live="polite"></div>
+</div>
+
+<div id="touch-controls" aria-label="Touch controls">
+  <button id="touch-select" class="touch-btn utility-btn" aria-label="Confirm">Confirm</button>
+  <button id="touch-up" class="touch-btn" aria-label="Up">▲</button>
+  <button id="touch-back" class="touch-btn utility-btn" aria-label="Back">Back</button>
+  <button id="touch-left" class="touch-btn" aria-label="Left">◀</button>
+  <button id="touch-down" class="touch-btn" aria-label="Down">▼</button>
+  <button id="touch-right" class="touch-btn" aria-label="Right">▶</button>
+</div>
+
+<!-- The boot loader reads every content file, then loads the game's scripts in the order
+     listed in src/load-order.dat. Nothing else is loaded from here. -->
+<script src="src/engine/content/formats.js"></script>
+<script src="src/engine/content/loader.js"></script>
+<script src="src/engine/boot.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+# ==================================================================
+#  CLOCKWORK CITADEL  (clockwork)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/clockwork.story). New in build 46.
+# ==================================================================
+
+name     = Clockwork Citadel    # on the map
+label    = Precise              # a short name for the island
+music    = tense                # a track in content/music/music.dat
+medal    = #c9a24a              # the island's color in menus and medals
+
+[rules]
+speed           = 10                     # squares a second
+edge            = wall                   # wrap, wall, mirror, endless or maze
+innerWalls      = true                   # walls in the middle
+startOrbs       = 3                      # XP orbs at the start
+orbChance       = 0.12                   # chance of another orb every 5 seconds
+description     = Spike traps rise and fall on one steady beat, and flash red just before they rise. Every run here and after offers a Bounty Contract for extra XP and Snakebucks.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 25
+l     = 10
+[spawns.apple]
+s     = 20
+[spawns.spikes]
+count = 10
+[spawns.popsicle]
+max   = 3
+delay = [3000, 7000]
+s     = 25
+[spawns.wasp]
+max   = 1
+delay = [7000, 12000]
+[spawns.hourglass]
+max   = 1
+delay = [12000, 20000]
+[spawns.armor]
+max   = 1
+delay = [14000, 22000]
+
+[nightmare]
+name   = Overclock
+twist  = The whole citadel runs fast. The spikes rise sooner and stay up longer.
+overclock = true
+[nightmare.spawns.spikes]
+count = 18
+
+[map]
+x      = 146                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 84
+width  = 28
+colors = [#8a8070, #7a7060, #4a4038]  # grass, edge, rock
+
+[tree]
+leaves = [#8a6a3a, #b08a4a, #d8b870, #c9ced6]  # three leaf colors and the fruit color

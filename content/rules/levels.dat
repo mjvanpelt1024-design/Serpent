@@ -1,0 +1,11 @@
+# ==================================================================
+#  LEVELS: how the three levels of every island differ
+#  speed, score and hazards multiply the island's own numbers.
+#  Keep three rows: the map, the Nightmares and the trees are built
+#  around three levels per island.
+# ==================================================================
+
+# level | speed | score | hazards | (unused since build 46) | shown on the map
+1     | 1     | 1     | 1       | 0                       | The gentlest way in.
+2     | 1.12  | 1.25  | 1.35    | 0                       | Faster and busier than the first, and better paid for it.
+3     | 1.25  | 1.55  | 1.7     | 0                       | As fast and as crowded as this place gets.

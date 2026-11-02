@@ -1,0 +1,55 @@
+# ==================================================================
+#  THE HIVE  (hive)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/hive.story). New in build 46.
+# ==================================================================
+
+name     = The Hive             # on the map
+label    = Buzzing              # a short name for the island
+music    = tense                # a track in content/music/music.dat
+medal    = #f5a623              # the island's color in menus and medals
+item     = polish               # a one-time item that grows on this tree
+
+[rules]
+speed           = 8.5                    # squares a second
+edge            = wrap                   # wrap, wall, mirror, endless or maze
+startOrbs       = 3                      # XP orbs at the start
+orbChance       = 0.12                   # chance of another orb every 5 seconds
+description     = Wasps fly straight at your head. Armor Plates take a hit for you, any hit at all. Wasps won't land on your body, so coil to keep them off.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 35
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 3
+[spawns.popsicle]
+max   = 2
+delay = [4000, 9000]
+[spawns.wasp]
+max   = 2
+delay = [3500, 7000]
+[spawns.armor]
+max   = 1
+delay = [10000, 16000]
+[spawns.golden]
+max   = 1
+delay = [16000, 26000]
+
+[nightmare]
+name   = The Swarm
+twist  = Wasps, and then more wasps, and then the rest of the wasps.
+[nightmare.spawns.wasp]
+max   = 6
+delay = [1200, 2600]
+
+[map]
+x      = 70                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 232
+width  = 26
+colors = [#e0b040, #c89a30, #7a5a18]  # grass, edge, rock
+
+[tree]
+leaves = [#c08a10, #e0a820, #ffd23f, #fff6c4]  # three leaf colors and the fruit color

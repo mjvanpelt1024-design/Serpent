@@ -1,0 +1,163 @@
+/* styles/08-fruit-tailor-satchel.css */
+
+/* ---------- Fruit: every upgrade and item is a little fruit with its picture inside ---------- */
+.tree-pin.fruit {
+  width: 2.5em;
+  height: 2.6em;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 0.14em 0 rgba(0, 0, 0, 0.45));
+}
+.fruit .fr-shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.fruit .fr-body { fill: var(--c); stroke: #1a1410; stroke-width: 1.6; stroke-linejoin: round; transition: fill 0.2s; }
+.fruit .fr-shine { fill: none; stroke: rgba(255, 255, 255, 0.65); stroke-width: 1.6; stroke-linecap: round; }
+.fruit .fr-stem { fill: none; stroke: #5a3a1e; stroke-width: 1.8; stroke-linecap: round; }
+.fruit .fr-leaf { fill: #3ddc3d; stroke: #1a1410; stroke-width: 1; }
+.fruit .fr-icon { position: absolute; left: 50%; top: 57%; width: 56%; height: auto; transform: translate(-50%, -50%); image-rendering: pixelated; pointer-events: none; }
+.fruit .fr-tier { position: absolute; left: 50%; top: 100%; transform: translate(-50%, -0.2em); font: 700 0.56em/1 var(--body); padding: 0.16em 0.42em 0.22em; border-radius: 0.45em; background: rgba(12, 10, 8, 0.85); color: #fff; white-space: nowrap; pointer-events: none; }
+.fruit .fr-lock { position: absolute; right: -0.2em; top: -0.1em; width: 1em; height: 1em; border-radius: 50%; background: #2c2c2c; display: grid; place-items: center; box-shadow: 0 0 0 1.5px #8a8a8a; }
+.fruit .fr-lock .lock { width: 0.6em; height: 0.6em; fill: #ddd; }
+.fruit .fr-star { position: absolute; right: -0.3em; top: -0.25em; width: 1.05em; height: 1.05em; }
+.fruit .fr-star .star { width: 100%; height: 100%; }
+.fruit.locked .fr-body { fill: #6b6b6b; }
+.fruit.locked .fr-icon { filter: grayscale(1) brightness(0.85); opacity: 0.7; }
+.fruit.locked .fr-leaf { fill: #7a8a7a; }
+.tree-pin.fruit.ready { animation: fruit-ready 1.4s ease-in-out infinite; }
+@keyframes fruit-ready { 50% { filter: drop-shadow(0 0 0.4em var(--xp)) drop-shadow(0 0.14em 0 rgba(0, 0, 0, 0.45)); } }
+.tree-pin.fruit.maxed { filter: drop-shadow(0 0 0.3em rgba(255, 210, 63, 0.9)) drop-shadow(0 0.14em 0 rgba(0, 0, 0, 0.45)); }
+.fruit.maxed .fr-body { stroke: #ffd23f; stroke-width: 2.2; }
+.fruit.nmn .fr-body { stroke: #ffb3d0; }
+.fruit.dream .fr-body { stroke: #e0b0ff; }
+.tree-pin.fruit.item { width: 2.15em; height: 2.25em; }
+.tree-pin.fruit.rank { width: 2.2em; height: 2.3em; }
+.tree-pin.fruit:hover { transform: translate(-50%, -50%) scale(1.1); }
+.tree-pin.fruit.selected, .tree-pin.fruit.selected:hover { transform: translate(-50%, -50%) scale(1.22); z-index: 3; }
+.fruit.selected .fr-body { stroke: #fff; stroke-width: 2.4; }
+.tree-view { container-type: inline-size; }
+.tree-view .tree-pin.fruit { font-size: clamp(10px, 2.5cqw, 26px); }
+.tc-pic { position: relative; width: 3.3em; height: 3.4em; margin: 0.3em auto 0.15em; filter: drop-shadow(0 0.15em 0 rgba(0, 0, 0, 0.45)); }
+
+/* ---------- The tree screen fills the window: tree and card side by side when there's room ---------- */
+body.menu-full #stage > #screen-tree { --side: max(1em, calc((100vw - 64em) / 2)); }
+.tree-layout { display: flex; flex-direction: column; align-items: center; gap: 0.2em; }
+.tree-layout .tree-view { width: 100%; max-width: calc((100dvh - var(--bar) - 6em) * var(--tree-ar, 1.333)); }
+.tree-layout .tree-card { width: 100%; max-width: 30em; }
+@media (min-aspect-ratio: 5/4) {
+  .tree-layout { flex-direction: row; align-items: flex-start; justify-content: center; gap: 1em; }
+  .tree-layout .tree-view { flex: 1 1 auto; min-width: 0; max-width: calc((100dvh - var(--bar) - 7em) * var(--tree-ar, 1.333)); }
+  .tree-layout .tree-card { flex: none; width: 17em; margin-top: 0.6em; }
+}
+
+
+/* ---------- Bubbles: the Tailor's wares float in soap bubbles ---------- */
+.bubbles { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.9em 0.7em; padding: 0.6em 0.2em 1.1em; }
+.bubble {
+  position: relative;
+  width: 5.2em;
+  height: 6.3em;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--ink);
+  animation: bubble-float 6s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+@keyframes bubble-float { 50% { transform: translateY(-0.3em); } }
+.bubble .bb-ring {
+  position: absolute;
+  left: 0.15em;
+  top: 0;
+  width: 4.9em;
+  height: 4.9em;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.35), transparent 30%), color-mix(in srgb, var(--bc) 25%, #0c0c10);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5), inset 0 -0.4em 0.8em rgba(0, 0, 0, 0.35), 0 0.2em 0 rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.bubble .bb-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.85) 0 0.25em, transparent 0.3em), radial-gradient(circle at 70% 78%, rgba(255, 255, 255, 0.25), transparent 35%);
+  box-shadow: inset 0.15em -0.1em 0.4em rgba(180, 230, 255, 0.35), inset -0.2em 0.15em 0.5em rgba(255, 170, 230, 0.3);
+  pointer-events: none;
+}
+.bubble .bb-art { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; display: block; }
+.bubble:hover .bb-ring, .bubble:focus-visible .bb-ring, .bubble.focused .bb-ring { transform: scale(1.08); }
+.bubble:focus-visible, .bubble.focused { outline: none; }
+.bubble:focus-visible .bb-ring, .bubble.focused .bb-ring { box-shadow: inset 0 0 0 2px #fff, 0 0 0 3px #fff, 0 0.2em 0 rgba(0, 0, 0, 0.35); }
+.bubble .bb-tag {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  font: 700 0.68em/1 var(--body);
+  padding: 0.25em 0.55em 0.3em;
+  border-radius: 0.6em;
+  white-space: nowrap;
+  background: var(--panel);
+  color: var(--ink-dim);
+  box-shadow: inset 0 0 0 1.5px var(--edge);
+}
+.bubble .bb-tag .lock { width: 0.9em; height: 0.9em; fill: currentColor; vertical-align: -0.1em; }
+.bubble.affordable .bb-tag { background: var(--gold); color: #3a2a00; box-shadow: 0 0.12em 0 var(--gold-lip); }
+.bubble.owned .bb-tag { background: color-mix(in srgb, var(--green) 30%, var(--panel)); color: #c8ffc8; }
+.bubble.on .bb-ring { box-shadow: inset 0 0 0 2px #fff, 0 0 0 3px var(--xp), 0 0 0.8em rgba(255, 210, 63, 0.6); }
+.bubble.on .bb-tag { background: var(--xp); color: #2a2000; }
+.bubble.locked .bb-ring { filter: grayscale(0.85) brightness(0.6); }
+.tier-head { display: flex; align-items: center; gap: 0.6em; }
+.tier-head .btn-tier { margin-left: auto; font-size: 0.85em; width: auto; flex: none; }
+.bubble, .shelf-fruit, .medal-chip { font-family: var(--body); }
+.tailor-note { text-align: center; }
+
+.bubble-card {
+  position: fixed;
+  z-index: 65;
+  width: min(19em, 92vw);
+  padding: 0.8em 0.95em 0.9em;
+  border-radius: 1.2em;
+  font-size: calc(15px * var(--mui));
+  text-align: center;
+  color: var(--ink);
+  background: var(--panel);
+  box-shadow: inset 0 0 0 3px var(--bc, var(--edge)), 0 0.4em 0 rgba(0, 0, 0, 0.45), 0 1em 2.4em rgba(0, 0, 0, 0.5);
+  display: none;
+  line-height: 1.35;
+}
+.bubble-card.open { display: block; animation: bubble-pop 0.28s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes bubble-pop { from { transform: scale(0.6); opacity: 0; } }
+.bubble-card .bc-x { position: absolute; right: 0.4em; top: 0.3em; width: 1.6em; height: 1.6em; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.3); color: #fff; font-size: 1.1em; line-height: 1; cursor: pointer; }
+.bubble-card .bc-pic { display: flex; justify-content: center; margin: 0.2em 0 0.4em; }
+.bubble-card .bc-pic canvas { width: 7.5em; height: auto; max-height: 6em; object-fit: contain; border-radius: 0.8em; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.2), 0 0.2em 0 rgba(0, 0, 0, 0.4); }
+.bubble-card .bc-sub { margin: 0; font-size: 0.75em; font-weight: 700; color: var(--bc); }
+.bubble-card .bc-name { margin: 0.1em 0 0.3em; font-family: var(--display); font-weight: 400; font-size: 1.55em; line-height: 1; text-shadow: 0 0.08em 0 rgba(0, 0, 0, 0.4); }
+.bubble-card .bc-desc { margin: 0 0 0.5em; font-size: 0.8em; color: var(--ink-dim); }
+.bubble-card .bc-price { margin: 0 0 0.5em; font-family: var(--display); font-size: 1.3em; color: var(--xp); }
+.bubble-card .bc-act .btn { min-width: 11em; }
+.bubble-card .bc-act .lock { width: 0.9em; height: 0.9em; fill: currentColor; vertical-align: -0.1em; }
+
+/* ---------- The Satchel: items sit on a shelf as fruit ---------- */
+.fruit-shelf { gap: 1em 1.2em; }
+.shelf-fruit { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.2em; width: 6em; margin: 0; padding: 0.4em 0.2em; border: 0; border-radius: 1em; background: none; color: var(--ink); cursor: pointer; }
+.shelf-fruit .sf-fruit { position: relative; width: 3.6em; height: 3.7em; filter: drop-shadow(0 0.15em 0 rgba(0, 0, 0, 0.45)); animation: bubble-float 5s ease-in-out infinite; }
+.shelf-fruit .sf-count { position: absolute; top: 0.2em; right: 0.5em; font: 700 0.75em/1 var(--body); padding: 0.2em 0.45em; border-radius: 0.6em; background: var(--xp); color: #2a2000; box-shadow: 0 0.1em 0 rgba(0, 0, 0, 0.4); }
+.shelf-fruit .sf-name { font-size: 0.78em; font-weight: 700; text-align: center; }
+.shelf-fruit:hover .sf-fruit, .shelf-fruit.focused .sf-fruit { transform: scale(1.08); }
+.tree-medal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13em, 1fr)); gap: 0.5em; margin: 0.4em 0 0.8em; }
+.tm-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5em; padding: 0.45em 0.7em; border-radius: var(--radius); background: var(--panel); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--m) 55%, transparent); }
+.tm-row.locked { opacity: 0.5; }
+.tm-name { font-size: 0.85em; font-weight: 700; }
+.medal-shelf { gap: 0.6em; }
+.medal-chip { display: flex; flex-direction: column; align-items: center; gap: 0.3em; width: 6.5em; padding: 0.6em 0.3em 0.5em; border: 0; border-radius: 1em; background: var(--panel); color: var(--ink); cursor: pointer; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--m) 50%, transparent), 0 0.18em 0 rgba(0, 0, 0, 0.35); }
+.medal-chip.on { box-shadow: inset 0 0 0 2px var(--xp), 0 0 0.6em rgba(255, 210, 63, 0.5); }
+.medal-chip .mc-name { font-size: 0.72em; font-weight: 700; text-align: center; }
+.medal-chip .mc-act { font-size: 0.66em; color: var(--ink-dim); }

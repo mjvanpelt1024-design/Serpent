@@ -1,0 +1,15 @@
+# ==================================================================
+#  Revive  (revive)
+#  Its price is in content/economy.txt under [items]. What it does is
+#  game code: src/game/flow/item-effects.js.
+# ==================================================================
+
+name        = Revive
+description = Offered when you die. Rewinds a few steps and counts you back in. Second chances exist. I have simply never had one.
+island      = insane               # grows on this island's tree
+boost       = false                # true = used up when a run starts
+
+# Its fruit in the Satchel
+fruit       = pear                 # apple, pear, orange, plum, lemon or berry
+color       = #9be870
+icon        = feather

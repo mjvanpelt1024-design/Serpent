@@ -1,0 +1,5 @@
+# Flair: Red Cape
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Red Cape
+slot      = cape                 # head, face, cape, body or tail
+priceRank = 7                    # price = flairStep (economy.txt) x this

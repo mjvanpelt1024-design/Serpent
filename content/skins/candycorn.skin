@@ -1,0 +1,5 @@
+# Skin: Candy Corn
+name     = Candy Corn
+group    = Tri-color            # its tier in the Tailor (skins/tiers.dat)
+palette  = [#ffffff, #ff9f1c, #ffd23f]  # the colors
+seq      = "123"                # the pattern down the body: 1 = first color, 2 = second...

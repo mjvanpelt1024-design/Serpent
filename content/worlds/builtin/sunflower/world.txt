@@ -1,0 +1,43 @@
+# ==================================================================
+#  SUNFLOWER FIELDS  (sunflower)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/sunflower.story). New in build 46.
+# ==================================================================
+
+name     = Sunflower Fields     # on the map
+label    = Sunny                # a short name for the island
+music    = calm                 # a track in content/music/music.dat
+medal    = #ffcf33              # the island's color in menus and medals
+item     = feverdream           # a one-time item that grows on this tree
+
+[rules]
+speed           = 6                      # squares a second
+edge            = wrap                   # wrap, wall, mirror, endless or maze
+apples          = 2                      # apples on the board at once
+startOrbs       = 3                      # XP orbs at the start
+orbChance       = 0.12                   # chance of another orb every 5 seconds
+description     = Two apples at a time and a sky full of sun. Golden Apples are worth ten of the ordinary kind, and eating quickly fills your Fever.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 60
+[spawns.apple]
+s     = 20
+[spawns.golden]
+max   = 1
+delay = [9000, 15000]
+
+[nightmare]
+name   = Wilted
+twist  = Apples rot in a few seconds. Eat fast, or eat rot.
+rot    = 4000                   # ms before an apple rots in this Nightmare
+
+[map]
+x      = 126                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 284
+width  = 28
+colors = [#9acd32, #8ab82a, #5a7a1a]  # grass, edge, rock
+
+[tree]
+leaves = [#d8a020, #f0c030, #ffe060, #ffd23f]  # three leaf colors and the fruit color

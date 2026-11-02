@@ -1,0 +1,13 @@
+# Theme: Twilight
+name      = Twilight             # the board's own name
+group     = Gradients            # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #2c3e7a              # the main board color
+accent    = #0a0a1f              # a second color the pattern uses
+painter   = twilight             # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#3f56b0, #1c2258, #060618]  # bright, middle and deep paint colors
+highlight = #c9b3ff              # the accent color
+particles = stars                # what drifts over the page
+emblem    = moon                 # its symbol in the Tailor

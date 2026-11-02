@@ -1,0 +1,39 @@
+# ==================================================================
+#  THE GARDEN  (easy)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/easy.story).
+# ==================================================================
+
+name     = Garden               # on the map
+label    = Easy                 # the old difficulty name
+music    = calm                 # a track in content/music/music.dat
+medal    = #3ddc3d              # the island's color in menus and medals
+item     = goldheart            # a one-time item that grows on this tree
+
+[rules]
+speed           = 5                    # squares a second
+edge            = wrap                 # wrap, wall, mirror, endless or maze
+hazard          = false                # rocks on the board
+maxPopsicle     = 0                    # popsicles at once
+popsicleEffect  = "none"               # none, penalty or death
+startOrbs       = 1                     # XP orbs at the start
+orbChance       = 0.08                 # chance of another orb every 5 seconds
+description     = Apples make you longer, and the edges wrap around. The only danger here is your own tail, which is true of most gardens and nearly all people.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 100
+
+[nightmare]
+name   = Starving
+twist  = Your snake shrinks every few seconds. Keep eating, or starve, which is the oldest story there is.
+
+[map]
+x      = 28                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 282
+width  = 32
+colors = [#5aab45, #4f9a3a, #2f6a24]  # grass, edge, rock
+
+[tree]
+leaves = [#3f9a3a, #5ab046, #7cc95a, #ff3b3b]  # three leaf colors and the fruit color

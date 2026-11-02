@@ -1,0 +1,5 @@
+# Flair: Hero Cape
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Hero Cape
+slot      = cape                 # head, face, cape, body or tail
+priceRank = 23                   # price = flairStep (economy.txt) x this

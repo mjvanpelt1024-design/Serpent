@@ -1,0 +1,16 @@
+# Keep the project's line endings as they are (LF), whatever the machine's git settings
+* text=auto eol=lf
+*.exe binary
+*.ico binary
+*.png binary
+*.ogg binary
+*.woff binary
+# Visual Studio files keep Windows line endings (see .editorconfig)
+*.cpp text eol=crlf
+*.h text eol=crlf
+*.rc text eol=crlf
+*.sln text eol=crlf
+*.vcxproj text eol=crlf
+*.filters text eol=crlf
+*.config text eol=crlf
+*.bat text eol=crlf

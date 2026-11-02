@@ -1,0 +1,13 @@
+# Theme: Chevron
+name      = Chevron              # the board's own name
+group     = Deluxe               # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #1d2433              # the main board color
+accent    = #26304a              # a second color the pattern uses
+painter   = chevron              # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#3f5080, #1f2738, #0a0d14]  # bright, middle and deep paint colors
+highlight = #8fb0ff              # the accent color
+particles = dust                 # what drifts over the page
+emblem    = chevron              # its symbol in the Tailor

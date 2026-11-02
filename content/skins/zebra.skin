@@ -1,0 +1,5 @@
+# Skin: Zebra
+name     = Zebra
+group    = Critters             # its tier in the Tailor (skins/tiers.dat)
+palette  = [#f5f5f5, #1a1a1a]   # the colors
+seq      = "12"                 # the pattern down the body: 1 = first color, 2 = second...

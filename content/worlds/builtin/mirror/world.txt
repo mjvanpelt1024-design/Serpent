@@ -1,0 +1,61 @@
+# ==================================================================
+#  THE GLASS HALL  (mirror)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/mirror.story).
+# ==================================================================
+
+name     = Glass Hall           # on the map
+label    = Mirror               # the old difficulty name
+music    = fast                 # a track in content/music/music.dat
+medal    = #8fe3ff              # the island's color in menus and medals
+item     = magnet               # a one-time item that grows on this tree
+
+[rules]
+speed           = 10                   # squares a second
+edge            = mirror               # wrap, wall, mirror, endless or maze
+hazard          = true                 # rocks on the board
+maxPopsicle     = 5                    # popsicles at once
+popsicleEffect  = death                # none, penalty or death
+popsicleDelay   = [1500, 4500]         # [min, max] ms between popsicles
+startOrbs       = 3                    # XP orbs at the start
+orbChance       = 0.12                  # chance of another orb every 5 seconds
+description     = Like Insane, with more popsicles, and every edge is a portal: leave the board and you reappear on a random side, not the opposite one.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 30
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 4
+s     = 40
+[spawns.popsicle]
+max   = 5
+delay = [1500, 4500]
+s     = 30
+[spawns.flea]
+max   = 2
+delay = [4000, 9000]
+s     = 45
+
+# Power-ups from earlier islands (build 46)
+[spawns.shield]
+max   = 1
+delay = [14000, 22000]
+[spawns.golden]
+max   = 1
+delay = [14000, 22000]
+
+[nightmare]
+name   = Topsy-Turvy
+twist  = Every warp flips your controls, and warping again flips them back. Left is right, until it is not.
+
+[map]
+x      = 102                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 188
+width  = 28
+colors = [#6cc4d0, #5cb3c0, #2f7783]  # grass, edge, rock
+
+[tree]
+leaves = [#4fb8c8, #8fe3ff, #d8fbff, #b9a6ff]  # three leaf colors and the fruit color

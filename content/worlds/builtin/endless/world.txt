@@ -1,0 +1,61 @@
+# ==================================================================
+#  THE LONG TUNNEL  (endless)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/endless.story).
+# ==================================================================
+
+name     = Tunnel               # on the map
+label    = Endless              # the old difficulty name
+music    = tunnel               # a track in content/music/music.dat
+medal    = #ff5a61              # the island's color in menus and medals
+
+[rules]
+speed           = 7                    # squares a second
+edge            = endless              # wrap, wall, mirror, endless or maze
+hazard          = false                # rocks on the board
+maxPopsicle     = 0                    # popsicles at once
+popsicleEffect  = death                # none, penalty or death
+startOrbs       = 3                    # XP orbs at the start
+orbChance       = 0.12                 # chance of another orb every 5 seconds
+description     = A side scroller with no end. Weave through a tunnel that squeezes in and out. Dodging costs ground, and heading right wins it back.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 25
+l     = 8
+[spawns.apple]
+s     = 20
+[spawns.rock]
+rate  = 0.035
+s     = 30
+l     = 15
+[spawns.popsicle]
+rate  = 0.12
+s     = 25
+l     = 15
+[spawns.flea]
+rate  = 0.04
+s     = 35
+l     = 15
+
+# Power-ups from earlier islands (build 46)
+[spawns.golden]
+max   = 1
+delay = [10000, 18000]
+[spawns.shield]
+max   = 1
+delay = [14000, 22000]
+
+[nightmare]
+name   = Crumbling
+twist  = The tunnel is much tighter, and lost ground is harder to win back. It is crumbling, and so, possibly, are you.
+
+[map]
+x      = 104                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 138
+width  = 30
+colors = [#7c6a4e, #6d5842, #43362a]  # grass, edge, rock
+
+[tree]
+leaves = [#8a6a3a, #a8844a, #c8a060, #ff5a61]  # three leaf colors and the fruit color

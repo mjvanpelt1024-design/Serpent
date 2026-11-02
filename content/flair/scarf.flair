@@ -1,0 +1,5 @@
+# Flair: Winter Scarf
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Winter Scarf
+slot      = cape                 # head, face, cape, body or tail
+priceRank = 12                   # price = flairStep (economy.txt) x this

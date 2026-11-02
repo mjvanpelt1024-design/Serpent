@@ -1,0 +1,11 @@
+# Theme: Peach
+name      = Peach                # the board's own name
+group     = Solids               # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #ffcfa8              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#ffb486, #e06e48, #4a2214]  # bright, middle and deep paint colors
+highlight = #ff8c5a              # the accent color
+particles = petals               # what drifts over the page
+emblem    = peach                # its symbol in the Tailor

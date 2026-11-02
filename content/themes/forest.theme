@@ -1,0 +1,11 @@
+# Theme: Forest
+name      = Forest               # the board's own name
+group     = Solids               # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #16341f              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#2f8a48, #174226, #08180d]  # bright, middle and deep paint colors
+highlight = #6fdc6f              # the accent color
+particles = leaves               # what drifts over the page
+emblem    = leaf                 # its symbol in the Tailor

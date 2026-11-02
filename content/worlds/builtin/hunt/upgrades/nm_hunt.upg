@@ -1,0 +1,18 @@
+# ==================================================================
+#  Scent Mask  (nm_hunt)
+#  Hunting Grounds, Nightmare (red) upgrade
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Scent Mask
+description = The Hunter moves more slowly again, everywhere. Mostly useful against the Pack.
+slot        = nightmare              # trunk, left, right, crown or nightmare
+icon        = spray                  # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 0                      # before the first tier
+start       = 5                      # tier 1
+step        = 5                      # added every tier
+tiers       = 5
+format      = {v}% slower            # how a value is shown; {v} is the value

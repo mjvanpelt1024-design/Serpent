@@ -1,0 +1,12 @@
+# Theme: Lava Rock
+name      = Lava Rock            # the board's own name
+group     = Deluxe               # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #1c1412              # the main board color
+painter   = lavarock             # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#ff6020, #781c0a, #120605]  # bright, middle and deep paint colors
+highlight = #ffb020              # the accent color
+particles = embers               # what drifts over the page
+emblem    = flame                # its symbol in the Tailor

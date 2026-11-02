@@ -1,0 +1,12 @@
+# Theme: Nebula
+name      = Nebula               # the board's own name
+group     = Deluxe               # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #0a0618              # the main board color
+painter   = nebula               # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#8840d0, #1c4c92, #04020e]  # bright, middle and deep paint colors
+highlight = #f72585              # the accent color
+particles = stars                # what drifts over the page
+emblem    = galaxy               # its symbol in the Tailor

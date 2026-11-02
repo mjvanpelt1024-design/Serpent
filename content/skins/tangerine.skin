@@ -1,0 +1,5 @@
+# Skin: Tangerine
+name     = Tangerine
+group    = Solids               # its tier in the Tailor (skins/tiers.dat)
+palette  = [#ff8c1a]            # the colors
+seq      = "1"                  # the pattern down the body: 1 = first color, 2 = second...

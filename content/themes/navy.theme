@@ -1,0 +1,11 @@
+# Theme: Navy
+name      = Navy                 # the board's own name
+group     = Solids               # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #0f1e3d              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#3363b8, #13264a, #060d1e]  # bright, middle and deep paint colors
+highlight = #5aa0ff              # the accent color
+particles = stars                # what drifts over the page
+emblem    = star                 # its symbol in the Tailor

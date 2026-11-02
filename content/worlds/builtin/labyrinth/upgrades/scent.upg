@@ -1,0 +1,19 @@
+# ==================================================================
+#  Apple Scent  (scent)
+#  The Heart of the Maze tree, left branch
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Apple Scent
+description = More apples wander the Labyrinth. Something else in there hums, and I would rather not say what.
+slot        = left                 # trunk, left, right, crown or nightmare
+color       = #ff2b2b
+icon        = scent                # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 0                    # before the first tier
+start       = 2                    # tier 1
+step        = 2                    # added every tier
+tiers       = 10
+format      = +{v} apples          # how a value is shown; {v} is the value

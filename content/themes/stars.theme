@@ -1,0 +1,12 @@
+# Theme: Starfield
+name      = Starfield            # the board's own name
+group     = Patterns             # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #070a18              # the main board color
+painter   = stars                # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#30377a, #141848, #04050e]  # bright, middle and deep paint colors
+highlight = #ffe8a8              # the accent color
+particles = stars                # what drifts over the page
+emblem    = star                 # its symbol in the Tailor

@@ -1,0 +1,15 @@
+# ==================================================================
+#  Popsicle Repellent  (repellent)
+#  Its price is in content/economy.txt under [items]. What it does is
+#  game code: src/game/flow/item-effects.js.
+# ==================================================================
+
+name        = Popsicle Repellent
+description = Half as many popsicles, fleas and fire for one run. It smells dreadful. It works.
+island      = chaos                # grows on this island's tree
+boost       = true                 # true = used up when a run starts
+
+# Its fruit in the Satchel
+fruit       = plum                 # apple, pear, orange, plum, lemon or berry
+color       = #8f6cff
+icon        = spray

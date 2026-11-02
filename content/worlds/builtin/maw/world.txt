@@ -1,0 +1,82 @@
+# ==================================================================
+#  THE MAW  (maw)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/maw.story). New in build 46.
+# ==================================================================
+
+name     = The Maw              # on the map
+label    = Final                # a short name for the island
+music    = hot                  # a track in content/music/music.dat
+medal    = #e0284e              # the island's color in menus and medals
+
+[rules]
+speed           = 10.5                   # squares a second
+edge            = wall                   # wrap, wall, mirror, endless or maze
+cell            = 10                     # square size (10 = half size)
+apples          = 2                      # apples on the board at once
+hunter          = true                   # the Hunter, a rival snake
+startOrbs       = 3                      # XP orbs at the start
+orbChance       = 0.12                   # chance of another orb every 5 seconds
+description     = The last island. Sinkholes crack, then open into pits that end the run. The Hunter is back. Frenzy Clocks double your points. Everything else you've met is here too.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 25
+l     = 10
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 8
+s     = 30
+l     = 15
+[spawns.popsicle]
+max   = 4
+delay = [2500, 6000]
+s     = 25
+l     = 20
+[spawns.sinkhole]
+max   = 3
+delay = [3000, 6000]
+l     = 40
+[spawns.bomb]
+max   = 2
+delay = [5000, 9000]
+[spawns.ghost]
+max   = 2
+delay = [5000, 9000]
+[spawns.lightning]
+max   = 2
+delay = [4000, 8000]
+[spawns.spikes]
+count = 8
+[spawns.frenzy]
+max   = 1
+delay = [10000, 16000]
+[spawns.star]
+max   = 1
+delay = [16000, 24000]
+[spawns.shield]
+max   = 1
+delay = [14000, 22000]
+[spawns.golden]
+max   = 1
+delay = [14000, 22000]
+
+[nightmare]
+name   = The Pit
+twist  = The ground gives way everywhere, faster than ever, and the Hunter is waiting at the bottom.
+hunter = true
+fastsink = true
+[nightmare.spawns.sinkhole]
+max   = 7
+delay = [1200, 2600]
+
+[map]
+x      = 84                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 32
+width  = 34
+colors = [#3a1a1a, #2a1010, #120808]  # grass, edge, rock
+
+[tree]
+leaves = [#3a1010, #5a1a1a, #8a2a2a, #ff3b3b]  # three leaf colors and the fruit color

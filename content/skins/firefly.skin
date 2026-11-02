@@ -1,0 +1,5 @@
+# Skin: Firefly
+name     = Firefly
+group    = Critters             # its tier in the Tailor (skins/tiers.dat)
+palette  = [#5c5a3a, #e8ff6b]   # the colors
+seq      = "1112"               # the pattern down the body: 1 = first color, 2 = second...

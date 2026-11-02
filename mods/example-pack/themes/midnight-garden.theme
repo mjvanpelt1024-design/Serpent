@@ -1,0 +1,12 @@
+# Theme: Midnight Garden (from the Example Pack)
+# Patterned themes need a painter from src/art/theme-painters.js; this one reuses "lawn".
+name      = Midnight Garden
+group     = Patterns
+kind      = pattern
+base      = #0b1a14
+accent    = #10261c
+painter   = lawn
+swirl     = [#1f6a40, #0b2a1c, #03100a]
+highlight = #6fffb0
+particles = fireflies
+emblem    = moon

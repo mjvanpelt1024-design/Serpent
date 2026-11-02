@@ -1,0 +1,6 @@
+# Skin: Marquee
+name     = Marquee
+group    = Animated             # its tier in the Tailor (skins/tiers.dat)
+palette  = [#ffd23f, #6b5200]   # the colors
+seq      = "1112"               # the pattern down the body: 1 = first color, 2 = second...
+animated = 100                  # the pattern scrolls; lower is faster (ms per step)

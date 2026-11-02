@@ -1,0 +1,21 @@
+# ==================================================================
+#  Experience Booster  (xp)
+#  The Great Tree, trunk
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Experience Booster
+description = Fewer points needed to earn 1 XP. Experience, like misfortune, comes quicker to those who go looking for it.
+part        = trunk                # trunk, bough, branch or dream
+position    = [120, 104]           # where it hangs on the tree picture
+icon        = orb                  # a picture from src/engine/render/pixel-icons.js
+badge       = up                   # corner mark: up, plus, x or star
+
+# What each tier is worth
+base        = 100                  # before the first tier
+ratio       = 0.93303              # each tier: 6.7% fewer points per XP (100 -> 25 over 20 tiers)
+
+tiers       = 20
+format      = per-xp               # how a value is shown; {v} is the value
+prestige    = div                  # mul or div: how prestige ranks scale it

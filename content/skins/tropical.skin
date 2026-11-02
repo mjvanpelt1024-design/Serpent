@@ -1,0 +1,5 @@
+# Skin: Tropical
+name     = Tropical
+group    = Tri-color            # its tier in the Tailor (skins/tiers.dat)
+palette  = [#ff9f1c, #2ec4b6, #e71d73]  # the colors
+seq      = "123"                # the pattern down the body: 1 = first color, 2 = second...

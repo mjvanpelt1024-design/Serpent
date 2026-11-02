@@ -1,0 +1,9 @@
+# ==================================================================
+#  Frostbite Fjord: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Hoarfrost | Rime
+2 | Pack Ice | Blizzard
+3 | Glacier Mouth | Whiteout

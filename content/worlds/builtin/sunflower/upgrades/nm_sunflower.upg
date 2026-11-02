@@ -1,0 +1,18 @@
+# ==================================================================
+#  Sunscreen  (nm_sunflower)
+#  Sunflower Fields, Nightmare (red) upgrade
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Sunscreen
+description = Apples take longer to rot in Wilted. Shade, at last.
+slot        = nightmare              # trunk, left, right, crown or nightmare
+icon        = potion                 # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 0                      # before the first tier
+start       = 20                     # tier 1
+step        = 20                     # added every tier
+tiers       = 5
+format      = +{v}% longer           # how a value is shown; {v} is the value

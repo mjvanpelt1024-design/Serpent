@@ -1,0 +1,12 @@
+# Theme: Digital Rain
+name      = Digital Rain         # the board's own name
+group     = Deluxe               # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #020a04              # the main board color
+painter   = matrix               # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#148a30, #063612, #010803]  # bright, middle and deep paint colors
+highlight = #22ff5e              # the accent color
+particles = bits                 # what drifts over the page
+emblem    = chip                 # its symbol in the Tailor

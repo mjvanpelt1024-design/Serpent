@@ -1,0 +1,5 @@
+# Skin: Monochrome
+name     = Monochrome
+group    = Stripes              # its tier in the Tailor (skins/tiers.dat)
+palette  = [#eeeeee, #666666]   # the colors
+seq      = "12"                 # the pattern down the body: 1 = first color, 2 = second...

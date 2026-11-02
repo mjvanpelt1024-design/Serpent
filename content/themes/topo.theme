@@ -1,0 +1,13 @@
+# Theme: Topographic
+name      = Topographic          # the board's own name
+group     = Deluxe               # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #1d2b24              # the main board color
+accent    = #2f4a3c              # a second color the pattern uses
+painter   = topo                 # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#528a62, #20322a, #0a110d]  # bright, middle and deep paint colors
+highlight = #b8e0a0              # the accent color
+particles = dust                 # what drifts over the page
+emblem    = peak                 # its symbol in the Tailor

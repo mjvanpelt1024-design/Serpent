@@ -1,0 +1,11 @@
+# Theme: White
+name      = White                # the board's own name
+group     = Solids               # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #f2f2f2              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#cfd8e2, #93a6ba, #3a4a5e]  # bright, middle and deep paint colors
+highlight = #2f6fff              # the accent color
+particles = dust                 # what drifts over the page
+emblem    = cloud                # its symbol in the Tailor

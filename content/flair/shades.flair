@@ -1,0 +1,5 @@
+# Flair: Sunglasses
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Sunglasses
+slot      = face                 # head, face, cape, body or tail
+priceRank = 3                    # price = flairStep (economy.txt) x this

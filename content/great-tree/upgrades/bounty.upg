@@ -1,0 +1,22 @@
+# ==================================================================
+#  Bounty Hunter  (bounty)
+#  The Great Tree, branch (special, build 46)
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Bounty Hunter
+description = Bounty Contracts pay more, from the Clockwork Citadel onward.
+part        = branch               # trunk, bough, branch or dream
+group       = special              # priced as a special part ([great] special in economy.txt)
+growsFrom   = apple                # grows once this reaches the gate tier
+position    = [154, 50]            # where it hangs on the tree picture
+icon        = coins                # a picture from src/engine/render/pixel-icons.js
+badge       = plus
+
+# What each tier is worth
+base        = 0
+start       = 10
+step        = 10
+tiers       = 10
+format      = +{v}%

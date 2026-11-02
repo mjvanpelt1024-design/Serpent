@@ -1,0 +1,13 @@
+# Theme: Brick Wall
+name      = Brick Wall           # the board's own name
+group     = Patterns             # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #4e2418              # the main board color
+lines     = #2a130d              # thin detail lines
+painter   = brick                # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#b04c2c, #55271a, #1c0b06]  # bright, middle and deep paint colors
+highlight = #ff9a5a              # the accent color
+particles = dust                 # what drifts over the page
+emblem    = brick                # its symbol in the Tailor

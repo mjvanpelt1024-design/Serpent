@@ -1,0 +1,18 @@
+# ==================================================================
+#  Forecast  (forecast)
+#  Thunder Peaks, Nightmare (red) upgrade
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Forecast
+description = Lightning warns you sooner, everywhere. Mostly useful in the Supercell.
+slot        = nightmare              # trunk, left, right, crown or nightmare
+icon        = cloud                  # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 0                      # before the first tier
+start       = 10                     # tier 1
+step        = 10                     # added every tier
+tiers       = 5
+format      = +{v}% warning          # how a value is shown; {v} is the value

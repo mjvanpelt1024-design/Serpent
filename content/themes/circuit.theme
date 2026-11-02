@@ -1,0 +1,13 @@
+# Theme: Circuit Board
+name      = Circuit Board        # the board's own name
+group     = Deluxe               # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #0b2a1f              # the main board color
+accent    = #1f6b4f              # a second color the pattern uses
+painter   = circuit              # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#22784f, #0c3022, #03100a]  # bright, middle and deep paint colors
+highlight = #2fff9e              # the accent color
+particles = bits                 # what drifts over the page
+emblem    = chip                 # its symbol in the Tailor

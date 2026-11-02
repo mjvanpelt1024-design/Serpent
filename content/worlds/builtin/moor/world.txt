@@ -1,0 +1,59 @@
+# ==================================================================
+#  HAUNTED MOOR  (moor)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/moor.story). New in build 46.
+# ==================================================================
+
+name     = Haunted Moor         # on the map
+label    = Haunted              # a short name for the island
+music    = tunnel               # a track in content/music/music.dat
+medal    = #b8a0ff              # the island's color in menus and medals
+
+[rules]
+speed           = 9.5                    # squares a second
+edge            = wrap                   # wrap, wall, mirror, endless or maze
+startOrbs       = 3                      # XP orbs at the start
+orbChance       = 0.12                   # chance of another orb every 5 seconds
+description     = Ghosts drift toward you through walls and rocks, and a touch costs a heart and some score. A Phantom slides through its own body and through rocks.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 25
+l     = 10
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 5
+[spawns.bramble]
+count = 3
+max   = 10
+[spawns.ghost]
+max   = 3
+delay = [3000, 6000]
+[spawns.popsicle]
+max   = 2
+delay = [4000, 9000]
+[spawns.phantom]
+max   = 1
+delay = [11000, 18000]
+[spawns.golden]
+max   = 1
+delay = [16000, 24000]
+
+[nightmare]
+name   = Poltergeist
+twist  = Ghosts that won't leave, and won't slow down, and won't stop knocking.
+poltergeist = true
+[nightmare.spawns.ghost]
+max   = 7
+delay = [1200, 2600]
+
+[map]
+x      = 54                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 84
+width  = 28
+colors = [#4a5a4a, #3a4a3a, #2a2a30]  # grass, edge, rock
+
+[tree]
+leaves = [#2a3a2a, #3a4a3a, #6a7a6a, #e8ecff]  # three leaf colors and the fruit color

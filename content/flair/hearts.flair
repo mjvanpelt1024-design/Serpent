@@ -1,0 +1,5 @@
+# Flair: Little Hearts
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Little Hearts
+slot      = body                 # head, face, cape, body or tail
+priceRank = 10                   # price = flairStep (economy.txt) x this

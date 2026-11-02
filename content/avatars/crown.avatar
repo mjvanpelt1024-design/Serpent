@@ -1,0 +1,5 @@
+# Avatar: Crown
+# Price: avatarStep (economy.txt), by its place in _index.dat
+name       = Crown
+picture    = crown                # a picture from src/engine/render/pixel-icons.js
+background = #a8202a

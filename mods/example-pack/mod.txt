@@ -1,0 +1,5 @@
+# A mod is a folder that adds to, or changes, the game's content.
+name    = Example Pack
+version = "1.0"
+author  = Mark
+about   = One new skin, one new theme, and a slightly stronger Snack Time. Copy this folder to start your own.

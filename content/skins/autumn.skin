@@ -1,0 +1,5 @@
+# Skin: Autumn
+name     = Autumn
+group    = Gradients            # its tier in the Tailor (skins/tiers.dat)
+gradient = [#f4a261, #e76f51, #9c2c13]  # colors to blend smoothly along the body
+steps    = 10                   # how many shades the blend has

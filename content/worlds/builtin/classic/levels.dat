@@ -1,0 +1,9 @@
+# ==================================================================
+#  The Old Yard: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Morning Walk | Dusk
+2 | Rush Hour | Moonless
+3 | Lockdown | Blackout

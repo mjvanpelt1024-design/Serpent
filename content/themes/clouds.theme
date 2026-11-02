@@ -1,0 +1,13 @@
+# Theme: Pixel Clouds
+name      = Pixel Clouds         # the board's own name
+group     = Deluxe               # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #8fd3ff              # the main board color
+accent    = #ffffff              # a second color the pattern uses
+painter   = clouds               # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#c6ecff, #68bdf0, #1f5e8e]  # bright, middle and deep paint colors
+highlight = #ffffff              # the accent color
+particles = snow                 # what drifts over the page
+emblem    = cloud                # its symbol in the Tailor

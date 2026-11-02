@@ -1,0 +1,12 @@
+# Theme: Aurora Night
+name      = Aurora Night         # the board's own name
+group     = Deluxe               # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #050b1a              # the main board color
+painter   = auroranight          # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#00c890, #5c22b8, #040a18]  # bright, middle and deep paint colors
+highlight = #00ffa3              # the accent color
+particles = stars                # what drifts over the page
+emblem    = aurora               # its symbol in the Tailor

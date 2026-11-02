@@ -1,0 +1,9 @@
+# ==================================================================
+#  Haunted Moor: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Mist | Whispers
+2 | The Barrow | Wailing
+3 | The Old Church | Poltergeist

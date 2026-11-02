@@ -1,0 +1,11 @@
+# Theme: Mint Cream
+name      = Mint Cream           # the board's own name
+group     = Solids               # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #e3fbef              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#a6ecc8, #4fb48c, #163f30]  # bright, middle and deep paint colors
+highlight = #3eb489              # the accent color
+particles = bubbles              # what drifts over the page
+emblem    = leaf                 # its symbol in the Tailor

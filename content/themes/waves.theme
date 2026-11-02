@@ -1,0 +1,13 @@
+# Theme: Waves
+name      = Waves                # the board's own name
+group     = Patterns             # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #0a2231              # the main board color
+lines     = #15405a              # thin detail lines
+painter   = waves                # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#2378a0, #164662, #051822]  # bright, middle and deep paint colors
+highlight = #5ad1ff              # the accent color
+particles = bubbles              # what drifts over the page
+emblem    = wave                 # its symbol in the Tailor

@@ -1,0 +1,52 @@
+# ==================================================================
+#  BRAMBLEWOOD  (bramble)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/bramble.story). New in build 46.
+# ==================================================================
+
+name     = Bramblewood          # on the map
+label    = Thorny               # a short name for the island
+music    = tense                # a track in content/music/music.dat
+medal    = #4f8f33              # the island's color in menus and medals
+
+[rules]
+speed           = 7.5                    # squares a second
+edge            = wall                   # wrap, wall, mirror, endless or maze
+startOrbs       = 3                      # XP orbs at the start
+orbChance       = 0.12                   # chance of another orb every 5 seconds
+description     = A wood full of brambles that creep into the squares around them. Shears snip your tail short for points when there's no room left.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 40
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 2
+[spawns.bramble]
+count = 4
+max   = 26
+[spawns.shears]
+max   = 1
+delay = [12000, 20000]
+[spawns.golden]
+max   = 1
+delay = [16000, 26000]
+
+[nightmare]
+name   = Overgrowth
+twist  = The brambles grow wild and fast. Soon there will be no room for anything else.
+overgrowth = true
+[nightmare.spawns.bramble]
+count = 10
+max   = 70
+
+[map]
+x      = 162                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 232
+width  = 26
+colors = [#3f7a2a, #356a22, #1e3a12]  # grass, edge, rock
+
+[tree]
+leaves = [#2d5a1e, #3f7a2a, #5a9a3a, #c0282e]  # three leaf colors and the fruit color

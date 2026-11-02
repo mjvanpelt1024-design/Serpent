@@ -1,0 +1,22 @@
+# ==================================================================
+#  MUSIC
+#  Put your audio files in this folder with the names below (OGG loops
+#  cleanly; WAV and MP3 work too). Until a file exists, the game plays its
+#  built-in synth version of that track (src/engine/audio/songs.js).
+#
+#  loop from / loop to: seconds. The song plays from the start, then loops
+#  between these two points forever ('end' = the end of the file).
+#  volume: 0-100, on top of the player's music volume.
+#  Which island plays which track is in that island's world.txt.
+# ==================================================================
+
+# track  | file          | loop from | loop to | volume | plays during
+menu     | menu.ogg      | 6.857     | end     | 100    | the title screen
+map      | map.ogg       | 7.5       | end     | 100    | the map and menus with a save open
+story    | story.ogg     | 9.231     | end     | 100    | story scenes and the book, Chrono Rift
+calm     | calm.ogg      | 9.6       | end     | 100    | Garden, Old Yard, Sunflower Fields, the tutorial, sandbox levels
+tense    | tense.ogg     | 6.621     | end     | 100    | Quarry, Bramblewood, Ice Parlor, the Hive, Frostbite Fjord, Clockwork Citadel
+fast     | fast.ogg      | 6.0       | end     | 100    | Orchard, Thunder Peaks, Glass Hall, Vault, Hunting Grounds, Gale Cliffs
+tunnel   | tunnel.ogg    | 6.4       | end     | 100    | Tunnel, Haunted Moor
+hot      | hot.ogg       | 6.194     | end     | 100    | Powder Keg, Furnace, Maze, the Maw
+dream    | dream.ogg     | 9.6       | end     | 100    | every Nightmare

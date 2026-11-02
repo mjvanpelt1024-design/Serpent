@@ -1,0 +1,59 @@
+# ==================================================================
+#  THUNDER PEAKS  (thunder)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/thunder.story). New in build 46.
+# ==================================================================
+
+name     = Thunder Peaks        # on the map
+label    = Stormy               # a short name for the island
+music    = fast                 # a track in content/music/music.dat
+medal    = #9ad8ff              # the island's color in menus and medals
+
+[rules]
+speed           = 9.5                    # squares a second
+edge            = wall                   # wrap, wall, mirror, endless or maze
+startOrbs       = 3                      # XP orbs at the start
+orbChance       = 0.12                   # chance of another orb every 5 seconds
+description     = Lightning flashes a warning on the ground, then strikes there. Bubble Shields take the next hit of any kind, even a wall.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 30
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 4
+s     = 40
+[spawns.popsicle]
+max   = 3
+delay = [3000, 7000]
+s     = 30
+[spawns.lightning]
+max   = 3
+delay = [1500, 3500]
+l     = 25
+[spawns.shield]
+max   = 1
+delay = [11000, 18000]
+[spawns.armor]
+max   = 1
+delay = [16000, 26000]
+
+[nightmare]
+name   = Supercell
+twist  = Lightning everywhere, and the warnings come half as early.
+supercell = true
+[nightmare.spawns.lightning]
+max   = 7
+delay = [700, 1600]
+l     = 40
+
+[map]
+x      = 56                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 182
+width  = 28
+colors = [#6a7a8a, #5a6878, #3a4048]  # grass, edge, rock
+
+[tree]
+leaves = [#4a5a6a, #6a7a8a, #9ad8ff, #fff7a0]  # three leaf colors and the fruit color

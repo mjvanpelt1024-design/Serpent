@@ -1,0 +1,9 @@
+# ==================================================================
+#  The Glass Hall: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Reflection | Askew
+2 | Refraction | Upside Down
+3 | Shatterpoint | Topsy-Turvy

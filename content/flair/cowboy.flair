@@ -1,0 +1,5 @@
+# Flair: Cowboy Hat
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Cowboy Hat
+slot      = head                 # head, face, cape, body or tail
+priceRank = 11                   # price = flairStep (economy.txt) x this

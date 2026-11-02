@@ -1,0 +1,13 @@
+# Theme: Argyle
+name      = Argyle               # the board's own name
+group     = Patterns             # its tier in the Tailor (themes/tiers.dat)
+kind      = pattern              # solid or pattern
+base      = #23233a              # the main board color
+accent    = #2f2f4f              # a second color the pattern uses
+painter   = argyle               # a pattern in src/art/theme-painters.js
+
+# The rest of the page while this theme is on
+swirl     = [#5252a0, #2f2f56, #121226]  # bright, middle and deep paint colors
+highlight = #a3a3ff              # the accent color
+particles = sparkle              # what drifts over the page
+emblem    = diamond              # its symbol in the Tailor

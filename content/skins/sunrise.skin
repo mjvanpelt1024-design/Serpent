@@ -1,0 +1,5 @@
+# Skin: Sunrise
+name     = Sunrise
+group    = Gradients            # its tier in the Tailor (skins/tiers.dat)
+gradient = [#ff5f6d, #ffc371]   # colors to blend smoothly along the body
+steps    = 10                   # how many shades the blend has

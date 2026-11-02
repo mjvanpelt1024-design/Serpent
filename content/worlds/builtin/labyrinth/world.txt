@@ -1,0 +1,82 @@
+# ==================================================================
+#  THE HEART OF THE MAZE  (labyrinth)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/labyrinth.story).
+# ==================================================================
+
+name     = Maze                 # on the map
+label    = Labyrinth            # the old difficulty name
+music    = hot                  # a track in content/music/music.dat
+medal    = #9b5cff              # the island's color in menus and medals
+
+[rules]
+speed           = 7                    # squares a second
+edge            = maze                 # wrap, wall, mirror, endless or maze
+hazard          = true                 # rocks on the board
+maxPopsicle     = 5                    # popsicles at once
+popsicleEffect  = death                # none, penalty or death
+startOrbs       = 3                    # XP orbs at the start
+orbChance       = 0.12                 # chance of another orb every 5 seconds
+description     = A maze that stretches in every direction and is different every time. You start in a quiet clearing with a way out through each wall; the further you wander, the tighter it gets. The camera follows you. Nothing else will.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 25
+l     = 10
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 24
+s     = 30
+l     = 10
+[spawns.popsicle]
+max   = 5
+delay = [2000, 5000]
+s     = 25
+l     = 15
+[spawns.flea]
+max   = 3
+delay = [3500, 8000]
+s     = 35
+l     = 15
+[spawns.fire]
+max   = 3
+delay = [4000, 8000]
+s     = 30
+l     = 15
+[spawns.molasses]
+max   = 4
+delay = [4000, 9000]
+s     = 30
+l     = 25
+
+# Power-ups from earlier islands (build 46)
+[spawns.phantom]
+max   = 1
+delay = [12000, 20000]
+[spawns.hourglass]
+max   = 1
+delay = [14000, 22000]
+[spawns.golden]
+max   = 1
+delay = [14000, 22000]
+
+[nightmare]
+name   = Sticky Maze
+twist  = Molasses pools everywhere, and portals can drop you anywhere in the maze, usually somewhere worse.
+
+[map]
+x      = 100                  # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 90
+width  = 28
+colors = [#5a4a80, #4d3c70, #2b2142]  # grass, edge, rock
+
+[tree]
+leaves = [#6a4ab0, #8a6ad0, #b39cf0, #3ddc3d]  # three leaf colors and the fruit color
+
+# The maze generator (src/game/world/labyrinth.js). The seed is in seed.txt.
+[generator]
+cells  = 20                   # maze cells across
+span   = 4                    # board squares per cell
+clear  = 5                    # the starting clearing, in cells

@@ -1,0 +1,5 @@
+# Avatar: Anchor
+# Price: avatarStep (economy.txt), by its place in _index.dat
+name       = Anchor
+picture    = anchor               # a picture from src/engine/render/pixel-icons.js
+background = #0a9396

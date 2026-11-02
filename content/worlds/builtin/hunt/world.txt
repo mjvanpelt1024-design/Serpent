@@ -1,0 +1,51 @@
+# ==================================================================
+#  HUNTING GROUNDS  (hunt)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/hunt.story). New in build 46.
+# ==================================================================
+
+name     = Hunting Grounds      # on the map
+label    = Hunted               # a short name for the island
+music    = fast                 # a track in content/music/music.dat
+medal    = #c0282e              # the island's color in menus and medals
+
+[rules]
+speed           = 8.5                    # squares a second
+edge            = wrap                   # wrap, wall, mirror, endless or maze
+apples          = 2                      # apples on the board at once
+hunter          = true                   # the Hunter, a rival snake
+startOrbs       = 3                      # XP orbs at the start
+orbChance       = 0.12                   # chance of another orb every 5 seconds
+description     = A rival snake, the Hunter, steals your apples and hunts your head. Make it run into your body three times to beat it. Press E to shed your skin as a wall it can't cross.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 30
+[spawns.apple]
+s     = 20
+[spawns.rock]
+count = 4
+[spawns.popsicle]
+max   = 2
+delay = [4000, 9000]
+[spawns.golden]
+max   = 1
+delay = [12000, 20000]
+[spawns.armor]
+max   = 1
+delay = [14000, 22000]
+
+[nightmare]
+name   = The Pack
+twist  = The Hunter is faster, longer and angrier. It has been practising.
+hunter = true
+
+[map]
+x      = 150                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 132
+width  = 28
+colors = [#6a8a3a, #5a7a30, #3a2a1a]  # grass, edge, rock
+
+[tree]
+leaves = [#3a5a20, #5a7a30, #8aa050, #7a1424]  # three leaf colors and the fruit color

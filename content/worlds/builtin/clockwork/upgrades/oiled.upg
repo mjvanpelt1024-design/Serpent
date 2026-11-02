@@ -1,0 +1,19 @@
+# ==================================================================
+#  Oiled Gears  (oiled)
+#  Clockwork Citadel, right branch
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Oiled Gears
+description = Spikes stay down longer, everywhere.
+slot        = right                  # trunk, left, right, crown or nightmare
+color       = #b08a4a
+icon        = bottle                 # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 0                      # before the first tier
+start       = 5                      # tier 1
+step        = 5                      # added every tier
+tiers       = 10
+format      = +{v}%                  # how a value is shown; {v} is the value

@@ -1,0 +1,5 @@
+# Avatar: Feather
+# Price: avatarStep (economy.txt), by its place in _index.dat
+name       = Feather
+picture    = feather              # a picture from src/engine/render/pixel-icons.js
+background = #a855f7

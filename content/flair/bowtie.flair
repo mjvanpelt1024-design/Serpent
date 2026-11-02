@@ -1,0 +1,5 @@
+# Flair: Bow Tie
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Bow Tie
+slot      = cape                 # head, face, cape, body or tail
+priceRank = 4                    # price = flairStep (economy.txt) x this

@@ -1,0 +1,5 @@
+# Skin: Deep Sea
+name     = Deep Sea
+group    = Gradients            # its tier in the Tailor (skins/tiers.dat)
+gradient = [#00c6ff, #0072ff, #1a3fa8]  # colors to blend smoothly along the body
+steps    = 12                   # how many shades the blend has

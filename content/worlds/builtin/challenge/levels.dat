@@ -1,0 +1,9 @@
+# ==================================================================
+#  The Quarry: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Loose Gravel | Pebblefall
+2 | Rockfall | Landslide
+3 | Bedrock | Avalanche

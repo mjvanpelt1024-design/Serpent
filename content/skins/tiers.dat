@@ -1,0 +1,18 @@
+# ==================================================================
+#  SKIN TIERS, simplest first
+#  Each tier unlocks once you own enough of the one before. Its fee is
+#  skinTier (economy.txt) x its position, so the first tier is free.
+# ==================================================================
+
+# tier
+Starter
+Solids
+Stripes
+Bands
+Tri-color
+Critters
+Treats
+Specials
+Gradients
+Head turners
+Animated

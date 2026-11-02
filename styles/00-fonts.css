@@ -1,0 +1,9 @@
+/* styles/00-fonts.css */
+
+/* Pixelify Sans (SIL Open Font License), built into the game so it works offline */
+@font-face {
+  font-family: "Pixelify Sans";
+  src: url("../assets/fonts/PixelifySans.woff") format("woff");
+  font-weight: 100 900;
+  font-display: swap;
+}

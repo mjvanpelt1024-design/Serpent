@@ -1,0 +1,9 @@
+# ==================================================================
+#  The Ice Parlor: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Single Scoop | Mean Streak
+2 | Sundae | Cold Shoulder
+3 | Brain Freeze | No Mercy

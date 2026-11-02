@@ -1,0 +1,42 @@
+# ==================================================================
+#  Flair: the order they appear in the game
+#  One file name per line (without the extension). A file that isn't
+#  listed here is never loaded. Reorder lines to reorder the game.
+# ==================================================================
+
+partyhat
+propeller
+cowboy
+santa
+tophat
+wizard
+pirate
+steamhat
+halo
+crown
+googly
+shades
+nerd
+mustache
+eyepatch
+monocle
+goggles
+bowtie
+redcape
+scarf
+herocape
+royalcape
+purpledots
+hearts
+stars
+zigzag
+spots
+gears
+rattle
+bow
+maraca
+candycane
+flametail
+brasstail
+goldtail
+ancient

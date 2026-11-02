@@ -1,0 +1,18 @@
+# ==================================================================
+#  Jeweler's Eye  (nm_treasure)
+#  The Vault tree, Nightmare (red) upgrade
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Jeweler's Eye
+description = A chance a disguised boulder looks dull, so you can spot it. Not all that glitters, and so on.
+slot        = nightmare            # trunk, left, right, crown or nightmare
+icon        = gem                  # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 0                    # before the first tier
+start       = 20                   # tier 1
+step        = 20                   # added every tier
+tiers       = 5
+format      = {v}%                 # how a value is shown; {v} is the value

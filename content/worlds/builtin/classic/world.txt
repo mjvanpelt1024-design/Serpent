@@ -1,0 +1,39 @@
+# ==================================================================
+#  THE OLD YARD  (classic)
+#  Everything about this island except its upgrades (upgrades/) and its
+#  story page (content/story/classic.story).
+# ==================================================================
+
+name     = Old Yard             # on the map
+label    = Classic              # the old difficulty name
+music    = calm                 # a track in content/music/music.dat
+medal    = #38bdf8              # the island's color in menus and medals
+item     = doubleapple          # a one-time item that grows on this tree
+
+[rules]
+speed           = 7                    # squares a second
+edge            = wall                 # wrap, wall, mirror, endless or maze
+hazard          = false                # rocks on the board
+maxPopsicle     = 0                    # popsicles at once
+popsicleEffect  = "none"               # none, penalty or death
+startOrbs       = 2                     # XP orbs at the start
+orbChance       = 0.1                  # chance of another orb every 5 seconds
+description     = Snake as it has always been played: four red walls, one apple at a time, and the slow, certain approach of your own tail.
+
+# What turns up on the board. s / l = percent chance an item is small / large.
+# count = placed at the start; max + delay = timed; rate = per column (the Tunnel).
+[spawns.xp]
+s     = 50
+
+[nightmare]
+name   = Blackout
+twist  = The lights are out. You can see only a small circle around your head, and I am told that is plenty. It is not.
+
+[map]
+x      = 78                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
+y      = 290
+width  = 28
+colors = [#a07a52, #8f6c48, #5a4430]  # grass, edge, rock
+
+[tree]
+leaves = [#4f8a3a, #6a9a40, #8ab050, #ffb020]  # three leaf colors and the fruit color

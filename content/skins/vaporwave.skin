@@ -1,0 +1,5 @@
+# Skin: Vaporwave
+name     = Vaporwave
+group    = Gradients            # its tier in the Tailor (skins/tiers.dat)
+gradient = [#ff71ce, #01cdfe, #05ffa1, #b967ff]  # colors to blend smoothly along the body
+steps    = 16                   # how many shades the blend has

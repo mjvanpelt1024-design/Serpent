@@ -1,0 +1,5 @@
+# Skin: Ocean Depths
+name     = Ocean Depths
+group    = Tri-color            # its tier in the Tailor (skins/tiers.dat)
+palette  = [#caf0f8, #0096c7, #023e8a]  # the colors
+seq      = "123"                # the pattern down the body: 1 = first color, 2 = second...

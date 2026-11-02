@@ -1,0 +1,6 @@
+# Skin: Aurora
+name     = Aurora
+group    = Animated             # its tier in the Tailor (skins/tiers.dat)
+gradient = [#00ffa3, #00b3ff, #b400ff]  # colors to blend smoothly along the body
+steps    = 14                   # how many shades the blend has
+animated = 70                   # the pattern scrolls; lower is faster (ms per step)

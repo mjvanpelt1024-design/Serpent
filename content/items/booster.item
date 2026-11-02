@@ -1,0 +1,15 @@
+# ==================================================================
+#  Score Booster  (booster)
+#  Its price is in content/economy.txt under [items]. What it does is
+#  game code: src/game/flow/item-effects.js.
+# ==================================================================
+
+name        = Score Booster
+description = 1.2x score for one run. Briefly, everything counts for more.
+island      = challenge            # grows on this island's tree
+boost       = true                 # true = used up when a run starts
+
+# Its fruit in the Satchel
+fruit       = orange               # apple, pear, orange, plum, lemon or berry
+color       = #ff9a3d
+icon        = bolt

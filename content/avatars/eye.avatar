@@ -1,0 +1,5 @@
+# Avatar: Watcher
+# Price: avatarStep (economy.txt), by its place in _index.dat
+name       = Watcher
+picture    = eye                  # a picture from src/engine/render/pixel-icons.js
+background = #1a1410

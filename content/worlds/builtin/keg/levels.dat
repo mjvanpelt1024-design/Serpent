@@ -1,0 +1,9 @@
+# ==================================================================
+#  Powder Keg: level names
+#  Speeds, scores and goals are in content/rules/levels.dat.
+# ==================================================================
+
+# level | name | Nightmare name
+1 | Fuse | Short Fuse
+2 | Powder Room | Sparks
+3 | The Magazine | Chain Reaction

@@ -1,0 +1,12 @@
+# Theme: Garden
+name      = Black                # the board's own name
+title     = Garden               # the name shown, if different
+group     = Starter              # its tier in the Tailor (themes/tiers.dat)
+kind      = solid                # solid or pattern
+base      = #111111              # the main board color
+
+# The rest of the page while this theme is on
+swirl     = [#1f6a40, #0f3d2b, #08190f]  # bright, middle and deep paint colors
+highlight = #3ddc3d              # the accent color
+particles = dust                 # what drifts over the page
+emblem    = sprout               # its symbol in the Tailor

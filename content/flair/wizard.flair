@@ -1,0 +1,5 @@
+# Flair: Wizard Hat
+# How it's drawn is code: src/art/flair-drawing.js
+name      = Wizard Hat
+slot      = head                 # head, face, cape, body or tail
+priceRank = 22                   # price = flairStep (economy.txt) x this

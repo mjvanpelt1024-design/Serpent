@@ -1,0 +1,5 @@
+# Skin: Watermelon
+name     = Watermelon
+group    = Specials             # its tier in the Tailor (skins/tiers.dat)
+palette  = [#2d6a4f, #ff4d6d, #ffccd5]  # the colors
+seq      = "12233"              # the pattern down the body: 1 = first color, 2 = second...

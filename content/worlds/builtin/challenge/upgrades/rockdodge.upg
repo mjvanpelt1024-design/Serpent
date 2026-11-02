@@ -1,0 +1,20 @@
+# ==================================================================
+#  Rock Dodger  (rockdodge)
+#  The Quarry tree, crown
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Rock Dodger
+description = A chance each rock never shows up in Challenge. The best rock is an absent rock.
+slot        = crown                # trunk, left, right, crown or nightmare
+color       = #d0d0d0
+icon        = rock                 # a picture from src/engine/render/pixel-icons.js
+badge       = x                    # corner mark: up, plus, x or star
+
+# What each tier is worth
+base        = 0                    # before the first tier
+start       = 6                    # tier 1
+step        = 6                    # added every tier
+tiers       = 10
+format      = {v}%                 # how a value is shown; {v} is the value

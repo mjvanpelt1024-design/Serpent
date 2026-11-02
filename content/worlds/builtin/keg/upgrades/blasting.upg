@@ -1,0 +1,20 @@
+# ==================================================================
+#  Blasting Cap  (blasting)
+#  Powder Keg, trunk
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Blasting Cap
+description = More points from apples in the Powder Keg.
+slot        = trunk                  # trunk, left, right, crown or nightmare
+color       = #b07a42
+icon        = logs                   # a picture from src/engine/render/pixel-icons.js
+effect      = applePoints            # applePoints, passivePoints or orbChance on this island; otherwise game code reads the id
+
+# What each tier is worth
+base        = 1                      # before the first tier
+start       = 1.05                   # tier 1
+step        = 0.05                   # added every tier
+tiers       = 10
+format      = x                      # how a value is shown; {v} is the value

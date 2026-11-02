@@ -1,0 +1,18 @@
+# ==================================================================
+#  Mileage  (mileage)
+#  The Long Tunnel tree, trunk
+#  Prices come from content/economy.txt. To fix them by hand instead,
+#  add: prices = [10, 20, 30, ...]  (one per tier)
+# ==================================================================
+
+name        = Mileage
+description = More passive points in Endless, for every weary meter.
+slot        = trunk                # trunk, left, right, crown or nightmare
+icon        = sign                 # a picture from src/engine/render/pixel-icons.js
+
+# What each tier is worth
+base        = 1                    # before the first tier
+start       = 1.05                 # tier 1
+step        = 0.05                 # added every tier
+tiers       = 10
+format      = x                    # how a value is shown; {v} is the value

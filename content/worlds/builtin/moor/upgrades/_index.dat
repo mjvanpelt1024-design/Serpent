@@ -1,0 +1,11 @@
+# ==================================================================
+#  Haunted Moor upgrades: the order they appear in the game
+#  One file name per line (without the extension). A file that isn't
+#  listed here is never loaded. Reorder lines to reorder the game.
+# ==================================================================
+
+willowisp
+lantern
+wraith
+exorcist
+nm_moor
