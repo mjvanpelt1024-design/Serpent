@@ -1,5 +1,21 @@
 # Changelog
 
+## v:11.02.2026_b:46.1: the map, rebuilt
+
+- The map fills the whole screen. The islands sit along a winding road, right along the bottom, up, back
+  left, up, and so on to the Maw; the Commons is the starting dock and the Workshop waits past the Maw.
+- The road is **the Coil**, the serpent from the story: its scales light up green and gold as far as
+  you've unlocked, light flows along it toward your next island, the stretch ahead glows with golden
+  cracks, and the rest is cold stone. Unlocking an island sends a surge of light along it. Its head lies
+  past the Maw; its eye opens when the Maw is yours and burns purple once the Nightmare Realm wakes.
+- The sky climbs from sunrise at the Garden to a starry night at the Maw, with stars, a moon and far-off
+  islands drifting behind the map as you move.
+- It opens on the island you're working toward. Drag in any direction (a flick keeps it gliding), scroll
+  or pinch to zoom; zoomed all the way out, the whole map still fills the screen.
+- Every build 46 island has its own landmark on the map, and some of them move.
+- Fixed: the bottom of the map was cut off, so most islands couldn't be seen.
+- The game starts in full screen (`fullscreen = true` in `launcher.ini`; F11 or Alt+Enter switches).
+
 ## v:11.02.2026_b:46.0: twenty-two islands and a new economy
 
 **Twelve new islands**, each bringing something new (the Garden and the Old Yard still come first):

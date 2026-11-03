@@ -157,7 +157,7 @@ builtin/garden-name/
 | `[nightmare]` `name`, `twist` | the Nightmare's name and description |
 | `[nightmare]` flags, `rot` | twists for the islands from build 46: `hunter`, `echoes`, `overgrowth`, `supercell`, `shortfuse`, `poltergeist`, `overclock`, `fastsink` (`true`), and an apple rot time |
 | `[nightmare.spawns.<type>]` | changes to `[spawns.<type>]` in the Nightmare |
-| `[map]` `x`, `y`, `width`, `colors` | where the island floats (map pixels, 200 across and 340 down), and its grass, edge and rock colors |
+| `[map]` `x`, `y`, `width`, `colors` | where the island floats (map pixels, 600 across and 340 down; the islands sit along a road that winds right, up, left, up), and, and its grass, edge and rock colors |
 | `[tree]` `leaves` | three leaf colors and the fruit color of its tree |
 | `[generator]` | settings for a procedural generator (the Labyrinth: `cells`, `span`, `clear`) |
 

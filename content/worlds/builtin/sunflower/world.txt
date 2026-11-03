@@ -34,9 +34,9 @@ twist  = Apples rot in a few seconds. Eat fast, or eat rot.
 rot    = 4000                   # ms before an apple rots in this Nightmare
 
 [map]
-x      = 126                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 284
-width  = 28
+x      = 348                   # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 286
+width  = 30
 colors = [#9acd32, #8ab82a, #5a7a1a]  # grass, edge, rock
 
 [tree]

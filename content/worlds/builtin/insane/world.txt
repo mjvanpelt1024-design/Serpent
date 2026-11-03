@@ -44,8 +44,8 @@ name   = No Mercy
 twist  = Every popsicle ends your run. Hearts and upgrades cannot save you. Nothing can. That is rather the point.
 
 [map]
-x      = 116                  # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 238
+x      = 548                  # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 206
 width  = 28
 colors = [#e4f6fc, #c4e8f4, #7fb6c9]  # grass, edge, rock
 

@@ -30,9 +30,9 @@ name   = Starving
 twist  = Your snake shrinks every few seconds. Keep eating, or starve, which is the oldest story there is.
 
 [map]
-x      = 28                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 282
-width  = 32
+x      = 176                   # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 286
+width  = 34
 colors = [#5aab45, #4f9a3a, #2f6a24]  # grass, edge, rock
 
 [tree]

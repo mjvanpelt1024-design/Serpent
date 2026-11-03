@@ -107,7 +107,7 @@ struct Settings {
     std::wstring title = L"Snake";
     bool devTools = true;
     bool reloadKey = true;
-    bool startFullscreen = false;
+    bool startFullscreen = true;
     int width = 1280;
     int height = 800;
     std::wstring modsFolder = L"documents";  // "documents" or "game"

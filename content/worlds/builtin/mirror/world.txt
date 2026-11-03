@@ -52,8 +52,8 @@ name   = Topsy-Turvy
 twist  = Every warp flips your controls, and warping again flips them back. Left is right, until it is not.
 
 [map]
-x      = 102                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 188
+x      = 204                   # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 206
 width  = 28
 colors = [#6cc4d0, #5cb3c0, #2f7783]  # grass, edge, rock
 

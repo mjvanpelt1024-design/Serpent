@@ -35,6 +35,7 @@ ui/hud.js
 ui/navigation.js
 ui/rules-screen.js
 ui/map.js
+ui/map-coil.js
 ui/upgrades-screen.js
 game/story/story.js
 ui/tour.js

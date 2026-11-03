@@ -48,9 +48,9 @@ name   = Sugar High
 twist  = Every apple makes you a little faster, for good. There is no slowing down. There never was.
 
 [map]
-x      = 26                  # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 216
-width  = 28
+x      = 376                  # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 206
+width  = 30
 colors = [#4a8e3e, #3f7f35, #2a5622]  # grass, edge, rock
 
 [tree]

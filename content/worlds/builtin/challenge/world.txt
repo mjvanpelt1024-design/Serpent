@@ -38,9 +38,9 @@ name   = Avalanche
 twist  = Rocks tumble onto the board all game long, big ones included. The sky, it seems, has a grudge.
 
 [map]
-x      = 172                  # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 272
-width  = 28
+x      = 434                  # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 292
+width  = 30
 colors = [#a3a29c, #8f8e88, #5c5b56]  # grass, edge, rock
 
 [tree]

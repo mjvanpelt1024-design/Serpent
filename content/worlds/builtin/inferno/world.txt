@@ -64,8 +64,8 @@ name   = Firestorm
 twist  = Fire everywhere, and much of it big. The Furnace has stopped pretending to be anything else.
 
 [map]
-x      = 22                  # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 110
+x      = 402                  # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 132
 width  = 28
 colors = [#6a3226, #5c2b22, #2f1410]  # grass, edge, rock
 

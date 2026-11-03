@@ -50,8 +50,8 @@ max   = 7
 delay = [1200, 2600]
 
 [map]
-x      = 54                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 84
+x      = 490                   # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 138
 width  = 28
 colors = [#4a5a4a, #3a4a3a, #2a2a30]  # grass, edge, rock
 

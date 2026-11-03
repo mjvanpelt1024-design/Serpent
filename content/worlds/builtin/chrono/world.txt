@@ -49,9 +49,9 @@ echoes = true
 rot    = 5000                   # ms before an apple rots in this Nightmare
 
 [map]
-x      = 182                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 60
-width  = 26
+x      = 372                   # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 58
+width  = 28
 colors = [#4a3a6a, #3a2a5a, #1a1430]  # grass, edge, rock
 
 [tree]

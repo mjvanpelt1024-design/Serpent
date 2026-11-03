@@ -95,6 +95,8 @@ names it always did, so the content can change without touching the rules.
 | Every price: the ladder of good runs | `src/game/economy/ladder.js` |
 | Unlocking islands and the Nightmare Realm | `src/game/world/unlocks.js` |
 | Story book pictures for the build 46 islands | `src/art/island-art-46.js` |
+| The map: islands, camera, pins, landmarks | `src/ui/map.js` |
+| The Coil (the glowing road joining the islands) and the parallax sky | `src/ui/map-coil.js` |
 | Moving the snake | `src/game/flow/snake.js` |
 | Nightmare twists, Inferno walls, portals | `src/game/flow/nightmares.js` |
 | The maze | `src/game/world/labyrinth.js` |

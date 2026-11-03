@@ -48,8 +48,8 @@ overclock = true
 count = 18
 
 [map]
-x      = 146                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 84
+x      = 462                   # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 64
 width  = 28
 colors = [#8a8070, #7a7060, #4a4038]  # grass, edge, rock
 

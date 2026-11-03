@@ -50,8 +50,8 @@ count = 16
 l     = 60
 
 [map]
-x      = 148                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 182
+x      = 116                   # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 212
 width  = 28
 colors = [#e8f4ff, #c8dcf0, #7a8aa0]  # grass, edge, rock
 

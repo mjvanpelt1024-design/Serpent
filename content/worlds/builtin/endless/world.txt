@@ -52,8 +52,8 @@ name   = Crumbling
 twist  = The tunnel is much tighter, and lost ground is harder to win back. It is crumbling, and so, possibly, are you.
 
 [map]
-x      = 104                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 138
+x      = 226                   # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 132
 width  = 30
 colors = [#7c6a4e, #6d5842, #43362a]  # grass, edge, rock
 

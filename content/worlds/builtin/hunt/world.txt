@@ -42,8 +42,8 @@ twist  = The Hunter is faster, longer and angrier. It has been practising.
 hunter = true
 
 [map]
-x      = 150                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 132
+x      = 138                   # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 138
 width  = 28
 colors = [#6a8a3a, #5a7a30, #3a2a1a]  # grass, edge, rock
 

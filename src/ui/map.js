@@ -5,14 +5,17 @@
 "use strict";
 
 /* =========================================================
-   The Map: the world is a scatter of floating islands, one per
-   area, joined by rope bridges. From far away you see only the
-   islands; fly into one to see its levels on top and its
-   Nightmares hanging underneath. Painted at a low resolution
-   and shown with chunky pixels; it animates only while open.
+   The Map: floating islands strung along the body of the Coil,
+   a road that winds right, climbs, winds back left and climbs
+   again, from the Commons at the bottom to the Maw at the top
+   (src/ui/map-coil.js). It fills the screen; drag to travel along
+   it, scroll or pinch to zoom. Fly into an island to see its
+   levels on top and its Nightmares hanging underneath. Painted at
+   a low resolution and shown with chunky pixels; it animates only
+   while open.
    ========================================================= */
-const MAP_W = 200;            // map pixels (each one is 2 world units)
-const MAP_H = 340;            // tall enough for twenty-two islands (build 46)
+const MAP_W = 600;            // map pixels (each one is 2 world units)
+const MAP_H = 340;
 /* x, y: the middle of the island's grassy top. w: its width */
 /* x, y: the middle of the island's grassy top. w: its width. The islands come from the
    [map] part of each world.txt; the Workshop and the Commons are fixed parts of the map. */
@@ -21,8 +24,8 @@ MODE_KEYS.forEach(key => {
   const m = CONTENT.worlds[key].info.map || {};
   ISLANDS[key] = { x: m.x, y: m.y, w: m.width, name: CONTENT.worlds[key].info.name || key };
 });
-ISLANDS.sandbox = { x: 26, y: 46, w: 22, name: "Workshop" };
-ISLANDS.commons = { x: 104, y: 318, w: 154, name: "The Commons" };
+ISLANDS.sandbox = { x: 70, y: 54, w: 26, name: "Workshop" };
+ISLANDS.commons = { x: 74, y: 290, w: 128, name: "The Commons" };
 const MAP_PLACES = ISLANDS;
 const MAP_ORDER = MODE_KEYS.concat("sandbox");
 Object.values(ISLANDS).forEach(i => {
@@ -34,8 +37,8 @@ ISLANDS.commons.th = 5;                             // the Commons is long and f
 ISLANDS.commons.depth = 16;
 /* The four landmarks on the Commons, and the screens they open */
 const COMMONS = [
-  { id: "inventory", name: "The Satchel", label: "Inventory", dx: -30 },
-  { id: "exchange", name: "The Exchange", label: "XP to Snakebucks", dx: 30 }
+  { id: "inventory", name: "The Satchel", label: "Inventory", dx: -28 },
+  { id: "exchange", name: "The Exchange", label: "XP to Snakebucks", dx: 26 }
 ];
 
 const MAP_BIOME = Object.fromEntries(MODE_KEYS.map(key => [key, (CONTENT.worlds[key].info.map || {}).colors || ["#5aab45", "#4f9a3a", "#2f6a24"]]));
@@ -49,7 +52,6 @@ let mapRaf = 0;
 let mapFrame = 0;
 const mapFog = {};
 const islandCache = {};
-let mapSkyCache = null;
 let mapDeep = false;
 
 const mapEl = document.getElementById("map");
@@ -200,6 +202,44 @@ function paintLandmark(g, key, x, y, isl) {
     mapRect(g, x + 5, y - 10, 3, 9, "#2a1512"); mapRect(g, x + 4, y - 11, 5, 2, "#3c1f19");
   } else if (key === "labyrinth") {
     for (let j = -isl.th + 1; j < isl.th; j += 2) for (let i = -10; i <= 10; i++) if (mapHash(i + 50, j + 50, 9) < 0.6) mapRect(g, x + i, y + j, 1, 1, "#a896e0");
+  } else if (key === "sunflower") {
+    for (let i = 0; i < 6; i++) { const px = x - 12 + i * 5, h = 4 + (i % 3); mapRect(g, px, y - h, 1, h, "#3a7a2a"); mapRect(g, px - 1, y - h - 2, 3, 3, "#ffcf33"); mapRect(g, px, y - h - 1, 1, 1, "#7a4a18"); }
+  } else if (key === "bramble") {
+    for (let i = 0; i < 5; i++) { const [px, py] = spot(0.8, 0.5); mapRect(g, px - 2, py - 3, 5, 3, "#2d5a1e"); mapRect(g, px - 1, py - 4, 3, 1, "#3f7a2a"); mapRect(g, px + 1, py - 3, 1, 1, "#c0282e"); mapRect(g, px - 3, py - 2, 1, 1, "#e8e0c8"); }
+  } else if (key === "hive") {
+    mapRect(g, x - 1, y - 14, 2, 3, "#5a3a20");
+    for (let j = 0; j < 7; j++) { const w = 9 - Math.abs(j - 3) * 2; mapRect(g, x - Math.floor(w / 2), y - 11 + j, w, 1, j % 2 ? "#e0a820" : "#c08a10"); }
+    mapRect(g, x - 1, y - 6, 2, 1, "#3a2a10");
+  } else if (key === "thunder") {
+    for (let j = 0; j < 10; j++) { const w = j * 2 + 1; mapRect(g, x - j, y - 11 + j, w, 1, j < 3 ? "#e8f4ff" : "#5a6878"); }
+    mapRect(g, x - 9, y - 14, 18, 3, "#3a4048"); mapRect(g, x - 6, y - 16, 10, 2, "#4a5260");
+  } else if (key === "frost") {
+    for (let i = 0; i < 5; i++) { const px = x - 10 + i * 5, h = 3 + ((i * 3) % 5); for (let j = 0; j < h; j++) mapRect(g, px, y - j, 1 + (j < 2 ? 1 : 0), 1, j > h - 2 ? "#ffffff" : "#bfe8ff"); }
+    for (let i = 0; i < 6; i++) { const [px, py] = spot(0.8, 0.6); mapRect(g, px, py, 2, 1, "#e8f8ff"); }
+  } else if (key === "hunt") {
+    for (let x2 = -12; x2 <= 12; x2 += 2) mapRect(g, x + x2, y - 2 - (Math.abs(x2) % 3), 1, 3 + (Math.abs(x2) % 3), "#8aa050");
+    for (let i = 0; i < 6; i++) mapRect(g, x - 2 + i * 2, y - 3 + (i % 2), 2, 2, i === 0 ? "#2a0a12" : "#7a1424");
+    mapRect(g, x - 2, y - 3, 1, 1, "#ffd23f");
+  } else if (key === "keg") {
+    for (let i = 0; i < 3; i++) { const px = x - 9 + i * 7; mapRect(g, px, y - 7, 5, 7, "#7a5232"); mapRect(g, px, y - 6, 5, 1, "#3a2a1a"); mapRect(g, px, y - 2, 5, 1, "#3a2a1a"); }
+    mapRect(g, x + 10, y - 4, 3, 3, "#2a2a30"); mapRect(g, x + 11, y - 6, 1, 2, "#8a6a3a");
+  } else if (key === "moor") {
+    mapRect(g, x + 2, y - 12, 9, 12, "#4a4a52"); mapRect(g, x + 5, y - 17, 3, 5, "#4a4a52"); mapRect(g, x + 6, y - 19, 1, 2, "#6a6a72"); mapRect(g, x + 5, y - 6, 3, 4, "#1a1a20");
+    for (let i = 0; i < 3; i++) { const px = x - 11 + i * 4; mapRect(g, px, y - 4, 3, 4, "#8a8a92"); mapRect(g, px + 1, y - 5, 1, 1, "#8a8a92"); }
+  } else if (key === "clockwork") {
+    mapRect(g, x - 3, y - 15, 7, 15, "#8a8070"); mapRect(g, x - 4, y - 16, 9, 2, "#6a6058");
+    mapRect(g, x - 2, y - 13, 5, 5, "#e8d39a"); mapRect(g, x, y - 12, 1, 3, "#3a2a1a"); mapRect(g, x, y - 10, 2, 1, "#3a2a1a");
+    for (let i = 0; i < 4; i++) mapRect(g, x - 11 + i * 2, y - 2, 1, 2, "#c9ced6");
+  } else if (key === "chrono") {
+    for (let j = 0; j < 14; j++) mapRect(g, x - 1 + Math.round(Math.sin(j * 0.7) * 1.5), y - 16 + j, 2, 1, j % 3 ? "#9fe8ff" : "#ffffff");
+    for (let i = 0; i < 4; i++) { const [px, py] = spot(0.8, 0.5); mapRect(g, px, py, 2, 2, "#5a4a9a"); }
+  } else if (key === "gale") {
+    mapRect(g, x - 8, y - 12, 1, 12, "#5a3a20");
+    for (let i = 0; i < 4; i++) mapRect(g, x - 7 + i * 2, y - 12 + Math.floor(i / 2), 2, 2, i % 2 ? "#ffffff" : "#ff5a61");
+    for (let i = 0; i < 3; i++) { const px = x + 3 + i * 4; for (let j = 0; j < 4 + i; j++) mapRect(g, px - Math.floor(j / 2), y - j, 1 + Math.floor(j / 2) * 2, 1, "#2a5a3a"); }
+  } else if (key === "maw") {
+    for (let i = 0; i < 7; i++) { const px = x - 14 + i * 4.5; for (let j = 0; j < 5; j++) mapRect(g, px + Math.floor(j / 2), y - 5 + j, Math.max(1, 3 - j), 1, "#e8e0c8"); }
+    mapRect(g, x - 5, y - 2, 10, 3, "#120808");
   } else if (key === "sandbox") {
     mapRect(g, x - 7, y - 2, 14, 2, "#7a4f2a"); mapRect(g, x - 6, y, 1, 3, "#5a3a1e"); mapRect(g, x + 5, y, 1, 3, "#5a3a1e");
     mapRect(g, x - 3, y - 8, 6, 6, "#ffffff"); mapRect(g, x + 4, y - 6, 1, 4, "#2f2f2f");
@@ -211,30 +251,6 @@ function islandArt(key) {
   const tag = fog ? "fog" : "on";
   if (!islandCache[key] || islandCache[key].tag !== tag) islandCache[key] = { tag, ...paintIsland(key, fog) };
   return islandCache[key];
-}
-
-function paintSky() {
-  const c = document.createElement("canvas");
-  c.width = MAP_W;
-  c.height = MAP_H;
-  const g = c.getContext("2d");
-  const top = hexToRgb("#5fb2ec"), bottom = hexToRgb("#ffe0c2");
-  for (let y = 0; y < MAP_H; y++) {
-    const f = y / (MAP_H - 1);
-    for (let x = 0; x < MAP_W; x++) {
-      const k = Math.min(1, Math.max(0, f + (BAYER[(y % 4) * 4 + (x % 4)] / 16 - 0.5) * 0.12));
-      const q = Math.round(k * 7) / 7;
-      g.fillStyle = `rgb(${top.map((v, i) => Math.round(v + (bottom[i] - v) * q)).join(",")})`;
-      g.fillRect(x, y, 1, 1);
-    }
-  }
-  // far-off islands, faint against the haze
-  for (let i = 0; i < 6; i++) {
-    const x = mapHash(i, 1, 41) * MAP_W, y = 30 + mapHash(i, 2, 41) * MAP_H * 0.6, w = 6 + mapHash(i, 3, 41) * 8;
-    g.fillStyle = "rgba(120,150,190,0.35)";
-    for (let r = 0; r < w * 0.6; r++) g.fillRect(Math.round(x - (w / 2) * (1 - r / (w * 0.6))), Math.round(y + r), Math.max(1, Math.round(w * (1 - r / (w * 0.6)))), 1);
-  }
-  return c;
 }
 
 function drawCloud(g, x, y, w, color) {
@@ -272,7 +288,7 @@ function drawCommons(g, t, by) {
   const R = (x, y, w, h, c) => mapRect(g, x, y + by, w, h, c);
   const base = isl.y - 1;
   // a path along the green
-  for (let x = -66; x <= 66; x++) if ((x + 66) % 3) R(isl.x + x, base + 2 + Math.round(Math.sin(x * 0.2)), 1, 1, "#c8b07a");
+  for (let x = -56; x <= 56; x++) if ((x + 56) % 3) R(isl.x + x, base + 2 + Math.round(Math.sin(x * 0.2)), 1, 1, "#c8b07a");
   // The Satchel, on a little stall
   {
     const x = isl.x + COMMONS[0].dx;
@@ -299,29 +315,28 @@ function drawCommons(g, t, by) {
     if (cw >= 3) { R(x - Math.floor(cw / 2), base - 27, cw, 1, "#9bffc4"); R(x, base - 26, 1, 4, "#0e4a2a"); }
   }
   // a few villagers' lanterns
-  for (let i = 0; i < 3; i++) { const x = isl.x - 60 + i * 60; R(x, base - 6, 1, 6, "#5a3a20"); R(x - 1, base - 8, 3, 2, Math.sin(t * 3 + i) > 0 ? "#ffd23f" : "#ffb020"); }
+  for (let i = 0; i < 3; i++) { const x = isl.x - 52 + i * 52; R(x, base - 6, 1, 6, "#5a3a20"); R(x - 1, base - 8, 3, 2, Math.sin(t * 3 + i) > 0 ? "#ffd23f" : "#ffb020"); }
 }
 
 function drawMap(ts) {
   const g = mapCanvas.getContext("2d");
   g.imageSmoothingEnabled = false;
   const t = ts / 1000;
-  if (!mapSkyCache) mapSkyCache = paintSky();
-  g.drawImage(mapSkyCache, 0, 0);
+  drawSky(t);
+  g.clearRect(0, 0, MAP_W, MAP_H);
 
-  // high clouds drifting behind everything
-  for (let i = 0; i < 5; i++) {
-    const w = 18 + mapHash(i, 7, 3) * 22;
-    const x = ((mapHash(i, 7, 5) * 260 + t * (1.5 + i * 0.4)) % 260) - 40;
-    drawCloud(g, x, 14 + i * (MAP_H / 6) + mapHash(i, 7, 9) * 8, w, "rgba(255,255,255,0.55)");
+  // clouds drifting between the rows, tinted by the sky around them
+  for (let i = 0; i < 14; i++) {
+    const w = 18 + mapHash(i, 7, 3) * 26;
+    const x = ((mapHash(i, 7, 5) * (MAP_W + 120) + t * (1.2 + (i % 5) * 0.35)) % (MAP_W + 120)) - 60;
+    const y = 20 + (i % 7) * (MAP_H / 7) + mapHash(i, 7, 9) * 18;
+    const [r, gg, b] = skyAt(y);
+    drawCloud(g, x, y, w, `rgba(${Math.round((r + 255 * 2) / 3)},${Math.round((gg + 255 * 2) / 3)},${Math.round((b + 255 * 2) / 3)},0.5)`);
   }
 
-  // bridges, lit once the far side is yours or within reach
-  for (let i = 0; i < MODE_KEYS.length - 1; i++) {
-    const a = MODE_KEYS[i], b = MODE_KEYS[i + 1];
-    if (placeFogged(b)) continue;
-    drawBridge(g, a, b, t, isModeUnlocked(b));
-  }
+  // the Coil: the road every island hangs on
+  drawCoil(g, t);
+  if (!placeFogged("sandbox")) drawBridge(g, "maw", "sandbox", t, sandboxUnlocked());
 
   // the Commons, with its four landmarks
   {
@@ -373,6 +388,31 @@ function drawMap(ts) {
     g.fillStyle = `hsla(${(hue + 120) % 360},100%,80%,${0.6 + glow * 0.4})`; g.fillRect(p.x - 1, p.y - 1, 3, 2);
   }
   if (!placeFogged("treasure") && Math.sin(t * 1.7) > 0.8) { const p = at("treasure"); mapRect(g, p.x - 2, p.y - 5, 1, 1, "#ffffff"); }
+  if (!placeFogged("hive")) for (let i = 0; i < 4; i++) {           // bees about the hive
+    const p = at("hive"), a = t * (2 + i * 0.4) + i * 1.6;
+    mapRect(g, p.x + Math.cos(a) * (6 + i * 2), p.y - 8 + Math.sin(a * 1.3) * 4, 1, 1, i % 2 ? "#ffcf33" : "#1a1410");
+  }
+  if (!placeFogged("thunder") && (t % 4.3) < 0.12) {                // a flash over the peak
+    const p = at("thunder");
+    let x = p.x + 2; for (let y = p.y - 26; y < p.y - 12; y += 2) { mapRect(g, x, y, 1, 2, "#fff7a0"); x += (y % 4 ? -1 : 1); }
+  }
+  if (!placeFogged("chrono")) {                                      // the rift breathes
+    const p = at("chrono"), glow = 0.3 + 0.3 * Math.sin(t * 2);
+    g.fillStyle = `rgba(159, 232, 255, ${glow})`; g.fillRect(p.x - 3, p.y - 17, 6, 16);
+  }
+  if (!placeFogged("moor")) for (let i = 0; i < 2; i++) {            // a wisp or two
+    const p = at("moor"), ph = (t * 0.4 + i * 0.5) % 1;
+    g.fillStyle = `rgba(232, 236, 255, ${0.6 * Math.sin(ph * Math.PI)})`; g.fillRect(Math.round(p.x - 10 + i * 8 + Math.sin(t + i) * 3), Math.round(p.y - 6 - ph * 10), 2, 2);
+  }
+  if (!placeFogged("gale")) for (let i = 0; i < 3; i++) {            // wind streaks
+    const p = at("gale"), ph = (t * 0.9 + i / 3) % 1;
+    g.fillStyle = `rgba(255, 255, 255, ${0.7 * Math.sin(ph * Math.PI)})`; g.fillRect(Math.round(p.x - 18 + ph * 36), Math.round(p.y - 14 + i * 4), 5, 1);
+  }
+  if (!placeFogged("keg") && Math.sin(t * 9) > 0.3) { const p = at("keg"); mapRect(g, p.x + 11, p.y - 7, 1, 1, "#ffd23f"); }
+  if (!placeFogged("maw")) {                                         // a red glow in the throat
+    const p = at("maw");
+    g.fillStyle = `rgba(255, 59, 59, ${0.25 + 0.2 * Math.sin(t * 1.4)})`; g.fillRect(p.x - 5, p.y - 2, 10, 3);
+  }
 
   // your snake, napping on the last island you played
   const home = MODE_KEYS.includes(save.mapHome) && isModeUnlocked(save.mapHome) ? save.mapHome : "easy";
@@ -398,11 +438,12 @@ function drawMap(ts) {
     g.globalAlpha = 1;
   });
 
-  // a sea of clouds far below
+  // a sea of clouds far below, lit by the sunrise
   for (let x = 0; x < MAP_W; x++) {
-    const h = 6 + Math.round(Math.sin((x + t * 4) * 0.13) * 2 + Math.sin((x - t * 2.5) * 0.31) * 1.5);
-    mapRect(g, x, MAP_H - h, 1, h, "#f6f1ec");
-    mapRect(g, x, MAP_H - h, 1, 1, "#ffffff");
+    const h = 9 + Math.round(Math.sin((x + t * 4) * 0.13) * 2 + Math.sin((x - t * 2.5) * 0.31) * 1.5);
+    mapRect(g, x, MAP_H - h, 1, h, "#fbe9dc");
+    mapRect(g, x, MAP_H - h, 1, 2, "#ffffff");
+    if ((x + Math.floor(t * 6)) % 23 === 0) mapRect(g, x, MAP_H - h + 3, 4, 1, "#f2cdb8");
   }
 
   // pins ride along with their island
@@ -416,43 +457,66 @@ function mapLoop(ts) {
   mapRaf = 0;
   if (currentScreen !== "modes") return;
   mapRaf = requestAnimationFrame(mapLoop);
-  if (++mapFrame % 3 && mapFrame > 1) return;
+  if (++mapFrame % 2 && mapFrame > 1) return;
   drawMap(ts);
 }
-/* The whole map fits on screen to begin with. Drag, scroll or pinch to
-   look closer; picking a place flies the camera to it. */
-let mapCam = null;          // a view the player has dragged or zoomed to, or null for the fitted view
+/* The map always covers the whole screen. It opens close enough to read, on the
+   island you're working toward; drag to travel, scroll or pinch to zoom.
+   Zoomed all the way out, the whole map still fills the screen. */
+let mapCam = null;          // the view: { s, tx, ty }, kept between visits
 
+const WORLD_W = MAP_W * 2, WORLD_H = MAP_H * 2;
+/* The smallest scale: the world just covers the screen */
 function mapFit() {
   const vw = mapEl.clientWidth, vh = mapEl.clientHeight;
-  return Math.min(vw / 400, vh / 400);
+  return Math.max(vw / WORLD_W, vh / WORLD_H);
 }
+/* The usual scale: one row of islands, with a glimpse of the rows above and below */
+const mapNear = () => Math.max(mapFit(), mapEl.clientHeight / 250);
+const mapMax = () => mapNear() * 2.2;
 
-/* Keep the map from wandering off: centered when it is smaller than the view,
-   otherwise always covering it */
+/* Keep the world covering the view: never a gap at any edge */
 function clampCam(c) {
   const vw = mapEl.clientWidth, vh = mapEl.clientHeight;
-  const fit = mapFit();
-  c.s = Math.max(fit, Math.min(fit * 4, c.s));
-  const w = 400 * c.s, h = 400 * c.s;
-  c.tx = w <= vw ? (vw - w) / 2 : Math.min(0, Math.max(vw - w, c.tx));
-  c.ty = h <= vh ? (vh - h) / 2 : Math.min(0, Math.max(vh - h, c.ty));
+  c.s = Math.max(mapFit(), Math.min(mapMax(), c.s));
+  c.tx = Math.min(0, Math.max(vw - WORLD_W * c.s, c.tx));
+  c.ty = Math.min(0, Math.max(vh - WORLD_H * c.s, c.ty));
   return c;
 }
 
+/* A view centered on a map point at a scale */
+function camOn(x, y, s) {
+  const vw = mapEl.clientWidth, vh = mapEl.clientHeight;
+  return clampCam({ s, tx: vw / 2 - x * 2 * s, ty: vh / 2 - y * 2 * s });
+}
+
+/* Where the camera starts: the island you're working toward, or home */
+function homeCam() {
+  const next = MODE_KEYS[Math.min(MODE_KEYS.length - 1, nextLockedIndex())];
+  const key = next && !isModeUnlocked(next) ? next : MODE_KEYS.includes(save.mapHome) && isModeUnlocked(save.mapHome) ? save.mapHome : "easy";
+  const isl = ISLANDS[key];
+  return camOn(isl.x, isl.y + 2, mapNear());
+}
+
+let camShown = null;        // the view on screen right now (for the sky's parallax)
+const mapCamNow = () => camShown || mapCam || { s: 1, tx: 0, ty: 0 };
+
 function applyCam(c) {
   const ui = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--mui")) || 1;
+  camShown = { ...c };
   mapWorldEl.style.transform = `translate(${c.tx}px, ${c.ty}px) scale(${c.s})`;
   mapWorldEl.style.setProperty("--inv", (ui * (mapSel ? 1.1 : 1) / Math.max(c.s, mapFit() * 0.9)).toFixed(4));
-  mapEl.classList.toggle("can-pan", !mapSel && c.s > mapFit() * 1.01);
-  const deep = !mapSel && c.s >= mapFit() * 2.5;
+  mapEl.classList.toggle("can-pan", !mapSel);
+  const deep = !mapSel && c.s >= mapNear() * 1.35;
   if (deep !== mapDeep) { mapDeep = deep; updatePins(); }
 }
 
 function layoutMap() {
   const vw = mapEl.clientWidth, vh = mapEl.clientHeight;
   if (!vw || !vh) return;
-  const fit = mapFit();
+  if (mapCanvas.width !== MAP_W || mapCanvas.height !== MAP_H) { mapCanvas.width = MAP_W; mapCanvas.height = MAP_H; }
+  mapWorldEl.style.width = WORLD_W + "px";
+  mapWorldEl.style.height = WORLD_H + "px";
   let c;
   if (mapSel) {
     // Frame the whole island, from its tree down to its Nightmares, below the banner
@@ -461,25 +525,23 @@ function layoutMap() {
     const tall = (bottom - top) * 2, wide = (isl.w + 18) * 2;
     const bannerBottom = mapBannerEl.classList.contains("open") ? mapBannerEl.offsetTop + mapBannerEl.offsetHeight + 6 : 6;
     const room = Math.max(vh * 0.4, vh - bannerBottom - 8);
-    const s = Math.max(fit * 1.1, Math.min(fit * 3.4, room / tall, (vw * 0.9) / wide));
+    const s = Math.max(mapNear() * 1.1, Math.min(mapMax() * 1.4, room / tall, (vw * 0.9) / wide));
     c = { s, tx: vw / 2 - isl.x * 2 * s, ty: bannerBottom + room / 2 - ((top + bottom) / 2) * 2 * s };
-    if (400 * s > vw) c.tx = Math.min(0, Math.max(vw - 400 * s, c.tx));      // never show past the world's sides
-  } else if (mapCam) {
-    c = clampCam(mapCam);
+    c.tx = Math.min(0, Math.max(vw - WORLD_W * s, c.tx));
+    c.ty = Math.min(0, Math.max(vh - WORLD_H * s, c.ty));
   } else {
-    c = clampCam({ s: fit, tx: 0, ty: 0 });
+    mapCam = clampCam(mapCam || homeCam());
+    c = mapCam;
   }
   applyCam(c);
 }
 
 /* Zoom by a factor around a point on screen */
 function zoomMapAt(factor, px, py) {
-  const fit = mapFit();
-  const cur = mapCam || clampCam({ s: fit, tx: 0, ty: 0 });
-  const s = Math.max(fit, Math.min(fit * 4, cur.s * factor));
+  const cur = mapCam || homeCam();
+  const s = Math.max(mapFit(), Math.min(mapMax(), cur.s * factor));
   const k = s / cur.s;
   mapCam = clampCam({ s, tx: px - (px - cur.tx) * k, ty: py - (py - cur.ty) * k });
-  if (mapCam.s <= fit * 1.001) mapCam = null;
   layoutMap();
 }
 
@@ -500,8 +562,9 @@ function zoomMapAt(factor, px, py) {
     }
     ptrs.set(e.pointerId, local(e));
     dragged = false;
-    const cur = mapCam || clampCam({ s: mapFit(), tx: 0, ty: 0 });
-    start = { cam: { ...cur }, pts: new Map(ptrs) };
+    stopGlide();
+    const cur = mapCam || homeCam();
+    start = { cam: { ...cur }, pts: new Map(ptrs), trail: [] };
   });
   mapEl.addEventListener("pointermove", e => {
     if (mapSel && swipe && ptrs.has(e.pointerId)) {
@@ -531,6 +594,8 @@ function zoomMapAt(factor, px, py) {
       if (!dragged && Math.hypot(x - x0, y - y0) < 6) return;
       if (!dragged) { dragged = true; mapEl.classList.add("dragging"); try { mapEl.setPointerCapture(e.pointerId); } catch (err) { /* fine */ } }
       mapCam = clampCam({ s: start.cam.s, tx: start.cam.tx + x - x0, ty: start.cam.ty + y - y0 });
+      start.trail.push({ x, y, at: performance.now() });
+      if (start.trail.length > 6) start.trail.shift();
       layoutMap();
     } else if (ids.length >= 2 && start.pts.size >= 2) {
       // Pinch: zoom by how far the fingers have spread, around their middle
@@ -538,8 +603,7 @@ function zoomMapAt(factor, px, py) {
       const [a0, b0] = ids.slice(0, 2).map(id => start.pts.get(id) || ptrs.get(id));
       const d = Math.hypot(a[0] - b[0], a[1] - b[1]), d0 = Math.hypot(a0[0] - b0[0], a0[1] - b0[1]) || 1;
       const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, mx0 = (a0[0] + b0[0]) / 2, my0 = (a0[1] + b0[1]) / 2;
-      const fit = mapFit();
-      const s = Math.max(fit, Math.min(fit * 4, start.cam.s * d / d0));
+      const s = Math.max(mapFit(), Math.min(mapMax(), start.cam.s * d / d0));
       const k = s / start.cam.s;
       dragged = true;
       mapEl.classList.add("dragging");
@@ -561,12 +625,17 @@ function zoomMapAt(factor, px, py) {
     }
     ptrs.delete(e.pointerId);
     if (ptrs.size) {
-      const cur = mapCam || clampCam({ s: mapFit(), tx: 0, ty: 0 });
-      start = { cam: { ...cur }, pts: new Map(ptrs) };
+      const cur = mapCam || homeCam();
+      start = { cam: { ...cur }, pts: new Map(ptrs), trail: [] };
     } else {
+      // A flick keeps the map gliding for a moment
+      const tr = start && start.trail;
+      if (dragged && tr && tr.length >= 2) {
+        const a = tr[0], b = tr[tr.length - 1], dt = Math.max(16, b.at - a.at);
+        if (performance.now() - b.at < 80) glide((b.x - a.x) / dt * 16, (b.y - a.y) / dt * 16);
+      }
       start = null;
       mapEl.classList.remove("dragging");
-      if (mapCam && mapCam.s <= mapFit() * 1.001) mapCam = null;
     }
   };
   mapEl.addEventListener("pointerup", end);
@@ -598,10 +667,31 @@ function zoomMapAt(factor, px, py) {
   mapEl.addEventListener("dblclick", e => {
     if (mapSel || mapBriefEl.contains(e.target)) return;
     const [x, y] = local(e);
-    if (mapCam) { mapCam = null; layoutMap(); } else zoomMapAt(2, x, y);
+    zoomMapAt(mapCam && mapCam.s > mapNear() * 1.2 ? 1 / 1.8 : 1.8, x, y);
   });
 })();
 
+
+/* The map keeps drifting after a flick, slowing to a stop */
+let glideRaf = 0;
+function glide(vx, vy) {
+  stopGlide();
+  mapEl.classList.add("dragging");
+  const step = () => {
+    vx *= 0.92; vy *= 0.92;
+    if (Math.abs(vx) + Math.abs(vy) < 0.4 || !mapCam || mapSel || currentScreen !== "modes") { stopGlide(); return; }
+    mapCam = clampCam({ s: mapCam.s, tx: mapCam.tx + vx, ty: mapCam.ty + vy });
+    layoutMap();
+    glideRaf = requestAnimationFrame(step);
+  };
+  glideRaf = requestAnimationFrame(step);
+}
+function stopGlide() {
+  if (!glideRaf) return;
+  cancelAnimationFrame(glideRaf);
+  glideRaf = 0;
+  mapEl.classList.remove("dragging");
+}
 
 /* ----- Pins: one per island from afar; levels, Nightmares and the tree up close ----- */
 let mapPop = null;              // { key, j, nm } while a level's little bubble is open
@@ -614,7 +704,7 @@ const mapBannerEl = document.getElementById("map-banner");
 const LEAF_SVG = '<svg class="leaf" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c4 3 7 7 7 11a7 7 0 0 1-6 6.9V22h-2v-2.1A7 7 0 0 1 5 13c0-4 3-8 7-11z"/></svg>';
 
 function renderModes(justUnlocked) {
-  document.getElementById("map-hint").textContent = isTouchDevice() ? "Drag or pinch to explore" : "Drag or scroll to explore";
+  document.getElementById("map-hint").textContent = isTouchDevice() ? "Drag to explore, pinch to zoom" : "Drag to explore, scroll to zoom";
   mapPinsEl.innerHTML = "";
   const home = MODE_KEYS.includes(save.mapHome) && isModeUnlocked(save.mapHome) ? save.mapHome : null;
   const focusKey = justUnlocked || home || MODE_KEYS[Math.max(0, nextLockedIndex() - 1)];

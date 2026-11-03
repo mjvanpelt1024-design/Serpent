@@ -30,9 +30,9 @@ name   = Blackout
 twist  = The lights are out. You can see only a small circle around your head, and I am told that is plenty. It is not.
 
 [map]
-x      = 78                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 290
-width  = 28
+x      = 262                   # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 292
+width  = 30
 colors = [#a07a52, #8f6c48, #5a4430]  # grass, edge, rock
 
 [tree]

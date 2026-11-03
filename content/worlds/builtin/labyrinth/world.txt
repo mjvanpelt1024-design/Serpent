@@ -67,8 +67,8 @@ name   = Sticky Maze
 twist  = Molasses pools everywhere, and portals can drop you anywhere in the maze, usually somewhere worse.
 
 [map]
-x      = 100                  # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 90
+x      = 552                  # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 58
 width  = 28
 colors = [#5a4a80, #4d3c70, #2b2142]  # grass, edge, rock
 

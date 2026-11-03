@@ -58,9 +58,9 @@ name   = Fool's Gold
 twist  = Some big apples are boulders in disguise. Not everything that glitters is lunch.
 
 [map]
-x      = 182                   # middle of the grassy top, in map pixels (0-200 across, 0-340 down)
-y      = 158
-width  = 26
+x      = 50                   # middle of the grassy top, in map pixels (0-600 across, 0-340 down)
+y      = 132
+width  = 28
 colors = [#dcb45a, #cfa64c, #8a6a28]  # grass, edge, rock
 
 [tree]
