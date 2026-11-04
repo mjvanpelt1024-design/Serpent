@@ -198,8 +198,28 @@ const ContentLoader = (() => {
     }
   }
 
+  /* ----- The campaign (content/campaign/): JSON files, kept as text too so they can be signed ----- */
+  async function json(path) {
+    const text = await need(path);
+    try { return { text, data: JSON.parse(text || "{}") }; } catch (e) { warn(path, 0, "isn't valid JSON: " + e.message); return { text, data: {} }; }
+  }
+  async function campaign() {
+    const ids = Formats.list(await need("content/campaign/islands/_index.dat"));
+    const [islands, items, upgrades, rules, manifest] = await Promise.all([
+      Promise.all(ids.map(id => json(`content/campaign/islands/${id}.json`))),
+      json("content/campaign/items.json"),
+      json("content/campaign/upgrades.json"),
+      json("content/campaign/rules.json"),
+      read("content/campaign/manifest.dat")
+    ]);
+    const texts = { "items.json": items.text, "upgrades.json": upgrades.text, "rules.json": rules.text };
+    ids.forEach((id, i) => { texts[`islands/${id}.json`] = islands[i].text; });
+    return { islands: islands.map(x => x.data), items: items.data, upgrades: upgrades.data, rules: rules.data, texts, manifest: manifest || "" };
+  }
+
   async function load() {
     const C = await loadBase();
+    C.campaign = await campaign();
     await loadMods(C);
     C.source = state.mode;
     C.filesRead = state.files;

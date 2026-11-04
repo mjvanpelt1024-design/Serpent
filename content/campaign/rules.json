@@ -1,0 +1,68 @@
+{
+  "_about": "The campaign's numbers: rewards, timers, the bank, the challenger, achievements and cosmetics. Every value here is checked by tools/check-campaign.py and signed by tools/sign-content.py.",
+  "snake": {"hearts": 3, "armorCap": 3, "startLength": 4},
+  "rewards": {
+    "winBase": 30, "perLevel": 6, "bossMult": 2.5, "replayShare": 0.35,
+    "flawlessBonus": 0.25, "lootChance": 0.12, "lootEveryMs": 9000
+  },
+  "merchant": {"stockSize": 3, "restockMinutes": 120, "rerollGems": 5, "dealDiscount": 30, "sellShare": 0.35},
+  "challenge": {
+    "days": 7, "levels": 3, "modsPerLevel": 2, "rerollGems": 10,
+    "rewardBase": 260, "rewardPerIsland": 0,
+    "mods": [
+      {"id": "swift", "name": "Swift", "text": "Everything moves 20% faster."},
+      {"id": "greedy", "name": "Greedy", "text": "The goal is 50% bigger."},
+      {"id": "swarm", "name": "Swarm", "text": "Twice as many hazards and enemies."},
+      {"id": "glass", "name": "Glass Scales", "text": "Only one heart, no armor."},
+      {"id": "dark", "name": "Blackout", "text": "You can only see around your head."},
+      {"id": "bare", "name": "Bare Scales", "text": "No gear, spells, snacks or familiars."},
+      {"id": "clock", "name": "Against the Clock", "text": "Finish within 90 seconds."},
+      {"id": "rocky", "name": "Rockslide", "text": "Rocks scattered everywhere."}
+    ],
+    "pool": [
+      {"kind": "gems", "weight": 50, "min": 8, "max": 25},
+      {"kind": "item", "rarity": "rare", "weight": 26},
+      {"kind": "item", "rarity": "legendary", "weight": 9},
+      {"kind": "skin", "weight": 9},
+      {"kind": "theme", "weight": 6}
+    ]
+  },
+  "bank": {"rateToPrev": 10, "feePrev": 5, "snaycoinPerGem": 500, "gemFee": 1},
+  "gems": {"startGems": 0, "storeSoon": "Gem packs arrive when the game launches. Until then gems come from achievements, challenges and the bank."},
+  "cosmetics": {
+    "freeSkins": ["classic"],
+    "freeThemes": ["black"],
+    "exclusiveSkins": ["karat", "aurora", "galaxy", "lavalamp", "rainbow", "comet"],
+    "exclusiveThemes": ["nebula", "auroranight", "synthwave"],
+    "skinPrice": [20, 4, 140],
+    "themePrice": [15, 3, 110]
+  },
+  "achievements": [
+    {"id": "first", "name": "First Steps", "text": "Win your first level.", "stat": "levelsWon", "need": 1, "gems": 5},
+    {"id": "ten", "name": "Getting the Hang of It", "text": "Win 10 levels.", "stat": "levelsWon", "need": 10, "gems": 10},
+    {"id": "forty", "name": "Seasoned Slitherer", "text": "Win 40 levels.", "stat": "levelsWon", "need": 40, "gems": 25},
+    {"id": "all75", "name": "The Whole Coil", "text": "Win all 75 levels.", "stat": "uniqueWins", "need": 75, "gems": 100},
+    {"id": "boss1", "name": "Knight Fall", "text": "Beat any boss fight.", "stat": "bossFights", "need": 1, "gems": 10},
+    {"id": "boss5", "name": "Giant Slayer", "text": "Finish a boss's last stand on any island.", "stat": "bossesSlain", "need": 1, "gems": 20},
+    {"id": "bossall", "name": "Wyrmbane", "text": "Slay all five bosses.", "stat": "bossesSlain", "need": 5, "gems": 75},
+    {"id": "isl2", "name": "Over the Bridge", "text": "Reach the second island.", "stat": "islandsOpen", "need": 2, "gems": 10},
+    {"id": "isl5", "name": "Crown in Sight", "text": "Reach the Cinder Crown.", "stat": "islandsOpen", "need": 5, "gems": 40},
+    {"id": "apples500", "name": "Orchard Keeper", "text": "Eat 500 apples.", "stat": "applesEaten", "need": 500, "gems": 10},
+    {"id": "apples5000", "name": "Bottomless", "text": "Eat 5,000 apples.", "stat": "applesEaten", "need": 5000, "gems": 30},
+    {"id": "flawless", "name": "Not a Scratch", "text": "Win a level without losing a heart.", "stat": "flawless", "need": 1, "gems": 5},
+    {"id": "flawless25", "name": "Untouchable", "text": "Win 25 levels without losing a heart.", "stat": "flawless", "need": 25, "gems": 25},
+    {"id": "buy1", "name": "Window Shopper No More", "text": "Buy something from a merchant.", "stat": "itemsBought", "need": 1, "gems": 5},
+    {"id": "buy20", "name": "Regular Customer", "text": "Buy 20 things from merchants.", "stat": "itemsBought", "need": 20, "gems": 15},
+    {"id": "break", "name": "Worn to the Hilt", "text": "Use a piece of gear until it breaks.", "stat": "itemsBroken", "need": 1, "gems": 5},
+    {"id": "cast50", "name": "Spellslinger", "text": "Cast 50 spells.", "stat": "spellsCast", "need": 50, "gems": 15},
+    {"id": "trial1", "name": "Challenge Accepted", "text": "Finish a challenge.", "stat": "challengesDone", "need": 1, "gems": 10},
+    {"id": "trial10", "name": "Glutton for Punishment", "text": "Finish 10 challenges.", "stat": "challengesDone", "need": 10, "gems": 40},
+    {"id": "keys", "name": "Keymaster", "text": "Pick up 30 keys.", "stat": "keysFound", "need": 30, "gems": 10},
+    {"id": "plates", "name": "Pressure Point", "text": "Press 50 pressure plates.", "stat": "platesPressed", "need": 50, "gems": 10},
+    {"id": "relics", "name": "Treasure Hunter", "text": "Find all five relics.", "stat": "relicsFound", "need": 5, "gems": 20},
+    {"id": "thief", "name": "Stop, Thief!", "text": "Catch 20 thieves.", "stat": "thievesCaught", "need": 20, "gems": 10},
+    {"id": "road", "name": "Long Road", "text": "Travel 3,000 meters in tunnels.", "stat": "distance", "need": 3000, "gems": 15},
+    {"id": "banker", "name": "Exchange Rate", "text": "Make a trade at a bank.", "stat": "trades", "need": 1, "gems": 5},
+    {"id": "upg25", "name": "Green Thumb", "text": "Buy 25 upgrade tiers.", "stat": "upgradesBought", "need": 25, "gems": 20}
+  ]
+}
