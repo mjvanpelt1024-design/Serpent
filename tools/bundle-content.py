@@ -13,7 +13,7 @@ import os
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TEXT = {".txt", ".dat", ".upg", ".skin", ".theme", ".flair", ".avatar", ".item", ".story", ".level", ".world", ".json"}
+TEXT = {".txt", ".dat", ".upg", ".skin", ".theme", ".flair", ".avatar", ".item", ".story", ".level", ".world"}
 
 
 def main():
