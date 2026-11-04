@@ -9,15 +9,13 @@
 
 /* The full-window screens and the panel modal live at the top of the page, not inside the
    board's stage: the stage can be transformed (scaling, shakes), which would drag them along */
-["screen-camp", "screen-campbase", "screen-campshop", "camp-modal"].forEach(id => document.body.appendChild(document.getElementById(id)));
+["screen-camp", "screen-campshop", "camp-modal"].forEach(id => document.body.appendChild(document.getElementById(id)));
 
 /* The new screens join the old navigation */
 screenEls.camp = document.getElementById("screen-camp");
-screenEls.campbase = document.getElementById("screen-campbase");
 screenEls.campshop = document.getElementById("screen-campshop");
 screenEls.campresult = document.getElementById("screen-campresult");
 BACK_TARGET.camp = "main";
-BACK_TARGET.campbase = "camp";
 BACK_TARGET.campshop = "camp";
 BACK_TARGET.campresult = "camp";
 BOARD_SCREENS.push("campresult");
@@ -39,9 +37,8 @@ BOARD_SCREENS.push("campresult");
   const orig = goBack;
   window.goBack = function () {
     if (campModalOpen) { closeCampModal(); return; }
-    if (currentScreen === "camp" && cmSel) { cmSel = null; cmCard(); return; }
+    if (currentScreen === "camp" && (cmSel || cmHome)) { cmSel = null; cmHome = null; cmCard(); cmSpots(); return; }
     if (currentScreen === "camp") { openScreen("main"); return; }
-    if (currentScreen === "campbase") { if (cbView === "close") cbSetView("grove"); else openCampMap({ isl: cbIsl, node: "base" }); return; }
     if (currentScreen === "campshop") { openCampMap({ isl: shopIsl, node: shopKind }); return; }
     if (currentScreen === "campresult") { campResultMap(); return; }
     return orig.apply(this, arguments);
@@ -158,7 +155,7 @@ document.getElementById("cr-next").addEventListener("click", () => {
   const orig = showScreen;
   window.showScreen = function (name) {
     orig.apply(this, arguments);
-    document.body.classList.toggle("camp-screen", ["camp", "campbase", "campshop"].includes(name));
+    document.body.classList.toggle("camp-screen", ["camp", "campshop"].includes(name));
     if (name !== null && name !== "campresult" && !["pause"].includes(name) && campRun && name !== undefined) {
       // left a level through some other door (settings from pause comes back, so keep it)
       if (!["settings", "controls", "howto"].includes(name)) campLeaveRun();

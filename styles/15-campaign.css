@@ -20,8 +20,7 @@
 .overlay.camp-full.active { animation: campFade 0.25s ease-out both; }
 @keyframes campFade { from { opacity: 0; } }
 body.camp-screen #hud { display: none; }
-#cm-canvas, #cb-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
-#cb-canvas { cursor: default; }
+#cm-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; image-rendering: pixelated; }
 
 .cm-bar {
   position: absolute; left: 0; right: 0; top: 0;
@@ -87,7 +86,7 @@ body.camp-screen #hud { display: none; }
 .ci-icon.empty { opacity: 0.4; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.15); }
 
 /* ----- Home base ----- */
-#cb-spots { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+#cm-spots { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
 .cb-spot {
   position: absolute; transform: translate(-50%, -100%);
   pointer-events: auto;

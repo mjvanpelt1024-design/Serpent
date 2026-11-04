@@ -1,5 +1,18 @@
 # Changelog
 
+## v:11.04.2026_b:47.1: the sky map
+
+- The map is back to the old map's look: pixel-art floating islands with ragged rock undersides, a sky
+  that climbs from sunrise to a starry night with drifting clouds, far-off islands, a sun and a moon, a sea
+  of clouds below, and the Coil as a glowing pixel serpent winding from island to island.
+- Your snake travels the map: it slithers along paths and plank bridges to whatever you click, and rides
+  the Coil up to the next island with the camera following.
+- Home base is part of the map now. Each island's tree grows as you buy its upgrades, with a fruit for
+  every tier, and the satchel, trophy, mirror and easel only turn up under it once you have something for
+  them. Click home to move in close and click them.
+- The shops and stalls, boss lairs and goal stones all got little pixel sprites; each island has its own
+  props, landmark and something moving on it.
+
 ## v:11.04.2026_b:47: the five islands
 
 A new game on the old engine. The 22 islands, their levels and the story are switched off but kept in the

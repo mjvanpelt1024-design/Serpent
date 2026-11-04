@@ -43,18 +43,30 @@ There is one save (`snakeCampaign_v1` in the launcher's storage). Play loads it;
 The old profile save still exists underneath for settings and the engine's own stats. Nothing of the
 campaign lives in it.
 
-## An island
+## The map
 
-Every island uses the same path:
+One screen. Five floating islands climb from the sunrise at the bottom of the sky to the stars at the top,
+strung together by the Coil, the giant serpent from the old story. Your snake travels the map itself: click
+a spot and it slithers there along the paths and plank bridges; ride the Coil and it carries you up to the
+next island while the camera follows. The Coil is green and gold where it's awake, glows with golden
+cracks on the stretch ahead of you, and is grey stone beyond. Islands you haven't reached sit in clouds.
+
+Every island uses the same layout:
 
 ```
-home -> 1 -> 2 -> 3 -> 4 -> BOSS 5 -> 6 -> 7 -> 8 -> 9 -> BOSS 10 -> 11 -> 12 -> 13 -> 14 -> BOSS 15 -> bridge
-                              \-> merchant                 \-> challenger                  \-> bank
+                     bridge islet (the Coil leaves for the next island)
+ challenger islet   11 12 13 14 BOSS 15 - bank islet
+                    BOSS 10  9  8  7  6
+                     1  2  3  4 BOSS 5 - merchant islet
+                     home islet (the Coil arrives here)
 ```
 
-- **Home (level 0):** the island's tree. Click it to look closer: the canopy is the upgrade tree (every open
-  island's tree can be bought from any base), the satchel is the inventory, the trophy is achievements, the
-  mirror is skins, the easel is themes.
+- **Home** is the islet where the Coil arrives, with the island's tree on it. The tree starts as a sapling
+  and grows as you buy that island's upgrades: a taller trunk, wider branches and canopy, and one fruit for
+  every tier bought; fully grown, it sparkles. Click home and the camera moves in close. Click the tree for
+  the upgrade trees (every open island's tree can be bought from any home). Keepsakes gather under the
+  tree only once you have something for them: the satchel (once you carry an item), the trophy (your first
+  achievement), the mirror (a second skin, or gems enough for one) and the easel (likewise for themes).
 - **Levels 1-4** are fixed boards (no scrolling, no mazes). **6-9** are fixed boards with enemies (fleas,
   bees, ghosts, rival snakes). **11-14** move: the endless road (`tunnel`), the endless maze (`maze`), the
   endless hall of mirrored walls cascading out from the middle (`field`), and walls that rise and fall on a
