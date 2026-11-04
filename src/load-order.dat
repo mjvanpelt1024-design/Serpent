@@ -83,17 +83,4 @@ engine/input/fullscreen.js
 engine/input/touch.js
 engine/input/keyboard.js
 game/wiring.js
-campaign/integrity.js
-campaign/camp-data.js
-campaign/camp-save.js
-campaign/camp-levels.js
-campaign/camp-boss.js
-campaign/camp-items.js
-campaign/camp-art.js
-campaign/camp-hud.js
-campaign/camp-run.js
-campaign/camp-map.js
-campaign/camp-base.js
-campaign/camp-shops.js
-campaign/camp-screens.js
 game/start.js

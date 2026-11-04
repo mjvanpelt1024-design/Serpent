@@ -26,7 +26,6 @@
 <link rel="stylesheet" href="styles/12-modals.css">
 <link rel="stylesheet" href="styles/13-touch.css">
 <link rel="stylesheet" href="styles/14-profiles-exchange.css">
-<link rel="stylesheet" href="styles/15-campaign.css">
 </head>
 <body>
 <canvas id="bg-swirl" aria-hidden="true"></canvas>
@@ -334,12 +333,13 @@
   <section id="screen-howto" class="overlay" aria-label="How to play">
     <div class="panel howto">
       <h2 class="screen-title">How to play</h2>
-      <p><strong>The journey.</strong> Five islands, fifteen levels each, strung together by the Coil. Win a level to open the next. Levels 5, 10 and 15 are boss fights, and each one opens something new: a merchant, a challenger, then the bank and the bridge to the next island.</p>
-      <p><strong>Winning.</strong> Every level has its own goal: eat enough apples, reach a score, survive, find keys and a gate, press plates, catch a thief, or find a relic hidden somewhere in an endless maze.</p>
-      <p><strong>Bosses.</strong> The first fight, outlast it until its stamina runs out. The second, wear it out and bite its body while it's exhausted to crack its silver armor. The third, do the same to its red hearts.</p>
-      <p><strong>Your kit.</strong> Gear wears out, spells (Space) and snacks get used up, familiars stay with you, and a rune burns up as a level starts. Every item has a strength and a weakness. Swap them between levels from the Satchel.</p>
-      <p><strong>Money.</strong> Each island has its own currency for its own upgrade tree, and every upgrade works everywhere. Banks trade money down to the island before, or into gems for skins and themes.</p>
-      <p><strong>Home base.</strong> The tree on every island: upgrades, your satchel, achievements, skins and themes.</p>
+      <p><strong>The goal.</strong> Eat apples to grow and score. Walls and your own tail end the run. A red border means walls, green means the edges wrap around, and purple means they mirror.</p>
+      <p><strong>XP.</strong> Your score turns into XP when a run ends, and the glowing squares on the board are XP you can pick up. Spend it in the Shop on upgrades, cosmetics and one-time items.</p>
+      <p><strong>Hazards.</strong> Rocks knock points off your score. Popsicles cost hearts, and with none left the run is over. Fleas bite, fire makes you zoom, and molasses slows you down. A card explains each one the first time you meet it.</p>
+      <p><strong>Pausing.</strong> Tap the pause button above the board, or press Space, Esc or P. The pause menu has Shop and Settings buttons, so you never have to quit a run to spend XP.</p>
+      <p><strong>Prestige.</strong> Max your three core stats, finish the era's upgrades and prestige in the Shop for a permanently stronger snake and much bigger numbers.</p>
+      <p><strong>Nightmares.</strong> Once every mode is open, each gets a Nightmare version with one brutal twist and five times the score.</p>
+      <p><strong>The Sandbox</strong> opens after every mode and Nightmare. Build your own levels, share codes and play other people's.</p>
       <h3 class="howto-about">About</h3>
       <p class="howto-credit">An original game. The story, art, soundtrack and narration were all made for it. Thank you for playing.</p>
       <p class="howto-credit howto-build" id="about-build"></p>
@@ -352,10 +352,9 @@
     <div class="panel">
       <h2 class="screen-title">Controls</h2>
       <p><strong>Arrow keys or WASD:</strong> steer the snake (either can be turned off in Settings)</p>
-      <p><strong>Space:</strong> cast your spell during a level</p>
-      <p><strong>Esc or P:</strong> pause</p>
-      <p><strong>Touch:</strong> swipe on the board or use the on-screen pad; the extra button casts your spell</p>
-      <p><strong>The map:</strong> drag to look around, scroll or pinch to zoom, click a spot on the path</p>
+      <p><strong>Touch:</strong> swipe on the board or use the on-screen pad</p>
+      <p><strong>Menus:</strong> arrow keys move the highlight, Space or Enter selects, Esc goes back</p>
+      <p><strong>Space:</strong> start from the rules screen, or play again after a game over</p>
       <div class="row-buttons"><button class="btn" data-back data-autofocus>Back</button></div>
     </div>
   </section>
@@ -380,61 +379,6 @@
       <input id="console-input" class="console-input" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Terminal command" placeholder="group subject.action value   (type help)">
     </div>
   </section>
-
-  <!-- ===== The campaign (src/campaign/) ===== -->
-  <!-- The world map: five islands on the Coil -->
-  <section id="screen-camp" class="overlay camp-full" aria-label="The world map">
-    <canvas id="cm-canvas" aria-hidden="true"></canvas>
-    <div class="cm-bar">
-      <button class="btn btn-small" id="cm-back">Menu</button>
-      <span class="cm-island" id="cm-island"></span>
-      <span class="cm-wallet" id="cm-wallet"></span>
-      <button class="btn btn-small" id="cm-satchel">Satchel</button>
-      <button class="btn btn-small" id="cm-menu" aria-label="Save options">Save</button>
-    </div>
-    <p class="cm-hint">Drag to explore, scroll to zoom, click a spot on the path</p>
-    <aside id="cm-card" class="cm-card" aria-live="polite"></aside>
-  </section>
-
-  <!-- Home base: the tree, the satchel and friends -->
-  <section id="screen-campbase" class="overlay camp-full" aria-label="Home base">
-    <canvas id="cb-canvas" aria-hidden="true"></canvas>
-    <div class="cm-bar"><button class="btn btn-small" id="cb-back">Map</button><span class="cm-island" id="cb-title"></span></div>
-    <div id="cb-spots"></div>
-  </section>
-
-  <!-- A shop along the path -->
-  <section id="screen-campshop" class="overlay camp-full" aria-label="Shop">
-    <div class="cm-bar"><button class="btn btn-small" id="cs-back">Map</button><span class="cm-island" id="cs-title"></span><span class="cm-wallet" id="cs-wallet"></span></div>
-    <div class="cs-layout">
-      <div class="cs-keeper">
-        <canvas id="cs-portrait" width="256" height="256" aria-hidden="true"></canvas>
-        <div class="cs-name" id="cs-name"></div>
-        <p class="cs-line" id="cs-line"></p>
-      </div>
-      <div class="cs-body" id="cs-body"></div>
-    </div>
-  </section>
-
-  <!-- After a level -->
-  <section id="screen-campresult" class="overlay" aria-label="Level result">
-    <div class="panel cr-panel">
-      <div class="cr-kicker"></div>
-      <h2 class="screen-title"></h2>
-      <p class="cr-score"></p>
-      <ul class="cr-lines"></ul>
-      <p class="cr-line" hidden></p>
-      <div class="row-buttons">
-        <button class="btn" id="cr-map">Map</button>
-        <button class="btn btn-primary" id="cr-again">Play again</button>
-        <button class="btn btn-gold" id="cr-next" hidden>Next</button>
-      </div>
-      <p class="hint">Space to continue, Esc for the map</p>
-    </div>
-  </section>
-
-  <!-- Campaign panels: upgrades, satchel, achievements, skins, themes, save -->
-  <div id="camp-modal" class="modal camp-modal" role="dialog" aria-modal="true"><div class="camp-modal-box"></div></div>
 
   <!-- Pause -->
   <div id="pause" class="modal pause" role="dialog" aria-modal="true" aria-labelledby="pause-title">
