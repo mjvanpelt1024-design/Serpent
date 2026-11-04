@@ -1,16 +1,224 @@
 /* =========================================================
    src/campaign/camp-base.js
-   The panels behind home base. Home itself is on the map: each island's
-   home islet has its tree and, once you have something for them, the
-   keepsakes under it (src/campaign/camp-map.js). Clicking those opens:
-     the tree     the upgrade trees (every open island's, paid in its currency)
-     the satchel  everything you carry, and what you take into levels
-     the trophy   achievements
-     the mirror   skins (gems)
-     the easel    themes (gems)
+   Home base: the clearing on every island where the upgrade tree grows.
+   Click the tree and the view moves in close: the satchel leans on the
+   trunk, a trophy sits on a stump, a mirror and an easel stand nearby.
+     canopy   the upgrade trees (every open island's, paid in its currency)
+     satchel  everything you carry, and what you take into levels
+     trophy   achievements
+     mirror   skins (gems)
+     easel    themes (gems)
+   The same base is on every island, so nothing ever needs a trip back.
    Also here: the modal every campaign panel opens in.
    ========================================================= */
 "use strict";
+
+let cbIsl = "keep";
+let cbView = "grove";        // grove, or close (zoomed in on the trunk)
+let cbZoom = 0;              // 0 = grove, 1 = close, animated between
+let cbRaf = 0;
+let cbCanvas = null;
+let cbHover = null;
+
+/* Where things are in the scene, in scene units (320 x 200, the trunk's foot at 160, 150) */
+const CB_SPOTS = {
+  tree: { x: 160, y: 95, r: 50, view: "grove", label: "Look closer" },
+  canopy: { x: 160, y: 84, r: 18, view: "close", label: "Upgrade tree" },
+  satchel: { x: 132, y: 146, r: 13, view: "close", label: "Satchel" },
+  trophy: { x: 196, y: 140, r: 12, view: "close", label: "Achievements" },
+  mirror: { x: 228, y: 132, r: 14, view: "close", label: "Skins" },
+  easel: { x: 92, y: 132, r: 14, view: "close", label: "Themes" }
+};
+
+function openCampBase(isl) {
+  cbIsl = isl || camp.at;
+  cbView = "grove";
+  cbZoom = 0;
+  openScreen("campbase");
+  cbCanvas = document.getElementById("cb-canvas");
+  if (!cbCanvas.dataset.bound) {
+    cbCanvas.dataset.bound = "1";
+    cbCanvas.addEventListener("pointermove", e => { cbHover = cbHit(e); cbCanvas.style.cursor = cbHover ? "pointer" : "default"; cbLabels(); });
+    cbCanvas.addEventListener("click", e => { const h = cbHit(e); if (h) cbOpen(h); });
+    document.getElementById("cb-back").addEventListener("click", () => { if (cbView === "close") cbSetView("grove"); else openCampMap({ isl: cbIsl, node: "base" }); });
+  }
+  document.getElementById("cb-title").textContent = `${CAMP.islandById[cbIsl].name} · ${CAMP.islandById[cbIsl].tree.name}`;
+  cbLabels();
+  cancelAnimationFrame(cbRaf);
+  cbRaf = requestAnimationFrame(cbLoop);
+}
+
+function cbSetView(v) {
+  cbView = v;
+  sfx("whoosh");
+  cbLabels();
+}
+
+/* The scene is scaled to cover the window; returns scene -> screen */
+function cbXform() {
+  const w = cbCanvas.clientWidth, h = cbCanvas.clientHeight;
+  const base = Math.max(w / 320, h / 200);
+  const z = 1 + cbZoom * 0.75;
+  const fx = 160, fy = 70 + cbZoom * 42;      // where the camera looks
+  const s = base * z;
+  return { s, ox: w / 2 - fx * s, oy: h / 2 - fy * s };
+}
+
+function cbHit(e) {
+  const r = cbCanvas.getBoundingClientRect();
+  const { s, ox, oy } = cbXform();
+  const x = (e.clientX - r.left - ox) / s, y = (e.clientY - r.top - oy) / s;
+  for (const [k, p] of Object.entries(CB_SPOTS)) {
+    if (p.view !== cbView) continue;
+    if (Math.hypot(x - p.x, y - p.y) < p.r) return k;
+  }
+  return null;
+}
+
+function cbOpen(k) {
+  sfx("click");
+  if (k === "tree") { cbSetView("close"); return; }
+  if (k === "canopy") openUpgradesPanel(cbIsl);
+  else if (k === "satchel") openSatchel();
+  else if (k === "trophy") openAchievementsPanel();
+  else if (k === "mirror") openSkinsPanel();
+  else if (k === "easel") openThemesPanel();
+}
+
+/* Floating labels on the hotspots, which are also the keyboard's way in */
+function cbLabels() {
+  const box = document.getElementById("cb-spots");
+  if (!box || !cbCanvas) return;
+  const { s, ox, oy } = cbXform();
+  box.innerHTML = Object.entries(CB_SPOTS).filter(([, p]) => p.view === cbView).map(([k, p]) =>
+    `<button class="cb-spot ${cbHover === k ? "hover" : ""}" data-spot="${k}" style="left:${(ox + p.x * s).toFixed(0)}px;top:${(oy + (p.y - p.r * 0.9) * s).toFixed(0)}px">${p.label}</button>`).join("");
+  box.querySelectorAll("[data-spot]").forEach(b => b.addEventListener("click", () => cbOpen(b.dataset.spot)));
+  document.getElementById("cb-back").textContent = cbView === "close" ? "Step back" : "Map";
+}
+
+function cbLoop(ts) {
+  if (currentScreen !== "campbase") return;
+  cbRaf = requestAnimationFrame(cbLoop);
+  const want = cbView === "close" ? 1 : 0;
+  if (Math.abs(cbZoom - want) > 0.001) {
+    cbZoom += (want - cbZoom) * 0.12;
+    if (Math.abs(cbZoom - want) < 0.002) cbZoom = want;
+    cbLabels();
+  }
+  cbDraw(ts);
+}
+
+function cbDraw(ts) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = cbCanvas.clientWidth, h = cbCanvas.clientHeight;
+  if (cbCanvas.width !== Math.round(w * dpr) || cbCanvas.height !== Math.round(h * dpr)) { cbCanvas.width = Math.round(w * dpr); cbCanvas.height = Math.round(h * dpr); cbLabels(); }
+  const g = cbCanvas.getContext("2d");
+  const I = CAMP.islandById[cbIsl];
+  const C = I.colors;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.imageSmoothingEnabled = false;
+  const { s, ox, oy } = cbXform();
+  g.save();
+  g.translate(ox, oy);
+  g.scale(s, s);
+  const R = (x, y, ww, hh, col) => { g.fillStyle = col; g.fillRect(x, y, ww, hh); };
+  // sky and hills
+  const sky = g.createLinearGradient(0, -60, 0, 140);
+  const skies = { medieval: ["#7ab8e8", "#cfe8f8"], wizard: ["#2a2a6a", "#8a6ad8"], harvest: ["#f0a860", "#ffe0a0"], ocean: ["#1a5a8a", "#6ac8d8"], volcano: ["#2a0a0a", "#a83a1a"] }[I.theme];
+  sky.addColorStop(0, skies[0]); sky.addColorStop(1, skies[1]);
+  g.fillStyle = sky; g.fillRect(-200, -200, 720, 400);
+  if (I.theme === "wizard" || I.theme === "volcano") for (let i = 0; i < 40; i++) R((i * 73) % 520 - 100, (i * 37) % 120 - 60, 1, 1, I.theme === "wizard" ? "#ffffff" : "#ffb070");
+  g.fillStyle = campShade(C.grass, -0.2);
+  g.beginPath(); g.moveTo(-200, 130); for (let x = -200; x <= 520; x += 20) g.lineTo(x, 118 + Math.sin(x / 47) * 8); g.lineTo(520, 400); g.lineTo(-200, 400); g.fill();
+  R(-200, 140, 720, 260, C.grass);
+  for (let i = 0; i < 120; i++) R((i * 53) % 700 - 190, 142 + (i * 29) % 60, 2, 1, "rgba(0,0,0,0.12)");
+  // the tree
+  cbTree(g, I, ts);
+  // things at the foot of the tree
+  cbSatchel(g, 132, 146, ts);
+  cbStump(g, 196, 140);
+  cbMirror(g, 228, 132, ts);
+  cbEasel(g, 92, 132, ts);
+  // the map signpost and a couple of island touches
+  R(40, 118, 3, 26, "#6a4a2a"); R(28, 118, 28, 8, "#a87a4a"); R(30, 120, 24, 1, "#6a4a2a");
+  g.restore();
+  // the hover glow
+  if (cbHover) {
+    const p = CB_SPOTS[cbHover];
+    g.save();
+    g.strokeStyle = "rgba(255,240,160,0.8)"; g.lineWidth = 2;
+    g.setLineDash([6, 4]); g.lineDashOffset = -ts / 40;
+    g.beginPath(); g.arc(ox + p.x * s, oy + p.y * s, p.r * s, 0, Math.PI * 2); g.stroke();
+    g.restore();
+  }
+}
+
+function cbTree(g, I, ts) {
+  const C = I.colors;
+  const R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+  const trunk = { medieval: "#6a4a2a", wizard: "#4a3a5a", harvest: "#7a5a3a", ocean: "#c86a7a", volcano: "#2a1a1a" }[I.theme];
+  // roots and trunk
+  R(146, 96, 28, 56, trunk); R(140, 140, 40, 12, trunk); R(132, 148, 12, 4, trunk); R(176, 148, 12, 4, trunk);
+  R(150, 100, 4, 46, campShade(trunk, 0.2)); R(164, 112, 3, 30, campShade(trunk, -0.2));
+  R(170, 112, 6, 6, campShade(trunk, -0.35));
+  // canopy: one big crown, tinted by the island
+  const sway = Math.sin(ts / 1400) * 1.5;
+  const leaf = { medieval: ["#2f6a2a", "#3f8a33", "#5aa840"], wizard: ["#3a2a7a", "#5a3aa8", "#8a6ad8"], harvest: ["#5a7a2a", "#7a9a3a", "#a8b84a"], ocean: ["#c84a6a", "#e86a8a", "#ff9ab0"], volcano: ["#3a1a1a", "#6a2a1a", "#a83a1a"] }[I.theme];
+  const blobs = [[160, 60, 62, 38], [120, 74, 36, 24], [200, 72, 38, 26], [140, 44, 32, 22], [184, 44, 30, 20], [160, 30, 28, 18]];
+  blobs.forEach(([x, y, rx, ry], i) => { g.fillStyle = leaf[0]; g.beginPath(); g.ellipse(x + sway * (i % 2 ? 1 : -1), y + 3, rx, ry, 0, 0, Math.PI * 2); g.fill(); });
+  blobs.forEach(([x, y, rx, ry], i) => { g.fillStyle = leaf[1]; g.beginPath(); g.ellipse(x + sway * (i % 2 ? 1 : -1), y, rx * 0.9, ry * 0.85, 0, 0, Math.PI * 2); g.fill(); });
+  blobs.forEach(([x, y, rx, ry], i) => { g.fillStyle = leaf[2]; g.beginPath(); g.ellipse(x - rx * 0.25 + sway, y - ry * 0.3, rx * 0.45, ry * 0.35, 0, 0, Math.PI * 2); g.fill(); });
+  // fruit: one per upgrade on this island's tree, lit when bought
+  const ups = I.tree.upgrades;
+  const spots = [[124, 70], [146, 52], [172, 46], [196, 66], [140, 82], [182, 84]];
+  ups.forEach((u, i) => {
+    const [x, y] = spots[i % spots.length];
+    const t = upTier(u.id), max = u.values.length - 1;
+    const fruit = { medieval: "#ff3b3b", wizard: "#7fe3ff", harvest: "#ffd23f", ocean: "#f0f4ff", volcano: "#ff8c1a" }[I.theme];
+    g.fillStyle = t ? fruit : "rgba(0,0,0,0.25)";
+    g.beginPath(); g.arc(x + sway, y, 3.2, 0, Math.PI * 2); g.fill();
+    if (t >= max) { g.fillStyle = "rgba(255,255,255,0.8)"; g.fillRect(x - 1 + sway, y - 2, 1, 1); }
+  });
+  if (I.theme === "wizard" || I.theme === "volcano") {
+    for (let i = 0; i < 6; i++) {
+      const a = ts / 1800 + i;
+      g.fillStyle = I.theme === "wizard" ? "rgba(255,232,106,0.9)" : "rgba(255,140,40,0.9)";
+      g.fillRect(160 + Math.cos(a) * 70, 60 + Math.sin(a * 1.3) * 34, 2, 2);
+    }
+  }
+}
+
+function cbSatchel(g, x, y, ts) {
+  const R = (a, b, w, h, col) => { g.fillStyle = col; g.fillRect(x + a, y + b, w, h); };
+  R(-10, -10, 20, 14, "#8a5a2a"); R(-11, -12, 22, 4, "#a87a3a"); R(-8, -16, 2, 6, "#6a4a1a"); R(6, -16, 2, 6, "#6a4a1a"); R(-8, -17, 16, 2, "#6a4a1a");
+  R(-3, -9, 6, 5, "#ffd23f"); R(-1, -7, 2, 2, "#8a5a2a"); R(-10, 2, 20, 2, "#6a4a1a");
+  R(9, -4, 4, 6, "#c8323a");   // a scroll sticking out
+}
+function cbStump(g, x, y) {
+  const R = (a, b, w, h, col) => { g.fillStyle = col; g.fillRect(x + a, y + b, w, h); };
+  R(-9, -2, 18, 10, "#7a5a3a"); R(-10, -4, 20, 3, "#a8885a"); R(-6, -3, 12, 1, "#8a6a4a");
+  R(-5, -14, 10, 7, "#ffd23f"); R(-7, -14, 2, 4, "#ffd23f"); R(5, -14, 2, 4, "#ffd23f"); R(-1, -7, 2, 3, "#ffd23f"); R(-4, -4, 8, 2, "#d8a020");
+  R(-3, -12, 2, 3, "#fff4b0");
+}
+function cbMirror(g, x, y, ts) {
+  const R = (a, b, w, h, col) => { g.fillStyle = col; g.fillRect(x + a, y + b, w, h); };
+  R(-1, 4, 2, 12, "#6a4a2a"); R(-6, 15, 12, 2, "#6a4a2a");
+  R(-8, -16, 16, 22, "#c8a04a"); R(-6, -14, 12, 18, "#9fd8f0");
+  const shine = (ts / 1500) % 1;
+  R(-6 + shine * 10, -14, 2, 18, "rgba(255,255,255,0.5)");
+  // a reflected snake
+  const sk = currentSkin();
+  for (let i = 0; i < 4; i++) R(-4 + i * 2, -2 - (i === 3 ? 2 : 0), 2, 2, skinColorAt(sk, 3 - i, ts));
+}
+function cbEasel(g, x, y, ts) {
+  const R = (a, b, w, h, col) => { g.fillStyle = col; g.fillRect(x + a, y + b, w, h); };
+  R(-8, -6, 2, 22, "#8a6a3a"); R(6, -6, 2, 22, "#8a6a3a"); R(-1, -10, 2, 26, "#6a4a2a");
+  R(-10, -18, 20, 15, "#f0e8d8");
+  const bd = currentBackdrop();
+  const cols = bd.colors || [bd.color || "#222", "#444"];
+  for (let i = 0; i < 4; i++) R(-9 + i * 4.5, -17, 4.5, 13, cols[i % cols.length] || "#333");
+  R(4, 6, 10, 6, "#c8a070"); R(6, 7, 2, 2, "#ff3b3b"); R(9, 7, 2, 2, "#3ddc84"); R(11, 9, 2, 2, "#38bdf8");
+}
 
 /* ----- The modal every campaign panel uses ----- */
 let campModalOpen = false;
@@ -30,7 +238,7 @@ function closeCampModal() {
   campModalOpen = false;
   const after = campModalAfter;
   campModalAfter = null;
-  if (currentScreen === "camp") { cmTopbar(); cmCard(); cmSpots(); }
+  if (currentScreen === "camp") { cmTopbar(); cmCard(); }
   if (after) after();
 }
 
