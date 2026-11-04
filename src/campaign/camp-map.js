@@ -17,26 +17,26 @@
    ========================================================= */
 "use strict";
 
-const CM_W = 900, CM_H = 1640;                     // the world, in map pixels
-const CM_CENTERS = [[300, 1380], [600, 1110], [300, 840], [600, 570], [450, 300]];
-/* The coastline: soft blobs melted into one landmass (metaballs), then a little ragged noise.
-   [x, y, half-width, half-height] around the island's middle. */
-const CM_LOBES = [
-  [0, 0, 158, 60], [-4, 78, 62, 28], [190, 34, 56, 24], [-196, -6, 56, 24], [182, -50, 52, 22],
-  [10, -88, 50, 20], [-126, -58, 54, 26], [-126, 60, 50, 24], [128, 68, 48, 22]
-];
-const CM_FEATURE = { landmark: [-126, -52], pool: [-126, 60], grove: [128, 66] };
+const CM_W = 760, CM_H = 1120;                     // the world, in map pixels
+const CM_CENTERS = [[250, 990], [510, 800], [250, 610], [510, 420], [330, 232]];
+const CM_MAIN = { hw: 118, th: 40, depth: 74 };
+const CM_ISLETS = {
+  home: { x: 0, y: 76, hw: 44, th: 13, depth: 26 },
+  merchant: { x: 160, y: 32, hw: 25, th: 8, depth: 17 },
+  challenger: { x: -162, y: -6, hw: 25, th: 8, depth: 17 },
+  banker: { x: 158, y: -42, hw: 25, th: 8, depth: 17 },
+  bridge: { x: 0, y: -88, hw: 13, th: 4, depth: 11 }
+};
 const CM_NODES = {
-  home: [-4, 80],
-  1: [-100, 36], 2: [-50, 38], 3: [0, 38], 4: [50, 38], 5: [100, 36],
-  6: [108, 2], 7: [54, 3], 8: [0, 4], 9: [-54, 3], 10: [-108, 2],
-  11: [-100, -32], 12: [-50, -34], 13: [0, -34], 14: [50, -34], 15: [100, -32],
-  merchant: [194, 34], challenger: [-200, -6], banker: [186, -52], bridge: [12, -92]
+  home: [0, 76],
+  1: [-78, 22], 2: [-39, 25], 3: [0, 26], 4: [39, 25], 5: [78, 22],
+  6: [86, 0], 7: [43, 1], 8: [0, 2], 9: [-43, 1], 10: [-86, 0],
+  11: [-78, -22], 12: [-39, -25], 13: [0, -26], 14: [39, -25], 15: [78, -22],
+  merchant: [160, 32], challenger: [-162, -6], banker: [158, -42], bridge: [0, -88]
 };
 const CM_EDGES = [["home", 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11],
   [11, 12], [12, 13], [13, 14], [14, 15], [5, "merchant"], [10, "challenger"], [15, "banker"], [15, "bridge"]];
-/* Bends in the longer paths, so they wind across the land */
-const CM_WAY = { "home-1": [[-44, 66], [-84, 50]], "15-bridge": [[76, -54], [40, -76]], "5-merchant": [[146, 42]], "10-challenger": [[-154, -2]], "15-banker": [[144, -46]], "5-6": [[112, 18]], "10-11": [[-112, -16]] };
+const CM_ROPES = ["home-1", "5-merchant", "10-challenger", "15-banker", "15-bridge"];   // these cross open sky
 
 const cmKey = (isl, node) => isl + ":" + node;
 const cmParse = k => { const [isl, n] = k.split(":"); return { isl, node: isNaN(+n) ? n : +n }; };
@@ -90,7 +90,7 @@ function openCampMap(focus) {
   if (campLoadNote) { const t = campLoadNote; campLoadNote = ""; setTimeout(() => showToast(t), 400); }
 }
 
-const cmDefaultZoom = () => Math.max(1, Math.min(8, Math.min(window.innerWidth / 560, window.innerHeight / 320)));
+const cmDefaultZoom = () => Math.max(1, Math.min(9, Math.min(window.innerWidth / 380, window.innerHeight / 250)));
 
 function cmLayout() {
   if (!cmCanvas) {
@@ -188,9 +188,8 @@ function cmHit(sx, sy) {
     Object.keys(CM_NODES).forEach(k => {
       const node = isNaN(+k) ? k : +k;
       const p = cmPos(isl.id, node);
-      const big = node === "home" || typeof node === "string";
-      const [x, y] = cmToScreen(p.x, p.y - (big ? 10 : 3));
-      const r = Math.max(14, (big ? 14 : 8) * cmCam.z);
+      const [x, y] = cmToScreen(p.x, p.y - (node === "home" ? 8 : 2));
+      const r = Math.max(14, (node === "home" ? 16 : 8) * cmCam.z);
       const d = Math.hypot(sx - x, sy - y);
       if (d < r && d < bestD) { best = { isl: isl.id, node }; bestD = d; }
     });
@@ -233,33 +232,23 @@ function cmSelect(hit) {
 /* ----- Your snake on the map ----- */
 const cmTraveler = { at: null, path: null, d: 0, trail: [] };
 
-/* The points along one step of the journey: a winding path on the ground, or a ride on the Coil */
-function cmLocalPath(isl, a, b) {
-  const way = CM_WAY[`${a}-${b}`] || (CM_WAY[`${b}-${a}`] ? CM_WAY[`${b}-${a}`].slice().reverse() : []);
-  const i = campIslandIdx(isl), c = CM_CENTERS[i];
-  const pts = [CM_NODES[a]].concat(way, [CM_NODES[b]]).map(([x, y]) => ({ x: c[0] + x, y: c[1] + y }));
-  const out = [];
-  for (let s = 0; s < pts.length - 1; s++) {
-    const p = pts[s], q = pts[s + 1];
-    const n = Math.max(3, Math.ceil(Math.hypot(q.x - p.x, q.y - p.y) / 2));
-    for (let k = s ? 1 : 0; k <= n; k++) {
-      const f = k / n;
-      out.push({ x: p.x + (q.x - p.x) * f, y: p.y + (q.y - p.y) * f - Math.sin(f * Math.PI) * 2 });
-    }
-  }
-  return out;
-}
-
 function cmEdgePoints(a, b) {
   const A = cmParse(a), B = cmParse(b);
   if (A.isl !== B.isl) {
-    // up from the bridge gate, along the Coil, and onto the next island's shore
-    const lo = campIslandIdx(A.isl) < campIslandIdx(B.isl) ? A : B, hi = lo === A ? B : A;
-    const g = cmPos(lo.isl, "bridge", 0), h = cmPos(hi.isl, "home", 0);
-    const pts = [{ x: g.x, y: g.y }].concat(coilSamples(campIslandIdx(lo.isl)).map(p => ({ x: p.x, y: p.y })), [{ x: h.x, y: h.y }]);
-    return lo === A ? pts : pts.reverse();
+    // riding the Coil from one island's bridge to the next island's home
+    const i = Math.min(campIslandIdx(A.isl), campIslandIdx(B.isl));
+    const pts = coilSamples(i).map(p => ({ x: p.x, y: p.y }));
+    return campIslandIdx(A.isl) < campIslandIdx(B.isl) ? pts : pts.reverse();
   }
-  return cmLocalPath(A.isl, A.node, B.node);
+  const p = cmPos(A.isl, A.node, 0), q = cmPos(B.isl, B.node, 0);
+  const out = [];
+  const rope = CM_ROPES.includes(`${A.node}-${B.node}`) || CM_ROPES.includes(`${B.node}-${A.node}`);
+  const n = Math.max(4, Math.ceil(Math.hypot(q.x - p.x, q.y - p.y) / 3));
+  for (let k = 0; k <= n; k++) {
+    const f = k / n;
+    out.push({ x: p.x + (q.x - p.x) * f, y: p.y + (q.y - p.y) * f + (rope ? Math.sin(f * Math.PI) * 5 : -Math.sin(f * Math.PI) * 2) });
+  }
+  return out;
 }
 
 function cmNeighbors(k) {
@@ -455,8 +444,8 @@ function cmTopbar() {
 function cmFocusHome(isl) {
   cmHome = isl;
   const p = cmPos(isl, "home", 0);
-  const z = Math.max(5, Math.min(20, Math.min(cmCanvas.clientWidth / 150, cmCanvas.clientHeight / 95)));
-  cmFly(p.x + 18, p.y - 14, z, 800);
+  const z = Math.max(6, Math.min(22, Math.min(cmCanvas.clientWidth / 120, cmCanvas.clientHeight / 80)));
+  cmFly(p.x + 14, p.y - 12, z, 800);
   cmSpots();
 }
 
@@ -469,7 +458,7 @@ function cmKeepsakes() {
     easel: camp.themes.length > CAMP.rules.cosmetics.freeThemes.length || camp.gems >= cosmeticPrice("theme", 0)
   };
 }
-const CM_KEEP_AT = { satchel: [-18, 2], trophy: [18, 2], mirror: [32, -2], easel: [-33, -2] };
+const CM_KEEP_AT = { satchel: [-12, -1], trophy: [12, -1], mirror: [24, -3], easel: [-25, -3] };
 const CM_KEEP_LABEL = { canopy: "Upgrade tree", satchel: "Satchel", trophy: "Achievements", mirror: "Skins", easel: "Themes" };
 const cmSeenKeep = {};
 
@@ -479,7 +468,7 @@ function cmSpots() {
   if (!cmHome || currentScreen !== "camp") { box.innerHTML = ""; return; }
   const k = cmKeepsakes();
   const gr = cmTreeGrowth(cmHome);
-  const list = [["canopy", 0, -26 - Math.round(gr * 26)]].concat(Object.keys(CM_KEEP_AT).filter(n => k[n]).map(n => [n, CM_KEEP_AT[n][0], CM_KEEP_AT[n][1] - 9]));
+  const list = [["canopy", 0, -16 - Math.round(gr * 20)]].concat(Object.keys(CM_KEEP_AT).filter(n => k[n]).map(n => [n, CM_KEEP_AT[n][0], CM_KEEP_AT[n][1] - 9]));
   box.innerHTML = list.map(([n, dx, dy]) => `<button class="cb-spot" data-spot="${n}" data-dx="${dx}" data-dy="${dy}">${CM_KEEP_LABEL[n]}</button>`).join("");
   box.querySelectorAll("[data-spot]").forEach(b => b.addEventListener("click", () => {
     sfx("click");
@@ -542,7 +531,7 @@ function cmStep(ts) {
   }
   cmTickTraveler(dt);
   // drifting away from home closes it
-  if (cmHome && !cmGlide && !cmTraveler.crossing) { const p = cmPos(cmHome, "home", 0); if (cmCam.z < 3 || Math.hypot(p.x - cmCam.x, p.y - cmCam.y) > 140) { cmHome = null; cmSpots(); } }
+  if (cmHome && !cmGlide && !cmTraveler.crossing) { const p = cmPos(cmHome, "home", 0); if (cmCam.z < 3 || Math.hypot(p.x - cmCam.x, p.y - cmCam.y) > 90) { cmHome = null; cmSpots(); } }
   cmDraw(ts);
   cmPlaceSpots();
 }
@@ -562,6 +551,648 @@ function cmDraw(ts) {
   const [x0, y0] = cmToWorld(0, 0);
   g.drawImage(cmWorld, 0, 0, CM_W, CM_H, -x0 * cmCam.z, -y0 * cmCam.z, CM_W * cmCam.z, CM_H * cmCam.z);
   cmDrawOverlay(g, t);
+}
+
+/* ----- The sky: sunrise at the bottom, the day, dusk, and stars at the top ----- */
+const CM_SKY = [[0, "#090820"], [150, "#1a1650"], [280, "#3e2c78"], [400, "#8a4f94"], [500, "#d47f93"],
+  [600, "#c9a7c6"], [700, "#8fbfe6"], [830, "#79bdec"], [960, "#bfe0f2"], [1060, "#ffe1bf"], [1120, "#ffd09a"]].map(([y, c]) => [y, hexToRgb(c)]);
+function cmSkyAt(y) {
+  if (y <= CM_SKY[0][0]) return CM_SKY[0][1];
+  for (let i = 1; i < CM_SKY.length; i++) {
+    const [y1, c1] = CM_SKY[i], [y0, c0] = CM_SKY[i - 1];
+    if (y <= y1) { const k = (y - y0) / (y1 - y0); return c0.map((v, j) => Math.round(v + (c1[j] - v) * k)); }
+  }
+  return CM_SKY[CM_SKY.length - 1][1];
+}
+
+const CM_SKY_PX = 5;
+function cmDrawSky(out, vw, vh, t) {
+  const w = Math.max(1, Math.ceil(vw / CM_SKY_PX)), h = Math.max(1, Math.ceil(vh / CM_SKY_PX));
+  if (cmSky.width !== w || cmSky.height !== h) { cmSky.width = w; cmSky.height = h; }
+  const g = cmSky.getContext("2d");
+  const worldY = row => cmToWorld(0, row * CM_SKY_PX)[1];
+  for (let r = 0; r < h; r++) {
+    const [cr, cg, cb] = cmSkyAt(worldY(r) + (BAYER[(r % 4) * 4] / 16 - 0.5) * 14);
+    g.fillStyle = `rgb(${cr},${cg},${cb})`;
+    g.fillRect(0, r, w, 1);
+  }
+  // the far layers drift a fraction as fast as the world
+  const px = -cmCam.x * cmCam.z / CM_SKY_PX, py = -cmCam.y * cmCam.z / CM_SKY_PX;
+  for (let i = 0; i < 170; i++) {
+    const sx = ((cmHash(i, 1, 91) * w * 3 + px * 0.1) % w + w) % w;
+    const sy = ((cmHash(i, 2, 91) * h * 3 + py * 0.1) % h + h) % h;
+    const a = Math.max(0, Math.min(1, (560 - worldY(sy)) / 300));
+    if (a <= 0) continue;
+    const tw = 0.5 + 0.5 * Math.sin(t * (1 + cmHash(i, 3, 91) * 3) + i);
+    g.fillStyle = `rgba(255, 250, 230, ${a * (0.3 + tw * 0.7)})`;
+    g.fillRect(Math.floor(sx), Math.floor(sy), 1, 1);
+  }
+  for (let i = 0; i < 10; i++) {
+    const iw = 6 + cmHash(i, 4, 93) * 11;
+    const sx = ((cmHash(i, 5, 93) * w * 2.2 + px * 0.28) % (w * 1.4) + w * 1.4) % (w * 1.4) - w * 0.2;
+    const sy = ((cmHash(i, 6, 93) * h * 2 + py * 0.28) % (h * 1.3) + h * 1.3) % (h * 1.3) - h * 0.15;
+    const [r0, g0, b0] = cmSkyAt(worldY(sy));
+    g.fillStyle = `rgba(${Math.round(r0 * 0.86)},${Math.round(g0 * 0.9)},${Math.round(b0 * 0.88)},0.75)`;
+    g.fillRect(Math.round(sx - iw / 2), Math.round(sy - 1), Math.round(iw), 2);
+    g.fillStyle = `rgba(${Math.round(r0 * 0.72)},${Math.round(g0 * 0.72)},${Math.round(b0 * 0.82)},0.7)`;
+    for (let r = 1; r < iw * 0.55; r++) {
+      const ww = Math.max(1, Math.round(iw * Math.pow(1 - r / (iw * 0.55), 0.8)));
+      g.fillRect(Math.round(sx - ww / 2), Math.round(sy + r), ww, 1);
+    }
+  }
+  // the moon over the Cinder Crown, the sun under Brightscale Keep
+  const [, moonSy] = cmToScreen(0, 90), [, sunSy] = cmToScreen(0, 1070);
+  const mx = w * 0.8 + px * 0.04, my = moonSy / CM_SKY_PX * 0.6 + py * 0.02;
+  if (my > -12 && my < h + 12) { cmDisc(g, mx, my, 9, "rgba(255,250,220,0.12)"); cmDisc(g, mx, my, 5, "#fff6d8"); cmDisc(g, mx + 2, my - 1, 4.2, "rgba(26,22,80,0.88)"); }
+  const sx = w * 0.14 + px * 0.04, sy = sunSy / CM_SKY_PX;
+  if (sy > -16 && sy < h + 16) { cmDisc(g, sx, sy, 13, "rgba(255,210,140,0.18)"); cmDisc(g, sx, sy, 9, "rgba(255,220,150,0.3)"); cmDisc(g, sx, sy, 6, "#fff0b8"); }
+  out.drawImage(cmSky, 0, 0, w * CM_SKY_PX, h * CM_SKY_PX);
+}
+function cmDisc(g, cx, cy, r, color) {
+  g.fillStyle = color;
+  for (let y = -r; y <= r; y++) { const half = Math.round(Math.sqrt(Math.max(0, r * r - y * y))); g.fillRect(Math.round(cx - half), Math.round(cy + y), half * 2 + 1, 1); }
+}
+
+/* ----- The world ----- */
+function cmCloud(g, x, y, w, color) {
+  g.fillStyle = color;
+  const h = Math.max(2, Math.round(w * 0.22));
+  g.fillRect(Math.round(x), Math.round(y), Math.round(w), h);
+  g.fillRect(Math.round(x + w * 0.15), Math.round(y - h * 0.6), Math.round(w * 0.4), h);
+  g.fillRect(Math.round(x + w * 0.45), Math.round(y - h), Math.round(w * 0.35), h);
+}
+
+function cmDrawWorld(g, t) {
+  // clouds far behind, tinted by the sky around them
+  for (let i = 0; i < 22; i++) {
+    const w = 22 + cmHash(i, 7, 3) * 40;
+    const x = ((cmHash(i, 7, 5) * (CM_W + 160) + t * (1.2 + (i % 5) * 0.4)) % (CM_W + 160)) - 80;
+    const y = 30 + (i / 22) * (CM_H - 80) + cmHash(i, 7, 9) * 30;
+    const [r, gg, b] = cmSkyAt(y);
+    cmCloud(g, x, y, w, `rgba(${Math.round((r + 510) / 3)},${Math.round((gg + 510) / 3)},${Math.round((b + 510) / 3)},0.45)`);
+  }
+  // the Coil, behind the islands it carries you between
+  cmDrawCoil(g, t);
+  CAMP.islands.forEach((isl, i) => cmDrawIsland(g, isl, i, t));
+  cmDrawCoilHead(g, t);
+  cmDrawTraveler(g, t);
+  // clouds over islands you haven't reached
+  CAMP.islands.forEach((isl, i) => {
+    if (campIslandOpen(isl.id)) return;
+    const c = CM_CENTERS[i];
+    for (let k = 0; k < 9; k++) {
+      const w = 40 + cmHash(k, i, 4) * 50;
+      const x = c[0] - 130 + cmHash(k, i, 5) * 210 + Math.sin(t * 0.3 + k) * 4, y = c[1] - 40 + (k % 5) * 26 + cmHash(k, i, 6) * 8;
+      cmCloud(g, x, y, w, k % 2 ? "rgba(244,247,251,0.92)" : "rgba(223,230,239,0.92)");
+    }
+  });
+  // a sea of clouds far below, lit by the sunrise
+  for (let x = 0; x < CM_W; x++) {
+    const hh = 14 + Math.round(Math.sin((x + t * 4) * 0.11) * 3 + Math.sin((x - t * 2.5) * 0.29) * 2);
+    cmRect(g, x, CM_H - hh, 1, hh, "#fbe9dc");
+    cmRect(g, x, CM_H - hh, 1, 2, "#ffffff");
+    if ((x + Math.floor(t * 6)) % 29 === 0) cmRect(g, x, CM_H - hh + 4, 5, 1, "#f2cdb8");
+  }
+}
+
+/* ----- Floating islands, painted once ----- */
+const CM_ROCK = {
+  medieval: ["#7a5232", "#6c482b", "#5e4a3a", "#4e4038", "#57545c", "#4c4a50"],
+  wizard: ["#5a4a7a", "#4a3d6a", "#463a5e", "#3a3050", "#3a3448", "#302a3c"],
+  harvest: ["#8a5a32", "#7a4e2b", "#6a4a32", "#5a3e2a", "#55463c", "#4a3e36"],
+  ocean: ["#c8a07a", "#b88e6a", "#a07a68", "#8a6a62", "#6a6a7a", "#5a5a6a"],
+  volcano: ["#3a2a2a", "#2e2222", "#2a2026", "#221a20", "#1e181c", "#181418"]
+};
+
+function cmPaintFloat(isl, hw, th, depth, seed, fog) {
+  const W = hw * 2 + 8, H = th * 2 + depth + 10;
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const g = c.getContext("2d");
+  const cx = Math.floor(W / 2), cy = th + 2;
+  const C = isl.colors;
+  const rock = fog ? ["#aab4c4", "#9ea9ba", "#aab4c4", "#9ea9ba", "#a4aebe", "#98a2b4"] : CM_ROCK[isl.theme];
+  const [a, b, edge] = fog ? ["#c9d2df", "#bcc6d4", "#9aa6b8"] : [C.grass, campShade(C.grass, -0.08), C.edge];
+  // the rock underneath: column by column, so the underside hangs in ragged points
+  const smooth = (v, s) => { const i = Math.floor(v), f = v - i, a = cmHash(i, s, 41), b = cmHash(i + 1, s, 41); return a + (b - a) * (f * f * (3 - 2 * f)); };
+  for (let x = -hw; x <= hw; x++) {
+    const e = Math.abs(x) / hw;
+    const col = depth * Math.pow(Math.max(0, 1 - e * e), 0.85) * (0.62 + 0.38 * smooth(x * 0.11 + 10, seed)) + (cmHash(x, seed, 5) - 0.5) * 3;
+    for (let r = 0; r <= col; r++) {
+      const y = cy + th - 1 + r;
+      const k = r / depth + (smooth(x * 0.3, seed + 3) - 0.5) * 0.12;
+      const band = k < 0.28 ? 0 : k < 0.6 ? 2 : 4;
+      let c = cmHash(x, r, seed + band) > 0.55 ? rock[band + 1] : rock[band];
+      if (!fog && (x + Math.floor(r / 3)) % 7 === 0 && r > 2) c = rock[Math.min(5, band + 1)];   // strata
+      if (r >= col - 1) c = fog ? "#8c97a8" : "#2e2420";
+      else if (x > hw * 0.55 && !fog) c = campShade(c, -0.18);                                     // the shaded side
+      else if (x < -hw * 0.6 && !fog && r < col * 0.5) c = campShade(c, 0.14);                     // the lit side
+      if (!fog && isl.theme === "volcano" && cmHash(x, r, seed + 9) > 0.985) c = "#ff6a1a";
+      if (!fog && isl.theme === "wizard" && cmHash(x, r, seed + 9) > 0.992) c = "#b8f0ff";
+      cmRect(g, cx + x, y, 1, 1, c);
+    }
+  }
+  if (!fog) {
+    const n = Math.max(2, Math.round(hw / 14));
+    for (let k = 0; k < n; k++) {
+      const x = cx - hw * 0.7 + k * (hw * 1.4 / Math.max(1, n - 1));
+      const y0 = cy + th + Math.round(depth * 0.3 * cmHash(k, seed, 9));
+      const len = 2 + Math.floor(cmHash(k, seed, 11) * (depth * 0.25));
+      for (let r = 0; r < len; r++) cmRect(g, x + (r > 2 ? 1 : 0), y0 + r, 1, 1, r === len - 1 ? campShade(C.grass, -0.1) : "#3e2a1a");
+    }
+  }
+  for (let dy = -th; dy <= th; dy++) {
+    const half = hw * Math.sqrt(Math.max(0, 1 - Math.pow(dy / (th + 0.5), 2)));
+    for (let x = -Math.round(half); x <= Math.round(half); x++) {
+      let col = ((x + dy) & 1) && cmHash(x, dy, seed + 5) > 0.45 ? b : a;
+      if (dy >= th - 1) col = edge;
+      if (dy === -th || (dy < 0 && Math.abs(x) >= Math.round(half) - 1)) col = fog ? "#e3e9f1" : campShade(a, 0.18);
+      cmRect(g, cx + x, cy + dy, 1, 1, col);
+    }
+  }
+  return { c, ox: cx, oy: cy, g };
+}
+
+function cmIslandArt(isl, i) {
+  const fog = !campIslandOpen(isl.id);
+  const key = isl.id + (fog ? ":fog" : ":on");
+  if (cmArtCache.has(key)) return cmArtCache.get(key);
+  const seed = 31 + i * 97;
+  const main = cmPaintFloat(isl, CM_MAIN.hw, CM_MAIN.th, CM_MAIN.depth, seed, fog);
+  if (!fog) {
+    const g = main.g, cx = main.ox, cy = main.oy;
+    const rng = seededRandom(seed);
+    const nodes = Object.entries(CM_NODES).filter(([k]) => !CM_ISLETS[k]).map(([, p]) => p);
+    const clear = (x, y, r) => nodes.every(([a, b]) => Math.hypot(a - x, (b - y) * 1.6) > r) && Math.hypot(x + 60, y + 34) > 16;
+    const props = [];
+    for (let k = 0; k < 400 && props.length < 34; k++) {
+      const x = (rng() * 2 - 1) * (CM_MAIN.hw - 6), y = (rng() * 2 - 1) * (CM_MAIN.th - 4);
+      if ((x / (CM_MAIN.hw - 6)) ** 2 + (y / (CM_MAIN.th - 3)) ** 2 > 1 || !clear(x, y, 10) || props.some(p => Math.hypot(p[0] - x, (p[1] - y) * 1.6) < 9)) continue;
+      props.push([x, y, rng()]);
+    }
+    // a trail worn between the levels
+    for (let j = 1; j < 15; j++) {
+      const [ax, ay] = CM_NODES[j], [bx, by] = CM_NODES[j + 1];
+      const n = Math.ceil(Math.hypot(bx - ax, by - ay));
+      for (let s = 0; s <= n; s++) if (s % 3 !== 2) cmRect(g, cx + ax + (bx - ax) * s / n, cy + ay + (by - ay) * s / n + 1, 1, 1, "rgba(110,80,40,0.45)");
+    }
+    props.sort((p, q) => p[1] - q[1]).forEach(([x, y, r]) => cmProp(g, isl.theme, cx + x, cy + y, r));
+    cmLandmark(g, isl.theme, cx - 60, cy - 31);
+  }
+  const islets = {};
+  Object.entries(CM_ISLETS).forEach(([k, d], j) => {
+    islets[k] = cmPaintFloat(isl, d.hw, d.th, d.depth, seed + 13 * (j + 1), fog);
+    if (!fog && k !== "home" && k !== "bridge") {
+      const r = seededRandom(seed + j);
+      cmProp(islets[k].g, isl.theme, islets[k].ox - 17, islets[k].oy + 1, r() * 0.5);
+      cmProp(islets[k].g, isl.theme, islets[k].ox + 17, islets[k].oy + 1, r() * 0.5);
+    }
+    if (!fog && k === "home") {
+      const r = seededRandom(seed + 77);
+      [[-34, 2], [33, 3], [-30, -5], [30, -6]].forEach(([dx, dy]) => cmProp(islets[k].g, isl.theme, islets[k].ox + dx, islets[k].oy + dy, r() * 0.45));
+    }
+  });
+  const art = { main, islets };
+  cmArtCache.set(key, art);
+  return art;
+}
+
+function cmProp(g, theme, x, y, r) {
+  const R = (a, b, w, h, col) => cmRect(g, x + a, y + b, w, h, col);
+  if (theme === "medieval") {
+    if (r < 0.5) { R(0, 1, 1, 3, "#5a3a22"); R(-2, -2, 5, 4, "#2f7d2a"); R(-1, -3, 3, 1, "#3f9a33"); if (r < 0.2) R(1, -1, 1, 1, "#ff3b3b"); }
+    else if (r < 0.7) { R(-3, -2, 6, 4, "#e8dcc0"); R(-4, -4, 8, 2, "#b23a3a"); R(-3, -5, 6, 1, "#c84a4a"); R(-1, 0, 2, 2, "#5a3a22"); }
+    else if (r < 0.85) { R(0, -6, 1, 7, "#5a3a22"); R(1, -6, 3, 2, r < 0.78 ? "#d9b44a" : "#3a6ab8"); }
+    else { R(-2, -1, 4, 2, "#f4f4f4"); R(-1, -2, 3, 1, "#f4f4f4"); R(2, -2, 1, 1, "#3a3a3a"); }
+  } else if (theme === "wizard") {
+    if (r < 0.35) { for (let j = 0; j < 6; j++) R(-Math.floor(j / 3), -j, 1 + Math.floor(j / 3) * 2, 1, j > 4 ? "#e8d0ff" : "#9a7ae0"); }
+    else if (r < 0.6) { R(0, 1, 1, 3, "#3a2a5a"); R(-2, -2, 5, 4, "#2a6a7a"); R(-1, -3, 3, 1, "#3a8a9a"); R(-1, -1, 1, 1, "#ffe86a"); }
+    else if (r < 0.8) { R(-2, -1, 4, 3, "#7a4a2a"); R(-2, -2, 4, 1, "#e8e0c8"); R(1, -4, 1, 2, "#b36bff"); }
+    else { R(-1, -5, 2, 6, "#4a4a7a"); R(-2, -6, 4, 1, "#6a6aa0"); R(0, -4, 1, 1, "#7fe3ff"); }
+  } else if (theme === "harvest") {
+    if (r < 0.4) { R(0, 1, 1, 3, "#6a4a2a"); R(-2, -2, 5, 4, "#5a8a2a"); R(-1, -1, 1, 1, "#ff3b3b"); R(1, 0, 1, 1, "#ff8c1a"); }
+    else if (r < 0.6) { R(-3, -1, 6, 3, "#e8c060"); R(-2, -2, 4, 1, "#f0d070"); }
+    else if (r < 0.78) { R(-2, -1, 4, 3, "#ff8c1a"); R(-1, -2, 2, 1, "#ffa83a"); R(0, -3, 1, 1, "#3a7a2a"); }
+    else { R(-1, -3, 3, 3, "#e0a820"); R(-1, -4, 3, 1, "#c08a10"); R(0, -2, 1, 1, "#3a2a10"); }
+  } else if (theme === "ocean") {
+    if (r < 0.35) { R(0, -5, 1, 6, "#ff7a8a"); R(-2, -4, 2, 1, "#ff7a8a"); R(1, -3, 2, 1, "#ff7a8a"); R(-2, -5, 1, 1, "#ff9aa8"); }
+    else if (r < 0.6) { for (let j = 0; j < 6; j++) R(Math.round(Math.sin(j * 0.9)), -j, 1, 1, "#2a9a5a"); }
+    else if (r < 0.8) { R(-2, -1, 4, 2, "#ffc8b8"); R(-1, -2, 2, 1, "#ffd8c8"); R(0, -1, 1, 1, "#c87a6a"); }
+    else { R(-1, 0, 3, 1, "#4a90c8"); R(-2, 1, 5, 1, "#5aa0d8"); }
+  } else {
+    if (r < 0.35) { R(-2, -2, 4, 3, "#2a2028"); R(-1, -3, 2, 1, "#3a3040"); R(0, -2, 1, 1, "#ff6a1a"); }
+    else if (r < 0.6) { R(0, 0, 1, 2, "#2a1a1a"); R(-1, -3, 3, 3, "#1a1014"); R(0, -4, 1, 1, "#1a1014"); }
+    else if (r < 0.8) { R(-2, 0, 4, 1, "#ff6a1a"); R(-1, -1, 2, 1, "#ffd23f"); }
+    else { R(-1, -4, 2, 4, "#4a3a40"); R(0, -5, 1, 1, "#ff9a3a"); }
+  }
+}
+
+function cmLandmark(g, theme, x, y) {
+  const R = (a, b, w, h, col) => cmRect(g, x + a, y + b, w, h, col);
+  if (theme === "medieval") {
+    R(-8, -10, 16, 10, "#a8a098"); R(-10, -16, 5, 16, "#b8b0a8"); R(5, -16, 5, 16, "#b8b0a8");
+    for (let k = 0; k < 3; k++) { R(-10 + k * 2, -17, 1, 1, "#b8b0a8"); R(5 + k * 2, -17, 1, 1, "#b8b0a8"); }
+    R(-2, -5, 4, 5, "#5a3a20"); R(-8, -11, 16, 1, "#c8c0b8");
+    R(-8, -22, 1, 6, "#5a3a20"); R(-7, -22, 4, 2, "#d9b44a"); R(8, -22, 1, 6, "#5a3a20"); R(9, -22, 4, 2, "#c8323a");
+  } else if (theme === "wizard") {
+    R(-3, -26, 6, 26, "#5a5a90"); R(-4, -28, 8, 2, "#4a4a80"); for (let j = 0; j < 6; j++) R(-4 + j * 0.7, -34 + j, 8 - j * 1.4, 1, "#3a3a8a");
+    R(-1, -20, 2, 2, "#ffe86a"); R(-1, -12, 2, 2, "#ffe86a"); R(-6, -2, 12, 2, "#4a4a80");
+  } else if (theme === "harvest") {
+    R(-10, -8, 12, 8, "#a83a2a"); R(-11, -12, 14, 4, "#8a2a1a"); R(-6, -4, 3, 4, "#5a3a20");
+    R(4, -14, 4, 14, "#c8b080"); R(3, -16, 6, 2, "#a89060"); R(1, -15, 2, 1, "#c8b080"); R(9, -15, 2, 1, "#c8b080");
+  } else if (theme === "ocean") {
+    R(-12, -4, 24, 4, "#6a4a2a"); R(-9, -12, 2, 8, "#5a3a20"); R(-10, -12, 9, 5, "#e8e0c8"); R(3, -15, 2, 11, "#5a3a20"); R(4, -15, 8, 6, "#e8e0c8");
+  } else {
+    for (let j = 0; j < 14; j++) R(-j * 0.9, -14 + j, j * 1.8 + 3, 1, j < 3 ? "#ff6a1a" : "#3a2a30");
+    R(-2, -15, 4, 2, "#ff6a1a");
+  }
+}
+
+function cmDrawIsland(g, isl, i, t) {
+  const art = cmIslandArt(isl, i);
+  const c = CM_CENTERS[i], by = cmBob(i, t);
+  const open = campIslandOpen(isl.id);
+  const blit = (a, x, y) => g.drawImage(a.c, Math.round(x - a.ox), Math.round(y - a.oy + by));
+  // islets behind the main island first, then the island, then the ones in front
+  ["bridge", "banker", "challenger"].forEach(k => blit(art.islets[k], c[0] + CM_ISLETS[k].x, c[1] + CM_ISLETS[k].y));
+  blit(art.main, c[0], c[1]);
+  ["merchant", "home"].forEach(k => blit(art.islets[k], c[0] + CM_ISLETS[k].x, c[1] + CM_ISLETS[k].y));
+  if (!open) return;
+  cmDrawPaths(g, isl, t);
+  cmLiving(g, isl, c[0], c[1] + by, t);
+  Object.keys(CM_NODES).forEach(k => cmDrawNode(g, isl, isNaN(+k) ? k : +k, t));
+}
+
+/* Plank bridges across the sky between the islets and the island */
+function cmDrawPaths(g, isl, t) {
+  const by = cmBob(campIslandIdx(isl.id), t);
+  CM_EDGES.forEach(([a, b]) => {
+    if (!CM_ROPES.includes(`${a}-${b}`)) return;          // trails between levels are painted on the ground
+    const lit = !["locked", "fog"].includes(cmNodeState(isl.id, b)) && !["locked", "fog"].includes(cmNodeState(isl.id, a));
+    const pts = cmEdgePoints(cmKey(isl.id, a), cmKey(isl.id, b));
+    pts.forEach((p, k) => {
+      if (k < 2 || k > pts.length - 3) return;
+      if (!lit && k % 3) return;
+      cmRect(g, p.x, p.y + 1 + by, 1, 1, "rgba(0,0,0,0.25)");
+      cmRect(g, p.x, p.y + by, 1, 1, lit ? (k % 2 ? "#a8743e" : "#8a5a30") : "rgba(90,70,50,0.55)");
+      if (lit && k % 4 === 0) cmRect(g, p.x, p.y - 2 + by, 1, 2, "#4a3020");
+    });
+  });
+}
+
+/* Little things moving on each island */
+function cmLiving(g, isl, x, y, t) {
+  if (isl.theme === "medieval") {
+    if (Math.sin(t * 5) > 0) cmRect(g, x - 52, y - 53, 1, 1, "#d9b44a");
+    for (let k = 0; k < 3; k++) { const ph = (t * 0.5 + k / 3) % 1; cmRect(g, x - 20 + k * 30 + Math.sin(t + k) * 3, y - 34 - ph * 4, 1, 1, `rgba(255,255,255,${0.6 * (1 - ph)})`); }
+  } else if (isl.theme === "wizard") {
+    for (let k = 0; k < 8; k++) { const a = t * 0.8 + k; cmRect(g, x - 60 + Math.cos(a) * 12, y - 52 + Math.sin(a * 1.3) * 7, 1, 1, k % 2 ? "#ffe86a" : "#b36bff"); }
+  } else if (isl.theme === "harvest") {
+    for (let k = 0; k < 4; k++) { const a = t * (2 + k * 0.4) + k * 1.6; cmRect(g, x - 52 + Math.cos(a) * (5 + k * 2), y - 40 + Math.sin(a * 1.3) * 3, 1, 1, k % 2 ? "#ffcf33" : "#1a1410"); }
+  } else if (isl.theme === "ocean") {
+    for (let k = 0; k < 18; k++) { const ph = (t * 1.3 + k / 18) % 1; cmRect(g, x + 96, y + 30 + ph * 44, 1, 2, `rgba(200,235,255,${0.85 * (1 - ph)})`); }
+    for (let k = 0; k < 4; k++) { const ph = (t * 0.4 + k / 4) % 1; cmRect(g, x - 20 + k * 22, y - 10 - ph * 12, 1, 1, `rgba(220,240,255,${0.7 * Math.sin(ph * Math.PI)})`); }
+  } else {
+    for (let k = 0; k < 3; k++) { const ph = (t * 0.35 + k / 3) % 1; g.fillStyle = `rgba(70,60,60,${0.55 * (1 - ph)})`; g.fillRect(Math.round(x - 60 + Math.sin(ph * 6 + k) * 2 - ph * 3), Math.round(y - 47 - ph * 16), 2 + Math.round(ph * 3), 2 + Math.round(ph * 2)); }
+    cmRect(g, x - 61, y - 46, 2, 1, Math.sin(t * 4) > 0 ? "#ffd23f" : "#ff6a1a");
+  }
+}
+
+/* ----- The spots on the path ----- */
+function cmDrawNode(g, isl, node, t) {
+  const p = cmPos(isl.id, node, t);
+  const st = cmNodeState(isl.id, node);
+  const x = Math.round(p.x), y = Math.round(p.y);
+  const R = (a, b, w, h, col) => cmRect(g, x + a, y + b, w, h, col);
+  if (node === "home") { cmDrawHome(g, isl, x, y, t); return; }
+  g.save();
+  if (st === "locked") g.globalAlpha = 0.6;
+  if (typeof node === "number") {
+    const d = campLevelDef(isl.id, node);
+    if (d.kind === "boss") {
+      R(-6, -6, 12, 7, "#2a2028"); R(-5, -8, 10, 2, "#3a3040"); R(-3, -9, 6, 1, "#3a3040");
+      R(-4, -5, 8, 6, "#0a0608");
+      const blink = (t + node) % 3.5 < 0.12;
+      R(-3, -3, 2, blink ? 1 : 2, isl.boss.eye); R(1, -3, 2, blink ? 1 : 2, isl.boss.eye);
+      R(-6, 1, 12, 1, "#4a4048");
+      if (st === "won") { R(5, -13, 1, 6, "#5a3a20"); R(6, -13, 3, 2, "#ffd23f"); }
+      else { R(-1, -13, 2, 4, "#e8e0c8"); R(-2, -12, 4, 1, "#e8e0c8"); }
+    } else {
+      const base = { static: "#c8a46a", enemy: "#c8704a", dynamic: "#6a8ad8" }[d.kind];
+      const top = st === "won" ? "#ffd23f" : base;
+      R(-4, 1, 9, 1, "rgba(0,0,0,0.3)");
+      R(-4, -1, 9, 2, campShade(base, -0.35));
+      R(-4, -3, 9, 2, top); R(-3, -4, 7, 1, top);
+      R(-2, -4, 3, 1, "rgba(255,255,255,0.45)");
+      cmGlyph(g, d.goal, x, y - 8, t);
+      if (st === "won") { R(4, -9, 1, 5, "#5a3a20"); R(5, -9, 2, 2, (camp.levels[campLevelId(isl.id, node)] || {}).flawless ? "#ffffff" : "#ff5a61"); }
+    }
+  } else if (node === "bridge") {
+    R(-5, -9, 2, 9, "#8a8270"); R(3, -9, 2, 9, "#8a8270"); R(-4, -10, 8, 2, "#a89c84"); R(-2, -11, 4, 1, "#a89c84");
+    if (st !== "locked") { g.fillStyle = `rgba(255,236,140,${0.35 + 0.25 * Math.sin(t * 3)})`; g.fillRect(x - 3, y - 8, 6, 8); }
+  } else {
+    cmDrawStall(g, isl, node, x, y, t);
+  }
+  g.restore();
+  if (st === "locked") { R(-1, -6, 3, 3, "#2a2e36"); R(0, -7, 1, 1, "#2a2e36"); R(0, -5, 1, 1, "#ffd23f"); }
+}
+
+/* A tiny picture of each goal, floating over its stone */
+function cmGlyph(g, goal, x, y, t) {
+  const bobY = Math.round(Math.sin(t * 2 + x) * 0.5);
+  const R = (a, b, w, h, col) => cmRect(g, x + a, y + b + bobY, w, h, col);
+  switch (goal.type) {
+    case "apples": R(-1, -1, 3, 3, "#ff2b2b"); R(0, -2, 1, 1, "#5a3a20"); R(1, -2, 1, 1, "#3ddc3d"); break;
+    case "score": R(0, -2, 1, 5, "#fff4b0"); R(-2, 0, 5, 1, "#fff4b0"); R(-1, -1, 3, 3, "#ffe86a"); break;
+    case "length": R(-2, 0, 2, 2, "#3ddc84"); R(0, 0, 2, 2, "#2fae6a"); R(2, -1, 2, 2, "#3ddc84"); break;
+    case "survive": R(-1, -2, 3, 1, "#e8e0c8"); R(0, -1, 1, 2, "#ffd23f"); R(-1, 1, 3, 1, "#e8e0c8"); break;
+    case "distance": R(-2, 0, 4, 1, "#ffffff"); R(1, -1, 1, 3, "#ffffff"); R(2, 0, 1, 1, "#ffffff"); break;
+    case "keys": R(-2, -1, 2, 2, "#ffd23f"); R(0, 0, 3, 1, "#ffd23f"); R(2, 1, 1, 1, "#ffd23f"); break;
+    case "buttons": R(-2, 0, 5, 2, "#5a6070"); R(-1, -1, 3, 1, "#3ddc84"); break;
+    case "relic": R(-2, -1, 5, 3, "#ffd23f"); R(-2, -2, 1, 1, "#ffd23f"); R(0, -2, 1, 1, "#ffd23f"); R(2, -2, 1, 1, "#ffd23f"); R(0, 0, 1, 1, "#ff3b3b"); break;
+    case "shards": R(-1, -1, 3, 3, "#c89a4a"); R(0, -2, 1, 1, "#8a6a2a"); break;
+    case "thief": R(-2, 0, 4, 2, "#8a6a4a"); R(1, -1, 2, 2, "#a8886a"); R(-3, 0, 1, 1, "#6a4a2a"); break;
+  }
+}
+
+/* A shopkeeper's stall on its islet, with the shopkeeper leaning out */
+function cmDrawStall(g, isl, kind, x, y, t) {
+  const C = isl.colors;
+  const R = (a, b, w, h, col) => cmRect(g, x + a, y + b, w, h, col);
+  const look = isl.npcs[kind].look;
+  if (kind === "merchant") {
+    for (let k = 0; k < 6; k++) R(-7 + k * 2.4, -10, 3, 2, k % 2 ? "#ffffff" : C.accent);
+    R(-7, -8, 1, 7, "#5a3a20"); R(6, -8, 1, 7, "#5a3a20");
+    R(-7, -3, 14, 3, "#8a5a30"); R(-7, -3, 14, 1, "#a87a4a");
+    R(-5, -5, 2, 2, "#9aa3ad"); R(3, -5, 2, 2, "#ffd23f");
+  } else if (kind === "challenger") {
+    R(-6, -12, 1, 12, "#5a3a20"); R(5, -12, 1, 12, "#5a3a20"); R(-6, -12, 12, 1, "#5a3a20");
+    R(-5, -11, 10, 6, C.accent); R(-1, -10, 2, 3, "#ffd23f"); R(-2, -11, 4, 1, "#ffd23f");
+    R(6, -14 + (Math.sin(t * 4) > 0 ? 1 : 0), 4, 2, "#ff5a61");
+  } else {
+    R(-7, -9, 14, 2, "#e8e0c8"); R(-6, -7, 2, 7, "#d8d0c0"); R(-1, -7, 2, 7, "#d8d0c0"); R(4, -7, 2, 7, "#d8d0c0");
+    R(-7, -1, 14, 2, "#c8c0b0"); R(-4, -11, 8, 2, "#e8e0c8"); R(-1, -11, 2, 1, "#ffd23f");
+    const cw = Math.max(1, Math.round(4 * Math.abs(Math.cos(t * 1.6))));
+    R(9, -12, 1, 9, "#5a3a20"); R(10 - Math.floor(cw / 2), -15, cw, 4, "#ffd23f");
+  }
+  // the shopkeeper, bobbing
+  const bob = Math.round(Math.sin(t * 2 + kind.length));
+  const hx = kind === "banker" ? -12 : 9, hy = -4 + bob;
+  R(hx - 1, hy, 3, 4, look.body); R(hx - 2, hy - 3, 5, 3, look.body);
+  R(hx - 1, hy - 2, 1, 1, look.eye || "#ffd23f"); R(hx + 1, hy - 2, 1, 1, look.eye || "#ffd23f");
+  const hat = { helm: "#9aa3ad", wizard: "#3a3aa8", chef: "#ffffff", tophat: "#1a1a20", tricorn: "#1a1a20", crown: "#ffd23f", hood: campShade(look.body, -0.35), fez: "#c8323a", beret: "#3a5a2a", straw: "#e8c870", shell: "#ffc8b8", horns: "#2a2028", hennin: "#c8508a" }[look.hat];
+  if (hat) { R(hx - 2, hy - 4, 5, 1, hat); if (["wizard", "tophat", "chef", "hennin", "crown"].includes(look.hat)) R(hx - 1, hy - 6, 3, 2, hat); }
+}
+
+/* The home islet: the island's tree, grown as far as you've upgraded it, and your keepsakes */
+function cmDrawHome(g, isl, x, y, t) {
+  const target = cmTreeGrowth(isl.id);
+  const shown = cmGrowShown[isl.id] === undefined ? target : cmGrowShown[isl.id];
+  const gr = shown + (target - shown) * 0.04;
+  cmGrowShown[isl.id] = Math.abs(target - gr) < 0.002 ? target : gr;
+  const growing = Math.abs(target - gr) > 0.004;
+  const R = (a, b, w, h, col) => cmRect(g, x + a, y + b, w, h, col);
+  const leaf = { medieval: ["#2f6a2a", "#3f8a33", "#5aa840"], wizard: ["#3a2a7a", "#5a3aa8", "#8a6ad8"], harvest: ["#5a7a2a", "#7a9a3a", "#a8b84a"], ocean: ["#c84a6a", "#e86a8a", "#ff9ab0"], volcano: ["#5a1a1a", "#8a2a1a", "#c8401a"] }[isl.theme];
+  const trunk = { medieval: "#6a4a2a", wizard: "#4a3a5a", harvest: "#7a5a3a", ocean: "#b86a7a", volcano: "#2a1a1a" }[isl.theme];
+  const fruit = { medieval: "#ff3b3b", wizard: "#7fe3ff", harvest: "#ffd23f", ocean: "#f0f4ff", volcano: "#ffb020" }[isl.theme];
+  g.fillStyle = "rgba(0,0,0,0.18)";
+  g.fillRect(x - 6 - Math.round(gr * 8), y + 1, 12 + Math.round(gr * 16), 2);
+  if (gr < 0.02) {
+    // a sapling in a ring of stones, waiting for its first upgrade
+    [-4, -2, 2, 4].forEach((sx, k) => R(sx, k % 3 ? 0 : -1, 2, 1, "#9a948a"));
+    R(0, -7, 1, 7, "#5a8a3a");
+    R(-3, -6, 3, 2, leaf[1]); R(1, -8, 3, 2, leaf[1]); R(-2, -9, 2, 1, leaf[2]); R(1, -4, 2, 1, leaf[2]);
+    if (Math.sin(t * 2) > 0.6) R(2, -10, 1, 1, "#fff6c4");
+  } else {
+    const th = 5 + Math.round(gr * 13), tw = gr > 0.55 ? 3 : gr > 0.2 ? 2 : 1;
+    R(-Math.floor(tw / 2), -th, tw, th, trunk);
+    if (tw > 1) R(-Math.floor(tw / 2), -th, 1, th, campShade(trunk, 0.25));
+    if (gr > 0.35) { R(-3, -1, 2, 1, trunk); R(2, -1, 2, 1, trunk); }
+    const reach = Math.round(2 + gr * 6);
+    if (gr > 0.15) { R(-reach, -th + 2, reach, 1, trunk); R(1, -th + 3, reach, 1, trunk); }
+    const sway = Math.round(Math.sin(t * 0.9) * 0.6);
+    const cr = 3 + Math.round(gr * 9);
+    const cy0 = -th - Math.round(cr * 0.5);
+    const blob = (bx, bY, rx, ry, col) => { for (let yy = -ry; yy <= ry; yy++) { const hw = Math.round(rx * Math.sqrt(Math.max(0, 1 - (yy / (ry + 0.5)) ** 2))); R(bx - hw + sway, bY + yy, hw * 2 + 1, 1, col); } };
+    blob(0, cy0 + 1, cr, Math.round(cr * 0.7), leaf[0]);
+    if (gr > 0.25) { blob(-Math.round(cr * 0.7), cy0 + 2, Math.round(cr * 0.55), Math.round(cr * 0.45), leaf[0]); blob(Math.round(cr * 0.7), cy0 + 2, Math.round(cr * 0.55), Math.round(cr * 0.45), leaf[0]); }
+    blob(0, cy0, Math.round(cr * 0.85), Math.round(cr * 0.6), leaf[1]);
+    blob(-Math.round(cr * 0.3), cy0 - Math.round(cr * 0.3), Math.round(cr * 0.4), Math.round(cr * 0.3), leaf[2]);
+    // one fruit for every tier bought on this tree
+    const tiers = isl.tree.upgrades.reduce((a, u) => a + upTier(u.id), 0);
+    for (let k = 0; k < tiers; k++) {
+      const a = k * 2.399, rr = Math.sqrt((k + 0.5) / Math.max(1, tiers)) * cr * 0.8;
+      R(Math.round(Math.cos(a) * rr) + sway, cy0 + Math.round(Math.sin(a) * rr * 0.6), 1, 1, fruit);
+    }
+    if (target >= 1) for (let k = 0; k < 5; k++) if (Math.sin(t * 3 + k * 1.7) > 0.7) R(Math.round(Math.cos(k * 1.3) * cr), cy0 + Math.round(Math.sin(k * 2.1) * cr * 0.6), 1, 1, "#fffbe0");
+  }
+  if (growing) for (let k = 0; k < 6; k++) { const a = t * 4 + k; R(Math.round(Math.cos(a) * (6 + gr * 8)), -8 - Math.round(gr * 12) + Math.round(Math.sin(a) * 5), 1, 1, "#fff6c4"); }
+  // keepsakes, only once you have something they're for
+  Object.entries(cmKeepsakes()).forEach(([k, on]) => {
+    if (!on) return;
+    if (cmSeenKeep[isl.id + k] === undefined) cmSeenKeep[isl.id + k] = t;
+    const age = t - cmSeenKeep[isl.id + k];
+    const [dx, dy] = CM_KEEP_AT[k];
+    const X = x + dx, Y = y + dy + (age < 0.6 ? Math.round((1 - age / 0.6) * -4) : 0);
+    const K = (a, b, w, h, col) => cmRect(g, X + a, Y + b, w, h, col);
+    if (k === "satchel") { K(-2, -3, 5, 4, "#8a5a2a"); K(-2, -4, 5, 1, "#a87a3a"); K(0, -2, 1, 1, "#ffd23f"); K(-1, -5, 1, 1, "#6a4a1a"); K(1, -5, 1, 1, "#6a4a1a"); }
+    else if (k === "trophy") { K(-2, -1, 5, 2, "#7a5a3a"); K(-1, -5, 3, 3, "#ffd23f"); K(-2, -5, 1, 1, "#ffd23f"); K(2, -5, 1, 1, "#ffd23f"); K(0, -2, 1, 1, "#d8a020"); }
+    else if (k === "mirror") { K(0, -1, 1, 2, "#6a4a2a"); K(-1, -7, 3, 6, "#c8a04a"); K(0, -6, 1, 4, "#9fd8f0"); }
+    else { K(-2, -1, 1, 2, "#8a6a3a"); K(2, -1, 1, 2, "#8a6a3a"); K(-2, -6, 5, 5, "#f0e8d8"); K(-1, -5, 1, 3, "#ff5a61"); K(0, -5, 1, 3, "#3ddc84"); K(1, -5, 1, 3, "#38bdf8"); }
+    if (age < 1.2) for (let s = 0; s < 4; s++) { const a = t * 6 + s * 1.6; K(Math.round(Math.cos(a) * 4), -3 + Math.round(Math.sin(a) * 4), 1, 1, "#fff6c4"); }
+  });
+}
+
+/* ----- The Coil: the great serpent whose body carries you between islands ----- */
+const CMC_LIT = ["#0f3b22", "#1f6e3a", "#2fa85a", "#7fe08a", "#ffe08a"];
+const CMC_STONE = ["#2a2e38", "#454b58", "#5d6474", "#7a8294", "#8f97a8"];
+const CMC_WAKE = ["#3a2a18", "#6a4a24", "#9a7a3a", "#d0aa50", "#ffd23f"];
+
+/* Points along the stretch from island i's bridge to island i+1's home; -1 is the tail rising out of the clouds */
+const cmCoilCache = {};
+function coilSamples(i) {
+  if (cmCoilCache[i]) return cmCoilCache[i];
+  let a, b;
+  if (i < 0) {
+    const h = cmPos(CAMP.islands[0].id, "home", 0);
+    a = { x: h.x - 150, y: CM_H - 6 }; b = { x: h.x - 22, y: h.y + 6 };
+  } else {
+    const p = cmPos(CAMP.islands[i].id, "bridge", 0), q = cmPos(CAMP.islands[i + 1].id, "home", 0);
+    a = { x: p.x, y: p.y - 4 }; b = { x: q.x + (q.x > p.x ? -22 : 22), y: q.y + 6 };
+  }
+  const dir = b.x > a.x ? 1 : -1;
+  const c1 = { x: a.x - dir * 70, y: a.y - 60 }, c2 = { x: b.x - dir * 90, y: b.y + 70 };
+  const raw = [];
+  for (let k = 0; k <= 400; k++) {
+    const t = k / 400, u = 1 - t;
+    raw.push({ x: u * u * u * a.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * b.x, y: u * u * u * a.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * b.y });
+  }
+  // even spacing, about one sample per map pixel, with normals for the body's width
+  const out = [];
+  let acc = 0;
+  for (let k = 1; k < raw.length; k++) {
+    acc += Math.hypot(raw[k].x - raw[k - 1].x, raw[k].y - raw[k - 1].y);
+    if (acc >= 1 || k === raw.length - 1) {
+      acc = 0;
+      const dx = raw[k].x - raw[k - 1].x, dy = raw[k].y - raw[k - 1].y, l = Math.hypot(dx, dy) || 1;
+      out.push({ x: raw[k].x, y: raw[k].y, nx: -dy / l, ny: dx / l, s: out.length });
+    }
+  }
+  cmCoilCache[i] = out;
+  return out;
+}
+
+const coilW = (s, L) => 3 + Math.round(4 * Math.min(1, s / 30, (L - s) / 30));
+
+/* Stretch i is lit once island i+1 is open; the stretch ahead of you stirs */
+function coilState(i) {
+  if (i < 0) return "lit";
+  if (campIslandOpen(CAMP.islands[i + 1].id)) return "lit";
+  return campIslandOpen(CAMP.islands[i].id) ? "wake" : "stone";
+}
+
+const cmCoilArt = {};
+function cmCoilBody(i) {
+  const st = coilState(i);
+  const key = i + ":" + st;
+  if (cmCoilArt[key]) return cmCoilArt[key];
+  const c = document.createElement("canvas");
+  c.width = CM_W; c.height = CM_H;
+  const g = c.getContext("2d");
+  const S = coilSamples(i), L = S.length;
+  const pal = st === "lit" ? CMC_LIT : st === "wake" ? CMC_WAKE : CMC_STONE;
+  g.fillStyle = "rgba(10,8,30,0.22)";
+  S.forEach(p => { const w = coilW(p.s, L); g.fillRect(Math.round(p.x - w / 2 + 2), Math.round(p.y - w / 2 + 3), w, w); });
+  S.forEach(p => {
+    const w = coilW(p.s, L), half = w / 2;
+    for (let o = -half; o <= half; o += 0.5) {
+      const edge = Math.abs(o) / (half || 1);
+      const lightSide = o * Math.sign(p.ny || 1) < 0;
+      let shade = edge > 0.82 ? 0 : edge > 0.55 ? 1 : lightSide ? 3 : 2;
+      if (Math.floor((p.s + (o > 0 ? 2 : 0)) / 4) % 2 && shade > 1) shade -= 1;
+      if (Math.abs(o) < 0.6 && Math.floor(p.s / 3) % 2 === 0 && shade >= 2) shade = 4;
+      g.fillStyle = pal[shade];
+      if (st === "stone") g.globalAlpha = 0.7;
+      g.fillRect(Math.round(p.x + p.nx * o), Math.round(p.y + p.ny * o), 1, 1);
+      g.globalAlpha = 1;
+    }
+  });
+  cmCoilArt[key] = c;
+  return c;
+}
+
+let cmCoilSeen = null, cmCoilSurge = null;
+function cmDrawCoil(g, t) {
+  for (let i = -1; i < CAMP.islands.length - 1; i++) {
+    g.drawImage(cmCoilBody(i), 0, 0);
+    const S = coilSamples(i), st = coilState(i);
+    if (st === "lit") {
+      for (let k = 0; k * 40 < S.length; k++) {
+        const head = Math.floor((t * 30 + k * 40) % S.length);
+        for (let j = 0; j < 7; j++) {
+          const p = S[head - j];
+          if (!p) break;
+          g.fillStyle = `rgba(255,240,170,${(1 - j / 7) * 0.85})`;
+          const w = Math.max(1, coilW(p.s, S.length) - 3);
+          g.fillRect(Math.round(p.x - w / 2), Math.round(p.y - w / 2), w, w);
+        }
+      }
+      for (let k = 0; k < 6; k++) { const p = S[Math.floor(cmHash(k, Math.floor(t * 1.5) + i + 9, 17) * S.length)]; if (p && Math.sin(t * 6 + k) > 0.4) cmRect(g, p.x, p.y - 1, 1, 1, "#fffbe0"); }
+    } else if (st === "wake") {
+      const glow = 0.35 + 0.35 * Math.sin(t * 2.4);
+      for (let k = 0; k < S.length; k += 3) { const p = S[k]; if (Math.floor((p.s - t * 14) / 5) % 3) continue; g.fillStyle = `rgba(255,210,63,${glow})`; g.fillRect(Math.round(p.x), Math.round(p.y), 1, 1); }
+    }
+  }
+  // a surge of light runs up a stretch the moment it wakes
+  const litNow = CAMP.islands.filter(isl => campIslandOpen(isl.id)).length;
+  if (cmCoilSeen !== null && litNow > cmCoilSeen) cmCoilSurge = { i: litNow - 2, at: t };
+  cmCoilSeen = litNow;
+  if (cmCoilSurge) {
+    const S = coilSamples(cmCoilSurge.i), k = (t - cmCoilSurge.at) / 2;
+    if (k >= 1.3) cmCoilSurge = null;
+    else {
+      const at = Math.floor(S.length * Math.min(1, k));
+      for (let j = 0; j < 30; j++) { const p = S[at - j]; if (!p) break; const w = coilW(p.s, S.length) + 2; g.fillStyle = `rgba(255,250,210,${(1 - j / 30) * Math.min(1, (1.3 - k) * 3)})`; g.fillRect(Math.round(p.x - w / 2), Math.round(p.y - w / 2), w, w); }
+    }
+  }
+}
+
+/* The head rests by the last island: its eyes open once the Cinder Crown is beaten */
+function cmDrawCoilHead(g, t) {
+  const last = CAMP.islands[CAMP.islands.length - 1];
+  const p = cmPos(last.id, "bridge", t);
+  const awake = campWon(last.id, LEVEL_COUNT);
+  const pal = awake ? CMC_LIT : CMC_STONE;
+  const x = Math.round(p.x + 36), y = Math.round(p.y - 8);
+  const R = (dx, dy, w, h, c) => cmRect(g, x + dx, y + dy, w, h, c);
+  for (let k = 0; k < 40; k++) { const a = k / 40 * Math.PI * 1.6 + 1.2; R(Math.round(Math.cos(a) * 9) - 4, Math.round(Math.sin(a) * 4) + 8, 4, 3, k % 4 < 2 ? pal[2] : pal[1]); }
+  const jaw = awake ? Math.max(0, Math.round(Math.sin(t * 0.9) * 2)) : 0;
+  R(-13, -4, 15, 7, pal[1]); R(-12, -5, 12, 1, pal[2]); R(-14, -3, 2, 5, pal[1]);
+  R(-11, -4, 10, 2, pal[3]); R(-9, -5, 3, 1, pal[4]);
+  R(-14, 3 + jaw, 13, 2, pal[1]); R(-13, 3 + jaw, 11, 1, pal[2]);
+  if (jaw) { R(-13, 3, 11, jaw, "#2a0a12"); for (let k = 0; k < 4; k++) R(-12 + k * 3, 3, 1, 1, "#e8e0c8"); }
+  R(-15, -2, 1, 1, "#0a0a12"); R(-15, 0, 1, 1, "#0a0a12");
+  if (!awake || (t % 6) < 0.15) R(-7, -3, 3, 1, "#0a0a12");
+  else { g.fillStyle = `rgba(255,210,63,${0.25 + 0.2 * Math.sin(t * 3)})`; g.fillRect(x - 10, y - 6, 9, 7); R(-8, -4, 3, 3, "#ffd23f"); R(-7, -4, 1, 3, "#0a0a12"); }
+  if (awake && Math.sin(t * 2.2) > 0.6) { R(-19, 1, 5, 1, "#ff3b6b"); R(-21, 0, 2, 1, "#ff3b6b"); R(-21, 2, 2, 1, "#ff3b6b"); }
+}
+
+/* ----- Crisp things drawn over the scaled-up world: names, numbers, rings ----- */
+function cmDrawOverlay(g, t) {
+  const z = cmCam.z;
+  g.save();
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  CAMP.islands.forEach((isl, i) => {
+    const c = CM_CENTERS[i];
+    const open = campIslandOpen(isl.id);
+    if (z < 7) {
+      const [x, y] = cmToScreen(c[0] - 118, c[1] - CM_MAIN.th - 22);
+      const fs = Math.max(13, Math.min(26, z * 4.2));
+      g.font = `700 ${fs}px 'Pixelify Sans', system-ui, sans-serif`;
+      const text = open ? `${isl.n}. ${isl.name}` : `${isl.n}. ${isl.name} · in the clouds`;
+      const w = g.measureText(text).width + fs * 1.4;
+      g.fillStyle = "rgba(10,14,24,0.62)";
+      g.fillRect(x - w / 2, y - fs * 0.8, w, fs * 1.6);
+      g.fillStyle = isl.colors.accent;
+      g.fillRect(x - w / 2, y + fs * 0.8 - 2, w, 2);
+      g.fillStyle = open ? "#ffffff" : "#aab0ba";
+      g.fillText(text, x, y);
+    }
+    if (!open) return;
+    Object.keys(CM_NODES).forEach(k => {
+      const node = isNaN(+k) ? k : +k;
+      const p = cmPos(isl.id, node, t);
+      const st = cmNodeState(isl.id, node);
+      const sel = cmSel && cmSel.isl === isl.id && cmSel.node === node;
+      const hov = cmHover && cmHover.isl === isl.id && cmHover.node === node;
+      const [x, y] = cmToScreen(p.x, p.y);
+      if (st === "next") {
+        const pul = 0.5 + 0.5 * Math.sin(t * 4);
+        g.strokeStyle = `rgba(255,236,120,${0.5 + 0.5 * pul})`;
+        g.lineWidth = 2;
+        g.beginPath(); g.ellipse(x, y - z, (6 + pul * 1.5) * z, (3.2 + pul) * z, 0, 0, Math.PI * 2); g.stroke();
+      }
+      if (sel || hov) {
+        g.strokeStyle = sel ? "#ffffff" : "rgba(255,255,255,0.6)";
+        g.lineWidth = 2;
+        g.setLineDash([5, 4]);
+        g.lineDashOffset = -t * 20;
+        const rx = (node === "home" ? 14 : 7.5) * z;
+        g.beginPath(); g.ellipse(x, y - (node === "home" ? 6 : 1) * z, rx, rx * 0.55, 0, 0, Math.PI * 2); g.stroke();
+        g.setLineDash([]);
+      }
+      if (typeof node === "number" && z >= 3) {
+        const fs = Math.max(10, Math.min(16, z * 1.9));
+        g.font = `700 ${fs}px 'Pixelify Sans', system-ui, sans-serif`;
+        g.fillStyle = "rgba(0,0,0,0.6)";
+        g.fillText(String(node), x + 1, y + 3.4 * z + 1);
+        g.fillStyle = st === "won" ? "#ffe8a0" : st === "locked" ? "#c8ccd4" : "#ffffff";
+        g.fillText(String(node), x, y + 3.4 * z);
+      }
+    });
+  });
+  g.restore();
 }
 
 /* ----- Naming the snake on a new save ----- */

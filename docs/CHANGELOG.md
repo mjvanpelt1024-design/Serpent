@@ -1,25 +1,5 @@
 # Changelog
 
-## v:11.04.2026_b:47.2: the art pass
-
-- Every island is one landmass again: home, the shops and the Coil's gate all sit on a single coastline,
-  with bays filled by cliff faces and every path on solid ground.
-- All of the map's art is redrawn with a shared pixel-art toolkit (src/campaign/camp-sprites.js): shaded,
-  outlined shapes with ordered dithering, light from the top left, and dithered glows for anything magic.
-- Each island has its own ground, rock and life: a castle, cottages, windmills and a lily pond on Brightscale
-  Keep; crystals, glowing mushrooms, runestones, a mana pool and the wizard's tower on the Arcanum Spire;
-  an orchard, barn, silo, wheat field and beehives in Feastwood Hollow; sand, palms, coral, a lagoon and a
-  shipwreck on Tidecoil Reef; ash, obsidian, glowing seams, a lava pool, lava falls and a smoking volcano
-  on the Cinder Crown. Waterfalls pour off the edges and gems glint in the rock.
-- Islands take the light of their height in the sky, from warm sunrise to blue night, while windows,
-  crystals and lava glow brighter the darker it gets. Fireflies come out on the night islands.
-- The sky has an aurora over the top islands, twinkling and shooting stars, light rays from the rising sun,
-  puffy shaded clouds, and a sea of clouds below.
-- New sprites for the level stones (with glowing runes), boss lairs (torches and glowing eyes), the
-  merchant's stall, the challenger's pavilion, the bank, and the Coil's portal gate, plus the shopkeepers.
-- The Coil is thicker and scaled, rises from behind each island's gate and lands on the next island's shore.
-- The home tree is bigger, ringed with glowing blossoms, and grows with every upgrade.
-
 ## v:11.04.2026_b:47.1: the sky map
 
 - The map is back to the old map's look: pixel-art floating islands with ragged rock undersides, a sky
