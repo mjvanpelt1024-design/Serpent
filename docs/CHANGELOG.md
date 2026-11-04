@@ -1,41 +1,5 @@
 # Changelog
 
-## v:11.04.2026_b:47: the five islands
-
-A new game on the old engine. The 22 islands, their levels and the story are switched off but kept in the
-code; Play now goes straight to the campaign.
-
-- **One save.** No more profiles. Play loads it. It is signed: an edit made outside the game is rejected and
-  the last copy the game saved itself is loaded instead. Every value is checked against a schema
-  (`src/campaign/integrity.js`), so impossible numbers are clamped and unknown items dropped.
-- **Signed data.** The campaign's files (`content/campaign/`) are checked by `tools/check-campaign.py` and
-  signed by `tools/sign-content.py`. Edited data still loads, but marks the save as modded for good.
-- **Five islands, fifteen levels each:** Brightscale Keep, Arcanum Spire, Feastwood Hollow, Tidecoil Reef and
-  the Cinder Crown. Levels 1-4 are fixed boards, 6-9 add enemies, 11-14 move (an endless road, an endless maze,
-  an endless hall of mirrored walls, walls that rise and fall). Every level has a goal: apples, score,
-  length, surviving, distance, keys and a gate, pressure plates (some in order) and a seal, a relic hidden in
-  a maze, pouches across a field, or a thief to corner.
-- **A boss per island, fought three times.** Outlast it (level 5); exhaust it and bite off its silver armor
-  (level 10); exhaust it and bite its hearts to zero (level 15). Bosses charge, tire, recover and get
-  tougher island by island.
-- **Shops on the path.** After the first boss, a merchant: three offers, one of each kind, random rarity,
-  one on sale, new stock every two hours. After the second, a challenger: three of the island's levels with
-  twists, a week to finish them, and a weighted reward roll (gems, rare or legendary items, exclusive skins
-  and themes). After the third, the bank and the bridge to the next island.
-- **Items in four rarities (Common, Uncommon, Rare, Legendary), every one with a strength and a weakness.**
-  Gear (shield, sword, helm, cloak, thorn mail), spells on Space (force field, fireball, blink, frost nova,
-  apple call), snacks that fire on their own (stew, honey bread, tinker's pie, spice jerky, phoenix tart),
-  familiars that follow you (firefly, crab, turtle, pufferfish, seahorse) and runes that change one level
-  (plenty, stillness, fortune, fury, echoes). Loot trinkets turn up to sell.
-- **Five currencies** (Snaycoins, Slithers, Scales, Pearls, Orobucks), each paying for its island's upgrade
-  tree; every upgrade works everywhere. Banks trade down one island (10 to 1, flat 5 fee) or into gems.
-  Gems buy skins and themes; some are only won from challenges.
-- **Home base on every island:** click the tree to look closer; the canopy is the upgrade tree, the satchel
-  is your inventory, the trophy your achievements, the mirror your skins, the easel your themes.
-- **Nothing on the board.** During a level, everything (goal, score, hearts, armor, the boss, your kit,
-  effects, a pointer to what you're looking for) sits in rails beside the board.
-- Every level waits for your first arrow key. Esc or P pauses; Space casts.
-
 ## v:11.02.2026_b:46.1: the map, rebuilt
 
 - The map fills the whole screen. The islands sit along a winding road, right along the bottom, up, back

@@ -1,8 +1,7 @@
 # Snake
 
-A snake game across five big islands strung along the Coil: 75 levels with their own ways to win, a boss on
-every island fought three times, merchants, challengers, banks, five currencies, and a home base tree on every
-island. The older 22-island game is still in the code, switched off.
+A snake game with upgrades, twenty-two floating islands, a Nightmare Realm beneath them, a story book and a
+narrator with opinions.
 
 **Build:** see [`version.txt`](version.txt) · **Runs on:** Windows 10 and 11, through its own launcher (`SnakeGame.exe`)
 
@@ -35,8 +34,6 @@ SnakeGame/
 ├── index.html           the page the launcher opens: screens and buttons
 │
 ├── content/             EVERYTHING YOU TUNE BY HAND: plain text, no code
-│   ├── campaign/            THE GAME: five islands (islands/*.json), items, upgrade trees, rules
-│   │                        (check with tools/check-campaign.py, then sign with tools/sign-content.py)
 │   ├── economy.txt          every price in the game (the ladder: docs/DESIGN-46.md)
 │   ├── rules/               level tuning, prestige and Nightmare rules
 │   ├── worlds/
@@ -51,7 +48,6 @@ SnakeGame/
 │   └── music/               music.dat, plus your .ogg files
 │
 ├── src/                 THE CODE (JavaScript), loaded in the order of src/load-order.dat
-│   ├── campaign/            the five-island campaign: save, validator, levels, boss, items, map, shops
 │   ├── engine/              boot, content loader, storage, random, audio, drawing, input
 │   ├── game/                rules: islands, economy, saves, story, runs, items, sandbox
 │   ├── ui/                  screens: map, trees, Tailor, profiles, settings, tour...
@@ -61,7 +57,7 @@ SnakeGame/
 ├── styles/              CSS, in the order index.html links them
 ├── assets/              the font and icons
 ├── mods/                the example mod (copied to Documents\SnakeGame\mods on first run)
-├── tools/               check-campaign.py, sign-content.py, check-content.py, bundle-content.py, serve.py
+├── tools/               check-content.py, bundle-content.py, serve.py
 ├── launcher/            the C++ launcher: Visual Studio solution and source
 └── docs/                the guides below
 ```
@@ -91,7 +87,6 @@ If something is wrong anyway, the game shows a panel naming the file and line in
 
 ## Guides
 
-- [`docs/CAMPAIGN.md`](docs/CAMPAIGN.md): the five-island campaign: islands, levels, bosses, items, money, the save and its validator
 - [`docs/DESIGN-46.md`](docs/DESIGN-46.md): the economy, the Nightmare Realm, and every island, hazard and power-up
 - [`docs/CONTENT-FORMATS.md`](docs/CONTENT-FORMATS.md): every content file, field by field
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): how the code is organized and how it starts
@@ -101,6 +96,4 @@ If something is wrong anyway, the game shows a panel naming the file and line in
 ## Saves
 
 Saves live in the launcher's own browser storage, under `%APPDATA%\SnakeGame`. Replacing the game folder
-with a new build never touches them. There is one save. It is signed and checked every time it loads, so
-edits made outside the game are thrown out (see docs/CAMPAIGN.md). The map's Save button (or Settings > Your
-save) copies a backup code, loads one, or starts over.
+with a new build never touches them. Settings > "Back up your progress" copies a save code you can keep.
