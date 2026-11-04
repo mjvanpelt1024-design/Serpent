@@ -92,7 +92,9 @@ campaign/camp-items.js
 campaign/camp-art.js
 campaign/camp-hud.js
 campaign/camp-run.js
+campaign/camp-sprites.js
 campaign/camp-map.js
+campaign/camp-world.js
 campaign/camp-base.js
 campaign/camp-shops.js
 campaign/camp-screens.js

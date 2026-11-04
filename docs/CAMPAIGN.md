@@ -54,14 +54,17 @@ cracks on the stretch ahead of you, and is grey stone beyond. Islands you haven'
 Every island uses the same layout:
 
 ```
-                     bridge islet (the Coil leaves for the next island)
- challenger islet   11 12 13 14 BOSS 15 - bank islet
-                    BOSS 10  9  8  7  6
-                     1  2  3  4 BOSS 5 - merchant islet
-                     home islet (the Coil arrives here)
+                       the Coil's gate (it leaves for the next island)
+ challenger  11 12 13 14 BOSS 15 - bank
+             BOSS 10  9  8  7  6
+              1  2  3  4 BOSS 5 - merchant
+                  home (the Coil arrives on this shore)
 ```
 
-- **Home** is the islet where the Coil arrives, with the island's tree on it. The tree starts as a sapling
+Each island is one landmass. The art is drawn in code: src/campaign/camp-sprites.js is the pixel-art
+toolkit and the sprites, src/campaign/camp-world.js paints the islands, sky and Coil.
+
+- **Home** is the shore where the Coil arrives, with the island's tree on it. The tree starts as a sapling
   and grows as you buy that island's upgrades: a taller trunk, wider branches and canopy, and one fruit for
   every tier bought; fully grown, it sparkles. Click home and the camera moves in close. Click the tree for
   the upgrade trees (every open island's tree can be bought from any home). Keepsakes gather under the
