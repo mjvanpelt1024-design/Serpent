@@ -360,7 +360,7 @@ function mapFit() {
   return Math.max(vw / WORLD_W, vh / WORLD_H);
 }
 /* The usual scale: one island, with a glimpse of the ones above and below */
-const mapNear = () => Math.max(mapFit(), Math.min(mapEl.clientHeight / 330, mapEl.clientWidth / 520));
+const mapNear = () => Math.max(mapFit(), Math.min(mapEl.clientHeight / 330, mapEl.clientWidth / 660));
 const mapMax = () => mapNear() * 2.4;
 
 /* Keep the world covering the view: never a gap at any edge */
@@ -394,6 +394,8 @@ function applyCam(c) {
   mapWorldEl.style.transform = `translate(${c.tx}px, ${c.ty}px) scale(${c.s})`;
   mapWorldEl.style.setProperty("--inv", (ui * (mapSel ? 1.1 : 1) / Math.max(c.s, mapFit() * 0.9)).toFixed(4));
   mapEl.classList.toggle("can-pan", !mapSel);
+  // on a small screen the stops sit close together: their labels give way
+  mapEl.classList.toggle("tight", c.s * 2 < 1.6);
   const deep = !mapSel && c.s >= mapNear() * 0.92;
   if (deep !== mapDeep) { mapDeep = deep; updatePins(); }
 }

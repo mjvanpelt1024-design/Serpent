@@ -9,8 +9,9 @@ map: what loads when, where things live, and how the code reads content.
  content/   what the game is made of: numbers, names, text, colors, music      (no code)
     │
     ▼  read by src/engine/content/
- src/game/  the rules: islands, economy, saves, runs, items, story, sandbox
- src/ui/    the screens: map, trees, Tailor, saves, settings, tour
+ src/campaign/  the game since build 47: its one save, levels, bosses, items, shops, home base, HUD
+ src/game/  the rules underneath: the engine's runs, hazards, saves, old islands, story, sandbox
+ src/ui/    the screens: the map (and its islands), trees, Tailor, settings
  src/art/   pixel art drawn in code: theme patterns, Flair, story book scenes
  src/dev/   the cheat engine and the hidden terminal
     │
@@ -81,6 +82,18 @@ names it always did, so the content can change without touching the rules.
 | `story/` | `src/game/story/story.js` | `STORY`, `STORY_ORDER` |
 | `music/music.dat` | `src/engine/audio/music.js` | `MUSIC_FILES` |
 | `worlds/community/*.level` | `src/game/sandbox/sandbox.js` | `starterLevels()` |
+
+## The campaign on the old engine
+
+Since build 47 the game is the campaign (`docs/CAMPAIGN.md`). It doesn't replace the engine: a campaign
+level is played as the mode `"campaign"` with rules built from the level's entry in
+`content/campaign/islands/*.json`, and `src/campaign/camp-run.js` wraps a handful of engine functions
+(`endGame`, `takeHit`, `stepSnake`, `tickMechanics`, `drawHunter`...) to add goals, the boss, items and
+rewards. Every wrapper does nothing when no campaign level is running. Its screens reuse the old ones by
+wrapping their render functions (`renderTree`, `renderInventory`, `renderTailor`, `renderAchievements`,
+the game-over card) rather than adding a new look. `content/campaign/` is read as JSON, kept as text,
+and checked against a signed manifest at startup; the save goes through `SAVE_SCHEMA` in
+`src/campaign/integrity.js`.
 
 ## Where to find things
 

@@ -1,5 +1,33 @@
 # Changelog
 
+## v:11.04.2026_b:47: the five-island campaign, in the old look
+
+A new game on the old engine and in the old look: the same map, sky, Coil, screens, fonts and pixel art,
+extended rather than redrawn. The campaign's design is in [`CAMPAIGN.md`](CAMPAIGN.md).
+
+- **One save.** Play loads it (naming your snake the first time); no profiles. It's signed and checked
+  against a schema on every load, so values edited outside the game don't stick. Settings backs it up,
+  restores it, renames your snake and starts over.
+- **Five islands on the Coil**, stacked from the sunrise to the stars, each with its own landmark, scenery
+  and living details (flags, bees, an orbiting orb, windmill sails, a lighthouse beam, smoke and embers).
+  Every island: home base, fifteen levels on a winding path, bosses at 5, 10 and 15, and the merchant, the
+  challenger, the bank and the bridge after them. Every level needs the one before it.
+- **Levels** have their own goals: apples, score, length, survival, distance, keys and a gate, pressure
+  plates and a seal on an endless mirrored field, a thief, a relic in an endless maze.
+- **Bosses** are snakes with stamina and hearts (silver ones are armor): outlast it, break its armor,
+  finish it. Hearts grow island by island.
+- **Shopkeepers**, each a named snake with a hat and a little animated shop: a merchant per island
+  selling one kind of thing (gear, spells, snacks, familiars, runes; four rarities; new stock every two
+  hours), a challenger with three twisted trials and a prize roll, and a bank that trades money down or
+  into gems.
+- **Money**: every island has its own, for its own upgrade tree; every upgrade works everywhere. Gems buy
+  skins and themes; some are challenge prizes only.
+- **Home base**: the map dives into each island's tree, with your satchel, trophy, mirror and easel
+  around it.
+- **Nothing on the board but the game**: the level, goal, boss and your kit sit in plates beside it (under
+  it on a narrow screen); the old effect bars along the bottom of the board are gone.
+- The old islands, levels, profiles and story stay in the code, switched off.
+
 ## v:11.02.2026_b:46.1: the map, rebuilt
 
 - The map fills the whole screen. The islands sit along a winding road, right along the bottom, up, back

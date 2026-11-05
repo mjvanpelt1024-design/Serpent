@@ -1,7 +1,7 @@
 # Snake
 
-A snake game with upgrades, twenty-two floating islands, a Nightmare Realm beneath them, a story book and a
-narrator with opinions.
+A snake game with five floating islands up the Coil, fifteen levels and three boss fights on each,
+shopkeepers, upgrade trees, and a narrator with opinions.
 
 **Build:** see [`version.txt`](version.txt) · **Runs on:** Windows 10 and 11, through its own launcher (`SnakeGame.exe`)
 
@@ -34,7 +34,8 @@ SnakeGame/
 ├── index.html           the page the launcher opens: screens and buttons
 │
 ├── content/             EVERYTHING YOU TUNE BY HAND: plain text, no code
-│   ├── economy.txt          every price in the game (the ladder: docs/DESIGN-46.md)
+│   ├── campaign/            THE GAME: islands, levels, bosses, items, trees, rules (docs/CAMPAIGN.md)
+│   ├── economy.txt          the old islands' prices (the ladder: docs/DESIGN-46.md)
 │   ├── rules/               level tuning, prestige and Nightmare rules
 │   ├── worlds/
 │   │   ├── world-order.dat      the islands, in unlock order
@@ -49,6 +50,7 @@ SnakeGame/
 │
 ├── src/                 THE CODE (JavaScript), loaded in the order of src/load-order.dat
 │   ├── engine/              boot, content loader, storage, random, audio, drawing, input
+│   ├── campaign/            the campaign: its save, levels, bosses, items, shops, home base, HUD
 │   ├── game/                rules: islands, economy, saves, story, runs, items, sandbox
 │   ├── ui/                  screens: map, trees, Tailor, profiles, settings, tour...
 │   ├── art/                 pixel art in code: theme patterns, Flair, story book scenes
@@ -57,7 +59,7 @@ SnakeGame/
 ├── styles/              CSS, in the order index.html links them
 ├── assets/              the font and icons
 ├── mods/                the example mod (copied to Documents\SnakeGame\mods on first run)
-├── tools/               check-content.py, bundle-content.py, serve.py
+├── tools/               check-campaign.py, sign-content.py, check-content.py, bundle-content.py, serve.py
 ├── launcher/            the C++ launcher: Visual Studio solution and source
 └── docs/                the guides below
 ```
@@ -68,6 +70,10 @@ SnakeGame/
 
 | I want to... | Open |
 |---|---|
+| Change a level, a boss, a shopkeeper or an island's money | `content/campaign/islands/<island>.json` (see `docs/CAMPAIGN.md`) |
+| Change an item, its rarities or prices | `content/campaign/items.json` |
+| Change an upgrade tree | `content/campaign/upgrades.json` |
+| Change rewards, the bank, challenges, achievements or gem prices | `content/campaign/rules.json` |
 | Change a price, how fast the game climbs, badge and contract rewards | `content/economy.txt` (see `docs/DESIGN-46.md`) |
 | Change what turns up on an island (hazards, power-ups) | the `[spawns.*]` parts of its `world.txt` |
 | Change what an upgrade does per tier, its name or text | its `.upg` file: `content/worlds/builtin/<island>/upgrades/` or `content/great-tree/upgrades/` |
@@ -80,14 +86,16 @@ SnakeGame/
 | Add a Workshop level for everyone | `content/worlds/community/` |
 | Bump the build number | `version.txt` |
 
-After editing by hand, run `python tools/check-content.py` to catch typos before they reach the game.
+After editing `content/campaign/`, run `python tools/check-campaign.py` and then `python tools/sign-content.py`
+(edited but unsigned data marks the save as modded). For the rest of `content/`, run `python tools/check-content.py`.
 If something is wrong anyway, the game shows a panel naming the file and line instead of starting.
 
 ---
 
 ## Guides
 
-- [`docs/DESIGN-46.md`](docs/DESIGN-46.md): the economy, the Nightmare Realm, and every island, hazard and power-up
+- [`docs/CAMPAIGN.md`](docs/CAMPAIGN.md): the campaign: islands, levels, bosses, items, shopkeepers, money, home base, the save
+- [`docs/DESIGN-46.md`](docs/DESIGN-46.md): the old islands' economy, the Nightmare Realm, and every hazard and power-up
 - [`docs/CONTENT-FORMATS.md`](docs/CONTENT-FORMATS.md): every content file, field by field
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): how the code is organized and how it starts
 - [`docs/MODDING.md`](docs/MODDING.md): mods that add or change content without touching the game
@@ -96,4 +104,5 @@ If something is wrong anyway, the game shows a panel naming the file and line in
 ## Saves
 
 Saves live in the launcher's own browser storage, under `%APPDATA%\SnakeGame`. Replacing the game folder
-with a new build never touches them. Settings > "Back up your progress" copies a save code you can keep.
+with a new build never touches them. There is one save; Settings > "Back up your progress" copies a save
+code you can keep. The save is signed and checked on every load, so edits made outside the game don't stick.

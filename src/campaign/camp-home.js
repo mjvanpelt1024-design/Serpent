@@ -264,7 +264,7 @@ function drawHomeTreeBig(g, isl, x, y, t) {
   if (ISLANDS[isl].n >= 2) {
     const lx = x - 24 + Math.round(Math.sin(t * 1.2) * 1), ly = y - h * 0.6 + 6;
     R(lx, ly - 4, 1, 4, "#3a2a1a"); R(lx - 2, ly, 5, 5, "#3a2a1a"); R(lx - 1, ly + 1, 3, 3, "#ffd27a");
-    g.fillStyle = `rgba(255,210,120,${0.18 + 0.08 * Math.sin(t * 4)})`; g.fillRect(lx - 6, ly - 4, 13, 13);
+    for (let r = 3; r >= 1; r--) { g.fillStyle = `rgba(255,210,120,${(0.06 + 0.03 * Math.sin(t * 4)) * (4 - r)})`; g.fillRect(lx - 1 - r * 2, ly - r * 2, 5 + r * 4, 5 + r * 4); }
   }
 }
 

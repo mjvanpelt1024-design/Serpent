@@ -96,6 +96,8 @@ window.sceneForUnlock = (id, then) => { if (then) then(); };
 
 /* ----- Settings: the save rows work on the campaign save ----- */
 (() => {
+  const howto = SETTINGS_TABS.flatMap(tab => tab.rows).find(r => r.go === "howto");
+  if (howto) howto.help = "Islands, bosses, items and money, plus credits.";
   const fun = SETTINGS_TABS.find(tab => tab.id === "fun");
   if (!fun) return;
   const drop = ["rename", "backup", "restore", "erase", "tutorial"];

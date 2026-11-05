@@ -67,6 +67,8 @@ body.menu-full:not(.menu-main) #camp-wallet { display: flex; }
 .map-pin.prop.node.locked .pi { filter: grayscale(1) brightness(0.6); }
 .map-pin.prop.node .lbl { font-size: 9px; }
 .map-pin.prop.node.locked .lbl { color: #b8b8b8; }
+.map.tight .map-pin.prop.node .lbl, .map.tight .map-pin .last-tag { display: none; }
+.map.tight .map-pin.prop.node:hover .lbl, .map.tight .map-pin.prop.node:focus-visible .lbl { display: block; }
 .map-pin .nlock { position: absolute; right: -6px; top: -6px; width: 12px; height: 12px; border-radius: 50%; background: #2c2c2c; display: grid; place-items: center; box-shadow: 0 0 0 1.5px #6b6b6b; }
 .map-pin .nlock .lock { width: 8px; height: 8px; fill: #c9c9c9; }
 .mp-goal { margin: 0 0 0.4em; font-size: 0.78em; font-weight: 700; }
