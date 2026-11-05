@@ -15,28 +15,33 @@
    ========================================================= */
 "use strict";
 
-/* ----- The path: a smooth curve through every island, in unlock order ----- */
-const COIL_KEYS = ["commons"].concat(MODE_KEYS);
+/* ----- The path: a smooth curve through every island, in order -----
+   The tail rises out of the cloud sea, threads under each island's grass
+   from its home end to its far end, swings out past the end and climbs
+   to the next island, which runs the other way: a road that winds right,
+   climbs, winds back left and climbs again. Segments: 2i is island i's
+   own stretch, 2i + 1 the climb from it to the next. */
 const COIL = (() => {
-  // Anchor points just under each island's grassy top, so the body threads through the rock
-  const anchors = COIL_KEYS.map((k, i) => {
-    const isl = ISLANDS[k];
-    return { x: isl.x, y: isl.y + isl.th + 3, seg: i };
-  });
-  // Where the road climbs from one row to the next, swing out past the end of the row
   const pts = [];
-  anchors.forEach((a, i) => {
-    pts.push(a);
-    const b = anchors[i + 1];
-    if (b && Math.abs(b.y - a.y) > 40) {
-      const right = a.x > MAP_W / 2;
-      const side = right ? Math.min(MAP_W - 10, Math.max(a.x, b.x) + 34) : Math.max(10, Math.min(a.x, b.x) - 34);
-      pts.push({ x: side, y: a.y - 12, seg: i }, { x: side, y: b.y + 18, seg: i });
+  const isl = CAMP.islands.map(i => ISLANDS[i.id]);
+  const first = isl[0];
+  const end = (I, side, dy) => ({ x: I.x + side * (I.w / 2 + 2), y: I.y + dy });
+  pts.push({ x: first.x - first.dir * (first.w / 2 + 52), y: MAP_H + 12, seg: 0, open: 1 });
+  pts.push({ x: first.x - first.dir * (first.w / 2 + 34), y: first.y + 46, seg: 0, open: 1 });
+  isl.forEach((I, i) => {
+    pts.push(Object.assign(end(I, -I.dir, 8), { seg: 2 * i }));
+    pts.push({ x: I.x - I.dir * I.w * 0.2, y: I.y + I.th + 5, seg: 2 * i });
+    pts.push({ x: I.x + I.dir * I.w * 0.2, y: I.y + I.th + 3, seg: 2 * i });
+    pts.push(Object.assign(end(I, I.dir, -4), { seg: 2 * i, open: 1 }));
+    const next = isl[i + 1];
+    if (next) {
+      const side = I.x + I.dir * (I.w / 2 + 34);
+      pts.push({ x: side, y: I.y - 22, seg: 2 * i + 1, open: 1 }, { x: side, y: next.y + 34, seg: 2 * i + 1, open: 1 });
+    } else {
+      // past the last island, the neck reaches out to where the head lies
+      pts.push({ x: I.x + I.dir * (I.w / 2 + 30), y: I.y - 16, seg: 2 * i + 1 }, { x: I.x + I.dir * (I.w / 2 + 56), y: I.y - 34, seg: 2 * i + 1 });
     }
   });
-  // ...and past the Maw, the neck reaches out to where the head lies
-  const last = anchors[anchors.length - 1];
-  pts.push({ x: last.x - 30, y: last.y + 4, seg: anchors.length - 1 }, { x: last.x - 52, y: last.y - 6, seg: anchors.length - 1 });
 
   // Catmull-Rom through the points, then resampled to one map pixel apart
   const raw = [];
@@ -46,7 +51,8 @@ const COIL = (() => {
     for (let k = 0; k < n; k++) {
       const t = k / n, t2 = t * t, t3 = t2 * t;
       const f = (a, b, c, d) => 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
-      raw.push({ x: f(p0.x, p1.x, p2.x, p3.x), y: f(p0.y, p1.y, p2.y, p3.y), seg: p1.seg, wave: Math.sin(t * Math.PI) });
+      // the body sways out in the open, and lies still where it passes through rock
+      raw.push({ x: f(p0.x, p1.x, p2.x, p3.x), y: f(p0.y, p1.y, p2.y, p3.y), seg: p1.seg, wave: Math.sin(t * Math.PI) * (p1.open && p2.open ? 1 : 0) });
     }
   }
   raw.push({ x: pts[pts.length - 1].x, y: pts[pts.length - 1].y, seg: pts[pts.length - 1].seg, wave: 0 });
@@ -54,8 +60,8 @@ const COIL = (() => {
   for (let i = 0; i < raw.length; i++) {
     const a = raw[Math.max(0, i - 1)], b = raw[Math.min(raw.length - 1, i + 1)];
     const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
-    raw[i].ox = (-dy / len) * Math.sin(i / 13) * 3.5 * raw[i].wave;
-    raw[i].oy = (dx / len) * Math.sin(i / 13) * 3.5 * raw[i].wave;
+    raw[i].ox = (-dy / len) * Math.sin(i / 13) * 4.5 * raw[i].wave;
+    raw[i].oy = (dx / len) * Math.sin(i / 13) * 4.5 * raw[i].wave;
   }
   raw.forEach(p => { p.x += p.ox; p.y += p.oy; });
   const samples = [];
@@ -73,18 +79,20 @@ const COIL = (() => {
   return { samples, length: acc };
 })();
 
-/* How far along the body you've come: the first sample of the segment leading to the next locked island */
+/* How far along the body you've come. Lit: every island you've reached and the climbs
+   between them. The wake: the climb to the next island, while you work toward it. */
 function coilProgress() {
-  const next = MODE_KEYS.findIndex(k => !isModeUnlocked(k));
-  const litSegs = next === -1 ? COIL_KEYS.length + 1 : next + 1;    // COIL_KEYS[0] is the Commons; all lit includes the neck
-  return { litSegs, frontier: next === -1 ? -1 : next };
+  const open = CAMP.islands.filter(i => campIslandOpen(i.id)).length;
+  const last = CAMP.islands.length;
+  const done = campWon(CAMP.islands[last - 1].id, LEVEL_COUNT);
+  return { litSegs: done ? 2 * last + 1 : 2 * open, frontier: done ? -1 : open };
 }
 
-/* Body width: a thin tail at the Commons, a thick middle, a neck before the head */
+/* Body width: a thin tail out of the clouds, a thick middle, a neck before the head */
 function coilWidth(s) {
   const L = COIL.length;
-  const tail = Math.min(1, s / 70), neck = Math.min(1, (L - s) / 26);
-  return 2 + Math.round(5 * Math.min(tail, 1) * (0.55 + 0.45 * neck));
+  const tail = Math.min(1, s / 90), neck = Math.min(1, (L - s) / 30);
+  return 3 + Math.round(6 * Math.min(tail, 1) * (0.55 + 0.45 * neck));
 }
 
 const COIL_LIT = ["#0f3b22", "#1f6e3a", "#2fa85a", "#7fe08a", "#ffe08a"];      // edge ... belly highlight
@@ -95,7 +103,7 @@ const COIL_WAKE = ["#3a2a18", "#6a4a24", "#9a7a3a", "#d0aa50", "#ffd23f"];      
 let coilCache = null;
 function coilArt() {
   const { litSegs, frontier } = coilProgress();
-  const fogFrom = nextLockedIndex() + 1;                                      // islands past here are in the clouds
+  const fogFrom = frontier === -1 ? 99 : 2 * frontier + 1;                    // past the next island, it's in the clouds
   const tag = litSegs + ":" + fogFrom;
   if (coilCache && coilCache.tag === tag) return coilCache.c;
   const c = document.createElement("canvas");
@@ -194,13 +202,16 @@ function drawCoil(g, t) {
   drawCoilHead(g, t);
 }
 
-/* The head, lying past the Maw. Its eyes open once the Maw is yours, and burn purple once the Nightmare Realm wakes. */
+/* The head, lying past the last island. Its eyes open once you reach that island, and burn
+   purple once its last boss falls. It faces the way the neck was going. */
 function drawCoilHead(g, t) {
   const S = COIL.samples, p = S[S.length - 1];
   const x = Math.round(p.x), y = Math.round(p.y);
-  const awake = isModeUnlocked("maw"), realm = nightmareRealmOpen();
+  const lastIsl = CAMP.islands[CAMP.islands.length - 1].id;
+  const awake = campIslandOpen(lastIsl), realm = campWon(lastIsl, LEVEL_COUNT);
   const pal = awake ? COIL_LIT : COIL_STONE;
-  const R = (dx, dy, w, h, c) => mapRect(g, x + dx, y + dy, w, h, c);
+  const flip = p.tx > 0;
+  const R = (dx, dy, w, h, c) => mapRect(g, flip ? x - dx - w + 1 : x + dx, y + dy, w, h, c);
   const jaw = awake ? Math.max(0, Math.round(Math.sin(t * 0.9) * 2)) : 0;
   // facing left: the snout points the way the body was going
   R(-13, -4, 15, 7, pal[1]); R(-12, -5, 12, 1, pal[2]); R(-14, -3, 2, 5, pal[1]);
@@ -214,7 +225,7 @@ function drawCoilHead(g, t) {
   else {
     const c = realm ? "#d06bff" : "#ffd23f";
     g.fillStyle = realm ? `rgba(208, 107, 255, ${0.25 + 0.2 * Math.sin(t * 3)})` : `rgba(255, 210, 63, ${0.25 + 0.2 * Math.sin(t * 3)})`;
-    g.fillRect(x - 10, y - 6, 9, 7);
+    g.fillRect(flip ? x + 2 : x - 10, y - 6, 9, 7);
     R(-8, -4, 3, 3, c); R(-7, -4, 1, 3, "#0a0a12");
   }
   // a forked tongue, flicking, when it's awake
@@ -222,11 +233,11 @@ function drawCoilHead(g, t) {
 }
 
 /* ----- The sky: its own canvas behind the world, at a low resolution, with parallax ----- */
-const SKY_STOPS = [          // [map y, color]: night at the top, dusk, the day, and sunrise at the bottom
+const SKY_STOPS = [          // [height out of 340, color]: night at the top, dusk, the day, and sunrise at the bottom
   [0, "#090820"], [45, "#1a1650"], [85, "#3e2c78"], [120, "#8a4f94"], [150, "#d47f93"],
   [180, "#c9a7c6"], [210, "#8fbfe6"], [250, "#79bdec"], [290, "#bfe0f2"], [320, "#ffe1bf"], [340, "#ffd09a"]
 ];
-const SKY_RGB = SKY_STOPS.map(([y, c]) => [y, hexToRgb(c)]);
+const SKY_RGB = SKY_STOPS.map(([y, c]) => [y * MAP_H / 340, hexToRgb(c)]);
 function skyAt(y) {
   if (y <= SKY_RGB[0][0]) return SKY_RGB[0][1];
   for (let i = 1; i < SKY_RGB.length; i++) {
@@ -265,7 +276,7 @@ function drawSky(t) {
     const sx = ((mapHash(i, 1, 91) * w * 3 + px * 0.12) % (w * 1.0) + w) % w;
     const sy = ((mapHash(i, 2, 91) * h * 3 + py * 0.12) % (h * 1.0) + h) % h;
     const wy = worldY(sy);
-    const a = Math.max(0, Math.min(1, (190 - wy) / 120));
+    const a = Math.max(0, Math.min(1, (MAP_H * 0.56 - wy) / (MAP_H * 0.35)));
     if (a <= 0) continue;
     const tw = 0.5 + 0.5 * Math.sin(t * (1 + mapHash(i, 3, 91) * 3) + i);
     g.fillStyle = `rgba(255, 250, 230, ${a * (0.35 + tw * 0.65)})`;
@@ -289,13 +300,13 @@ function drawSky(t) {
     }
   }
   // the moon up in the night, the sun low in the morning
-  const moonY = (0 + 30) * 2 * cam.s / SKY_PX + py * 0.7, moonX = w * 0.82 + px * 0.05;
+  const moonY = 40 * 2 * cam.s / SKY_PX + py * 0.7, moonX = w * 0.82 + px * 0.05;
   if (moonY > -10 && moonY < h + 10) {
     skyDisc(g, moonX, moonY, 7, "rgba(255, 250, 220, 0.12)");
     skyDisc(g, moonX, moonY, 4, "#fff6d8");
     skyDisc(g, moonX + 1.5, moonY - 1, 3.4, "rgba(26, 22, 80, 0.85)");          // a crescent
   }
-  const sunY = 312 * 2 * cam.s / SKY_PX + py * 0.7, sunX = w * 0.12 + px * 0.05;
+  const sunY = (MAP_H - 30) * 2 * cam.s / SKY_PX + py * 0.7, sunX = w * 0.12 + px * 0.05;
   if (sunY > -14 && sunY < h + 14) {
     skyDisc(g, sunX, sunY, 11, "rgba(255, 210, 140, 0.18)");
     skyDisc(g, sunX, sunY, 8, "rgba(255, 220, 150, 0.3)");

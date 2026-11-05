@@ -39,6 +39,7 @@ ui/navigation.js
 ui/rules-screen.js
 ui/map.js
 ui/map-coil.js
+ui/map-isles.js
 ui/upgrades-screen.js
 game/story/story.js
 ui/tour.js
@@ -86,5 +87,12 @@ engine/input/fullscreen.js
 engine/input/touch.js
 engine/input/keyboard.js
 game/wiring.js
+campaign/camp-levels.js
+campaign/camp-boss.js
+campaign/camp-items.js
+campaign/camp-art.js
+campaign/camp-hud.js
+campaign/camp-run.js
+campaign/camp-screens.js
 campaign/camp-menu.js
 game/start.js
