@@ -381,6 +381,20 @@
     </div>
   </section>
 
+  <!-- A shopkeeper's place: the merchant, the challenger or the bank (src/campaign/camp-shops.js) -->
+  <section id="screen-campshop" class="overlay list" aria-label="Shop">
+    <div class="sticky">
+      <div class="screen-head">
+        <button class="btn btn-small" data-back>Back</button>
+        <h2 id="cs-title">Shop</h2>
+        <span id="cs-wallet" class="cs-wallet"></span>
+      </div>
+    </div>
+    <canvas class="book-art scene-banner" id="cs-art" width="160" height="60" aria-hidden="true"></canvas>
+    <p class="cs-quote" id="cs-quote"></p>
+    <div id="cs-body"></div>
+  </section>
+
   <!-- Pause -->
   <div id="pause" class="modal pause" role="dialog" aria-modal="true" aria-labelledby="pause-title">
     <div class="modal-box pause-box">

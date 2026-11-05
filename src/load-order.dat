@@ -94,5 +94,9 @@ campaign/camp-art.js
 campaign/camp-hud.js
 campaign/camp-run.js
 campaign/camp-screens.js
+campaign/camp-scenes.js
+campaign/camp-shops.js
+campaign/camp-kit.js
+campaign/camp-tree.js
 campaign/camp-menu.js
 game/start.js

@@ -40,7 +40,7 @@ document.getElementById("hud-right").insertBefore(campWalletEl, document.getElem
 
 function campWalletUpdate() {
   if (!camp) return;
-  const key = campRun ? campRun.isl : campIslandOpen(camp.at) ? camp.at : CAMP.islands[0].id;
+  const key = campRun ? campRun.isl : currentScreen === "campshop" ? shopIsl : currentScreen === "tree" && treeArea === "camp" ? campTreeIsl : campIslandOpen(camp.at) ? camp.at : CAMP.islands[0].id;
   const cur = campCurrency(key);
   campWalletEl.innerHTML = `<span class="plate cw-chip" title="${escapeAttr(cur.plural)}, the money of ${escapeAttr(CAMP.islandById[key].name)}">${coinHtml(key)}<b>${fmtInt(campWallet(key))}</b></span>` +
     `<span class="plate cw-chip gems" title="Gems: shared by every island, for skins and themes"><img class="gem-ico" src="${iconUrl("gem", 2)}" alt=""><b>${fmtInt(camp.gems)}</b></span>`;

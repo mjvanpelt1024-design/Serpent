@@ -162,3 +162,37 @@ body.menu-full .cp-rail { display: none; }
 .ci-icon.small img { width: 1.2em; height: 1.2em; }
 .ci-icon.big { width: 3.4em; height: 3.4em; border-radius: 0.6em; }
 .ci-icon.big img { width: 2.6em; height: 2.6em; }
+
+/* ---------- The shopkeepers' screen ---------- */
+#screen-campshop .screen-head { grid-template-columns: auto 1fr auto; }
+.cs-wallet { display: flex; gap: 0.35em; justify-content: flex-end; font-size: 0.8em; }
+#cs-art { margin-top: 0.4em; }
+.cs-quote { margin: 0 0 0.8em; font-size: 0.86em; color: var(--ink-dim); font-style: italic; text-align: center; line-height: 1.35; }
+.cs-quote b { font-style: normal; color: var(--isl, var(--xp)); filter: brightness(1.2); margin-right: 0.2em; }
+.cs-tabs { margin-bottom: 0.2em; }
+.cs-offer .ci-icon.big { align-self: start; }
+.cs-rar { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.03em; }
+.cs-deal { display: inline-block; font-size: 0.72em; padding: 0.05em 0.45em; border-radius: 99em; background: var(--gold); color: #fff; vertical-align: 0.1em; box-shadow: 0 0.12em 0 var(--gold-lip); }
+.cs-stat { color: var(--xp); font-weight: 700; }
+.cs-good { color: #9bffc4; }
+.cs-weak { color: #ffb0a8; }
+.cs-leg { color: #ffd27a; }
+.cs-foot .swatch.cs-clock { background: var(--xp); border-radius: 50%; box-shadow: inset 0 0 0 3px var(--gold-lip); }
+.btn-buy .gem-ico { width: 1.1em; height: 1.1em; vertical-align: -0.2em; }
+.btn-buy .coin { width: 0.85em; height: 0.85em; }
+.cs-num { display: grid; place-items: center; width: 1.8em; height: 1.8em; border-radius: 50%; background: var(--isl, var(--purple)); color: #fff; font-family: var(--display); box-shadow: 0 0.15em 0 rgba(0, 0, 0, 0.4); }
+.cs-trial.done .cs-num { background: var(--green); }
+.cs-mods { margin: 0.3em 0 0.2em; }
+.cs-reward .shop-note { text-align: center; margin-top: 0.4em; }
+.cs-reward .pn-count { color: var(--xp); }
+.cs-btns { margin-top: 0.6em; justify-content: center; }
+.cs-bank { text-align: center; padding-top: 1em; margin-top: 1.4em; }
+.cs-bank .ex-range { width: 100%; max-width: 30em; margin: 0.5em auto; }
+.cs-bank .ex-preview .coin, .cs-bank .ex-preview .gem-ico { vertical-align: -0.15em; }
+.cs-bank .ex-quick { flex-wrap: wrap; align-items: center; }
+
+/* ---------- The kit box before a level ---------- */
+.kit-row .ci-icon { width: 2.4em; height: 2.4em; }
+.kit-slot { text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; font-size: 0.68em !important; }
+.kit-weak { color: #ffb0a8; }
+.kit-row .stepper { display: flex; gap: 0.3em; }
