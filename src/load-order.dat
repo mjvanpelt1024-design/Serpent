@@ -19,6 +19,9 @@ art/theme-painters.js
 game/cosmetics/themes.js
 game/save/save-data.js
 game/save/profiles-storage.js
+campaign/integrity.js
+campaign/camp-data.js
+campaign/camp-save.js
 game/story/narration.js
 game/progress/badges.js
 game/state/runtime.js

@@ -50,6 +50,9 @@ applyEconomy();
 
 checkTreeMedals(true);
 checkBadges(true);
+// The campaign's one save: signed, checked against its schema, and loaded before anything shows
+loadCamp();
+if (campLoadNote) setTimeout(() => showToast(campLoadNote), 1200);
 // Brand-new players name their snake, see the opening scene, then play the tutorial
 // New players start at the title; Play leads to the saves, and a new save starts with naming and the tour
 updateLiveStats(true);
