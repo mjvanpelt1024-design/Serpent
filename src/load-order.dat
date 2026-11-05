@@ -98,5 +98,7 @@ campaign/camp-scenes.js
 campaign/camp-shops.js
 campaign/camp-kit.js
 campaign/camp-tree.js
+campaign/camp-home.js
+campaign/camp-collection.js
 campaign/camp-menu.js
 game/start.js

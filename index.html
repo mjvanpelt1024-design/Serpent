@@ -381,6 +381,20 @@
     </div>
   </section>
 
+  <!-- Home base: an island's tree, close up, with your things around it (src/campaign/camp-home.js) -->
+  <section id="screen-camphome" class="overlay map-screen" aria-label="Home base">
+    <div class="map-head">
+      <button class="btn btn-small" data-back>Back</button>
+      <h2 id="ch-title">Home</h2>
+    </div>
+    <div id="home-view" class="map home-view">
+      <div id="home-world" class="map-world home-world">
+        <canvas id="home-canvas" width="240" height="135" aria-hidden="true"></canvas>
+        <div id="home-pins"></div>
+      </div>
+    </div>
+  </section>
+
   <!-- A shopkeeper's place: the merchant, the challenger or the bank (src/campaign/camp-shops.js) -->
   <section id="screen-campshop" class="overlay list" aria-label="Shop">
     <div class="sticky">
