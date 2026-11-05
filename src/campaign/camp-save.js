@@ -100,15 +100,20 @@ function exportCamp() {
   const text = JSON.stringify(camp);
   return "COIL1-" + btoa(unescape(encodeURIComponent(JSON.stringify({ d: text, s: signText(text) }))));
 }
-function importCamp(code) {
+/* Reads a backup code without touching the save: { data } or { err } */
+function parseCampCode(code) {
   try {
     const box = JSON.parse(decodeURIComponent(escape(atob(String(code).trim().replace(/^COIL1-/, "")))));
-    if (signText(box.d) !== box.s) return "That code was edited, so it can't be loaded.";
-    const { data } = validateSave(JSON.parse(box.d));
-    camp = repairCamp(data);
-    saveCamp();
-    return "";
-  } catch (e) { return "That isn't a save code."; }
+    if (signText(box.d) !== box.s) return { err: "That code was edited, so it can't be loaded." };
+    return { data: repairCamp(validateSave(JSON.parse(box.d)).data) };
+  } catch (e) { return { err: "That isn't a save code. It should start with COIL1-" }; }
+}
+function importCamp(code) {
+  const got = parseCampCode(code);
+  if (got.err) return got.err;
+  camp = got.data;
+  saveCamp();
+  return "";
 }
 
 /* ----- Progress ----- */
@@ -261,7 +266,7 @@ function campItemIsland(id) {
 
 /* ----- Cosmetics: the old engine save draws them, so mirror the choice into it ----- */
 function applyCampCosmetics() {
-  save.name = camp.name;
+  save.settings.snakeName = camp.name;
   save.selectedSkin = camp.skin;
   save.selectedBackdrop = camp.theme;
   if (!save.ownedSkins.includes(camp.skin)) save.ownedSkins.push(camp.skin);

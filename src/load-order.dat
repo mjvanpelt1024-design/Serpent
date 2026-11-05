@@ -86,4 +86,5 @@ engine/input/fullscreen.js
 engine/input/touch.js
 engine/input/keyboard.js
 game/wiring.js
+campaign/camp-menu.js
 game/start.js

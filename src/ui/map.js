@@ -45,6 +45,9 @@ const MAP_BIOME = Object.fromEntries(MODE_KEYS.map(key => [key, (CONTENT.worlds[
 MAP_BIOME.sandbox = ["#eadcbc", "#dccdab", "#b39f78"];
 MAP_BIOME.commons = ["#6cbf52", "#5aab45", "#2f6a24"];
 
+/* The old islands' levels are retired from the map (their code and data stay) */
+const MAP_OLD_LEVELS = false;
+
 let mapSel = null;            // the area being looked at, or null for the whole world
 let mapLevel = { j: 0, nm: false };
 let mapNight = false;
@@ -733,7 +736,7 @@ function renderModes(justUnlocked) {
       () => selectPlace(key));
     if (key === focusKey) pin.dataset.autofocus = "";
     if (key === justUnlocked) pin.classList.add("just-unlocked");
-    if (key === "sandbox" || st === "fog") return;
+    if (key === "sandbox" || st === "fog" || !MAP_OLD_LEVELS) return;
     const spots = levelSpots(key);
     for (let j = 0; j < LEVELS_PER_AREA; j++) {
       const open = levelOpen(key, j);
@@ -846,6 +849,8 @@ function renderBanner() {
       ? `<button class="btn btn-small btn-gold" data-unlock>Unlock for ${fmtInt(modes[key].unlockAt)} XP</button>`
       : `<button class="btn btn-small" disabled>${LOCK_SVG} ${escapeAttr(unlockBlocker(key))}</button>`;
     note = modes[key].rules;
+  } else if (!MAP_OLD_LEVELS) {
+    note = "Its levels have been retired.";
   } else {
     action = `<button class="btn btn-small btn-green" data-tree>${LEAF_SVG} Upgrade tree${treeAffordable(key) ? " <b>+</b>" : ""}</button>`;
     note = "Tap a level to play it. Tap the tree to grow it.";
