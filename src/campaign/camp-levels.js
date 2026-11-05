@@ -450,83 +450,75 @@ function drawCampObjs(view, ts) {
   }
 }
 
+/* The goal pieces are the same 12 x 12 pictures as every icon in the game, drawn a square big */
+Object.assign(SPRITES, {
+  key: ["............", "..kkkk......", ".kyyyyk.....", "kyykkyyk....", "kyk..kyk....", "kyykkyykkkkk", ".kyyyyyyyyyk", "..kkkkkykyyk", ".......kykyk", ".......kk.kk", "............", "............"],
+  plate: ["............", "............", "..kkkkkkkk..", ".kWWWWWWWWk.", "kWsssssssSSk", "kWsSSSSSsSSk", "kWsSssssSsSk", "kWsssssssSSk", "kSSSSSSSSSSk", ".kkkkkkkkkk.", "............", "............"],
+  plateon: ["............", "............", "............", "..kkkkkkkk..", ".klllllllllk", "kllgggggglGk", "klgGGGGGglGk", "klggggggglGk", "kGGGGGGGGGGk", ".kkkkkkkkkk.", "............", "............"],
+  seal: ["...kkkkkk...", "..kPPPPPPk..", ".kPVpppVVPk.", "kPVpwwwpVVPk", "kPpwPPPwpVPk", "kPpwPwPwpVPk", "kPpwPPPwpVPk", "kPVpwwwpVVPk", ".kPVpppVVPk.", "..kPPPPPPk..", "...kkkkkk...", "............"],
+  grimoire: ["............", ".kkkkkkkkk..", "kmmmmmmmmyk.", "kmyyyyyymyk.", "kmymmmmymyk.", "kmymPPmymyk.", "kmymPPmymyk.", "kmymmmmymyk.", "kmyyyyyymyk.", "kmmmmmmmmyk.", "kkkkkkkkkWk.", ".kkkkkkkkk.."],
+  ladle: ["........kkk.", ".......kyyyk", "......kyywyk", "......kyyyyk", ".....kkkyyk.", "....kyk.kk..", "...kyk......", "..kyk.......", ".kyk........", "kyk.........", "kk..........", "............"],
+  pearl: ["............", "...kkkkkk...", "..kqqqqqqk..", ".kqhhhhhhqk.", ".kqh.kk.hqk.", ".kqhkwWkhqk.", ".kqhkWWkhqk.", "..kqhkkhqk..", "kkkqqqqqqkkk", "khqqhhhhqqhk", ".kkkkkkkkkk.", "............"],
+  raccoon: ["............", ".kk....kk...", "kSSk..kSSk..", "kSWSkkSWSk..", ".kSSSSSSk...", "kSkkSSkkSk..", "kSkwkkwkSk.k", ".kSSkkSSk.kS", "..kSSSSSkkSk", ".kSSSSSSSSk.", ".kSk.kk.kSk.", "..k.....k..."],
+  ring: ["............", "....kkkk....", "...kcwcck...", "...kccck....", "..kkkkkkk...", ".kyyyyyyyk..", "kyyk...kyyk.", "kyk.....kyk.", "kyk.....kyk.", ".kyk...kyk..", "..kkyyyyk...", "....kkkk...."]
+});
+const objSpriteCache = {};
+function objSprite(name, swap) {
+  const k = name + JSON.stringify(swap || {});
+  if (objSpriteCache[k]) return objSpriteCache[k];
+  const c = document.createElement("canvas");
+  c.width = c.height = 12;
+  const g = c.getContext("2d");
+  (SPRITES[name] || SPRITES.orb).forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === "." || ch === " ") return;
+    const col = ICON_PAL[(swap && swap[ch]) || ch];
+    if (!col) return;
+    g.fillStyle = col;
+    g.fillRect(x, y, 1, 1);
+  }));
+  return (objSpriteCache[k] = c);
+}
+const RELIC_SPRITE = { crown: "crown", grimoire: "grimoire", ladle: "ladle", pearl: "pearl", eye: "eye" };
+
 function drawCampObj(g, o, x, y, w, ts) {
-  const bob = Math.sin(ts / 260 + x) * w * 0.06;
-  g.save();
-  if (o.kind === "key") {
-    g.fillStyle = "#ffd23f";
-    g.fillRect(x + w * 0.2, y + w * 0.25 + bob, w * 0.3, w * 0.3);
-    g.fillStyle = "#3a2a0a";
-    g.fillRect(x + w * 0.29, y + w * 0.34 + bob, w * 0.12, w * 0.12);
-    g.fillStyle = "#ffd23f";
-    g.fillRect(x + w * 0.48, y + w * 0.36 + bob, w * 0.4, w * 0.1);
-    g.fillRect(x + w * 0.72, y + w * 0.46 + bob, w * 0.08, w * 0.16);
-    g.fillRect(x + w * 0.84, y + w * 0.46 + bob, w * 0.06, w * 0.12);
-  } else if (o.kind === "door") {
-    g.shadowColor = "#ffd23f"; g.shadowBlur = w * 0.6;
-    g.fillStyle = "#6a4a2a"; g.fillRect(x + w * 0.1, y, w * 0.8, w);
-    g.fillStyle = "#ffd23f"; g.fillRect(x + w * 0.1, y, w * 0.8, w * 0.12);
-    g.fillStyle = "#2a1a0a"; g.fillRect(x + w * 0.3, y + w * 0.3, w * 0.4, w * 0.7);
-    g.fillStyle = "#ffd23f"; g.fillRect(x + w * 0.58, y + w * 0.6, w * 0.08, w * 0.08);
+  const bob = Math.round(Math.sin(ts / 260 + x) * w * 0.06);
+  const put = (name, glow, swap, dy = bob, s = 1) => {
+    g.save();
+    g.imageSmoothingEnabled = false;
+    if (glow) { g.shadowColor = glow; g.shadowBlur = w * 0.7; }
+    const size = Math.round(w * s), off = Math.round((w - size) / 2);
+    g.drawImage(objSprite(name, swap), x + off, y + off + dy, size, size);
+    g.restore();
+  };
+  if (o.kind === "key") put("key", "#ffd23f");
+  else if (o.kind === "door") {
+    const p = 0.5 + 0.5 * Math.sin(ts / 200);
+    g.save(); g.fillStyle = `rgba(255, 233, 160, ${0.18 + 0.2 * p})`; g.fillRect(x - w * 0.2, y - w * 0.2, w * 1.4, w * 1.4); g.restore();
+    put("gate", "#ffd23f", null, 0, 1.15);
   } else if (o.kind === "plate") {
-    g.fillStyle = o.on ? "#3ddc84" : "#5a6070";
-    g.fillRect(x + w * 0.08, y + w * 0.08, w * 0.84, w * 0.84);
-    g.fillStyle = o.on ? "#b8ffd8" : "#8a92a4";
-    g.fillRect(x + w * 0.18, y + w * 0.18, w * 0.64, w * 0.64);
-    g.fillStyle = o.on ? "#0a3a1a" : "#1a1e26";
-    g.font = `700 ${Math.round(w * 0.5)}px 'Pixelify Sans', system-ui, sans-serif`;
-    g.textAlign = "center"; g.textBaseline = "middle";
-    g.fillText(campGoal && campGoal.ordered ? String(o.n) : o.on ? "✓" : "", x + w / 2, y + w / 2 + 1);
+    put(o.on ? "plateon" : "plate", o.on ? "#3ddc84" : null, null, 0);
+    if (campGoal && campGoal.ordered) {
+      g.fillStyle = o.on ? "#0a3a1a" : "#1a1e26";
+      g.font = `700 ${Math.round(w * 0.42)}px 'Pixelify Sans', system-ui, sans-serif`;
+      g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillText(String(o.n), x + w / 2, y + w * 0.55);
+    }
   } else if (o.kind === "seal") {
     const p = 0.5 + 0.5 * Math.sin(ts / 160);
-    g.shadowColor = "#b36bff"; g.shadowBlur = w * (0.5 + p);
-    g.fillStyle = "#b36bff";
-    g.beginPath(); g.arc(x + w / 2, y + w / 2, w * 0.45, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#ffffff";
-    g.beginPath(); g.arc(x + w / 2, y + w / 2, w * (0.18 + 0.06 * p), 0, Math.PI * 2); g.fill();
-  } else if (o.kind === "relic") {
-    g.shadowColor = "#ffd23f"; g.shadowBlur = w * 0.8;
-    drawRelicIcon(g, o.item, x, y + bob, w);
-  } else if (o.kind === "shard") {
-    g.fillStyle = "#c89a4a"; g.fillRect(x + w * 0.22, y + w * 0.3 + bob, w * 0.56, w * 0.55);
-    g.fillStyle = "#8a6a2a"; g.fillRect(x + w * 0.3, y + w * 0.18 + bob, w * 0.4, w * 0.16);
-    g.fillStyle = "#ffe08a"; g.fillRect(x + w * 0.4, y + w * 0.5 + bob, w * 0.2, w * 0.2);
-  } else if (o.kind === "thief") {
-    g.fillStyle = "#8a6a4a"; g.fillRect(x + w * 0.15, y + w * 0.35, w * 0.65, w * 0.45);
-    g.fillStyle = "#a8886a"; g.fillRect(x + w * 0.55, y + w * 0.22, w * 0.35, w * 0.35);
-    g.fillStyle = "#1a1410"; g.fillRect(x + w * 0.74, y + w * 0.3, w * 0.08, w * 0.08);
-    g.fillStyle = "#ffb0c0"; g.fillRect(x + w * 0.88, y + w * 0.4, w * 0.08, w * 0.06);
-    g.fillStyle = "#6a4a2a"; g.fillRect(x, y + w * 0.4, w * 0.2, w * 0.06);
-    g.fillStyle = "#ffd23f"; g.fillRect(x + w * 0.25, y + w * 0.2 + bob, w * 0.2, w * 0.2);  // the loot it stole
+    g.save(); g.fillStyle = `rgba(179, 107, 255, ${0.2 + 0.25 * p})`; g.beginPath(); g.arc(x + w / 2, y + w / 2, w * (0.8 + 0.2 * p), 0, Math.PI * 2); g.fill(); g.restore();
+    put("seal", "#b36bff", null, 0, 1.2);
+  } else if (o.kind === "relic") put(RELIC_SPRITE[o.item] || "crown", "#ffd23f", null, bob, 1.1);
+  else if (o.kind === "shard") put("bag", "#ffe08a");
+  else if (o.kind === "thief") {
+    const hop = o.hopAt && ts - o.hopAt < 160 ? -Math.round(Math.sin((ts - o.hopAt) / 160 * Math.PI) * w * 0.2) : 0;
+    put("raccoon", null, null, hop);
+    // the loot it stole, glinting over its head
+    if (Math.sin(ts / 150) > 0) { g.fillStyle = "#ffd23f"; g.fillRect(x + w * 0.4, y - w * 0.12 + hop, w * 0.2, w * 0.2); }
   } else if (o.kind === "loot") {
-    const a = o.until ? Math.min(1, (o.until - ts) / 2500) : 1;
-    g.globalAlpha = Math.max(0.3, a);
-    g.shadowColor = "#fff"; g.shadowBlur = w * 0.4;
-    g.fillStyle = "#e8e0c8"; g.fillRect(x + w * 0.25, y + w * 0.25 + bob, w * 0.5, w * 0.5);
-    g.fillStyle = "#9a8a6a"; g.fillRect(x + w * 0.35, y + w * 0.35 + bob, w * 0.3, w * 0.3);
-  }
-  g.restore();
-}
-
-function drawRelicIcon(g, item, x, y, w) {
-  if (item === "crown") {
-    g.fillStyle = "#ffd23f";
-    g.fillRect(x + w * 0.12, y + w * 0.45, w * 0.76, w * 0.35);
-    [[0.12, 0.2], [0.42, 0.12], [0.72, 0.2]].forEach(([a, b]) => g.fillRect(x + w * a, y + w * b, w * 0.16, w * 0.3));
-    g.fillStyle = "#ff3b3b"; g.fillRect(x + w * 0.44, y + w * 0.55, w * 0.12, w * 0.12);
-  } else if (item === "grimoire") {
-    g.fillStyle = "#5a2a8a"; g.fillRect(x + w * 0.18, y + w * 0.15, w * 0.64, w * 0.72);
-    g.fillStyle = "#ffd23f"; g.fillRect(x + w * 0.22, y + w * 0.15, w * 0.06, w * 0.72);
-    g.fillStyle = "#b36bff"; g.fillRect(x + w * 0.42, y + w * 0.38, w * 0.22, w * 0.22);
-  } else if (item === "ladle") {
-    g.fillStyle = "#ffd23f";
-    g.beginPath(); g.arc(x + w * 0.35, y + w * 0.65, w * 0.22, 0, Math.PI * 2); g.fill();
-    g.fillRect(x + w * 0.45, y + w * 0.15, w * 0.1, w * 0.45);
-  } else if (item === "pearl") {
-    g.fillStyle = "#c87a8a"; g.fillRect(x + w * 0.1, y + w * 0.55, w * 0.8, w * 0.3);
-    g.fillStyle = "#f0f4ff"; g.beginPath(); g.arc(x + w / 2, y + w * 0.45, w * 0.24, 0, Math.PI * 2); g.fill();
-  } else {
-    g.fillStyle = "#ff6a1a"; g.beginPath(); g.ellipse(x + w / 2, y + w / 2, w * 0.4, w * 0.28, 0, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#ffd23f"; g.fillRect(x + w * 0.45, y + w * 0.25, w * 0.1, w * 0.5);
+    g.save();
+    g.globalAlpha = o.until ? Math.max(0.3, Math.min(1, (o.until - ts) / 2500)) : 1;
+    const spec = ICON_FOR["ci:" + o.id] || ["gift"];
+    put(spec[0], "#ffffff", spec[2], bob, 0.9);
+    g.restore();
   }
 }

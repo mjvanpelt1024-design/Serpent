@@ -265,7 +265,11 @@ function damageBoss(n, how) {
 }
 let campBossFlash = 0;
 
-/* ----- Drawing ----- */
+/* ----- Drawing -----
+   The boss is drawn the way your snake is (drawSnakeCell): the same rounded,
+   lit segments, in its own colors. While it's armored, silver plates ride on
+   its back. Its head wears its island's crown: a knight's helm, a wizard's
+   hat, a glutton's jaw, a sea monster's fins, a wyrm's horns. */
 function drawBoss(view, ts) {
   if (!boss || boss.beaten) return;
   const B = boss.def;
@@ -274,37 +278,134 @@ function drawBoss(view, ts) {
   const charging = bossCharging(ts);
   const f = Math.min(1, Math.max(0, 1 - (boss.moveAt - ts) / bossInterval(ts)));
   const flash = ts - campBossFlash < 220;
-  for (let i = boss.cells.length - 1; i >= 0; i--) {
-    const c = boss.cells[i];
+  const pts = boss.cells.map((c, i) => {
     const p = boss.prev && boss.prev[i] ? boss.prev[i] : c;
     const jump = Math.abs(c.x - p.x) > cell * 2 || Math.abs(c.y - p.y) > cell * 2;
-    const [x, y] = view.toScreen(jump ? c.x : p.x + (c.x - p.x) * f, jump ? c.y : p.y + (c.y - p.y) * f);
-    const armored = boss.armor > 0;
-    let col = i % 2 ? B.body : shade(B.body, 0.15);
-    if (armored && i % 3 === 1) col = "#c8ced6";
+    return view.toScreen(jump ? c.x : p.x + (c.x - p.x) * f, jump ? c.y : p.y + (c.y - p.y) * f);
+  });
+  // a red glow around it while it charges
+  if (charging && !frozen) {
+    ctx.save();
+    ctx.shadowColor = "#ff3b3b";
+    ctx.shadowBlur = cell * (0.8 + 0.4 * Math.sin(ts / 60));
+    ctx.fillStyle = "rgba(255, 59, 59, 0.35)";
+    pts.forEach(([x, y]) => ctx.fillRect(x - 2, y - 2, cell + 3, cell + 3));
+    ctx.restore();
+  }
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const [x, y] = pts[i];
+    let col = i % 2 ? B.body : shade(B.body, 0.18);
     if (frozen) col = i % 2 ? "#9fd8ff" : "#7ab8e8";
+    if (tired && !frozen) col = shade(col, -0.25);
     if (flash) col = "#ffffff";
-    ctx.fillStyle = col;
-    ctx.fillRect(x, y, cell - 1, cell - 1);
-    ctx.fillStyle = armored && !frozen ? "rgba(232,240,255,0.35)" : B.belly;
-    ctx.fillRect(x + cell * 0.25, y + cell * 0.25, cell * 0.5, cell * 0.5);
     if (i === 0) {
-      if (charging) { ctx.save(); ctx.shadowColor = "#ff3b3b"; ctx.shadowBlur = cell; ctx.strokeStyle = "#ff3b3b"; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, cell + 1, cell + 1); ctx.restore(); }
-      ctx.fillStyle = tired ? "#ffffff" : B.eye;
-      const eh = tired ? cell * 0.08 : cell * 0.2;
-      ctx.fillRect(x + cell * 0.18, y + cell * 0.25, cell * 0.22, eh);
-      ctx.fillRect(x + cell * 0.6, y + cell * 0.25, cell * 0.22, eh);
-      // a crest so you can tell it's a boss
-      ctx.fillStyle = "#ffd23f";
-      ctx.fillRect(x + cell * 0.2, y - cell * 0.2, cell * 0.15, cell * 0.25);
-      ctx.fillRect(x + cell * 0.425, y - cell * 0.3, cell * 0.15, cell * 0.35);
-      ctx.fillRect(x + cell * 0.65, y - cell * 0.2, cell * 0.15, cell * 0.25);
-      if (tired) {
-        ctx.fillStyle = "#cfe8ff";
-        ctx.font = `700 ${Math.round(cell * 0.55)}px 'Pixelify Sans', system-ui, sans-serif`;
-        ctx.fillText("z", x + cell * 0.9, y - cell * 0.1 - (ts / 300 % 1) * cell * 0.4);
-      }
+      // a head a size bigger than the body
+      const grow = cell * 0.14;
+      ctx.save();
+      roundedPath(ctx, x - grow, y - grow, cell - 1 + grow * 2, cell - 1 + grow * 2, cell * 0.34);
+      ctx.fillStyle = col;
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
+      ctx.clip();
+      ctx.fillRect(x - grow, y - grow, cell + grow * 2, (cell + grow * 2) * 0.26);
+      ctx.restore();
+      ctx.save();
+      roundedPath(ctx, x - grow, y - grow, cell - 1 + grow * 2, cell - 1 + grow * 2, cell * 0.34);
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.45)";
+      ctx.lineWidth = Math.max(1, cell * 0.1);
+      ctx.stroke();
+      ctx.restore();
+      continue;
     }
+    drawSnakeCell(x, y, col);
+    // the belly stripe
+    ctx.fillStyle = flash ? "#ffffff" : B.belly;
+    ctx.globalAlpha = 0.55;
+    ctx.fillRect(x + cell * 0.32, y + cell * 0.32, cell * 0.34, cell * 0.34);
+    ctx.globalAlpha = 1;
+    // silver plates on its back while it's armored
+    if (boss.armor > 0 && i > 0 && i % 2 === 1) {
+      const k = cell / 20;
+      ctx.fillStyle = "#5a6470";
+      ctx.fillRect(x + 4 * k, y + 3 * k, 11 * k, 9 * k);
+      ctx.fillStyle = "#dfe6ee";
+      ctx.fillRect(x + 5 * k, y + 3 * k, 9 * k, 7 * k);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(x + 5 * k, y + 3 * k, 3 * k, 2 * k);
+      ctx.fillStyle = "#9aa3ad";
+      ctx.fillRect(x + 7 * k, y + 10 * k, 5 * k, 2 * k);
+    }
+  }
+  // the head: which way it looks, its crest, its eyes
+  const [hx, hy] = pts[0];
+  const nxt = boss.cells[1] || boss.cells[0];
+  let fx = Math.sign(boss.cells[0].x - nxt.x), fy = Math.sign(boss.cells[0].y - nxt.y);
+  if (Math.abs(boss.cells[0].x - nxt.x) > cell * 2) fx = -fx;
+  if (Math.abs(boss.cells[0].y - nxt.y) > cell * 2) fy = -fy;
+  if (!fx && !fy) fx = -1;
+  drawBossCrest(hx, hy, fx, fy, ts);
+  const k = cell / 20, cx = hx + (cell - 1) / 2, cy = hy + (cell - 1) / 2, px = -fy, py = fx;
+  [1, -1].forEach(side => {
+    const ex = cx + (px * 4.2 * side + fx * 2.5) * k, ey = cy + (py * 4.2 * side + fy * 2.5) * k;
+    if (tired) {
+      ctx.fillStyle = "#1a1418";
+      ctx.fillRect(ex - 3 * k, ey - 0.6 * k, 6 * k, 1.6 * k);
+      return;
+    }
+    // narrow, angry eyes that glow
+    ctx.save();
+    ctx.shadowColor = B.eye;
+    ctx.shadowBlur = cell * 0.5;
+    ctx.fillStyle = frozen ? "#e8f8ff" : B.eye;
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, 3.2 * k, 2 * k, Math.atan2(fy, fx) + side * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = "#1a0a0a";
+    ctx.fillRect(ex - 0.8 * k + fx * 0.8 * k, ey - 0.8 * k + fy * 0.8 * k, 1.6 * k, 1.6 * k);
+  });
+  // a flicking forked tongue when it's hungry, sleepy z's when it's spent
+  if (!tired && !frozen && Math.sin(ts / 180) > 0.6) {
+    ctx.fillStyle = "#ff3b6b";
+    const tx = cx + fx * cell * 0.62, ty = cy + fy * cell * 0.62;
+    ctx.fillRect(tx - 1.2 * k + fx * 2 * k, ty - 1.2 * k + fy * 2 * k, 2.4 * k + Math.abs(fx) * 3 * k, 2.4 * k + Math.abs(fy) * 3 * k);
+  }
+  if (tired) {
+    ctx.fillStyle = "#cfe8ff";
+    const ph = (ts / 900) % 1;
+    ctx.font = `700 ${Math.round(cell * (0.45 + ph * 0.3))}px 'Pixelify Sans', system-ui, sans-serif`;
+    ctx.globalAlpha = 1 - ph;
+    ctx.fillText("z", hx + cell * 0.8 + ph * cell * 0.4, hy - cell * 0.1 - ph * cell * 0.8);
+    ctx.globalAlpha = 1;
+  }
+}
+
+/* Each island's boss wears something of its island on its head */
+function drawBossCrest(x, y, fx, fy, ts) {
+  const k = cell / 20, isl = campRun.isl;
+  const R = (a, b, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x + a * k, y + b * k, w * k, h * k); };
+  if (isl === "keep") {
+    // a black knight's helm with a red plume
+    R(1, -3, 17, 7, "#2a2a34"); R(2, -4, 15, 2, "#7a808c"); R(2, -2, 15, 4, "#5a606c"); R(2, -2, 3, 4, "#8a909c"); R(3, 1, 13, 1, "#14141a"); R(9, -4, 1, 6, "#9aa0ac");
+    const wave = Math.round(Math.sin(ts / 120) * 1.5);
+    R(8, -8 + wave, 3, 6, "#c0392b"); R(10, -9 + wave, 4, 3, "#e74c3c"); R(13, -8 + wave, 3, 2, "#c0392b");
+  } else if (isl === "spire") {
+    // a tall, crooked wizard's hat with stars
+    R(1, -2, 17, 3, "#2a1a5a"); R(4, -6, 11, 4, "#3a2a7a"); R(6, -10, 7, 4, "#3a2a7a"); R(8, -14, 4, 4, "#3a2a7a"); R(11, -16, 3, 2, "#3a2a7a");
+    R(6, -5, 2, 2, "#ffd23f"); R(10, -9, 1, 1, "#ffd23f"); R(12, -15, 1, 1, Math.sin(ts / 200) > 0 ? "#ffffff" : "#ffd23f");
+  } else if (isl === "hollow") {
+    // a glutton's bib and a fork stuck in its hat
+    R(3, -3, 14, 4, "#f0f0f0"); R(4, -6, 12, 3, "#e8e8e8"); R(2, -5, 4, 3, "#f0f0f0"); R(14, -5, 4, 3, "#f0f0f0");
+    R(16, -12, 1, 8, "#c8ced6"); R(15, -13, 1, 2, "#c8ced6"); R(17, -13, 1, 2, "#c8ced6");
+  } else if (isl === "reef") {
+    // a crown of fins and a coral spike
+    for (let i = 0; i < 4; i++) R(2 + i * 4, -4 - (i % 2) * 2, 3, 5 + (i % 2) * 2, i % 2 ? "#3a8ac0" : "#2a6a9a");
+    R(9, -9, 2, 5, "#ff7a8a"); R(7, -8, 1, 2, "#ff7a8a"); R(12, -7, 1, 2, "#ff7a8a");
+  } else {
+    // a wyrm's horns, glowing at the tips
+    R(1, -3, 4, 4, "#2a1a1a"); R(-1, -7, 4, 4, "#2a1a1a"); R(-2, -10, 3, 3, "#ff8a1a");
+    R(15, -3, 4, 4, "#2a1a1a"); R(17, -7, 4, 4, "#2a1a1a"); R(19, -10, 3, 3, "#ff8a1a");
+    if (Math.sin(ts / 150) > 0.3) R(8, -4, 4, 2, "#ffb020");
   }
 }
 
