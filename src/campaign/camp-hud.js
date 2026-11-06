@@ -3,10 +3,10 @@
    The campaign's heads-up display: the hub around the board. Nothing is
    drawn on the board itself.
 
-   Left, everything about you: your hearts and armor, the score and the
-   pause button (the game's own HUD), then your purse (this island's money,
-   gems, and what this run's points will pay), your kit (gear, spell,
-   rune), the pocket of snacks on keys 1 to 4, your familiar, effects, and
+   Left, everything about you: your hearts and armor with your rune under
+   them, the score and the pause button (the game's own HUD), then your
+   purse (this island's money, gems, and what this run's points will pay),
+   your kit (gear, spell), the pocket of snacks on keys 1 to 4, your familiar, effects, and
    what you've found. Right, everything about the world: where you are,
    the objective (the level's goal), your quest (or none), the level's
    bonus challenge, and the bounty on the next boss. A boss's own stats
@@ -215,9 +215,7 @@ function campHudUpdate() {
   kit.push(row("gear", gear, gear ? pips(gear.uses, Math.max(gear.uses, freshUses(gear.id, gear.rarity))) : "", gear && ts - campRun.gearFx < 300 ? "flash" : ""));
   const spell = bare ? null : campEquipped("spell");
   const cd = spell ? Math.max(0, campRun.castReadyAt - ts) : 0;
-  kit.push(row("spell", spell, spell ? `${pips(spell.uses, Math.max(spell.uses, freshUses(spell.id, spell.rarity)))} <kbd>${isTouchDevice() ? "Spell" : "Space"}</kbd>${cd > 0 ? " <span class='cp-cd'>...</span>" : ""}` : ""));
-  if (campRun.rune) kit.push(`<div class="cp-slot">${campItemIconHtml(campRun.rune)}<span class="cp-sl"><span class="cp-k">Rune</span><span class="cp-name" style="color:${rarityColor(campRun.rune.rarity)}">${escapeAttr(campItemDef(campRun.rune.id).name)}</span><span class="cp-sub">${campRun.echoUsed ? "Echo spent" : "Burning"}</span></span></div>`);
-  else kit.push(row("rune", null, ""));
+  kit.push(row("spell", spell, spell ? `${pips(spell.uses, Math.max(spell.uses, freshUses(spell.id, spell.rarity)))} <kbd>${isTouchDevice() ? "Spell" : "Space"}</kbd>${campRun.freeCasts > 0 ? ` <span class="cp-free">+${campRun.freeCasts} free</span>` : ""}${cd > 0 ? " <span class='cp-cd'>...</span>" : ""}` : ""));
   setHtml($(".cp-kit-rows"), kit.join(""));
 
   // the pocket: four snacks on keys 1 to 4 (tap one on a touch screen)
@@ -324,7 +322,7 @@ function campHudUpdate() {
   window.renderHearts = function () {
     if (!campRun) return hearts.apply(this, arguments);
     const v = campVessel();
-    const key = ["c", campRun.startHearts, currentHearts, campRun.armor, campRun.armorMax, v ? v.uid + "/" + v.uses : ""].join(":");
+    const key = ["c", campRun.startHearts, currentHearts, campRun.armor, campRun.armorMax, v ? v.uid + "/" + v.uses : "", campRun.rune ? campRun.rune.uid : "", campRun.echoUsed].join(":");
     if (key === lastHeartsKey) return;
     lastHeartsKey = key;
     heartsEl.innerHTML = campHeartsHtml();

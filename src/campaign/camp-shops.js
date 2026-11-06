@@ -113,6 +113,13 @@ function fmtLeft(ms) {
 /* What an item does, as shop-row text */
 function itemFacts(id, rarity) {
   const d = campItemDef(id), r = rarityIdx(rarity);
+  if (d.family === "rune") {
+    // a rune: its two sides, with this condition's numbers
+    const it = { id, rarity };
+    return `<div class="shop-desc">${escapeAttr(d.does)} Yours for good.</div>
+    <div class="shop-meta"><span class="cs-good">Good: ${escapeAttr(campItemDoes(it))}</span></div>
+    <div class="shop-meta"><span class="cs-weak">Bad: ${escapeAttr(campItemWeak(it))}</span></div>`;
+  }
   const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
   const stat = d.uses ? plural(d.uses[r] + upVal("sturdy"), "use") : d.charges ? plural(d.charges[r] + (d.family === "spell" ? upVal("potent") : upVal("hearty")), "charge") : d.power ? `${d.power[r]} ${d.unit}` : "";
   return `<div class="shop-desc">${escapeAttr(d.does)}</div>
@@ -144,7 +151,7 @@ function merchantHtml() {
     const can = !o.sold && campWallet(shopIsl) >= price;
     return `<div class="shop-row cs-offer${o.sold ? " locked" : ""}" style="--rc:${rarityColor(o.rarity)}">
       ${campItemIconHtml({ id: o.id, rarity: o.rarity }, "big")}
-      <div><div class="shop-name"><span class="cs-rar" style="color:${rarityColor(o.rarity)}">${rarityName(o.rarity)}</span> ${escapeAttr(d.name)}${o.deal && !o.sold ? ` <span class="cs-deal">${CAMP.rules.merchant.dealDiscount}% off</span>` : ""}</div>${itemFacts(o.id, o.rarity)}</div>
+      <div><div class="shop-name"><span class="cs-rar" style="color:${rarityColor(o.rarity)}">${campGradeName(o.id, o.rarity)}</span> ${escapeAttr(d.name)}${o.deal && !o.sold ? ` <span class="cs-deal">${CAMP.rules.merchant.dealDiscount}% off</span>` : ""}</div>${itemFacts(o.id, o.rarity)}</div>
       ${o.sold ? `<button class="btn btn-buy equipped" disabled>Sold</button>` : `<button class="btn btn-buy${can ? " affordable" : ""}" data-act="buy" data-i="${i}" ${can ? "" : "disabled"}>${coinTag(shopIsl, price)}</button>`}
     </div>`;
   }).join("");
@@ -204,7 +211,7 @@ function challengerHtml() {
   }).join("");
   const pool = CAMP.rules.challenge.pool;
   const total = pool.reduce((a, p) => a + p.weight, 0);
-  const odds = pool.map(p => `<li><span class="pn-label">${p.kind === "gems" ? `${p.min} to ${p.max} gems` : p.kind === "item" ? `A ${rarityName(p.rarity).toLowerCase()} ${escapeAttr(CAMP.families[I.merchantFamily].name.toLowerCase())} item` : p.kind === "canister" ? "A Heart Canister (any rarity)" : p.kind === "skin" ? "An exclusive skin" : "An exclusive theme"}</span><span class="pn-count">${Math.round(p.weight / total * 100)}%</span></li>`).join("");
+  const odds = pool.map(p => `<li><span class="pn-label">${p.kind === "gems" ? `${p.min} to ${p.max} gems` : p.kind === "item" ? (CAMP.families[I.merchantFamily].grades ? `A ${CAMP.families[I.merchantFamily].grades[rarityIdx(p.rarity)].toLowerCase()} rune` : `A ${rarityName(p.rarity).toLowerCase()} ${escapeAttr(CAMP.families[I.merchantFamily].name.toLowerCase())} item`) : p.kind === "canister" ? "A Heart Canister (any rarity)" : p.kind === "skin" ? "An exclusive skin" : "An exclusive theme"}</span><span class="pn-count">${Math.round(p.weight / total * 100)}%</span></li>`).join("");
   const reward = `<div class="core-box cs-reward"><span class="ribbon rank-3">Reward</span>
     <p class="shop-note">${coinTag(shopIsl, challengeCurrency())} ${escapeAttr(I.currency.plural)}, and one roll of the prize pool:</p>
     <ul class="prestige-needs">${odds}</ul></div>`;
@@ -233,7 +240,7 @@ function rollChallengeReward(isl) {
     const ids = CAMP.items.filter(i => i.family === fam);
     const it = ids[Math.floor(Math.random() * ids.length)];
     campGive(it.id, pick.rarity);
-    return `a ${rarityName(pick.rarity)} ${it.name}`;
+    return `a ${campItemName({ id: it.id, rarity: pick.rarity })}`;
   }
   if (pick.kind === "canister") {
     const r = rollRarity();

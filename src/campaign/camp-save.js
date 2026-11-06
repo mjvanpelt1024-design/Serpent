@@ -39,6 +39,8 @@ function repairCamp(c) {
   const seen = new Set();
   c.satchel = c.satchel.filter(it => { if (seen.has(it.uid)) return false; seen.add(it.uid); return true; });
   c.nextUid = Math.max(c.nextUid, ...c.satchel.map(it => it.uid + 1), 1);
+  // runes used to stack and burn up: now every one is its own stone, kept for good
+  campSplitRunes(c);
   Object.keys(c.equip).forEach(slot => {
     const it = c.satchel.find(x => x.uid === c.equip[slot]);
     if (!it || !CAMP.itemById[it.id] || CAMP.families[CAMP.itemById[it.id].family].slot !== slot) delete c.equip[slot];
@@ -229,7 +231,7 @@ const fmtHalf = v => (Math.floor(v + 1e-9) || (v % 1 ? "" : "0")) + (v % 1 > 0.2
 function campItemLeft(it) {
   const slot = campItemSlot(it.id);
   if (slot === "pet") return "Never wears out";
-  if (slot === "rune") return `You have ${it.qty}`;
+  if (slot === "rune") return "Yours for good";
   if (slot === "canister") {
     const d = campItemDef(it.id), armor = d.armor[rarityIdx(it.rarity)] > 0;
     const n = armor ? it.uses / (CAMP.rules.snake.armorPieces || 4) : it.uses / 2;
@@ -242,8 +244,8 @@ function campItemLeft(it) {
 
 function campGive(id, rarity = "common") {
   const slot = campItemSlot(id);
-  // runes and loot stack; everything else is its own piece
-  if (slot === "rune" || slot === "loot") {
+  // loot stacks; everything else is its own piece
+  if (slot === "loot") {
     const have = camp.satchel.find(it => it.id === id && it.rarity === rarity);
     if (have) { have.qty = Math.min(999, have.qty + 1); return have; }
   }
@@ -264,7 +266,12 @@ function campDrop(uid) {
 function campItemName(it) {
   const d = campItemDef(it.id);
   if (!d) return (CAMP.lootById[it.id] || { name: it.id }).name;
-  return `${rarityName(it.rarity)} ${d.name}`;
+  return `${campGradeName(it.id, it.rarity)} ${d.name}`;
+}
+/* "Rare", or for a rune its condition: "Pristine" */
+function campGradeName(id, rarity) {
+  const d = campItemDef(id), fam = d && CAMP.families[d.family];
+  return fam && fam.grades ? fam.grades[rarityIdx(rarity)] : rarityName(rarity);
 }
 
 /* What an item sells for: a share of its shop price, or a loot trinket's value */

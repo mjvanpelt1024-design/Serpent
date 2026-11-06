@@ -409,7 +409,7 @@ function maybeLoot(ts) {
   if (ts < campRun.lootAt) return;
   campRun.lootAt = ts + CAMP.rules.rewards.lootEveryMs;
   if (campObjs.some(o => o.kind === "loot")) return;
-  if (Math.random() > CAMP.rules.rewards.lootChance * (1 + upPct("lucky"))) return;
+  if (Math.random() > CAMP.rules.rewards.lootChance * (1 + upPct("lucky")) * (1 + runeVal("loot") / 100)) return;
   const s = endless ? null : campSpot(0);
   if (!s) return;
   // now and then it's a heart canister instead of a trinket

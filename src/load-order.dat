@@ -97,6 +97,7 @@ campaign/camp-boss.js
 campaign/camp-items.js
 campaign/camp-art.js
 campaign/camp-hearts.js
+campaign/camp-runes.js
 campaign/camp-hud.js
 campaign/camp-run.js
 campaign/camp-screens.js

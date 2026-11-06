@@ -1,5 +1,20 @@
 # Changelog
 
+## v:11.06.2026_b:50: runes for keeps
+
+- **Runes are permanent.** They never wear out or burn up. One is active at a time, and you swap it or take
+  it off in the Satchel or the carry box between levels. Old saves' stacked runes become separate stones.
+- **Thirteen runes**, eight of them new: Haste, Iron, Vigor, the Magpie, the Sage, Greed, Calm and Grace
+  join Plenty, Stillness, Fortune, Fury and Echoes. Every one has a good side and a bad side.
+- **Conditions instead of rarities**: Broken, Cracked, Fine and Pristine, each drawn on the stone (a chipped
+  corner, a crack, plain, polished with a sweeping glint). A better condition means a stronger good side
+  and a milder bad side. Runes cost more now that they last.
+- **The hearts chip** shows every heart slot there is, the ones you don't have as shadows, and your rune
+  under them (a shadow stone when there's none) with its good side in green and its bad side in red, or
+  "No rune selected".
+- Runecraft now makes a rune's percentage boons stronger. The kit beside the board is gear and spell (with
+  any free casts from the Sage).
+
 ## v:11.06.2026_b:49: the pocket, challenges, and the map up close
 
 - **Your kit is three things**: one gear, one spell, one rune. **Snacks go in a pocket** of four and you

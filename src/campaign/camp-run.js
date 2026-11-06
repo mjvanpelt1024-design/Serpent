@@ -12,14 +12,19 @@
 "use strict";
 
 let campRun = null;
+/* The spawns that hurt: a rune that hurries or calms hazards changes these, not the good ones */
+const HAZARD_SPAWNS = ["popsicle", "flea", "fire", "molasses", "rock", "bramble", "wasp", "lightning", "ice", "bomb", "ghost", "spikes", "gust", "sinkhole", "shears"];
 
 /* How many hearts a level starts with. You start the game with none (one hit ends a run);
-   Stout Heart on the first island's tree adds them. */
-function campHearts(mods, rune) {
+   Stout Heart on the first island's tree adds them, and a rune can add or take some (halves too). */
+function campHearts(mods) {
   if (mods.includes("glass")) return 0;
-  let h = CAMP.rules.snake.hearts + upVal("hearts");
-  if (rune && rune.id === "fortune") h -= 1;
-  return Math.max(0, h);
+  return Math.max(0, CAMP.rules.snake.hearts + upVal("hearts") + runeVal("hearts"));
+}
+/* The most hearts anyone can have: the empty ones show as shadows */
+function campHeartCap() {
+  const u = CAMP.upgradeById.hearts;
+  return CAMP.rules.snake.hearts + (u ? u.values[u.values.length - 1] : 0);
 }
 
 /* ----- Hearts and armor -----
@@ -32,7 +37,8 @@ function campHearts(mods, rune) {
 const ARMOR_PIECES = () => CAMP.rules.snake.armorPieces || 4;
 function campArmorStart(mods) {
   if (mods.includes("glass")) return 0;
-  return Math.min(CAMP.rules.snake.armorCap + upVal("armorcap"), upVal("plating")) * ARMOR_PIECES();
+  // a rune's plates come on top of the cap
+  return (Math.min(CAMP.rules.snake.armorCap + upVal("armorcap"), upVal("plating")) + Math.max(0, runeVal("armor"))) * ARMOR_PIECES();
 }
 /* The engine still counts whole plates for its own odds and ends */
 function campSyncArmor() {
@@ -120,16 +126,10 @@ function campStart(isl, n, challengeIdx = -1) {
   const C = camp.challenges[isl];
   const mods = challengeIdx >= 0 && C && C.active ? (C.mods[challengeIdx] || []).slice() : [];
 
-  // a rune burns up as the level starts (Runecraft might save it)
-  let rune = null;
+  // your rune: yours for good, so nothing is used up; both its sides work all level
   const rIt = campEquipped("rune");
-  if (rIt && !mods.includes("bare")) {
-    rune = { id: rIt.id, rarity: rIt.rarity, power: campItemPower(rIt) };
-    if (!roll(upVal("runecraft"))) {
-      rIt.qty--;
-      if (rIt.qty <= 0) campDrop(rIt.uid);
-    } else showToast("Runecraft! The rune survived.");
-  }
+  const rune = rIt && !mods.includes("bare") ? runeForRun(rIt) : null;
+  const rv = stat => (rune && rune.vals[stat]) || 0;
 
   const spawns = JSON.parse(JSON.stringify(def.spawns || {}));
   if (mods.includes("swarm")) Object.values(spawns).forEach(s => {
@@ -143,15 +143,19 @@ function campStart(isl, n, challengeIdx = -1) {
     else spawns.rock = Object.assign({}, spawns.rock || {}, { count: ((spawns.rock || {}).count || 0) + 10 });
   }
   if (upVal("golden") > 0 && def.edge !== "endless") spawns.golden = spawns.golden || { max: 1, delay: [upVal("golden") * 800, upVal("golden") * 1200] };
-  if (rune && rune.id === "plenty") Object.values(spawns).forEach(s => { if (s.delay) s.delay = s.delay.map(d => Math.round(d * 0.8)); });
+  // a rune that hurries or calms hazards: more often (or less), and more (or fewer) placed ones
+  const hz = 1 + rv("hazards") / 100;
+  if (hz !== 1) Object.entries(spawns).forEach(([k, s]) => {
+    if (!HAZARD_SPAWNS.includes(k)) return;
+    if (s.delay) s.delay = s.delay.map(d => Math.round(d / hz));
+    if (s.count) s.count = Math.max(1, Math.round(s.count * hz));
+    if (s.rate) s.rate *= hz;
+  });
   MODE_ITEMS.campaign = spawns;
 
-  let mult = 1 + upPct("scoremult");
-  if (rune && rune.id === "plenty") mult *= 1 + rune.power / 100;
-  if (rune && rune.id === "stillness") mult *= 0.85;
-  let speed = def.speed * (mods.includes("swift") ? 1.2 : 1) * (1 - upPct("calm"));
-  if (rune && rune.id === "stillness") speed *= 1 - rune.power / 100;
-  const apples = 1 + upVal("orchard") + (rune && rune.id === "plenty" ? (rune.rarity === "legendary" ? 2 : 1) : 0);
+  const mult = (1 + upPct("scoremult")) * (1 + rv("points") / 100);
+  const speed = def.speed * (mods.includes("swift") ? 1.2 : 1) * (1 - upPct("calm")) * (1 + rv("speed") / 100);
+  const apples = 1 + upVal("orchard") + rv("apples");
   const edge = { tunnel: "endless", maze: "maze", field: "maze" }[def.layout] || def.edge;
   const island = CAMP.islandById[isl];
   modes.campaign = { label: def.name, speed, edge, multiplier: mult, startOrbs: 0, orbChance: 0, apples, hunter: !!def.hunter, rules: "" };
@@ -160,7 +164,7 @@ function campStart(isl, n, challengeIdx = -1) {
     isl, islandN: island.n, n, def, mods, challenge: challengeIdx, rune,
     apples: 0, lostHeart: false, loot: [], canisters: [], lootAt: performance.now() + 6000,
     castReadyAt: 0, fieldUntil: 0, pet: null, gearFx: 0, blinkFx: 0,
-    secondWind: upVal("secondwind") > 0, echoReady: !!(rune && rune.id === "echo"), echoUsed: false,
+    secondWind: upVal("secondwind") > 0, echoReady: rv("echo") > 0, echoUsed: false, freeCasts: rv("freeCasts"), dmgCarry: 0,
     over: false, speed, prevBest: (camp.levels[campLevelId(isl, n)] || { best: 0 }).best
   };
   campShots = [];
@@ -174,7 +178,7 @@ function campStart(isl, n, challengeIdx = -1) {
   document.body.classList.add("camp-run");
   startGame();
 
-  currentHearts = campHearts(mods, rune);
+  currentHearts = campHearts(mods);
   campRun.startHearts = currentHearts;
   campRun.armor = campRun.armorMax = campArmorStart(mods);
   campSyncArmor();
@@ -184,7 +188,6 @@ function campStart(isl, n, challengeIdx = -1) {
   campBonusSetup(def);
   if (def.goal.type === "boss") spawnBoss(def, def.goal.fight);
   campPetSetup();
-  if (rune) showToast(`${campItemName(rune)} burns bright.`);
   saveCamp();
   campHudBuild();
   lastHeartsKey = "";
@@ -233,7 +236,7 @@ function campRewardPreview(isl, n, first) {
 /* Every run's points turn into this island's money, won or lost */
 function campPointsPay() {
   const per = CAMP.rules.rewards.pointsPerCoin || 50;
-  return Math.max(0, Math.floor(Math.max(0, score) / per * (1 + upPct("mastery"))));
+  return Math.max(0, Math.floor(Math.max(0, score) / per * (1 + upPct("mastery")) * Math.max(0, 1 + runeVal("money") / 100)));
 }
 function campPayPoints(lines) {
   const pts = campPointsPay();
@@ -253,8 +256,8 @@ function campReward(first) {
   r *= (1 + upPct("bounty")) * (1 + upPct("mastery"));
   const pet = campEquipped("pet");
   if (pet && pet.id === "seahorse" && !campBare()) r *= 1 + campItemPower(pet) / 100;
-  if (campRun.rune && campRun.rune.id === "fortune") r *= 1 + campRun.rune.power / 100;
-  if (campRun.echoUsed) r *= 1 - campRun.rune.power / 100;
+  r *= Math.max(0, 1 + runeVal("money") / 100);
+  if (campRun.echoUsed) r *= 1 - runeVal("echoCut") / 100;
   return Math.max(1, Math.round(r));
 }
 
@@ -297,12 +300,13 @@ function campWinLevel() {
   if (endless) campBump("distance", endlessDistance());
   // trinkets found on the way, and the odd lucky extra
   const pet = campEquipped("pet");
-  if ((pet && pet.id === "seahorse" && pet.rarity === "legendary" && !campBare()) || (campRun.rune && campRun.rune.id === "fortune" && campRun.rune.rarity === "legendary")) {
+  if (pet && pet.id === "seahorse" && pet.rarity === "legendary" && !campBare()) {
     const pool = CAMP.loot.filter(l => l.island === campRun.islandN);
     if (pool.length) campRun.loot.push(pool[Math.floor(Math.random() * pool.length)].id);
   }
   campGiveFinds(lines, "Found");
   if (roll(upVal("gemfinder"))) { addGems(1); lines.push("+1 gem (Gem Finder)"); }
+  if (runeVal("gemChance") && roll(runeVal("gemChance"))) { addGems(1); lines.push(`+1 gem (${campItemDef(campRun.rune.id).name})`); }
   campBonusAtWin(lines);
   // the challenge
   const C = camp.challenges[isl];
@@ -385,8 +389,8 @@ function campTryRevive(cause) {
   if (campRun.phoenix) { const h = campRun.phoenix; campRun.phoenix = 0; showToast("The Phoenix Tart! You rise from the crumbs."); return back(h); }
   if (campRun.echoReady) {
     campRun.echoReady = false; campRun.echoUsed = true;
-    showToast("The Rune of Echoes calls you back!");
-    return back(campRun.rune.rarity === "legendary" ? 2 : 1);
+    showToast(`The ${campItemDef(campRun.rune.id).name} calls you back!`);
+    return back(runeVal("echo"));
   }
   return false;
 }
@@ -453,9 +457,18 @@ function campTryRevive(cause) {
     if (save.dev.invincible) return false;
     if (campGuardHit(cause)) return false;
     if (guardHit()) return false;                 // the Rampage Star, or a bubble shield
-    if (campRun.rune && campRun.rune.id === "fury" && hearts !== Infinity) hearts *= 2;
+    // a rune that makes you take more damage: the extra adds up in halves, so +50% is an extra half every other half
+    const more = runeVal("damage");
+    if (more && hearts !== Infinity) {
+      campRun.dmgCarry += hearts * 2 * more / 100;
+      const extra = Math.floor(campRun.dmgCarry + 1e-9);
+      campRun.dmgCarry -= extra;
+      hearts += extra / 2;
+    }
     campRun.hitTaken = true;
     if (campDamage(hearts, cause)) return true;
+    // a rune of grace: safe for a moment after every hit
+    if (runeVal("graceSecs") && gameState === "PLAYING") graceUntil = Math.max(graceUntil, performance.now() + runeVal("graceSecs") * 1000);
     return false;
   });
   // armor only comes from upgrades in the campaign: a stray armor pickup pays points instead
@@ -543,10 +556,11 @@ function campTryRevive(cause) {
     if (!campRun) return orig.apply(this, arguments);
     const before = score;
     orig.apply(this, arguments);
-    let extra = upPct("applevalue");
+    let extra = upPct("applevalue") + runeVal("applePoints") / 100;
     if (campRun.magnetDouble && performance.now() < campRun.magnetDouble) extra += 1;
-    if (extra > 0) score += Math.round((score - before) * extra);
+    if (extra !== 0) score += Math.round((score - before) * extra);
     campRun.apples++;
+    if (runeVal("growth") > 0) snake.maxCells += runeVal("growth");
     campBonusEvent("apple");
     campBump("applesEaten");
   });

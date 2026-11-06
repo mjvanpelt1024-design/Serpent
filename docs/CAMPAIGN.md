@@ -1,4 +1,4 @@
-# The campaign (builds 47 to 49)
+# The campaign (builds 47 to 50)
 
 Five islands strung up the sky along the Coil, fifteen levels each, one boss per island fought three times,
 shopkeepers off every path, and an economy where every island has its own money. It looks the way build
@@ -23,6 +23,7 @@ This file is the design and the map of where things live. The numbers themselves
 | Hearts and armor: the rules (`campDamage`) and their pictures | `camp-run.js`, `camp-hearts.js` |
 | Shops, shopkeeper scenes, the kit box, trees | `camp-shops.js`, `camp-scenes.js`, `camp-kit.js`, `camp-tree.js` |
 | Every level's challenge (its `bonus`) | `camp-bonus.js` |
+| Runes: what each stat does, their words and their four conditions | `camp-runes.js` |
 | Home base, the Satchel, Tailor and Trophy Hall | `camp-home.js`, `camp-collection.js` |
 | Item and goal pictures (12 x 12, like every icon) | `camp-art.js` (goal pieces: `camp-levels.js`) |
 | The pixel frames on every panel, button and window | `src/art/ui-frames.js`, `styles/16-retro-fantasy.css` |
@@ -112,16 +113,16 @@ tree, which grows as you buy that island's upgrades. The shopkeepers stand by th
 ## Playing a level
 
 Play (on the stop, or on the rules card) opens the old "Bring anything?" box, now "What will you carry?",
-when you own something to carry: **your kit** (one gear, one spell, one rune, picked with arrows), your
-familiar and heart canister, and **the pocket**, four snack slots you click to fill (never the same
+when you own something to carry: **your kit** (one gear, one spell, picked with arrows), your familiar,
+your active rune and heart canister ("with your hearts"), and **the pocket**, four snack slots you click to fill (never the same
 snack twice). The Satchel's Kit tab changes the same things between levels. Then the old 3-2-1
 countdown, and the cursor hides until the run ends or you pause.
 
 **Nothing is drawn on the board but the game.** The hub around it, in pixel-framed plates:
 
-- **Left, you:** your hearts and armor, the score and the pause button (the game's own HUD), your purse
+- **Left, you:** the hearts chip (below), the score and the pause button (the game's own HUD), your purse
   (this island's money and your gems, and what this run's points will pay), your kit (gear, spell with
-  its Space key, rune), the pocket (four snacks with their keys 1 to 4 and charges left; click one to eat
+  its Space key and any free casts), the pocket (four snacks with their keys 1 to 4 and charges left; click one to eat
   it too), a chip with your familiar (or No familiar), effects, and what you've found.
 - **Right, the world:** the island and level, then three plates: **Objective** (the level's goal),
   **Quest** (the challenger's three trials while one is on, from any island; None otherwise) and
@@ -151,6 +152,11 @@ the hunter), cast N spells (`spells`), find N trinkets (`loot`). The reward is `
 you do it, or `{"gems"}` / `{"coins"}` once (the level's record keeps `bonus: true`).
 
 ### Hearts and armor
+
+The hearts chip always shows as many slots as anyone can have (`campHeartCap`: five from Stout Heart, more
+if a rune or your armor needs them). The hearts you don't have, or have lost, are **shadows**. Under
+them sits your **rune**: its stone (or a shadow of one when there's none) and a two-line blurb, the good
+side in green and the bad side in red, or "No rune selected".
 
 You start the game with **no hearts**: one hit ends a run. Stout Heart (the first island's tree) adds one
 per tier, up to five. The engine's rule stays: at zero hearts you're still alive, and the next hit kills.
@@ -192,8 +198,8 @@ plate beside the board; silver hearts are armor.
 
 ## Items
 
-Four rarities (Common, Uncommon, Rare, Legendary), five kinds. Your kit is one gear, one spell and one
-rune; snacks go in the pocket, four at most; one familiar and one heart canister come along too:
+Four rarities (Common, Uncommon, Rare, Legendary), six kinds. Your kit is one gear and one spell; snacks
+go in the pocket, four at most; one familiar, one rune and one heart canister come along too:
 
 | Kind | Island | Behaves | The five |
 |---|---|---|---|
@@ -201,8 +207,43 @@ rune; snacks go in the pocket, four at most; one familiar and one heart canister
 | Spell | 2 | Space casts; rarity sets charges and duration | Force Field, Fireball, Blink, Frost Nova, Apple Call |
 | Snack | 3 | in the pocket; 1 to 4 eat one: heals, regrows armor, repairs gear, recharges a spell, a second chance | Hearty Stew, Honey Bread, Tinker's Pie, Spice Jerky, Phoenix Tart |
 | Familiar | 4 | follows you into every level; never wears out | Lantern Firefly, Snip the Crab, Shellby the Turtle, Puff the Pufferfish, Sir Seahorse |
-| Rune | 5 | burns up when a level starts and changes that level | Plenty, Stillness, Fortune, Fury, Echoes |
+| Rune | 5 | yours for good; one active at a time, a good side and a bad side in every level | Plenty, Stillness, Fortune, Fury, Echoes, Haste, Iron, Vigor, the Magpie, the Sage, Greed, Calm, Grace |
 | Canister | never sold | purple hearts on top of your own, lost first; they never refill | Heart Canister |
+
+### Runes
+
+A rune never wears out or burns up. One is active (`camp.equip.rune`), chosen in the Satchel or the
+carry box, and both its sides work in every level until you take it off (never during one). A rune's
+rarity is its **condition**, named by the family's `grades`: **Broken** (a chip knocked out of its
+corner, dull), **Cracked** (a split down its face), **Fine** (as carved) and **Pristine** (polished,
+with a glint that sweeps across it). A better condition makes the good side stronger and the bad side
+milder. Runecraft (the Ember Ash) makes the good side's percentages stronger still.
+
+| Rune | Good (broken / cracked / fine / pristine) | Bad |
+|---|---|---|
+| Plenty | apples +10/20/30/45% points; +1/1/1/2 apples | hazards 35/30/25/20% faster |
+| Stillness | move 6/10/14/20% slower | points -20/17/15/12% |
+| Fortune | +25/40/60/100% money | -1/1/1/½ heart |
+| Fury | bosses tire 20/30/40/60% faster; +1/1/1/2 bite | take 100/90/75/50% more damage |
+| Echoes | come back once with ½/1/1½/2 hearts | pay -50/40/30/20% if it saves you |
+| Haste | points +15/20/28/40% | move 14/12/10/8% faster |
+| Iron | +1/1/2/2 armor plates (over the cap) | each apple grows you 2/2/1/1 more |
+| Vigor | +½/1/1/2 hearts | hazards 30/25/20/15% faster |
+| The Magpie | trinkets 50/75/100/150% more often | points -15/12/10/8% |
+| The Sage | 1/1/2/3 free casts a level | spell recharge 50/40/30/20% slower |
+| Greed | 10/15/20/30% chance of a gem on a win | -40/35/30/25% money |
+| Calm | hazards 15/20/25/35% slower | apples -20/16/12/10% points |
+| Grace | 1/1½/2/3 s safe after every hit | -1/1/½/½ heart |
+
+**Adding one.** A rune is only data: an entry in `items.json` with a `color`, a `good` and a `bad` list of
+`{"stat", "v": [four values]}`, and a picture (`RUNE_GLYPHS` in `camp-runes.js`, a 7 x 7 glyph carved
+into the stone; the four conditions are drawn from it). The stats it can use are `RUNE_STATS` in
+`camp-runes.js` (each with its long and short words) and the same names in `tools/check-campaign.py`; the
+game reads them with `runeVal(stat)` where each one acts. A new kind of effect is one entry in each of
+those and one `runeVal()` call. Hazards (`HAZARD_SPAWNS` in `camp-run.js`) are the spawns that hurt.
+Old saves' stacked runes are split into separate stones (`campSplitRunes`).
+
+### The Heart Canister
 
 The **Heart Canister** is found on the board now and then (`rewards.canisterShare` of loot drops) or won
 from a quest (`challenge.pool`). Common, uncommon and rare ones hold 1, 2 and 3 **purple hearts**; a

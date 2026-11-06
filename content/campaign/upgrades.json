@@ -51,7 +51,7 @@
         {"id": "secondwind", "name": "Second Wind", "icon": "wing", "text": "Once per level, survive a killing blow with {v} heart.", "values": [0, 1], "prices": [1500]},
         {"id": "passive", "name": "Slow Burn", "icon": "candle", "text": "Points for staying alive are worth +{v}%.", "values": [0, 25, 50, 80, 115, 150], "prices": [50, 110, 220, 400, 680]},
         {"id": "gemfinder", "name": "Gem Finder", "icon": "gem", "text": "{v}% chance a win also pays a gem.", "values": [0, 4, 8, 12, 16, 20], "prices": [90, 190, 360, 640, 1050]},
-        {"id": "runecraft", "name": "Runecraft", "icon": "rune", "text": "{v}% chance a rune isn't used up.", "values": [0, 10, 20, 30, 40, 50], "prices": [60, 130, 260, 470, 800]},
+        {"id": "runecraft", "name": "Runecraft", "icon": "rune", "text": "Your rune's boons given in percent are {v}% stronger.", "values": [0, 10, 20, 30, 40, 50], "prices": [60, 130, 260, 470, 800]},
         {"id": "mastery", "name": "Coil Mastery", "icon": "crown", "text": "+{v}% of every currency, everywhere.", "values": [0, 8, 16, 25, 35, 50], "prices": [80, 170, 330, 580, 950]},
         {"id": "armorcap", "name": "Iron Scales", "icon": "ironscales", "text": "+{v} to the most armor plates you can carry.", "values": [0, 1, 2, 3], "prices": [150, 420, 1000]}
       ]

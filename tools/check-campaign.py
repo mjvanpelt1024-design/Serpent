@@ -34,7 +34,10 @@ SPAWNS = {"popsicle", "flea", "fire", "molasses", "rock", "apple", "xp",
           "golden", "shears", "armor", "shield", "hourglass", "star", "phantom", "lodestone", "frenzy"}
 PLACED = {"rock", "bramble", "ice", "spikes"}          # these use count, not max + delay
 ENDLESS_SPAWNS = {"rock", "flea", "popsicle"}         # the tunnel only rolls these, by rate
-FAMILIES = {"gear", "spell", "food", "pet", "rune"}     # sold by merchants, five items each
+FAMILIES = {"gear", "spell", "food", "pet", "rune"}     # sold by merchants, five items each (runes: five or more)
+# what a rune can do: src/campaign/camp-runes.js has the effect and the words for each
+RUNE_STATS = {"applePoints", "points", "apples", "hazards", "speed", "money", "hearts", "armor", "damage", "bossDrain", "bite",
+              "echo", "echoCut", "loot", "freeCasts", "castCooldown", "gemChance", "growth", "graceSecs"}
 SPECIAL_FAMILIES = {"vessel"}                         # never sold: found on the board or won
 CAUSES = {"boss", "bomb", "spikes", "hunter", "lightning", "ghost", "poison", "wasp", "bramble", "flea", "fire", "echo"}
 NPC_KINDS = ("merchant", "challenger", "banker")
@@ -181,6 +184,8 @@ def check_items(items):
     for f, d in fams.items():
         p = d.get("price", [])
         check(len(p) == 4 and all(num(x, 1, 1e7) for x in p) and p == sorted(p), rel, f"families.{f}.price must be four rising prices")
+        if "grades" in d:
+            check(len(d["grades"]) == 4 and all(isinstance(g, str) and g for g in d["grades"]), rel, f"families.{f}.grades must be four names")
     ids = set()
     per = {f: 0 for f in FAMILIES}
     for it in items.get("items", []):
@@ -190,14 +195,24 @@ def check_items(items):
         f = it.get("family")
         check(f in FAMILIES | SPECIAL_FAMILIES, where, f"family \"{f}\" unknown")
         per[f] = per.get(f, 0) + 1
-        for key in ("name", "does", "strong", "weak", "legend"):
+        for key in ("name", "does", "strong", "weak") + (() if f == "rune" else ("legend",)):
             check(it.get(key), where, f"missing \"{key}\" (every item needs a strength and a weakness)")
         if f == "gear":
             check(len(it.get("uses", [])) == 4, where, "gear needs uses for four rarities")
         if f in ("spell", "food"):
             check(len(it.get("charges", [])) == 4, where, "needs charges for four rarities")
-        if f in ("spell", "food", "pet", "rune"):
+        if f in ("spell", "food", "pet"):
             check(len(it.get("power", [])) == 4, where, "needs power for four rarities")
+        if f == "rune":
+            # a good side and a bad side, each one or more stats with a value per condition
+            check(isinstance(it.get("color"), str) and it["color"].startswith("#"), where, "a rune needs a color")
+            for side in ("good", "bad"):
+                stats = it.get(side, [])
+                check(isinstance(stats, list) and len(stats) >= 1, where, f"a rune needs at least one {side} stat")
+                for st in stats if isinstance(stats, list) else []:
+                    check(st.get("stat") in RUNE_STATS, where, f"{side} stat \"{st.get('stat')}\" isn't one the game knows")
+                    v = st.get("v", [])
+                    check(len(v) == 4 and all(num(x, -100, 1000) and x != 0 for x in v), where, f"{side} stat {st.get('stat')} needs four non-zero values, one per condition")
         if f == "vessel":
             h, a = it.get("hearts", []), it.get("armor", [])
             check(len(h) == 4 and len(a) == 4 and all(num(x, 0, 12) for x in h + a), where, "a vessel needs hearts and armor for four rarities (0-12)")
@@ -206,6 +221,9 @@ def check_items(items):
     for f, count in per.items():
         if f in SPECIAL_FAMILIES:
             check(count >= 1, rel, f"family {f} needs at least one item")
+            continue
+        if f == "rune":
+            check(count >= 5, rel, f"family rune has {count} items; the merchant needs at least 5")
             continue
         check(count == 5, rel, f"family {f} has {count} items; each merchant needs exactly 5")
     for l in items.get("loot", []):

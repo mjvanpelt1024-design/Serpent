@@ -48,7 +48,6 @@ function bossInterval(ts) {
   let rel = boss.def.speed * (1 + 0.07 * boss.dmg);
   if (bossCharging(ts)) rel *= 1.9;
   if (bossExhausted(ts)) rel *= 0.38;
-  if (campRun.rune && campRun.rune.id === "stillness" && campRun.rune.rarity === "legendary") rel *= 0.85;
   return moveInterval / Math.max(0.15, rel);
 }
 
@@ -56,7 +55,7 @@ function bossInterval(ts) {
 function bossDrain(ts) {
   let d = boss.def.drain[boss.fight - 1] / boss.def.stamina;
   d *= 1 + upPct("wear");
-  if (campRun.rune && campRun.rune.id === "fury") d *= 1 + campRun.rune.power / 100;
+  d *= 1 + runeVal("bossDrain") / 100;
   if (bossCharging(ts)) d *= 2.4;
   return d;
 }
@@ -204,7 +203,7 @@ function bossTouchedBy(nx, ny, ts) {
   boss.hitCdUntil = ts + BOSS_HIT_CD;
   if (bossExhausted(ts) && boss.fight > 1) {
     let n = 1;
-    if (campRun.rune && campRun.rune.id === "fury") n += campRun.rune.rarity === "legendary" ? 2 : 1;
+    n += runeVal("bite");
     if (roll(upVal("bite"))) n++;
     damageBoss(n, "bite");
     graceUntil = Math.max(graceUntil, ts + 500);

@@ -173,7 +173,7 @@ function campCast() {
   if (!it || campBare()) { showToast(campBare() ? "Bare Scales: no spells on this quest." : "No spell ready. Buy one on the Arcanum Spire."); return; }
   const ts = performance.now();
   if (ts < campRun.castReadyAt) return;
-  campRun.castReadyAt = ts + 1500 * (1 - upPct("recharge"));
+  campRun.castReadyAt = ts + 1500 * (1 - upPct("recharge")) * (1 + runeVal("castCooldown") / 100);
   const leg = it.rarity === "legendary";
   const p = campItemPower(it);
   let ok = true;
@@ -188,7 +188,9 @@ function campCast() {
     sfx("molasses");
   } else if (it.id === "magnet") { buffs.lodeUntil = ts + p * 1000; campRun.magnetDouble = leg ? ts + p * 1000 : 0; sfx("portal"); }
   if (!ok) { campRun.castReadyAt = ts + 300; return; }
-  it.uses--;
+  // the Rune of the Sage's free casts go first, and don't spend the spell's charges
+  if (campRun.freeCasts > 0) campRun.freeCasts--;
+  else it.uses--;
   campBump("spellsCast");
   campBonusEvent("spell");
   if (it.uses <= 0) {

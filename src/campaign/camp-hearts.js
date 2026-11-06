@@ -9,7 +9,10 @@
      silver  an armor plate where you have no heart
      purple  a heart from a heart canister
      violet  a plate of a canister's shiny purple armor
-     empty   nothing left there
+     empty   a shadow: a heart you've lost, or one you could still grow
+   The row always shows as many slots as anyone can have (the shadows
+   are the ones you don't have), and your rune sits under it, with what
+   it does beside it (src/campaign/camp-runes.js).
    A plate has four pieces: it shows a dent, then a crack, then only
    its left half, then it's gone. Bosses use the same pictures.
    ========================================================= */
@@ -36,7 +39,7 @@ const HEART_PALS = {
   silver: { k: "#262a32", r: "#c9ced6", w: "#ffffff", R: "#6e7886", m: "#eef2f8" },
   purple: { k: "#1e0a30", r: "#b36bff", w: "#f0d8ff", R: "#6a2aa8" },
   violet: { k: "#24083a", r: "#e2b4ff", w: "#ffffff", R: "#9450e0", m: "#ffffff" },
-  empty: { k: "#1a1410", r: "rgba(0,0,0,0.42)", w: "rgba(0,0,0,0.42)", R: "rgba(0,0,0,0.42)" }
+  empty: { k: "rgba(8,6,4,0.62)", r: "rgba(8,6,4,0.3)", w: "rgba(8,6,4,0.3)", R: "rgba(8,6,4,0.36)" }
 };
 const heartArtCache = {};
 
@@ -88,11 +91,12 @@ function heartSlotHtml({ heart = 0, armor = 0, purple = false, violet = false },
   return `<img class="${cls}" src="${heartSlotUrl(left, right, mark, [armL, armR])}" alt="" draggable="false">`;
 }
 
-/* The whole row: your slots (hearts with your armor over them, from the left), then the canister's */
+/* The whole chip: your slots (hearts with your armor over them, from the left; shadows up to the
+   most hearts anyone can have), then the canister's, and your rune under them */
 function campHeartsHtml() {
   const P = CAMP.rules.snake.armorPieces || 4;
   const halves = Math.round(currentHearts * 2);
-  const heartSlots = Math.max(campRun.startHearts || 0, Math.ceil(currentHearts - 1e-9));
+  const heartSlots = Math.max(campHeartCap(), campRun.startHearts || 0, Math.ceil(currentHearts - 1e-9));
   const plates = Math.ceil((campRun.armorMax || 0) / P);
   const slots = Math.max(heartSlots, plates);
   let html = "";
@@ -106,8 +110,20 @@ function campHeartsHtml() {
     if (vesselHoldsArmor(v)) for (let i = 0; i < Math.ceil(v.uses / P); i++) html += heartSlotHtml({ armor: Math.min(P, v.uses - i * P), violet: true }, "canister");
     else for (let i = 0; i < Math.ceil(v.uses / 2); i++) html += heartSlotHtml({ heart: Math.min(2, v.uses - i * 2), purple: true }, "canister");
   }
-  if (!slots && !v) html += `<span class="pheart-none" title="No hearts: one hit ends the run. Stout Heart on Brightscale Keep's tree adds them.">No hearts</span>`;
-  return html;
+  return `<div class="ph-row">${html}</div>` + campRuneRowHtml();
+}
+
+/* The rune slot under the hearts: the stone (or its shadow) and what it does */
+function campRuneRowHtml() {
+  const it = campRun.rune;
+  const owned = campEquipped("rune");
+  if (!it) {
+    const why = owned && campBare() ? `<span class="rb-none">Bare scales: no rune</span>` : runeBlurbHtml(null);
+    return `<div class="ph-rune empty"><span class="ph-stone"><img src="${runeShadowUrl()}" alt="" draggable="false"></span><span class="ph-blurb">${why}</span></div>`;
+  }
+  const grade = runeGradeId(it);
+  return `<div class="ph-rune" title="${escapeAttr(campItemName(it))}"><span class="ph-stone ${grade}"><img src="${runeIconUrl(it, 2)}" alt="" draggable="false"></span>` +
+    `<span class="ph-blurb">${runeBlurbHtml(it)}</span></div>`;
 }
 
 function campHeartsLabel() {
@@ -116,5 +132,7 @@ function campHeartsLabel() {
   const parts = [`${fmtHalf(currentHearts)} heart${currentHearts === 1 ? "" : "s"}`];
   if (campRun.armor > 0) parts.push(`${fmtHalf(Math.round(campRun.armor / P * 2) / 2)} armor plates`);
   if (v) parts.push(vesselHoldsArmor(v) ? `${fmtHalf(Math.round(v.uses / P * 2) / 2)} purple plates` : `${fmtHalf(v.uses / 2)} purple hearts`);
+  if (campRun.rune) { const w = runeWords(campRun.rune, "short"); parts.push(`rune: ${campItemName(campRun.rune)} (${w.good.concat(w.bad).join(", ")})`); }
+  else parts.push("no rune selected");
   return parts.join(", ");
 }

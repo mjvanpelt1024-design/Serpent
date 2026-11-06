@@ -387,3 +387,43 @@ body.title-world #screen-main .tagline { background: rgba(12, 10, 8, 0.72); }
 #screen-modes:has(#map-brief.open) .node-arrow,
 #screen-modes:has(#map-brief.open) #node-scroll { visibility: hidden; }
 .map-brief .fact { grid-template-columns: 6.6em 1fr; }
+
+/* ---------- The hearts chip: every heart slot (shadows for the ones you don't have), and your rune under them ---------- */
+body.camp-run #hearts { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 0.3em; }
+#hearts .ph-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.25em; }
+#hearts .pheart.empty { filter: none; opacity: 1; }
+#hearts .ph-rune {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.3em 0.15em 0.05em;
+  border-top: var(--px) dashed rgba(242, 196, 90, 0.28);
+  min-width: 0;
+}
+.ph-stone { position: relative; flex: none; display: grid; place-items: center; width: 1.7em; height: 1.7em; overflow: hidden; }
+.ph-stone img { width: 1.7em; height: 1.7em; image-rendering: pixelated; filter: drop-shadow(0 var(--px) 0 rgba(0, 0, 0, 0.45)); }
+.ph-rune.empty .ph-stone img { filter: none; }
+.ph-blurb { display: flex; flex-direction: column; gap: 0.1em; min-width: 0; font-size: 0.6em; line-height: 1.25; }
+.rb-good { color: #8cf0a8; }
+.rb-bad { color: #ff9a8a; }
+.rb-none { color: var(--ink-dim); font-style: italic; }
+.cp-free { font-size: 0.85em; color: #e2b4ff; font-family: var(--display); }
+.kit-good { color: #8cf0a8; }
+
+/* A pristine rune shines: a glint sweeps across it now and then */
+.ph-stone.pristine::after, .ci-icon.rune-pristine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.75) 48%, transparent 60%);
+  transform: translateX(-120%);
+  animation: rune-glint 3.2s ease-in-out infinite;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.ci-icon.rune-pristine { position: relative; overflow: hidden; }
+.ci-icon.rune-pristine img, .ph-stone.pristine img { filter: drop-shadow(0 0 2px rgba(255, 255, 230, 0.7)) drop-shadow(0 var(--px) 0 rgba(0, 0, 0, 0.45)); }
+@keyframes rune-glint { 0%, 55% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
+/* a broken one has lost its luster */
+.ci-icon.rune-broken img, .ph-stone.broken img { filter: saturate(0.6) brightness(0.92) drop-shadow(0 var(--px) 0 rgba(0, 0, 0, 0.45)); }
+@media (prefers-reduced-motion: reduce) { .ph-stone.pristine::after, .ci-icon.rune-pristine::after { animation: none; display: none; } }

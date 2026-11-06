@@ -87,10 +87,13 @@ Object.entries(UPGRADE_SPRITE).forEach(([id, spec]) => { ICON_FOR["cu:" + id] = 
 
 const RUNE_COLORS = { plenty: "#3ddc84", stillness: "#7fe3ff", fortune: "#ffd23f", fury: "#ff3b3b", echo: "#b36bff" };
 
-/* An item's picture in a little rarity-colored tile */
+/* An item's picture in a little rarity-colored tile. A rune shows its condition: chipped,
+   cracked, as carved, or polished and shining (src/campaign/camp-runes.js). */
 function campItemIconHtml(it, cls = "") {
   const color = CAMP.itemById[it.id] ? rarityColor(it.rarity) : "#8a8070";
-  return `<span class="ci-icon ${cls}" style="--rc:${color}"><img src="${iconUrl("ci:" + it.id, 3)}" alt="" draggable="false"></span>`;
+  const rune = CAMP.itemById[it.id] && CAMP.itemById[it.id].family === "rune";
+  const src = rune ? runeIconUrl(it, 3) : iconUrl("ci:" + it.id, 3);
+  return `<span class="ci-icon ${cls}${rune ? " rune-" + runeGradeId(it) : ""}" style="--rc:${color}"><img src="${src}" alt="" draggable="false"></span>`;
 }
 const campIconUrl = (id, scale = 3) => iconUrl("ci:" + id, scale);
 const campUpIconUrl = (icon, scale = 2) => iconUrl("cu:" + icon, scale);

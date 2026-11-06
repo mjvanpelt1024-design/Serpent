@@ -2,18 +2,19 @@
    src/campaign/camp-kit.js
    Choosing what to carry, between levels. The old "Bring anything?"
    box asks before every level once you own something to carry:
-     your kit     one gear, one spell and one rune, picked with arrows
+     your kit     one gear and one spell, picked with arrows
+     a familiar   to come along beside you
+     your rune    the one that's active (yours for good), and a
+                  canister of extra hearts: both sit with your hearts
      the pocket   four snacks, eaten with keys 1 to 4 in the level;
                   click a slot to change what's in it
-     a familiar   to come along beside you
-     a canister   extra hearts in a jar
    Nothing can be swapped in the middle of a level.
    ========================================================= */
 "use strict";
 
 let kitFor = null;            // { isl, n, challenge } while the box is open
-const KIT_SLOTS = ["gear", "spell", "rune"];
-const KIT_EXTRAS = ["pet", "canister"];
+const KIT_SLOTS = ["gear", "spell"];
+const KIT_EXTRAS = ["pet", "rune", "canister"];
 const CARRIED = KIT_SLOTS.concat(KIT_EXTRAS, ["food"]);
 
 /* Opens the box if there's anything to choose; false means just play */
@@ -53,15 +54,16 @@ function renderCampKit() {
     if (choices.length < 2) return;
     if (!headed && KIT_SLOTS.includes(slot)) { head("Your kit"); headed = true; }
     if (slot === "pet") head("Beside you");
-    if (slot === "canister") head("With your hearts");
+    if ((slot === "rune" || slot === "canister") && !list.querySelector(".kit-hearts")) { head("With your hearts"); list.lastChild.classList.add("kit-hearts"); }
     const it = campEquipped(slot);
     const s = CAMP.slots.find(x => x.id === slot);
     const row = document.createElement("div");
     row.className = "loadout-row kit-row";
-    let sub = "Nothing";
+    let sub = slot === "rune" ? "No rune selected" : "Nothing";
     if (it) {
       const d = campItemDef(it.id);
-      sub = slot === "rune" ? `Burns up as the level starts. You have ${it.qty}.` : campItemLeft(it);
+      if (slot === "rune") sub = `<span class="kit-good">${escapeAttr(campItemDoes(it))}</span> <span class="kit-weak">${escapeAttr(campItemWeak(it))}</span>`;
+      else sub = campItemLeft(it);
       if (slot !== "rune" && slot !== "canister") sub += `. <span class="kit-weak">Weak: ${escapeAttr(d.weak)}</span>`;
     }
     row.innerHTML = `${it ? campItemIconHtml(it) : `<span class="ci-icon"></span>`}
