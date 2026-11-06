@@ -610,7 +610,7 @@ function paintIsleScenery(g, key, cx, cy, isl, pass) {
     // two beehives by the gate
     [[-22, -12], [-16, -12]].forEach(([f, dy]) => { const [x, y] = P(f, dy); R(x - 1, y - 4, 3, 1, "#c08a10"); R(x - 2, y - 3, 5, 1, "#e0a820"); R(x - 2, y - 2, 5, 1, "#c08a10"); R(x - 1, y - 1, 3, 1, "#e0a820"); R(x, y - 2, 1, 1, "#3a2a10"); });
     // a cottage or two at the far end
-    { const [x, y] = P(128, 9); isleHouse(g, x - 3, y, 7, 5, "#e8dcc0", "#b23a3a"); }
+    { const [x, y] = P(128, 9); isleHouse(g, x - 3, y, 7, 5, "#e8dcc0", "#b23a3a"); R(x + 2, y - 10, 2, 3, "#8a4a3a"); R(x + 2, y - 10, 2, 1, "#5a2a1a"); }   // its chimney smokes (drawn live)
   } else if (key === "spire") {
     along(-70, 130, 13, "rim", (x, y) => { const c = rnd() > 0.5 ? "#7fe3ff" : "#b36bff"; R(x, y - 4, 1, 4, c); R(x - 1, y - 2, 1, 2, shadeHex(c, -0.3)); R(x + 1, y - 3, 1, 3, shadeHex(c, 0.3)); });
     scatter(8, [7, -13], (x, y, i) => {
@@ -644,6 +644,42 @@ function paintIsleScenery(g, key, cx, cy, isl, pass) {
     });
   }
   paintIsleProps(g, key, P, { sprinkle, along, free, rnd, R });
+  paintIsleWays(g, key, P, free, R);
+}
+
+/* ----- Signposts where the shops branch off, and lanterns along the open paths ----- */
+const ISLE_SIGNS = [[5, "merchant"], [10, "challenger"], [15, "banker"]];
+function isleLanterns(key) {
+  if (ISLANDS[key].n < 2) return [];                  // only up where it's dusk or night
+  const out = [];
+  NODE_PATH.forEach(([a, b], i) => {
+    if (i % 2 || nodeState(key, b) === "locked") return;
+    const [fa, da] = NODE_SPOTS[a], [fb, db] = NODE_SPOTS[b];
+    out.push([(fa + fb) / 2, Math.min(da, db) - 5]);
+  });
+  return out;
+}
+function paintIsleWays(g, key, P, free, R) {
+  const accent = CAMP.islandById[key].colors.accent;
+  // a signpost by each branch, its board in the island's color once the shop is open
+  ISLE_SIGNS.forEach(([n, shop]) => {
+    const [fa, da] = NODE_SPOTS[n], [fb, db] = NODE_SPOTS[shop];
+    const f = fa + (fb - fa) * 0.4, dy = da + (db - da) * 0.4 - 6;
+    if (!free(f, dy, 1, 0.55)) return;
+    const [x, y] = P(f, dy), open = nodeState(key, shop) !== "locked", d = ISLANDS[key].dir * Math.sign(fb - fa || 1);
+    R(x, y - 8, 1, 9, "#5a3a20"); R(x + 1, y - 8, 1, 9, "#3a2410");
+    const bx = d > 0 ? x - 1 : x - 5;
+    R(bx, y - 8, 7, 3, open ? accent : "#7a6a5a"); R(bx, y - 8, 7, 1, open ? shadeHex(accent, 0.35) : "#9a8a7a");
+    R(d > 0 ? bx + 7 : bx - 1, y - 7, 1, 1, open ? accent : "#7a6a5a");          // the arrow's point
+    R(bx + 2, y - 7, 3, 1, open ? shadeHex(accent, -0.45) : "#4a3a2a");          // the writing
+  });
+  // lantern posts (their glow is drawn live)
+  isleLanterns(key).forEach(([f, dy]) => {
+    if (!free(f, dy, 1, 0.5)) return;
+    const [x, y] = P(f, dy);
+    R(x, y - 7, 1, 7, "#2a2018"); R(x - 1, y, 3, 1, "#2a2018");
+    R(x - 1, y - 10, 3, 3, "#1a1410"); R(x, y - 9, 1, 1, "#ffd27a"); R(x - 1, y - 11, 3, 1, "#3a2a1a");
+  });
 }
 
 /* ----- The ground itself: blades, flowers, pebbles, shells, ash... (under the paths) ----- */
@@ -979,6 +1015,25 @@ function drawIsleLiving(g, key, t, by) {
       }
     });
     for (let i = 0; i < 3; i++) { const a = t * (0.5 + i * 0.1) + i * 2; drawFlier(g, isl.x + Math.cos(a) * (120 + i * 20), isl.y - 50 + Math.sin(a * 2) * 10 + by, Math.sin(t * 12 + i) > 0, "#120c10", 1); }
+  }
+  // lanterns glowing along the open paths
+  isleLanterns(key).forEach(([f, dy], i) => {
+    const [x, y] = P(f, dy), fl = 0.5 + 0.5 * Math.sin(t * 7 + i * 2.3) * Math.sin(t * 3.1 + i);
+    g.fillStyle = `rgba(255,200,110,${(0.14 + 0.1 * fl).toFixed(3)})`; g.fillRect(x - 4, y - 13, 9, 8);
+    g.fillStyle = `rgba(255,220,150,${(0.22 + 0.12 * fl).toFixed(3)})`; g.fillRect(x - 2, y - 11, 5, 4);
+    R(x, y - 9, 1, 1, fl > 0.6 ? "#fff6c4" : "#ffd27a");
+  });
+  // smoke from the cottage chimney on the first island
+  if (key === "keep") {
+    const [cx0, cy0] = P(128, 9);
+    const sx = cx0 - 3 + 3, sy = cy0 - 11;
+    for (let i = 0; i < 5; i++) { const ph = (t * 0.25 + i / 5) % 1, s = 1 + Math.round(ph * 3); g.fillStyle = `rgba(230,230,235,${(0.55 * (1 - ph)).toFixed(2)})`; g.fillRect(Math.round(sx + Math.sin(ph * 4 + i) * 2 + ph * 6 * d - s / 2), Math.round(sy - ph * 18), s, s); }
+  }
+  // mist where the falls tumble off into the clouds
+  {
+    const [fx, fy] = P(-40, Math.round(isleFront(key, -40) - 1) + 52);
+    const mist = key === "crown" ? "255,150,70" : "255,255,255";
+    for (let i = 0; i < 5; i++) { const ph = (t * 0.5 + i / 5) % 1; g.fillStyle = `rgba(${mist},${(0.25 * (1 - ph)).toFixed(2)})`; g.fillRect(Math.round(fx - 4 + i * 2 + Math.sin(t + i) * 2), Math.round(fy - ph * 6), 2, 2); }
   }
   // fireflies on the islands up in the dusk and the night
   if (isl.n >= 2) for (let i = 0; i < 6; i++) {

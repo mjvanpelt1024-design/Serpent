@@ -213,7 +213,25 @@ function freshUses(id, rarity) {
   if (slot === "gear") return d.uses[r] + upVal("sturdy");
   if (slot === "spell") return d.charges[r] + upVal("potent");
   if (slot === "food") return d.charges[r] + upVal("hearty");
+  // a canister counts what's left of it in pieces: two to a heart, four to an armor plate
+  if (slot === "canister") return d.armor[r] > 0 ? d.armor[r] * (CAMP.rules.snake.armorPieces || 4) : d.hearts[r] * 2;
   return 0;
+}
+
+/* "3 of 5 uses left", "You have 2", "2½ purple hearts left"... */
+const fmtHalf = v => (Math.floor(v + 1e-9) || (v % 1 ? "" : "0")) + (v % 1 > 0.25 ? "½" : "");
+function campItemLeft(it) {
+  const slot = campItemSlot(it.id);
+  if (slot === "pet") return "Never wears out";
+  if (slot === "rune") return `You have ${it.qty}`;
+  if (slot === "canister") {
+    const d = campItemDef(it.id), armor = d.armor[rarityIdx(it.rarity)] > 0;
+    const n = armor ? it.uses / (CAMP.rules.snake.armorPieces || 4) : it.uses / 2;
+    const whole = Math.ceil(n - 1e-9);
+    return armor ? `${whole} purple plate${whole === 1 ? "" : "s"} left${n % 1 ? " (one damaged)" : ""}` : `${fmtHalf(n)} purple heart${n <= 1 ? "" : "s"} left`;
+  }
+  const full = freshUses(it.id, it.rarity);
+  return `${it.uses} of ${Math.max(full, it.uses)} ${slot === "gear" ? "uses" : "charges"} left`;
 }
 
 function campGive(id, rarity = "common") {

@@ -284,6 +284,19 @@ function drawSky(t) {
     g.fillStyle = `rgba(255, 250, 230, ${a * (0.35 + tw * 0.65)})`;
     g.fillRect(Math.floor(sx), Math.floor(sy), 1, 1);
   }
+  // now and then a shooting star streaks across the night up top
+  {
+    const cyc = 7, ph = (t % cyc) / cyc, k = Math.floor(t / cyc);
+    if (ph < 0.12) {
+      const sx = mapHash(k, 7, 95) * w, sy = mapHash(k, 8, 95) * h * 0.5, len = 9;
+      const wy = worldY(sy);
+      if (wy < MAP_H * 0.45) for (let j = 0; j < len; j++) {
+        const q = ph / 0.12;
+        g.fillStyle = `rgba(255, 250, 225, ${((1 - j / len) * (1 - q) * 0.9).toFixed(2)})`;
+        g.fillRect(Math.floor(sx + q * 26 - j), Math.floor(sy + q * 10 - j * 0.4), 1, 1);
+      }
+    }
+  }
   // far-off islands, silhouetted against the sky
   for (let i = 0; i < 9; i++) {
     const iw = 6 + mapHash(i, 4, 93) * 10;

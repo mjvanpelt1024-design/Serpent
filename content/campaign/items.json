@@ -11,14 +11,16 @@
     {"id": "spell", "name": "Spell", "help": "Press Space to cast. One at a time. Each cast spends a charge; at zero it's gone."},
     {"id": "food", "name": "Snack", "help": "Works on its own the moment it's needed. One at a time. Each use spends a charge."},
     {"id": "pet", "name": "Familiar", "help": "Follows you into every level and never wears out. One at a time."},
-    {"id": "rune", "name": "Rune", "help": "Burns up when a level starts and changes that level. One at a time."}
+    {"id": "rune", "name": "Rune", "help": "Burns up when a level starts and changes that level. One at a time."},
+    {"id": "canister", "name": "Canister", "help": "Extra hearts in a jar. Its purple hearts and armor are lost first and never come back; when they're all gone, so is the jar. One at a time."}
   ],
   "families": {
     "gear": {"name": "Armory", "slot": "gear", "price": [40, 150, 420, 1200]},
     "spell": {"name": "Arcana", "slot": "spell", "price": [30, 110, 320, 900]},
     "food": {"name": "Kitchen", "slot": "food", "price": [25, 90, 260, 750]},
     "pet": {"name": "Familiars", "slot": "pet", "price": [120, 400, 1100, 3000]},
-    "rune": {"name": "Runes", "slot": "rune", "price": [35, 120, 340, 950]}
+    "rune": {"name": "Runes", "slot": "rune", "price": [35, 120, 340, 950]},
+    "vessel": {"name": "Vessels", "slot": "canister", "price": [60, 160, 380, 1100], "merchant": false}
   },
   "items": [
     {"id": "shield", "family": "gear", "name": "Kite Shield", "uses": [1, 3, 5, 5],
@@ -149,7 +151,12 @@
      "does": "If you die, you come back once and keep going.",
      "strong": "Hard levels you just want done",
      "weak": "The reward is cut if the echo saves you.",
-     "legend": "The echo also brings back a heart."}
+     "legend": "The echo also brings back a heart."},
+    {"id": "canister", "family": "vessel", "name": "Heart Canister", "hearts": [1, 2, 3, 0], "armor": [0, 0, 0, 5],
+     "does": "Purple hearts on top of your own, lost first. They don't refill between levels, and the jar is gone when they are.",
+     "strong": "Hard levels and boss fights: every purple heart is a free mistake",
+     "weak": "Never sold by merchants. Found on the board now and then, or won from a challenge.",
+     "legend": "Five plates of shiny purple armor instead of hearts, four pieces each."}
   ],
   "loot": [
     {"id": "buckle", "name": "Rusty Buckle", "value": 8, "island": 1},

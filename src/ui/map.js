@@ -226,6 +226,15 @@ function drawMap(ts) {
     drawCloud(g, x, y, w, `rgba(${Math.round((r + 255 * 2) / 3)},${Math.round((gg + 255 * 2) / 3)},${Math.round((b + 255 * 2) / 3)},0.5)`);
   }
 
+  // a flock of birds crossing the morning sky now and then
+  {
+    const ph = (t / 46) % 1, fx = -40 + ph * (MAP_W + 80), fy = 640 - ph * 60 + Math.sin(t * 0.8) * 4;
+    for (let i = 0; i < 6; i++) {
+      const bx = fx - Math.abs(i - 2.5) * 7 + (i > 2 ? 3 : 0), by = fy + Math.abs(i - 2.5) * 4, up = Math.sin(t * 9 + i) > 0;
+      mapRect(g, bx - 2, by - (up ? 1 : 0), 2, 1, "#3a3a4a"); mapRect(g, bx + 1, by - (up ? 1 : 0), 2, 1, "#3a3a4a"); mapRect(g, bx, by, 1, 1, "#3a3a4a");
+    }
+  }
+
   // the Coil: the body every island hangs on
   drawCoil(g, t);
 
@@ -894,7 +903,7 @@ function campLevelFacts(key, j) {
   if (def.goal.type === "boss") sp.unshift(CAMP.islandById[key].boss.name);
   if (sp.length) out.push(["Watch for", escapeAttr(sp.join(", "))]);
   const first = !campWon(key, j);
-  out.push(["Reward", `${coinHtml(key)} ${fmtInt(campRewardPreview(key, j, first))} ${escapeAttr(campCurrency(key).plural)}${first ? " (first win)" : ""}`]);
+  out.push(["Reward", `${coinHtml(key)} ${fmtInt(campRewardPreview(key, j, first))} ${escapeAttr(campCurrency(key).plural)}${first ? " (first win)" : ""}, plus 1 for every ${fmtInt(CAMP.rules.rewards.pointsPerCoin || 50)} points, win or lose`]);
   return out;
 }
 

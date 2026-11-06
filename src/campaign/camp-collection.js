@@ -151,8 +151,7 @@ window.renderInventory = function () {
       body.appendChild(groupHead(`${s.name}: ${s.help}`, false));
       items.sort((a, b) => rarityIdx(b.rarity) - rarityIdx(a.rarity)).forEach(it => {
         const on = camp.equip[slot] === it.uid;
-        const full = freshUses(it.id, it.rarity);
-        const left = slot === "pet" ? "Never wears out" : slot === "rune" ? `You have ${it.qty}` : `${it.uses} of ${Math.max(full, it.uses)} ${slot === "gear" ? "uses" : "charges"} left`;
+        const left = campItemLeft(it);
         const row = document.createElement("div");
         row.className = "shop-row";
         row.innerHTML = `${campItemIconHtml(it)}<div><div class="shop-name" style="color:${rarityColor(it.rarity)}">${escapeAttr(campItemName(it))}</div>

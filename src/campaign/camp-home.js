@@ -212,7 +212,7 @@ function drawHome(t) {
   const hx = sx + 8, hy = sy - 3 + (awake ? -2 : 0);
   R(hx, hy, 4, 4, skinColorAt(skin, 0, t * 1000)); R(hx, hy, 4, 1, "rgba(255,255,255,0.3)");
   if (awake) { R(hx + 2, hy + 1, 2, 2, "#ffffff"); R(hx + 3, hy + 1 + (Math.sin(t * 0.7) > 0.95 ? 0 : 1), 1, 1, "#111"); if (Math.sin(t * 3) > 0.7) R(hx + 4, hy + 3, 2, 1, "#ff3b6b"); }
-  else { R(hx + 2, hy + 2, 2, 1, "#111"); for (let i = 0; i < 2; i++) { const ph = (t * 0.4 + i / 2) % 1; g.globalAlpha = 1 - ph; g.fillStyle = "#e8e0ff"; g.font = "6px 'Pixelify Sans', monospace"; g.fillText("z", hx + 6 + ph * 6, hy - 2 - ph * 10); g.globalAlpha = 1; } }
+  else { R(hx + 2, hy + 2, 2, 1, "#111"); for (let i = 0; i < 2; i++) { const ph = (t * 0.4 + i / 2) % 1; g.globalAlpha = 1 - ph; g.fillStyle = "#e8e0ff"; g.font = `6px ${GAME_FONT}`; g.fillText("z", hx + 6 + ph * 6, hy - 2 - ph * 10); g.globalAlpha = 1; } }
   // fireflies in the evening islands, petals and leaves everywhere
   if (isle.n >= 2) for (let i = 0; i < 10; i++) { const glow = Math.sin(t * 2 + i * 1.7); if (glow > 0.1) R(10 + mapHash(i, 4, 5) * (HOME_W - 20) + Math.sin(t * 0.6 + i) * 8, 60 + mapHash(i, 5, 5) * 50 + Math.cos(t * 0.5 + i) * 5, 1, 1, glow > 0.6 ? "#fff6a8" : "#c8d060"); }
   for (let k = 0; k < 6; k++) { const ph = (t * 0.1 + k / 6) % 1; R(cx - 50 + k * 18 + Math.sin(t + k * 2) * 8, 20 + ph * 90, 1, 1, CTREE_LEAVES[isl][k % 3]); }

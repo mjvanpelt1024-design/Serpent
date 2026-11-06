@@ -9,7 +9,7 @@
 "use strict";
 
 let kitFor = null;            // { isl, n, challenge } while the box is open
-const KIT_SLOTS = ["gear", "spell", "food", "pet", "rune"];
+const KIT_SLOTS = ["gear", "spell", "food", "pet", "rune", "canister"];
 
 /* Opens the box if there's anything to choose; false means just play */
 function openCampKit(isl, n, challengeIdx) {
@@ -45,9 +45,8 @@ function renderCampKit() {
     let sub = "Nothing";
     if (it) {
       const d = campItemDef(it.id);
-      const full = freshUses(it.id, it.rarity);
-      sub = slot === "pet" ? "Never wears out" : slot === "rune" ? `Burns up as the level starts. You have ${it.qty}.` : `${it.uses} of ${Math.max(full, it.uses)} ${slot === "gear" ? "uses" : "charges"} left`;
-      if (slot !== "rune") sub += `. <span class="kit-weak">Weak: ${escapeAttr(d.weak)}</span>`;
+      sub = slot === "rune" ? `Burns up as the level starts. You have ${it.qty}.` : campItemLeft(it);
+      if (slot !== "rune" && slot !== "canister") sub += `. <span class="kit-weak">Weak: ${escapeAttr(d.weak)}</span>`;
     }
     row.innerHTML = `${it ? campItemIconHtml(it) : `<span class="ci-icon"></span>`}
       <div class="loadout-info"><div class="shop-desc kit-slot">${s.name}</div><div class="shop-name" style="color:${it ? rarityColor(it.rarity) : "var(--ink-dim)"}">${it ? escapeAttr(campItemName(it)) : "None"}</div><div class="shop-desc">${sub}</div></div>

@@ -39,7 +39,7 @@ function powerDisc(g, x, y, w, color, ts) {
 function glyph(g, x, y, w, text, color) {
   g.save();
   g.fillStyle = color;
-  g.font = `700 ${Math.max(6, Math.round(w * 0.62))}px 'Pixelify Sans', system-ui, sans-serif`;
+  g.font = `700 ${Math.max(6, Math.round(w * 0.62))}px ${GAME_FONT}`;
   g.textAlign = "center";
   g.textBaseline = "middle";
   g.fillText(text, x + w / 2, y + w / 2 + 1);

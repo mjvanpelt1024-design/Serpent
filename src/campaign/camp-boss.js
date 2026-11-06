@@ -373,7 +373,7 @@ function drawBoss(view, ts) {
   if (tired) {
     ctx.fillStyle = "#cfe8ff";
     const ph = (ts / 900) % 1;
-    ctx.font = `700 ${Math.round(cell * (0.45 + ph * 0.3))}px 'Pixelify Sans', system-ui, sans-serif`;
+    ctx.font = `700 ${Math.round(cell * (0.45 + ph * 0.3))}px ${GAME_FONT}`;
     ctx.globalAlpha = 1 - ph;
     ctx.fillText("z", hx + cell * 0.8 + ph * cell * 0.4, hy - cell * 0.1 - ph * cell * 0.8);
     ctx.globalAlpha = 1;

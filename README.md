@@ -57,7 +57,7 @@ SnakeGame/
 │   └── dev/                 the cheat engine and the hidden terminal
 │
 ├── styles/              CSS, in the order index.html links them
-├── assets/              the font and icons
+├── assets/              the fonts (with their licenses) and icons
 ├── mods/                the example mod (copied to Documents\SnakeGame\mods on first run)
 ├── tools/               check-campaign.py, sign-content.py, check-content.py, bundle-content.py, serve.py
 ├── launcher/            the C++ launcher: Visual Studio solution and source

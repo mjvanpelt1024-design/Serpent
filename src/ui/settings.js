@@ -7,6 +7,18 @@
 /* =========================================================
    Settings screen
    ========================================================= */
+/* The fonts (styles/00-fonts.css): [setting, name, what it is] */
+const FONT_OPTIONS = [
+  ["default", "Default", "Press Start 2P: chunky 8-bit, the clearest numbers"],
+  ["retro", "Retro", "Silkscreen: tiny pixel capitals"],
+  ["classic", "Classic", "VT323: an old terminal, tall and thin"],
+  ["jersey", "Jersey", "Jersey 10: clean and narrow"],
+  ["original", "Original", "Pixelify Sans: the game's first font"]
+];
+const FONT_FAMILY = { default: "Press Start 2P", retro: "Silkscreen", classic: "VT323", jersey: "Jersey 10", original: "Pixelify Sans" };
+/* The font for text drawn on the board and the map: the same one the menus use */
+let GAME_FONT = "'Press Start 2P', 'Pixelify Sans', monospace";
+
 /* Settings are described as data, one list per tab */
 const SETTINGS_TABS = [
   {
@@ -42,6 +54,7 @@ const SETTINGS_TABS = [
       { type: "switch", key: "bgMotion", label: "Moving background", help: "The swirl and your theme's flair drift slowly behind the board." },
       { type: "switch", key: "particles", label: "Theme flair", help: "Petals, embers, snow and the rest, depending on your theme." },
       { type: "action", action: "fullscreen", id: "set-fullscreen", label: "Full screen", help: "Fill the whole screen with the game. The F key does this too.", button: () => document.fullscreenElement ? "Exit" : "Go full" },
+      { type: "cycle", key: "font", id: "set-font", label: "Font", help: () => `${escapeAttr((FONT_OPTIONS.find(o => o[0] === save.settings.font) || FONT_OPTIONS[0])[2])}. Titles stay in Jacquarda Bastarda.`, options: FONT_OPTIONS },
       { type: "switch", key: "crt", label: "Retro screen", help: "Faint scanlines and darker corners, like an old monitor." },
       { type: "switch", key: "menuDemo", label: "Title screen snake", help: "Your snake plays by itself behind the main menu." },
       { type: "cycle", key: "shake", id: "set-shake", label: "Screen shake on crash", help: "From barely-there to seismic.", options: SHAKE_OPTIONS }
@@ -114,8 +127,19 @@ function applySettingsEffects() {
   const root = document.documentElement.style;
   root.setProperty("--bright", save.settings.brightness / 100);
   root.setProperty("--contrast", save.settings.contrast / 100);
+  applyFont();
   applyTheme();
   updateHud();
+}
+
+/* The chosen font, on <html data-font> for the menus and in GAME_FONT for canvases */
+function applyFont() {
+  const f = FONT_FAMILY[save.settings.font] ? save.settings.font : "default";
+  if (document.documentElement.dataset.font !== f) {
+    document.documentElement.dataset.font = f;
+    GAME_FONT = `'${FONT_FAMILY[f]}', 'Pixelify Sans', monospace`;
+    if (typeof islandCache === "object") Object.keys(islandCache).forEach(k => delete islandCache[k]);
+  }
 }
 
 function toggleSetting(key) {

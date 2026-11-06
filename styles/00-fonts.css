@@ -1,9 +1,50 @@
 /* styles/00-fonts.css */
 
-/* Pixelify Sans (SIL Open Font License), built into the game so it works offline */
+/* The game's fonts, built in so they work offline. All are under the SIL Open Font License
+   (the licenses sit beside the files in assets/fonts). Settings > Audio & display > Font picks
+   the one for text and numbers; titles are always in Jacquarda Bastarda.
+   size-adjust evens out how wide each one runs, so every layout fits whichever is chosen. */
 @font-face {
   font-family: "Pixelify Sans";
   src: url("../assets/fonts/PixelifySans.woff") format("woff");
   font-weight: 100 900;
   font-display: swap;
 }
+@font-face {
+  font-family: "Press Start 2P";
+  src: url("../assets/fonts/PressStart2P.woff2") format("woff2");
+  font-display: swap;
+  size-adjust: 58%;
+}
+@font-face {
+  font-family: "Silkscreen";
+  src: url("../assets/fonts/Silkscreen.woff2") format("woff2");
+  font-display: swap;
+  size-adjust: 78%;
+}
+@font-face {
+  font-family: "VT323";
+  src: url("../assets/fonts/VT323.woff2") format("woff2");
+  font-display: swap;
+  size-adjust: 122%;
+}
+@font-face {
+  font-family: "Jersey 10";
+  src: url("../assets/fonts/Jersey10.woff2") format("woff2");
+  font-display: swap;
+  size-adjust: 132%;
+}
+@font-face {
+  font-family: "Jacquarda Bastarda 9";
+  src: url("../assets/fonts/JacquardaBastarda9.woff2") format("woff2");
+  font-display: swap;
+  size-adjust: 105%;
+}
+
+/* Which font the text uses (save.settings.font, set on <html data-font>) */
+:root,
+:root[data-font="default"] { --ui-font: "Press Start 2P"; }
+:root[data-font="retro"] { --ui-font: "Silkscreen"; }
+:root[data-font="classic"] { --ui-font: "VT323"; }
+:root[data-font="jersey"] { --ui-font: "Jersey 10"; }
+:root[data-font="original"] { --ui-font: "Pixelify Sans"; }

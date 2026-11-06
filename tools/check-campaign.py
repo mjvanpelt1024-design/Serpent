@@ -31,7 +31,9 @@ SPAWNS = {"popsicle", "flea", "fire", "molasses", "rock", "apple", "xp",
           "golden", "shears", "armor", "shield", "hourglass", "star", "phantom", "lodestone", "frenzy"}
 PLACED = {"rock", "bramble", "ice", "spikes"}          # these use count, not max + delay
 ENDLESS_SPAWNS = {"rock", "flea", "popsicle"}         # the tunnel only rolls these, by rate
-FAMILIES = {"gear", "spell", "food", "pet", "rune"}
+FAMILIES = {"gear", "spell", "food", "pet", "rune"}     # sold by merchants, five items each
+SPECIAL_FAMILIES = {"vessel"}                         # never sold: found on the board or won
+CAUSES = {"boss", "bomb", "spikes", "hunter", "lightning", "ghost", "poison", "wasp", "bramble", "flea", "fire", "echo"}
 NPC_KINDS = ("merchant", "challenger", "banker")
 HATS = {"helm", "hennin", "tophat", "wizard", "hood", "fez", "chef", "beret", "straw", "shell", "tricorn", "horns", "crown", ""}
 EXTRAS = {"beard", "monocle", "mustache", "eyepatch", "none", ""}
@@ -155,7 +157,10 @@ def check_items(items):
     rar = items.get("rarities", [])
     check(len(rar) == 4, rel, "needs exactly four rarities")
     fams = items.get("families", {})
-    check(set(fams) == FAMILIES, rel, f"families must be {sorted(FAMILIES)}")
+    check(set(fams) == FAMILIES | SPECIAL_FAMILIES, rel, f"families must be {sorted(FAMILIES | SPECIAL_FAMILIES)}")
+    slots = {s.get("id") for s in items.get("slots", [])}
+    for f, d in fams.items():
+        check(d.get("slot") in slots, rel, f"families.{f}.slot \"{d.get('slot')}\" isn't one of the slots")
     for f, d in fams.items():
         p = d.get("price", [])
         check(len(p) == 4 and all(num(x, 1, 1e7) for x in p) and p == sorted(p), rel, f"families.{f}.price must be four rising prices")
@@ -166,7 +171,7 @@ def check_items(items):
         check(it.get("id") not in ids, where, "duplicate id")
         ids.add(it.get("id"))
         f = it.get("family")
-        check(f in FAMILIES, where, f"family \"{f}\" unknown")
+        check(f in FAMILIES | SPECIAL_FAMILIES, where, f"family \"{f}\" unknown")
         per[f] = per.get(f, 0) + 1
         for key in ("name", "does", "strong", "weak", "legend"):
             check(it.get(key), where, f"missing \"{key}\" (every item needs a strength and a weakness)")
@@ -176,7 +181,15 @@ def check_items(items):
             check(len(it.get("charges", [])) == 4, where, "needs charges for four rarities")
         if f in ("spell", "food", "pet", "rune"):
             check(len(it.get("power", [])) == 4, where, "needs power for four rarities")
+        if f == "vessel":
+            h, a = it.get("hearts", []), it.get("armor", [])
+            check(len(h) == 4 and len(a) == 4 and all(num(x, 0, 12) for x in h + a), where, "a vessel needs hearts and armor for four rarities (0-12)")
+            check(all(x + y > 0 for x, y in zip(h, a)), where, "every rarity of a vessel must hold something")
+            check(all(x * 2 <= 99 and y * 4 <= 99 for x, y in zip(h, a)), where, "a vessel holds at most 49 hearts or 24 plates (the save counts its pieces up to 99)")
     for f, count in per.items():
+        if f in SPECIAL_FAMILIES:
+            check(count >= 1, rel, f"family {f} needs at least one item")
+            continue
         check(count == 5, rel, f"family {f} has {count} items; each merchant needs exactly 5")
     for l in items.get("loot", []):
         check(num(l.get("value"), 1, 1e6) and num(l.get("island"), 1, 5), f"{rel} loot {l.get('id')}", "needs a value and an island (1-5)")
@@ -203,6 +216,15 @@ def check_rules(rules):
     rel = "rules.json"
     r = rules.get("rewards", {})
     check(num(r.get("winBase"), 1, 1e6) and num(r.get("replayShare"), 0, 1), rel, "rewards need winBase and replayShare (0-1)")
+    check(num(r.get("pointsPerCoin"), 1, 1e6), rel, "rewards.pointsPerCoin must be 1 or more (points per coin, paid win or lose)")
+    check(num(r.get("canisterShare"), 0, 1), rel, "rewards.canisterShare must be 0-1 (how many loot drops are heart canisters)")
+    sn = rules.get("snake", {})
+    check(num(sn.get("hearts"), 0, 20) and num(sn.get("armorCap"), 0, 20) and num(sn.get("armorPieces"), 1, 8), rel, "snake needs hearts (0-20), armorCap (0-20) and armorPieces (1-8)")
+    dmg = rules.get("damage", {})
+    for k in ("crush", "pierce"):
+        for cause in dmg.get(k, []):
+            check(cause in CAUSES, rel, f"damage.{k}: the game has no hit called \"{cause}\"")
+    check(not set(dmg.get("crush", [])) & set(dmg.get("pierce", [])), rel, "a hit can't both crush and pierce armor")
     m = rules.get("merchant", {})
     check(num(m.get("stockSize"), 1, 5), rel, "merchant.stockSize must be 1-5 (a family has 5 items)")
     check(num(m.get("restockMinutes"), 10, 10080), rel, "merchant.restockMinutes must be 10-10080")
@@ -210,6 +232,8 @@ def check_rules(rules):
     check(num(c.get("days"), 1, 60), rel, "challenge.days must be 1-60")
     check(num(c.get("levels"), 1, 3), rel, "challenge.levels must be 1-3")
     check(sum(p.get("weight", 0) for p in c.get("pool", [])) > 0, rel, "the challenge pool needs weights")
+    for p in c.get("pool", []):
+        check(p.get("kind") in ("gems", "item", "canister", "skin", "theme"), rel, f"challenge pool kind \"{p.get('kind')}\" unknown")
     b = rules.get("bank", {})
     check(num(b.get("rateToPrev"), 1, 1000) and num(b.get("feePrev"), 0, 1e6) and num(b.get("snaycoinPerGem"), 1, 1e9), rel, "bank needs rateToPrev, feePrev and snaycoinPerGem")
     for a in rules.get("achievements", []):

@@ -412,14 +412,21 @@ function maybeLoot(ts) {
   if (Math.random() > CAMP.rules.rewards.lootChance * (1 + upPct("lucky"))) return;
   const s = endless ? null : campSpot(0);
   if (!s) return;
+  // now and then it's a heart canister instead of a trinket
+  if (Math.random() < (CAMP.rules.rewards.canisterShare || 0)) { campObjs.push({ kind: "loot", x: s.x, y: s.y, id: "canister", rarity: rollRarity(), until: ts + 12000 }); return; }
   const pool = CAMP.loot.filter(l => l.island === campRun.islandN);
   const pick = pool[Math.floor(Math.random() * pool.length)];
   if (pick) campObjs.push({ kind: "loot", x: s.x, y: s.y, id: pick.id, until: ts + 12000 });
 }
 
 function collectLoot(o) {
-  campRun.loot.push(o.id);
   sfx("shimmer");
+  if (o.id === "canister") {
+    campRun.canisters.push(o.rarity);
+    showToast(`Found a ${rarityName(o.rarity)} Heart Canister! It's yours, win or lose.`);
+    return;
+  }
+  campRun.loot.push(o.id);
   showToast(`Found: ${CAMP.lootById[o.id].name}. Sell it at any merchant.`);
 }
 
@@ -499,7 +506,7 @@ function drawCampObj(g, o, x, y, w, ts) {
     put(o.on ? "plateon" : "plate", o.on ? "#3ddc84" : null, null, 0);
     if (campGoal && campGoal.ordered) {
       g.fillStyle = o.on ? "#0a3a1a" : "#1a1e26";
-      g.font = `700 ${Math.round(w * 0.42)}px 'Pixelify Sans', system-ui, sans-serif`;
+      g.font = `700 ${Math.round(w * 0.42)}px ${GAME_FONT}`;
       g.textAlign = "center"; g.textBaseline = "middle";
       g.fillText(String(o.n), x + w / 2, y + w * 0.55);
     }

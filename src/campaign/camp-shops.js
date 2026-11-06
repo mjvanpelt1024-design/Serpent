@@ -204,7 +204,7 @@ function challengerHtml() {
   }).join("");
   const pool = CAMP.rules.challenge.pool;
   const total = pool.reduce((a, p) => a + p.weight, 0);
-  const odds = pool.map(p => `<li><span class="pn-label">${p.kind === "gems" ? `${p.min} to ${p.max} gems` : p.kind === "item" ? `A ${rarityName(p.rarity).toLowerCase()} ${escapeAttr(CAMP.families[I.merchantFamily].name.toLowerCase())} item` : p.kind === "skin" ? "An exclusive skin" : "An exclusive theme"}</span><span class="pn-count">${Math.round(p.weight / total * 100)}%</span></li>`).join("");
+  const odds = pool.map(p => `<li><span class="pn-label">${p.kind === "gems" ? `${p.min} to ${p.max} gems` : p.kind === "item" ? `A ${rarityName(p.rarity).toLowerCase()} ${escapeAttr(CAMP.families[I.merchantFamily].name.toLowerCase())} item` : p.kind === "canister" ? "A Heart Canister (any rarity)" : p.kind === "skin" ? "An exclusive skin" : "An exclusive theme"}</span><span class="pn-count">${Math.round(p.weight / total * 100)}%</span></li>`).join("");
   const reward = `<div class="core-box cs-reward"><span class="ribbon rank-3">Reward</span>
     <p class="shop-note">${coinTag(shopIsl, challengeCurrency())} ${escapeAttr(I.currency.plural)}, and one roll of the prize pool:</p>
     <ul class="prestige-needs">${odds}</ul></div>`;
@@ -234,6 +234,11 @@ function rollChallengeReward(isl) {
     const it = ids[Math.floor(Math.random() * ids.length)];
     campGive(it.id, pick.rarity);
     return `a ${rarityName(pick.rarity)} ${it.name}`;
+  }
+  if (pick.kind === "canister") {
+    const r = rollRarity();
+    campGive("canister", r);
+    return `a ${rarityName(r)} Heart Canister`;
   }
   const isSkin = pick.kind === "skin";
   const list = CAMP.rules.cosmetics[isSkin ? "exclusiveSkins" : "exclusiveThemes"].filter(id => !(isSkin ? camp.skins : camp.themes).includes(id));

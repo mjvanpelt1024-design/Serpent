@@ -139,7 +139,7 @@ body.menu-full #stage > #screen-tree { --side: max(1em, calc((100vw - 64em) / 2)
 .bubble-card .bc-pic { display: flex; justify-content: center; margin: 0.2em 0 0.4em; }
 .bubble-card .bc-pic canvas { width: 7.5em; height: auto; max-height: 6em; object-fit: contain; border-radius: 0.8em; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.2), 0 0.2em 0 rgba(0, 0, 0, 0.4); }
 .bubble-card .bc-sub { margin: 0; font-size: 0.75em; font-weight: 700; color: var(--bc); }
-.bubble-card .bc-name { margin: 0.1em 0 0.3em; font-family: var(--display); font-weight: 400; font-size: 1.55em; line-height: 1; text-shadow: 0 0.08em 0 rgba(0, 0, 0, 0.4); }
+.bubble-card .bc-name { margin: 0.1em 0 0.3em; font-family: var(--title); font-weight: 400; font-size: 1.55em; line-height: 1; text-shadow: 0 0.08em 0 rgba(0, 0, 0, 0.4); }
 .bubble-card .bc-desc { margin: 0 0 0.5em; font-size: 0.8em; color: var(--ink-dim); }
 .bubble-card .bc-price { margin: 0 0 0.5em; font-family: var(--display); font-size: 1.3em; color: var(--xp); }
 .bubble-card .bc-act .btn { min-width: 11em; }

@@ -1,5 +1,32 @@
 # Changelog
 
+## v:11.05.2026_b:48: hearts, armor and the hub, in full retro fantasy dress
+
+- **Points pay.** Every run's points turn into the island's money, won or lost (1 coin per 50 points,
+  `rewards.pointsPerCoin`), on top of a win's reward. The purse in the hub shows what this run will pay.
+- **No hearts to start.** One hit ends a run until Stout Heart (the first island's tree) adds hearts, one
+  per tier up to five. Glass Scales now means no hearts, no armor, no canister.
+- **Armor in pieces.** Plates come only from upgrades. Each has four pieces: a half-heart hit knocks one
+  off (a dent, a crack, half a plate, gone) and a big hit carries on to the next plate. Breakers (bosses,
+  bombs, spikes, the rival snake) knock off twice as much; lightning, ghosts and poison go straight through.
+  Hearts are red, armored hearts gold, armor with no heart under it silver, all drawn as pixel hearts.
+- **The Heart Canister**, a new kind of thing to carry: found on the board now and then or won from a
+  challenge. 1 to 3 purple hearts (common to rare) or 5 plates of shiny purple armor (legendary), spent
+  first, never refilled; the jar crumbles when it's empty.
+- **The hub around the board.** Left: your hearts, score, purse and kit. Right: the island and level, the
+  quest, the challenge's trials, and a wanted poster with the bounty on the next boss; the boss's own stats
+  show only while you fight it.
+- **Fonts.** Press Start 2P by default, with Retro (Silkscreen), Classic (VT323), Jersey and Original
+  (Pixelify Sans) in Settings; titles in the blackletter Jacquarda Bastarda. All built in, all OFL.
+- **The art pass.** Every panel, window, button, tab and chip has a pixel frame drawn from the theme's
+  colors: brass trim and rivets, gems in the corners of big windows, a lip under every button, parchment
+  for the bounty, brass brackets on the board. Every upgrade and rune has its own picture, and every icon
+  is lit from the top left.
+- **The map.** The islands climb in a zigzag, each with its own outline and an underside that curves like
+  real rock (crystals under the Spire, tiers under the Hollow, coral under the Reef, a black spike under
+  the Crown), islets floating nearby, signposts where the shops branch off, lanterns along the paths up in
+  the dusk, chimney smoke, mist off the falls, birds by day and shooting stars by night.
+
 ## v:11.04.2026_b:47: the five-island campaign, in the old look
 
 A new game on the old engine and in the old look: the same map, sky, Coil, screens, fonts and pixel art,

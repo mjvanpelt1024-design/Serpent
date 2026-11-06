@@ -24,7 +24,7 @@
 .map-head > * { pointer-events: auto; }
 .map-head .btn { margin-bottom: 0.2em; }
 .map-head h2 {
-  font-family: var(--display);
+  font-family: var(--title);
   font-weight: 400;
   font-size: 1.7em;
   line-height: 1;
@@ -213,7 +213,7 @@ body.menu-full #stage > #screen-modes { inset: 0; }
 .mb-top { display: flex; align-items: center; gap: 0.5em; }
 .mb-kicker { flex: 1; text-align: center; font-size: 0.78em; font-weight: 700; color: var(--m); }
 .mb-nav { padding: 0.2em 0.55em 0.25em; font-size: 0.7em; }
-.mb-title { font-family: var(--display); font-weight: 400; font-size: 1.75em; line-height: 1; margin: 0.15em 0 0.3em; text-align: center; text-shadow: 0 0.08em 0 rgba(0, 0, 0, 0.4); }
+.mb-title { font-family: var(--title); font-weight: 400; font-size: 1.75em; line-height: 1; margin: 0.15em 0 0.3em; text-align: center; text-shadow: 0 0.08em 0 rgba(0, 0, 0, 0.4); }
 .mb-seg { display: flex; justify-content: center; gap: 0.4em; margin: 0 0 0.5em; }
 .mb-seg .subtab { margin: 0; display: inline-flex; align-items: center; gap: 0.3em; }
 .mb-seg .skull { width: 1em; height: 1em; fill: currentColor; }
@@ -354,4 +354,4 @@ body.menu-full #stage > #screen-modes { inset: 0; }
 .subtab[aria-selected="true"], .subtab[aria-pressed="true"] { color: #fff; background: var(--blue); box-shadow: 0 0.18em 0 var(--blue-lip); }
 
 .soon { margin: 2em auto; max-width: 20em; text-align: center; color: var(--ink-dim); font-size: 0.9em; }
-.soon strong { display: block; color: var(--ink); font-size: 1.6em; margin-bottom: 0.3em; font-family: var(--display); font-weight: 400; }
+.soon strong { display: block; color: var(--ink); font-size: 1.6em; margin-bottom: 0.3em; font-family: var(--title); font-weight: 400; }

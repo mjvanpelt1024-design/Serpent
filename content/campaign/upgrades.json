@@ -4,56 +4,56 @@
     "keep": {
       "name": "The Oak of Basics",
       "upgrades": [
-        {"id": "applevalue", "name": "Juicier Apples", "icon": "apple", "text": "Apples are worth +{v}% points.", "values": [0, 15, 30, 50, 75, 100], "prices": [40, 90, 180, 340, 600]},
-        {"id": "orchard", "name": "Bigger Orchard", "icon": "tree", "text": "Extra apples on the board: {v}.", "values": [0, 1, 2, 3], "prices": [110, 380, 950]},
+        {"id": "applevalue", "name": "Juicier Apples", "icon": "juicy", "text": "Apples are worth +{v}% points.", "values": [0, 15, 30, 50, 75, 100], "prices": [40, 90, 180, 340, 600]},
+        {"id": "orchard", "name": "Bigger Orchard", "icon": "orchard", "text": "Extra apples on the board: {v}.", "values": [0, 1, 2, 3], "prices": [110, 380, 950]},
         {"id": "scoremult", "name": "Showmanship", "icon": "star", "text": "Every point is worth +{v}%.", "values": [0, 10, 20, 32, 46, 60], "prices": [50, 110, 220, 400, 700]},
-        {"id": "hearts", "name": "Stout Heart", "icon": "heart", "text": "Extra hearts in every level: {v}.", "values": [0, 1, 2, 3], "prices": [120, 360, 900]},
-        {"id": "bounty", "name": "Bounty Hunter", "icon": "coin", "text": "+{v}% currency from every win.", "values": [0, 10, 20, 30, 45, 60], "prices": [70, 150, 290, 520, 880]},
+        {"id": "hearts", "name": "Stout Heart", "icon": "heart", "text": "Hearts in every level: {v}. You start with none: one hit ends a run.", "values": [0, 1, 2, 3, 4, 5], "prices": [100, 300, 750, 1500, 2600]},
+        {"id": "bounty", "name": "Bounty Hunter", "icon": "wanted", "text": "+{v}% currency from every win.", "values": [0, 10, 20, 30, 45, 60], "prices": [70, 150, 290, 520, 880]},
         {"id": "golden", "name": "Golden Groves", "icon": "golden", "text": "A Golden Apple turns up every {v} seconds or so.", "values": [0, 40, 32, 26, 21, 17], "prices": [80, 170, 330, 580, 950]}
       ]
     },
     "spire": {
       "name": "The Warding Willow",
       "upgrades": [
-        {"id": "plating", "name": "Arcane Plating", "icon": "armor", "text": "Start every level with {v} armor plates.", "values": [0, 1, 2, 3], "prices": [90, 260, 700]},
-        {"id": "calm", "name": "Calm Mind", "icon": "clock", "text": "You move {v}% slower.", "values": [0, 3, 6, 9, 12, 15], "prices": [50, 110, 220, 400, 680]},
-        {"id": "hazardward", "name": "Hazard Ward", "icon": "rock", "text": "{v}% chance a hazard does no damage.", "values": [0, 8, 15, 22, 28, 34], "prices": [60, 130, 260, 470, 800]},
-        {"id": "enemyward", "name": "Enemy Ward", "icon": "wasp", "text": "{v}% chance an enemy does no damage.", "values": [0, 8, 15, 22, 28, 34], "prices": [60, 130, 260, 470, 800]},
+        {"id": "plating", "name": "Arcane Plating", "icon": "plate", "text": "Start every level with {v} armor plates.", "values": [0, 1, 2, 3], "prices": [90, 260, 700]},
+        {"id": "calm", "name": "Calm Mind", "icon": "snail", "text": "You move {v}% slower.", "values": [0, 3, 6, 9, 12, 15], "prices": [50, 110, 220, 400, 680]},
+        {"id": "hazardward", "name": "Hazard Ward", "icon": "ward", "text": "{v}% chance a hazard does no damage.", "values": [0, 8, 15, 22, 28, 34], "prices": [60, 130, 260, 470, 800]},
+        {"id": "enemyward", "name": "Enemy Ward", "icon": "wardbee", "text": "{v}% chance an enemy does no damage.", "values": [0, 8, 15, 22, 28, 34], "prices": [60, 130, 260, 470, 800]},
         {"id": "shorten", "name": "Quick Recovery", "icon": "molasses", "text": "Speed-ups and slow-downs last {v}% shorter.", "values": [0, 12, 24, 35, 45, 55], "prices": [40, 90, 180, 330, 560]},
-        {"id": "recharge", "name": "Spell Focus", "icon": "spell", "text": "Spells recharge between casts {v}% faster.", "values": [0, 15, 30, 45, 60, 75], "prices": [45, 100, 200, 360, 620]}
+        {"id": "recharge", "name": "Spell Focus", "icon": "focus", "text": "Spells recharge between casts {v}% faster.", "values": [0, 15, 30, 45, 60, 75], "prices": [45, 100, 200, 360, 620]}
       ]
     },
     "hollow": {
       "name": "The Pantry Pear",
       "upgrades": [
-        {"id": "sturdy", "name": "Sturdy Gear", "icon": "shield", "text": "New gear has +{v} uses.", "values": [0, 1, 2, 3], "prices": [120, 340, 850]},
-        {"id": "potent", "name": "Potent Spells", "icon": "spell", "text": "New spells have +{v} charges.", "values": [0, 1, 2, 3], "prices": [120, 340, 850]},
+        {"id": "sturdy", "name": "Sturdy Gear", "icon": "anvil", "text": "New gear has +{v} uses.", "values": [0, 1, 2, 3], "prices": [120, 340, 850]},
+        {"id": "potent", "name": "Potent Spells", "icon": "potion", "text": "New spells have +{v} charges.", "values": [0, 1, 2, 3], "prices": [120, 340, 850]},
         {"id": "hearty", "name": "Second Helpings", "icon": "food", "text": "New snacks have +{v} charges.", "values": [0, 1, 2, 3], "prices": [100, 290, 720]},
-        {"id": "lucky", "name": "Keen Eye", "icon": "loot", "text": "Loot trinkets turn up {v}% more often.", "values": [0, 25, 50, 80, 115, 150], "prices": [50, 110, 220, 400, 680]},
-        {"id": "haggle", "name": "Haggler", "icon": "coin", "text": "Merchants charge {v}% less.", "values": [0, 5, 10, 15, 20, 25], "prices": [70, 150, 300, 540, 900]},
-        {"id": "restock", "name": "Early Deliveries", "icon": "clock", "text": "Merchants restock {v} minutes sooner.", "values": [0, 10, 20, 30, 45, 60], "prices": [60, 130, 260, 470, 780]}
+        {"id": "lucky", "name": "Keen Eye", "icon": "eye", "text": "Loot trinkets turn up {v}% more often.", "values": [0, 25, 50, 80, 115, 150], "prices": [50, 110, 220, 400, 680]},
+        {"id": "haggle", "name": "Haggler", "icon": "scales", "text": "Merchants charge {v}% less.", "values": [0, 5, 10, 15, 20, 25], "prices": [70, 150, 300, 540, 900]},
+        {"id": "restock", "name": "Early Deliveries", "icon": "crate", "text": "Merchants restock {v} minutes sooner.", "values": [0, 10, 20, 30, 45, 60], "prices": [60, 130, 260, 470, 780]}
       ]
     },
     "reef": {
       "name": "The Coral Fig",
       "upgrades": [
         {"id": "wear", "name": "Wear Them Down", "icon": "stamina", "text": "Bosses lose stamina {v}% faster.", "values": [0, 8, 16, 25, 34, 45], "prices": [60, 130, 260, 470, 800]},
-        {"id": "exhaust", "name": "Long Naps", "icon": "clock", "text": "Tired bosses stay slow {v}% longer.", "values": [0, 12, 24, 36, 50, 65], "prices": [55, 120, 240, 430, 730]},
+        {"id": "exhaust", "name": "Long Naps", "icon": "zzz", "text": "Tired bosses stay slow {v}% longer.", "values": [0, 12, 24, 36, 50, 65], "prices": [55, 120, 240, 430, 730]},
         {"id": "bite", "name": "Sharp Fangs", "icon": "fang", "text": "{v}% chance a bite deals double damage.", "values": [0, 10, 20, 30, 40, 50], "prices": [70, 150, 300, 540, 900]},
-        {"id": "petbond", "name": "Kindred Spirits", "icon": "pet", "text": "Familiars work {v}% faster.", "values": [0, 10, 20, 30, 40, 50], "prices": [65, 140, 280, 500, 840]},
+        {"id": "petbond", "name": "Kindred Spirits", "icon": "paw", "text": "Familiars work {v}% faster.", "values": [0, 10, 20, 30, 40, 50], "prices": [65, 140, 280, 500, 840]},
         {"id": "treasure", "name": "Trial Spoils", "icon": "chest", "text": "Challenge rewards are {v}% bigger.", "values": [0, 15, 30, 50, 75, 100], "prices": [50, 110, 220, 400, 680]},
-        {"id": "salvage", "name": "Salvager", "icon": "loot", "text": "Things sell for {v}% more.", "values": [0, 10, 20, 32, 46, 60], "prices": [45, 100, 200, 360, 620]}
+        {"id": "salvage", "name": "Salvager", "icon": "hammer", "text": "Things sell for {v}% more.", "values": [0, 10, 20, 32, 46, 60], "prices": [45, 100, 200, 360, 620]}
       ]
     },
     "crown": {
       "name": "The Ember Ash",
       "upgrades": [
-        {"id": "secondwind", "name": "Second Wind", "icon": "heart", "text": "Once per level, survive a killing blow with {v} heart.", "values": [0, 1], "prices": [1500]},
-        {"id": "passive", "name": "Slow Burn", "icon": "clock", "text": "Points for staying alive are worth +{v}%.", "values": [0, 25, 50, 80, 115, 150], "prices": [50, 110, 220, 400, 680]},
+        {"id": "secondwind", "name": "Second Wind", "icon": "wing", "text": "Once per level, survive a killing blow with {v} heart.", "values": [0, 1], "prices": [1500]},
+        {"id": "passive", "name": "Slow Burn", "icon": "candle", "text": "Points for staying alive are worth +{v}%.", "values": [0, 25, 50, 80, 115, 150], "prices": [50, 110, 220, 400, 680]},
         {"id": "gemfinder", "name": "Gem Finder", "icon": "gem", "text": "{v}% chance a win also pays a gem.", "values": [0, 4, 8, 12, 16, 20], "prices": [90, 190, 360, 640, 1050]},
         {"id": "runecraft", "name": "Runecraft", "icon": "rune", "text": "{v}% chance a rune isn't used up.", "values": [0, 10, 20, 30, 40, 50], "prices": [60, 130, 260, 470, 800]},
         {"id": "mastery", "name": "Coil Mastery", "icon": "crown", "text": "+{v}% of every currency, everywhere.", "values": [0, 8, 16, 25, 35, 50], "prices": [80, 170, 330, 580, 950]},
-        {"id": "armorcap", "name": "Iron Scales", "icon": "armor", "text": "+{v} to the most armor plates you can carry.", "values": [0, 1, 2, 3], "prices": [150, 420, 1000]}
+        {"id": "armorcap", "name": "Iron Scales", "icon": "ironscales", "text": "+{v} to the most armor plates you can carry.", "values": [0, 1, 2, 3], "prices": [150, 420, 1000]}
       ]
     }
   }

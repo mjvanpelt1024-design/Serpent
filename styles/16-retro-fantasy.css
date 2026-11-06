@@ -1,0 +1,219 @@
+/* styles/16-retro-fantasy.css */
+
+/* ---------- The retro fantasy dress: pixel frames on everything ----------
+   The frames are tiny pictures drawn from the theme's colors by src/art/ui-frames.js
+   (--fx-*), used here as 9-slice border images at two screen pixels per pixel.
+   Panels get brass trim and corner rivets, big windows a double trim and gems,
+   buttons a chunky lip, the bounty a parchment. Loaded last, so it dresses the
+   shapes the other files lay out. */
+:root { --px: 2px; }
+/* the frames are part of each box's size, so nothing grows past its rail */
+.plate, #hearts, #xp, #hud-score, .shop-row, .stat-group, .map-head h2, #toast, .lv-chip, .set-row, .inv-row,
+.core-box, .modal-box, .map-banner, .map-pop, .bubble-card, .intro-bubble, .btn, .tab, .cw-chip, .mbn-coin { box-sizing: border-box; }
+
+/* ---- Plates and panels ---- */
+.plate,
+#hearts,
+#xp,
+#hud-score:not(:empty),
+.shop-row,
+.stat-group,
+.map-head h2,
+#toast,
+.lv-chip,
+.set-row,
+.inv-row {
+  border: calc(5 * var(--px)) solid transparent;
+  border-image: var(--fx-plate) 5 fill / calc(5 * var(--px)) round;
+  border-radius: 0;
+  background: none;
+  box-shadow: 0 calc(2 * var(--px)) 0 rgba(0, 0, 0, 0.35);
+  image-rendering: pixelated;
+}
+#hud-score:not(:empty) { border-image-source: var(--fx-plate-blue); box-shadow: 0 calc(2 * var(--px)) 0 var(--blue-lip); }
+.shop-row { border-image-source: var(--fx-plate-2); padding: 0.25em 0.35em; }
+.core-box {
+  border: calc(5 * var(--px)) solid transparent;
+  border-image: var(--fx-plate-3) 5 fill / calc(5 * var(--px)) round;
+  border-radius: 0;
+  background: none;
+  box-shadow: 0 calc(2 * var(--px)) 0 rgba(0, 0, 0, 0.35);
+  padding: 0.1em 0.35em 0.35em;
+}
+.core-box.rank-1, .core-box.rank-2, .core-box.rank-3 { box-shadow: 0 calc(2 * var(--px)) 0 rgba(0, 0, 0, 0.35); }
+.core-box.rank-3 { border-image-source: var(--fx-plate-gold); }
+#toast { padding: 0.15em 0.4em 0.2em; }
+#toast.t-narrator { border-image-source: var(--fx-plate-violet); background: none; box-shadow: 0 calc(2 * var(--px)) 0 rgba(0, 0, 0, 0.45); }
+#toast.t-snake { border-image-source: var(--fx-plate-2); background: none; box-shadow: 0 calc(2 * var(--px)) 0 rgba(0, 0, 0, 0.45); }
+.map-head h2 { padding: 0.05em 0.45em 0.1em; }
+.set-row { margin-bottom: 0.35em; padding: 0.15em 0.3em; border-image-source: var(--fx-plate-2); }
+.stat-group { padding: 0 0.3em 0.15em; }
+
+/* ---- Big windows: modals, the map's banner and bubbles, cards ---- */
+.modal-box,
+.map-banner.open,
+.map-pop.open,
+.bubble-card,
+.intro-bubble {
+  border: calc(8 * var(--px)) solid transparent;
+  border-image: var(--fx-window) 8 fill / calc(8 * var(--px)) round;
+  border-radius: 0;
+  background: none;
+  box-shadow: 0 calc(3 * var(--px)) 0 rgba(0, 0, 0, 0.5);
+  image-rendering: pixelated;
+}
+.modal-box { padding: 0.5em 0.45em 0.4em; }
+.modal.gold .modal-box { box-shadow: 0 calc(3 * var(--px)) 0 rgba(0, 0, 0, 0.5), 0 0 1.2em rgba(255, 207, 51, 0.35); }
+
+/* ---- Buttons: a chunky block with a lip, pressed flat when you click ---- */
+.btn {
+  --fxb: var(--fx-btn-dark);
+  --fxbd: var(--fx-btn-dark-down);
+  border: solid transparent;
+  border-width: calc(3 * var(--px)) calc(3 * var(--px)) calc(5 * var(--px));
+  border-image: var(--fxb) 3 3 5 fill / calc(3 * var(--px)) calc(3 * var(--px)) calc(5 * var(--px)) round;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  margin: 0;
+  padding: 0.32em 0.7em 0.18em;
+  image-rendering: pixelated;
+  text-shadow: 0 var(--px) 0 rgba(0, 0, 0, 0.45);
+}
+.btn:active:not(:disabled) { transform: none; box-shadow: none; border-image-source: var(--fxbd); padding-top: calc(0.32em + 2 * var(--px)); padding-bottom: calc(0.18em - 0px); }
+.btn-primary, .btn-green { --fxb: var(--fx-btn-green); --fxbd: var(--fx-btn-green-down); }
+.btn-red, .btn-danger { --fxb: var(--fx-btn-red); --fxbd: var(--fx-btn-red-down); }
+.btn-blue, .btn-buy.equip { --fxb: var(--fx-btn-blue); --fxbd: var(--fx-btn-blue-down); }
+.btn-gold, .btn-buy.affordable { --fxb: var(--fx-btn-gold); --fxbd: var(--fx-btn-gold-down); }
+.btn-purple { --fxb: var(--fx-btn-purple); --fxbd: var(--fx-btn-purple-down); }
+.btn[data-back], .btn-orange { --fxb: var(--fx-btn-orange); --fxbd: var(--fx-btn-orange-down); }
+.btn-quiet, .btn-buy.equipped { border: 0; border-image: none; }
+.btn-quiet { padding: 0.4em 0.7em; }
+.btn-buy.equipped { box-shadow: inset 0 0 0 var(--px) var(--green), inset 0 0 0 calc(2 * var(--px)) #0b0907; padding: 0.45em 0.6em; }
+.btn-small { padding: 0.24em 0.55em 0.12em; }
+.btn-buy { padding: 0.28em 0.45em 0.14em; }
+.menu-stack .btn-primary { padding: 0.25em 0 0.2em; }
+.btn:focus-visible, .btn.focused { outline-offset: 0; }
+
+/* ---- Tabs ---- */
+.tab {
+  border: solid transparent;
+  border-width: calc(3 * var(--px)) calc(3 * var(--px)) calc(5 * var(--px));
+  border-image: var(--fx-btn-dark) 3 3 5 fill / calc(3 * var(--px)) calc(3 * var(--px)) calc(5 * var(--px)) round;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  image-rendering: pixelated;
+}
+.tab[aria-selected="true"] { border-image-source: var(--fx-btn-red); background: none; box-shadow: none; }
+
+/* ---- Chips: coins and gems in the top bar ---- */
+.cw-chip, .mbn-coin {
+  border: calc(3 * var(--px)) solid transparent;
+  border-image: var(--fx-chip) 3 fill / calc(3 * var(--px)) round;
+  border-radius: 0;
+  background: none;
+  box-shadow: 0 var(--px) 0 rgba(0, 0, 0, 0.35);
+  image-rendering: pixelated;
+}
+
+/* ---- The board: brass corner brackets over its frame ---- */
+#stage { border-radius: 0.25em; }
+#stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  background:
+    var(--fx-corner-tl) top left / calc(12 * var(--px)) no-repeat,
+    var(--fx-corner-tr) top right / calc(12 * var(--px)) no-repeat,
+    var(--fx-corner-bl) bottom left / calc(12 * var(--px)) no-repeat,
+    var(--fx-corner-br) bottom right / calc(12 * var(--px)) no-repeat;
+  image-rendering: pixelated;
+}
+body.menu-full:not(.menu-main) #stage::after { display: none; }
+
+/* ---- The hub around the board (src/campaign/camp-hud.js) ---- */
+.cp-rail .plate { padding: 0.12em 0.28em 0.18em; gap: 0.25em; }
+#hearts { padding: 0.2em 0.3em; min-height: 0; gap: 0.25em; }
+.cp-head { color: #f2c45a; text-shadow: 0 var(--px) 0 #0b0907; display: flex; align-items: center; gap: 0.4em; }
+.cp-head::before, .cp-head::after { content: ""; flex: 1; height: var(--px); background: linear-gradient(90deg, transparent, #c88a28 30%, #c88a28 70%, transparent); opacity: 0.8; }
+.cp-head::before { flex: 0 0 0.6em; }
+.cp-where { border-image-source: var(--fx-isle, var(--fx-plate-gold)); background: none; }
+.cp-boss { border-image-source: var(--fx-plate-boss); background: none; box-shadow: 0 calc(2 * var(--px)) 0 rgba(60, 0, 10, 0.6), 0 0 1em rgba(255, 60, 80, 0.25); }
+.cp-boss .cp-head { color: #ffb8c0; }
+.cp-boss-name { font-family: var(--title); font-size: 1.15em; color: #ffd8dc; line-height: 1; }
+.cp-trials { border-image-source: var(--fx-plate-violet); }
+.cp-trials .cp-head { color: #e2b4ff; }
+.cp-trial { display: flex; align-items: center; gap: 0.45em; font-size: 0.78em; line-height: 1.15; }
+.cp-trial.done { color: var(--ink-dim); text-decoration: line-through; text-decoration-color: rgba(255, 255, 255, 0.35); }
+.cp-trial.now { color: #fff; }
+.cp-tick { flex: none; display: grid; place-items: center; width: 1.45em; height: 1.45em; font-family: var(--display); font-size: 0.8em; background: #3a1462; color: #e2b4ff; box-shadow: inset 0 0 0 var(--px) #9450e0; }
+.cp-trial.done .cp-tick { background: #1f5a3a; color: #8cf0a8; box-shadow: inset 0 0 0 var(--px) #3ddc84; }
+.cp-trial.now .cp-tick { background: #f2c45a; color: #2a1a00; box-shadow: none; }
+
+/* The bounty: a wanted poster nailed to the rail */
+.cp-bounty {
+  border-image-source: var(--fx-parch);
+  color: #3a2410;
+  text-align: center;
+  align-items: center;
+  box-shadow: 0 calc(2 * var(--px)) 0 rgba(0, 0, 0, 0.4);
+  transform: rotate(-1deg);
+}
+.cp-wanted { font-family: var(--title); font-size: 1.35em; line-height: 1; color: #7a1a10; letter-spacing: 0.04em; text-shadow: 0 1px 0 rgba(255, 240, 200, 0.6); }
+.cp-face { width: calc(16 * var(--px) * 1.5); height: calc(16 * var(--px) * 1.5); image-rendering: pixelated; background: #d6b97f; box-shadow: inset 0 0 0 var(--px) #8a6434; padding: var(--px); }
+.cp-bname { font-family: var(--title); font-weight: 400; font-size: 1.05em; line-height: 1.05; color: #2a1408; }
+.cp-bounty .cp-sub { color: #6a4a28; justify-content: center; text-align: center; }
+.cp-reward { display: inline-flex; align-items: center; gap: 0.3em; font-size: 0.8em; color: #3a2410; }
+.cp-reward b { font-family: var(--display); color: #7a4a08; }
+
+/* Your purse */
+.cp-purse-row { display: flex; flex-wrap: wrap; gap: 0.35em 0.8em; align-items: center; }
+.cp-coin { display: inline-flex; align-items: center; gap: 0.3em; }
+.cp-coin b { font-family: var(--display); font-size: 1.05em; color: var(--xp); text-shadow: 0 var(--px) 0 rgba(0, 0, 0, 0.5); font-variant-numeric: tabular-nums; }
+.cp-coin.gems b { color: #9ad8ff; }
+.cp-earn { font-size: 0.72em; color: var(--ink-dim); }
+.cp-earn b { color: #8cf0a8; font-family: var(--display); }
+.cp-kit-rows { display: flex; flex-direction: column; gap: 0.35em; }
+body.cp-narrow .cp-kit-rows { flex-direction: row; flex-wrap: wrap; }
+
+/* ---- Item tiles: a little inset slot with a rarity-colored bezel ---- */
+.ci-icon { border-radius: 0 !important; box-shadow: inset 0 0 0 var(--px) var(--rc, #4a4a4a), inset 0 0 0 calc(2 * var(--px)) #0b0907, 0 var(--px) 0 rgba(0, 0, 0, 0.35) !important; }
+
+/* ---- Pins on the map: little shields and tokens ---- */
+.map-pin.level { border-radius: 0.2em; }
+
+/* ---- The map's stops: little bevelled tokens, square-cut like everything else ---- */
+.map-pin { border-radius: 3px; }
+.map-pin.level, .map-pin.level.boss, .map-pin.prop, .map-pin.prop.node { border-radius: 2px; }
+.map-pin.level::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.28), inset -1px -1px 0 rgba(0, 0, 0, 0.4); }
+.map-pin.level.last::after { inset: -7px; border-radius: 3px; box-shadow: none; }
+.map-pin.prop { background: rgba(12, 10, 8, 0.82); }
+.map-pin.prop .lbl, .map-pin.level.last .last-tag { border-radius: 0; }
+
+/* ---- The trees and the island cards ---- */
+.tree-card, .isle-card {
+  box-sizing: border-box;
+  border: calc(5 * var(--px)) solid transparent;
+  border-image: var(--fx-plate) 5 fill / calc(5 * var(--px)) round;
+  border-radius: 0;
+  background: none;
+  box-shadow: 0 calc(2 * var(--px)) 0 rgba(0, 0, 0, 0.4);
+  image-rendering: pixelated;
+}
+.tree-card { padding: 0.35em 0.45em 0.45em; }
+.isle-card { padding: 0.25em; }
+.isle-card:active:not(:disabled) { box-shadow: 0 var(--px) 0 rgba(0, 0, 0, 0.4); }
+.isle-card.ready { border-image-source: var(--fx-plate-gold); box-shadow: 0 calc(2 * var(--px)) 0 var(--gold-lip); }
+.tree-view {
+  border: calc(5 * var(--px)) solid transparent;
+  border-image: var(--fx-plate-3) 5 / calc(5 * var(--px)) round;
+  border-radius: 0;
+  box-shadow: 0 calc(2 * var(--px)) 0 rgba(0, 0, 0, 0.4);
+  image-rendering: pixelated;
+}
+.isle-thumb { border-radius: 0; }
+.tree-pin { border-radius: 3px; }
+.tree-pin .tp-in { border-radius: 2px; }

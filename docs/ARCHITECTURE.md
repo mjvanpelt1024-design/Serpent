@@ -124,12 +124,16 @@ and checked against a signed manifest at startup; the save goes through `SAVE_SC
 | Every button's wiring | `src/game/wiring.js` |
 | Keyboard | `src/engine/input/keyboard.js` |
 | Pixel icons (sprites) | `src/engine/render/pixel-icons.js` |
+| The menus' pixel frames (panels, windows, buttons, tabs, the parchment), drawn from the theme's colors | `src/art/ui-frames.js`, used by `styles/16-retro-fantasy.css` |
+| The fonts and the Font setting | `styles/00-fonts.css`, `FONT_OPTIONS` in `src/ui/settings.js` (canvases use `GAME_FONT`) |
 | Terminal commands | `src/dev/terminal/cmd-*.js` |
 
 ## Styles
 
 `styles/` holds the CSS, split by area and numbered in the order `index.html` loads them. Later files win
-when two rules clash, so keep the numbers in order when adding one.
+when two rules clash, so keep the numbers in order when adding one. `16-retro-fantasy.css` comes last on purpose: it dresses
+every panel, button and window in pixel frames (border images from `src/art/ui-frames.js`), so the files
+before it lay things out and it gives them their look.
 
 ## Testing outside the launcher
 

@@ -91,7 +91,8 @@ function defaultSettings() {
     crt: true,
     bgMotion: true,
     particles: true,
-    menuDemo: true
+    menuDemo: true,
+    font: "default"
   };
 }
 
@@ -308,6 +309,7 @@ function sanitizeSave(raw) {
   if (typeof set.shake === "boolean") s.settings.shake = set.shake ? "normal" : "off";
   else if (SHAKE_OPTIONS.some(o => o[0] === set.shake)) s.settings.shake = set.shake;
   if (SCORE_UNITS.some(o => o[0] === set.scoreUnit)) s.settings.scoreUnit = set.scoreUnit;
+  if (["default", "retro", "classic", "jersey", "original"].includes(set.font)) s.settings.font = set.font;
 
   const dev = raw.dev || {};
   const DEV_MIN = { speedMult: 0.1, scrollMult: 0.1 };

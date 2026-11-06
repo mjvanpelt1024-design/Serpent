@@ -15,6 +15,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class NoCache(http.server.SimpleHTTPRequestHandler):
+    # fonts by their real types, whatever the machine's registry says
+    extensions_map = {**http.server.SimpleHTTPRequestHandler.extensions_map, ".woff": "font/woff", ".woff2": "font/woff2"}
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=ROOT, **kwargs)
 

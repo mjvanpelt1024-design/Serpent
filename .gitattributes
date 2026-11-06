@@ -5,6 +5,7 @@
 *.png binary
 *.ogg binary
 *.woff binary
+*.woff2 binary
 # Visual Studio files keep Windows line endings (see .editorconfig)
 *.cpp text eol=crlf
 *.h text eol=crlf

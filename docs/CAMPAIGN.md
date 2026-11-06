@@ -19,10 +19,12 @@ This file is the design and the map of where things live. The numbers themselves
 | The map: islands, paths, stops, pins, camera | `src/ui/map.js` (the Coil and the sky: `map-coil.js`) |
 | What's painted on each island, and each island's shape | `src/ui/map-isles.js` (`ISLE_SHAPE`) |
 | Playing a level on the old engine | `src/campaign/camp-run.js`, `camp-levels.js`, `camp-boss.js`, `camp-items.js` |
-| The HUD beside the board, the result card | `src/campaign/camp-hud.js`, `camp-screens.js` |
+| The hub beside the board, the result card | `src/campaign/camp-hud.js`, `camp-screens.js` |
+| Hearts and armor: the rules (`campDamage`) and their pictures | `camp-run.js`, `camp-hearts.js` |
 | Shops, shopkeeper scenes, the kit box, trees | `camp-shops.js`, `camp-scenes.js`, `camp-kit.js`, `camp-tree.js` |
 | Home base, the Satchel, Tailor and Trophy Hall | `camp-home.js`, `camp-collection.js` |
 | Item and goal pictures (12 x 12, like every icon) | `camp-art.js` (goal pieces: `camp-levels.js`) |
+| The pixel frames on every panel, button and window | `src/art/ui-frames.js`, `styles/16-retro-fantasy.css` |
 | One save, no profiles, settings rows | `camp-menu.js` |
 
 After changing any campaign file:
@@ -99,15 +101,38 @@ tree, which grows as you buy that island's upgrades. The shopkeepers stand by th
 ## Playing a level
 
 Play (or the level's rules card) opens the old "Bring anything?" box when you own something to carry: one
-gear, spell, snack, familiar and rune, picked with arrows. Then the old 3-2-1 countdown.
+gear, spell, snack, familiar, rune and heart canister, picked with arrows. Then the old 3-2-1 countdown.
 
-**Nothing is drawn on the board but the game.** The game's own HUD keeps the hearts (with armor), the
-score and the pause button; plates in the same style hold the rest. On a wide screen the level, its goal
-and the boss sit in the left rail and your kit, effects, the pointer and found loot in the right rail; on a
-narrow screen they line up under the board. The old effect bars along the bottom of the board are gone.
+**Nothing is drawn on the board but the game.** The hub around it, in pixel-framed plates:
+
+- **Left, you:** your hearts and armor, the score and the pause button (the game's own HUD), your purse
+  (this island's money and your gems, and what this run's points will pay), your kit with what's left of
+  each piece, effects, and what you've found.
+- **Right, the world:** the island and level, the quest (the goal), the challenge's three trials while one
+  is on, and a wanted poster with the bounty on the next boss: its face, its name, where it waits and the
+  reward. The boss's own hearts, stamina and mood only show while you fight it.
+
+On a narrow screen both sides line up under the board.
+
+### Hearts and armor
+
+You start the game with **no hearts**: one hit ends a run. Stout Heart (the first island's tree) adds one
+per tier, up to five. The engine's rule stays: at zero hearts you're still alive, and the next hit kills.
+
+- Hearts come in **halves**. Wasps, ghosts, brambles, fire, smaller fleas and a boss biting your body cost
+  half a heart; spikes, lightning, bombs, big fleas, the rival snake and running into a boss a whole one.
+- **Armor plates** come only from upgrades (Arcane Plating on the Spire, more room from Iron Scales on the
+  Crown); armor pickups pay points instead. A plate has four pieces (`rules.snake.armorPieces`): every half
+  heart of damage knocks one off, so it shows a dent, a crack, half a plate, then it's gone, and what's left
+  of a big hit carries on to the next plate, then the hearts. Armor works with no hearts at all.
+- **Breakers** (`rules.damage.crush`: the boss, bombs, spikes, the rival snake) knock off two pieces per
+  half heart, a whole plate for a one-heart hit. **Piercing** hits (`rules.damage.pierce`: lightning,
+  ghosts, poison) go straight through armor to the hearts.
+- In the HUD each slot is a pixel heart: **red** is a heart, **gold** a heart with a plate over it,
+  **silver** a plate where you have no heart. Bosses use the same pictures (silver while armored).
 
 The result shows on the old game-over card: the money won (a first win pays more, a flawless one a quarter
-extra), what just opened, and a Next button.
+extra), what this run's points paid, what just opened, and a Next button.
 
 ### Ways to win (a level's `goal`)
 
@@ -140,6 +165,13 @@ Four rarities (Common, Uncommon, Rare, Legendary), five kinds, one of each carri
 | Snack | 3 | fires by itself when needed: heals, regrows armor, repairs gear | Hearty Stew, Honey Bread, Tinker's Pie, Spice Jerky, Phoenix Tart |
 | Familiar | 4 | follows you into every level; never wears out | Lantern Firefly, Snip the Crab, Shellby the Turtle, Puff the Pufferfish, Sir Seahorse |
 | Rune | 5 | burns up when a level starts and changes that level | Plenty, Stillness, Fortune, Fury, Echoes |
+| Canister | never sold | purple hearts on top of your own, lost first; they never refill | Heart Canister |
+
+The **Heart Canister** is found on the board now and then (`rewards.canisterShare` of loot drops) or won
+from a challenge (`challenge.pool`). Common, uncommon and rare ones hold 1, 2 and 3 **purple hearts**; a
+legendary holds 5 plates of **shiny purple armor** (four pieces each, like yours). Its pieces are spent
+before your own armor and hearts, a lost one is gone for good, and the jar crumbles when it's empty. It's
+switched off by the Glass Scales and Bare Scales twists. Stored in the save as its pieces left (`uses`).
 
 Every item has a strength and a weakness, written on its row: the shield shoves a bee aside but the bee
 comes back, and does nothing for walls or fire; the sword kills anything alive but snaps on a rock; the
@@ -155,17 +187,19 @@ animated scene of their shop in the story book's style.
   55, Uncommon 28, Rare 13, Legendary 4), one on sale. New stock every 2 hours, or now for gems. A Sell tab
   buys anything back in the money of the island it came from.
 - **Challenger** (after boss 2): three of the island's won levels (never a boss) with two nightmare-style
-  twists each (faster, a bigger goal, a swarm, one heart, darkness, no items, a 90 second clock,
+  twists each (faster, a bigger goal, a swarm, no hearts or armor, darkness, no items, a 90 second clock,
   rockslides), different twists on each trial. Once accepted it stays until it's done or its week runs out
   (`challenge.days`). Finishing pays the island's money plus one weighted roll from `challenge.pool`
-  (gems, a rare or legendary item, an exclusive skin or theme); the odds are shown.
+  (gems, a rare or legendary item, a heart canister, an exclusive skin or theme); the odds are shown.
 - **Banker** (after boss 3): trades this island's money down to the previous island's (10 to 1, less a
   flat 5 of the previous money per trade) or into gems, with the old Exchange's slider. Trades only go
   down. *Cash out* walks everything down to Snaycoins, one fee per step, then into gems.
 
 ## Money and upgrades
 
-Each island has its own money, earned on its levels and from its challenges. Each upgrade tree is paid in
+Each island has its own money, earned on its levels and from its challenges. **Every run's points pay
+too, won or lost**: one coin per `rewards.pointsPerCoin` points (50), with Coil Mastery's bonus, on top of
+a win's reward. Even quitting pays for the points you made. Each upgrade tree is paid in
 its own island's money, but **every upgrade works on every island**:
 
 | Tree | Island | Upgrades |

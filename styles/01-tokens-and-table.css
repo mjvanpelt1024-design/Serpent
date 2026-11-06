@@ -51,8 +51,9 @@
   --mui: 1;
   --bar: 46px;
   --rail-ui: 1;
-  --display: "Pixelify Sans", ui-monospace, monospace;
-  --body: "Pixelify Sans", ui-rounded, system-ui, sans-serif;
+  --display: var(--ui-font), "Pixelify Sans", ui-monospace, monospace;
+  --body: var(--ui-font), "Pixelify Sans", ui-rounded, system-ui, sans-serif;
+  --title: "Jacquarda Bastarda 9", var(--ui-font), "Pixelify Sans", serif;
   --pixel: var(--display);
   --radius: 0.55em;
   --lip: 0.28em;

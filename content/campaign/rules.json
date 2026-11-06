@@ -1,9 +1,15 @@
 {
   "_about": "The campaign's numbers: rewards, timers, the bank, the challenger, achievements and cosmetics. Every value here is checked by tools/check-campaign.py and signed by tools/sign-content.py.",
-  "snake": {"hearts": 3, "armorCap": 3, "startLength": 4},
+  "snake": {"hearts": 0, "armorCap": 3, "armorPieces": 4, "startLength": 4},
+  "damage": {
+    "_about": "What a hit does. Every half heart of damage knocks one of an armor plate's four pieces off (dent, crack, half, gone). crush: breakers, double damage to armor. pierce: goes straight through armor to the hearts.",
+    "crush": ["boss", "bomb", "spikes", "hunter"],
+    "pierce": ["lightning", "ghost", "poison"]
+  },
   "rewards": {
     "winBase": 30, "perLevel": 6, "bossMult": 2.5, "replayShare": 0.35,
-    "flawlessBonus": 0.25, "lootChance": 0.12, "lootEveryMs": 9000
+    "flawlessBonus": 0.25, "lootChance": 0.12, "lootEveryMs": 9000,
+    "pointsPerCoin": 50, "canisterShare": 0.08
   },
   "merchant": {"stockSize": 3, "restockMinutes": 120, "rerollGems": 5, "dealDiscount": 30, "sellShare": 0.35},
   "challenge": {
@@ -13,9 +19,9 @@
       {"id": "swift", "name": "Swift", "text": "Everything moves 20% faster."},
       {"id": "greedy", "name": "Greedy", "text": "The goal is 50% bigger."},
       {"id": "swarm", "name": "Swarm", "text": "Twice as many hazards and enemies."},
-      {"id": "glass", "name": "Glass Scales", "text": "Only one heart, no armor."},
+      {"id": "glass", "name": "Glass Scales", "text": "No hearts, no armor, no canister: one hit ends it."},
       {"id": "dark", "name": "Blackout", "text": "You can only see around your head."},
-      {"id": "bare", "name": "Bare Scales", "text": "No gear, spells, snacks or familiars."},
+      {"id": "bare", "name": "Bare Scales", "text": "No gear, spells, snacks, familiars or canisters."},
       {"id": "clock", "name": "Against the Clock", "text": "Finish within 90 seconds."},
       {"id": "rocky", "name": "Rockslide", "text": "Rocks scattered everywhere."}
     ],
@@ -23,6 +29,7 @@
       {"kind": "gems", "weight": 50, "min": 8, "max": 25},
       {"kind": "item", "rarity": "rare", "weight": 26},
       {"kind": "item", "rarity": "legendary", "weight": 9},
+      {"kind": "canister", "weight": 10},
       {"kind": "skin", "weight": 9},
       {"kind": "theme", "weight": 6}
     ]

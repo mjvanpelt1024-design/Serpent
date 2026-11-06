@@ -13,13 +13,100 @@
 
 let campRun = null;
 
-/* How many hearts a level starts with */
+/* How many hearts a level starts with. You start the game with none (one hit ends a run);
+   Stout Heart on the first island's tree adds them. */
 function campHearts(mods, rune) {
-  if (mods.includes("glass")) return 1;
+  if (mods.includes("glass")) return 0;
   let h = CAMP.rules.snake.hearts + upVal("hearts");
   if (rune && rune.id === "fortune") h -= 1;
-  return Math.max(1, h);
+  return Math.max(0, h);
 }
+
+/* ----- Hearts and armor -----
+   Hearts come in halves. Armor plates come only from upgrades, and each has four pieces
+   (rules.snake.armorPieces): every half heart of damage knocks one off, so a plate goes
+   dented, cracked, half gone, gone, and what's left of a big hit carries on to the next
+   plate. Breakers (rules.damage.crush) knock off two pieces per half heart; piercing hits
+   (rules.damage.pierce) go straight through to the hearts. Armor works with no hearts at all.
+   A heart canister's purple hearts and armor are spent before your own, and never refill. */
+const ARMOR_PIECES = () => CAMP.rules.snake.armorPieces || 4;
+function campArmorStart(mods) {
+  if (mods.includes("glass")) return 0;
+  return Math.min(CAMP.rules.snake.armorCap + upVal("armorcap"), upVal("plating")) * ARMOR_PIECES();
+}
+/* The engine still counts whole plates for its own odds and ends */
+function campSyncArmor() {
+  currentArmor = Math.ceil(campRun.armor / ARMOR_PIECES());
+  lastHeartsKey = "";
+}
+/* The canister you carry into this level, if it still holds anything */
+function campVessel() {
+  if (!campRun || campBare() || campRun.mods.includes("glass")) return null;
+  const it = campEquipped("canister");
+  return it && it.uses > 0 ? it : null;
+}
+
+/* A hit of `hearts` (in hearts, halves allowed) from `cause`. True if the snake died. */
+function campDamage(hearts, cause) {
+  const D = CAMP.rules.damage || {};
+  const pierce = (D.pierce || []).includes(cause), crush = (D.crush || []).includes(cause);
+  let halves = hearts === Infinity ? Infinity : Math.max(1, Math.round(hearts * 2));
+  const v = campVessel(), vArmor = v && vesselHoldsArmor(v);
+  const armorBefore = campRun.armor, heartsBefore = currentHearts;
+  let lost = [];
+  // armor soaks a hit in pieces: one per half heart, two for a breaker; what's left carries on
+  const soak = have => {
+    if (pierce || halves === Infinity || halves <= 0 || have <= 0) return 0;
+    let pcs = halves * (crush ? 2 : 1);
+    const t = Math.min(pcs, have);
+    pcs -= t;
+    halves = Math.ceil(pcs / (crush ? 2 : 1));
+    return t;
+  };
+  // the canister's purple pieces go first, then your armor, then your hearts
+  if (v && vArmor) { const t = soak(v.uses); v.uses -= t; if (t) lost.push("purple armor"); }
+  if (v && !vArmor && halves > 0 && v.uses > 0) {
+    const t = Math.min(halves === Infinity ? v.uses : halves, v.uses);
+    v.uses -= t;
+    if (halves !== Infinity) halves -= t;
+    lost.push("purple heart");
+    campRun.lostHeart = true;
+  }
+  campRun.armor -= soak(campRun.armor);
+  if (v && v.uses <= 0) {
+    campDrop(v.uid);
+    showToast("The Heart Canister is empty. It crumbles to dust.");
+    sfx("bad");
+  }
+  if (v) saveCamp();
+  campSyncArmor();
+  noteHurt();
+  if (halves > 0) {
+    const own = Math.round(currentHearts * 2);
+    if (halves === Infinity || halves > own) {
+      // the engine lets you live on zero hearts; the hit after that is the one that kills
+      currentHearts = 0;
+      if (campTryRevive(cause)) return false;
+      endGame(cause);
+      return true;
+    }
+    currentHearts = (own - halves) / 2;
+    if (currentHearts < heartsBefore) campRun.lostHeart = true;
+  }
+  if (lost.includes("purple armor") && campRun.armor === armorBefore) { showToast(v.uses > 0 ? "Your purple armor took the hit." : "Your last purple plate shattered."); sfx("rock"); }
+  else if (campRun.armor < armorBefore) {
+    runCount("armorUsed");
+    const P = ARMOR_PIECES(), stage = campRun.armor % P;
+    showToast(campRun.armor <= 0 ? "Your last armor plate broke." : stage === 0 ? "An armor plate broke." : ["", "Your armor is down to half a plate.", "Your armor cracked.", "Your armor took a dent."][Math.round(stage * 4 / P)] || "Your armor took the hit.");
+    sfx("rock");
+  } else if (lost.includes("purple heart") && currentHearts === heartsBefore && v.uses > 0) showToast(`A purple heart took the hit. ${fmtHalf(v.uses / 2)} left.`);
+  else if (!lost.length && halves === 0) sfx("rock");
+  if (currentHearts < heartsBefore || lost.includes("purple heart")) sfx("heart");
+  buzz(45);
+  updateHud();
+  return false;
+}
+const vesselHoldsArmor = it => { const d = campItemDef(it.id); return !!(d && d.armor && d.armor[rarityIdx(it.rarity)] > 0); };
 
 /* From the map or a challenge: choose what to carry, then play */
 function campBeginLevel(isl, n, challengeIdx = -1) {
@@ -71,7 +158,7 @@ function campStart(isl, n, challengeIdx = -1) {
 
   campRun = {
     isl, islandN: island.n, n, def, mods, challenge: challengeIdx, rune,
-    apples: 0, lostHeart: false, loot: [], lootAt: performance.now() + 6000,
+    apples: 0, lostHeart: false, loot: [], canisters: [], lootAt: performance.now() + 6000,
     castReadyAt: 0, fieldUntil: 0, pet: null, gearFx: 0, blinkFx: 0,
     secondWind: upVal("secondwind") > 0, echoReady: !!(rune && rune.id === "echo"), echoUsed: false,
     over: false, speed, prevBest: (camp.levels[campLevelId(isl, n)] || { best: 0 }).best
@@ -89,7 +176,8 @@ function campStart(isl, n, challengeIdx = -1) {
 
   currentHearts = campHearts(mods, rune);
   campRun.startHearts = currentHearts;
-  currentArmor = mods.includes("glass") ? 0 : Math.min(CAMP.rules.snake.armorCap + upVal("armorcap"), upVal("plating"));
+  campRun.armor = campRun.armorMax = campArmorStart(mods);
+  campSyncArmor();
   goldHearts = 0;
   if (def.dark || mods.includes("dark")) nm.dark = true;
   campSetupGoal(def, mods);
@@ -141,6 +229,20 @@ function campRewardPreview(isl, n, first) {
   return Math.max(1, Math.round(r * (1 + upPct("bounty")) * (1 + upPct("mastery"))));
 }
 
+/* Every run's points turn into this island's money, won or lost */
+function campPointsPay() {
+  const per = CAMP.rules.rewards.pointsPerCoin || 50;
+  return Math.max(0, Math.floor(Math.max(0, score) / per * (1 + upPct("mastery"))));
+}
+function campPayPoints(lines) {
+  const pts = campPointsPay();
+  if (pts > 0) {
+    campPay(campRun.isl, pts);
+    lines.push(`+${campMoney(campRun.isl, pts)} from ${fmtInt(score)} points`);
+  }
+  return pts;
+}
+
 function campReward(first) {
   const R = CAMP.rules.rewards;
   const def = campRun.def;
@@ -153,6 +255,17 @@ function campReward(first) {
   if (campRun.rune && campRun.rune.id === "fortune") r *= 1 + campRun.rune.power / 100;
   if (campRun.echoUsed) r *= 1 - campRun.rune.power / 100;
   return Math.max(1, Math.round(r));
+}
+
+/* Trinkets and heart canisters picked up on the board go into the satchel */
+function campGiveFinds(lines, verb) {
+  const cans = campRun.canisters || [];
+  campRun.loot.forEach(id => campGive(id));
+  cans.forEach(r => campGive("canister", r));
+  const names = campRun.loot.map(id => CAMP.lootById[id].name).concat(cans.map(r => `${rarityName(r)} Heart Canister`));
+  if (names.length) lines.push(`${verb}: ${names.join(", ")}`);
+  campRun.loot = [];
+  campRun.canisters = [];
 }
 
 function campStopBoard() {
@@ -175,7 +288,8 @@ function campWinLevel() {
   camp.levels[key] = rec;
   const pay = campReward(first);
   campPay(isl, pay);
-  const lines = [`+${campMoney(isl, pay)}${first ? " (first win)" : ""}`];
+  const lines = [`+${campMoney(isl, pay)} for the win${first ? " (first win)" : ""}`];
+  campPayPoints(lines);
   campBump("levelsWon");
   if (!campRun.lostHeart) { campBump("flawless"); lines.push("Flawless: not a heart lost"); }
   if (def.kind === "boss") { campBump("bossFights"); if (def.goal.fight === 3) campBump("bossesSlain"); }
@@ -186,8 +300,7 @@ function campWinLevel() {
     const pool = CAMP.loot.filter(l => l.island === campRun.islandN);
     if (pool.length) campRun.loot.push(pool[Math.floor(Math.random() * pool.length)].id);
   }
-  campRun.loot.forEach(id => campGive(id));
-  if (campRun.loot.length) lines.push(`Found: ${campRun.loot.map(id => CAMP.lootById[id].name).join(", ")}`);
+  campGiveFinds(lines, "Found");
   if (roll(upVal("gemfinder"))) { addGems(1); lines.push("+1 gem (Gem Finder)"); }
   // the challenge
   const C = camp.challenges[isl];
@@ -220,15 +333,20 @@ function campWinLevel() {
 function campFail(cause) {
   campStopBoard();
   campBump("deaths");
-  // trinkets are kept even when you lose
-  campRun.loot.forEach(id => campGive(id));
+  // points still pay, and trinkets and canisters are kept even when you lose
+  const lines = [];
+  const pts = campPayPoints(lines);
+  campGiveFinds(lines, "Kept");
   campLast = { isl: campRun.isl, n: campRun.n, challenge: campRun.challenge };
   saveCamp();
-  if (cause === "quit") { campLeaveRun(); openScreen("modes"); return; }
+  if (cause === "quit") {
+    if (pts > 0) showToast(`Your ${fmtInt(score)} points paid ${campMoney(campRun.isl, pts)}.`);
+    campLeaveRun(); openScreen("modes"); return;
+  }
   sfx("death");
   buzz([90, 50, 190]);
   const line = causeLine(cause) || getCommentary(cause);
-  showCampResult(false, campRun.loot.length ? [`Kept: ${campRun.loot.map(id => CAMP.lootById[id].name).join(", ")}`] : [], [], line);
+  showCampResult(false, lines, [], line);
   const shakeClass = { subtle: "shake-subtle", normal: "shake", quake: "shake-quake" }[save.settings.shake];
   stageEl.classList.remove("shake", "shake-subtle", "shake-quake");
   if (shakeClass) { void stageEl.offsetWidth; stageEl.classList.add(shakeClass); }
@@ -333,32 +451,30 @@ function campTryRevive(cause) {
     if (!campRun) return orig.apply(this, arguments);
     if (save.dev.invincible) return false;
     if (campGuardHit(cause)) return false;
+    if (guardHit()) return false;                 // the Rampage Star, or a bubble shield
     if (campRun.rune && campRun.rune.id === "fury" && hearts !== Infinity) hearts *= 2;
-    const armorBefore = currentArmor;
-    // the engine lets you live on zero hearts; the hit after that is the one that kills
-    const lethal = currentArmor <= 0 && goldHearts <= 0 && (hearts === Infinity || currentHearts < hearts - 1e-9);
-    if (lethal && !starOn() && !shieldOn()) {
-      if (campTryRevive(cause)) return false;
-    }
-    const before = currentHearts;
-    const dead = orig.call(this, hearts, cause, opts);
-    if (dead) return true;
-    if (currentHearts < before) campRun.lostHeart = true;
+    const armorBefore = campRun.armor, before = currentHearts;
+    if (campDamage(hearts, cause)) return true;
     // snacks that fire after the fact
     const food = campBare() ? null : campEquipped("food");
     if (food && food.uses > 0) {
       if (food.id === "stew" && currentHearts < 1 && currentHearts < before) {
-        currentHearts = Math.min(campRun.startHearts, currentHearts + campItemPower(food));
+        currentHearts = Math.min(Math.max(campRun.startHearts, 1), currentHearts + campItemPower(food));
         useFood(food, "Hearty Stew! You feel better already.");
         lastHeartsKey = "";
         updateHud();
-      } else if (food.id === "bread" && armorBefore > 0 && currentArmor === 0) {
-        const n = campItemPower(food);
+      } else if (food.id === "bread" && armorBefore > 0 && campRun.armor === 0) {
+        const n = campItemPower(food) * ARMOR_PIECES();
         useFood(food, "Honey Bread! Your armor is growing back.");
-        setTimeout(() => { if (campRun && gameState === "PLAYING") { currentArmor = Math.min(currentArmor + n, CAMP.rules.snake.armorCap + upVal("armorcap")); lastHeartsKey = ""; updateHud(); } }, 1500);
+        setTimeout(() => { if (campRun && gameState === "PLAYING") { campRun.armor = Math.min(campRun.armor + n, campRun.armorMax); campSyncArmor(); updateHud(); } }, 1500);
       }
     }
     return false;
+  });
+  // armor only comes from upgrades in the campaign: a stray armor pickup pays points instead
+  wrap("addArmor", orig => function () {
+    if (!campRun) return orig.apply(this, arguments);
+    addScore(30 * scoreMultiplier);
   });
 
   wrap("guardCrash", orig => function (cause) {

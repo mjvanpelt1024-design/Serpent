@@ -342,7 +342,7 @@ function drawMechanicsHud(ts) {
 
   const g = ctx;
   g.save();
-  g.font = "600 9px 'Pixelify Sans', system-ui, sans-serif";
+  g.font = `600 9px ${GAME_FONT}`;
   g.textBaseline = "middle";
   const y = viewH - 13;
   let x = 4;

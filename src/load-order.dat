@@ -32,6 +32,7 @@ engine/render/pixel-icons.js
 ui/trees.js
 ui/cosmetics-preview.js
 engine/render/themes.js
+art/ui-frames.js
 engine/render/table.js
 game/world/unlocks.js
 ui/hud.js
@@ -91,6 +92,7 @@ campaign/camp-levels.js
 campaign/camp-boss.js
 campaign/camp-items.js
 campaign/camp-art.js
+campaign/camp-hearts.js
 campaign/camp-hud.js
 campaign/camp-run.js
 campaign/camp-screens.js

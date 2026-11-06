@@ -118,6 +118,12 @@ const ICON_FOR = {
 })();
 
 const iconCache = {};
+/* Lighter (k > 0) or darker (k < 0), for the icons' light and shade */
+function iconShade(hex, k) {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = s => { const v = (n >> s) & 255; return Math.max(0, Math.min(255, Math.round(k >= 0 ? v + (255 - v) * k : v * (1 + k)))); };
+  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+}
 /* A data URL for a thing's picture, drawn once */
 function iconUrl(id, scale = 1) {
   const key = id + "@" + scale;
@@ -137,6 +143,18 @@ function iconUrl(id, scale = 1) {
     g.fillRect(x * scale, y * scale, scale, scale);
   };
   rows.forEach((row, y) => [...row].forEach((ch, x) => put(ch, x, y)));
+  // light from the top left: every color brightens along its top and left edges and darkens
+  // along its bottom and right ones, so flat shapes read as little solid things
+  const edge = (x, y) => { const ch = (rows[y] || "")[x]; return ch === undefined || ch === "." || ch === " " || ch === "k"; };
+  rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === "." || ch === " " || ch === "k" || ch === "w") return;
+    const col = ICON_PAL[(swap && swap[ch]) || ch];
+    if (!col || col[0] !== "#") return;
+    const lit = edge(x, y - 1) || edge(x - 1, y), shaded = edge(x, y + 1) || edge(x + 1, y);
+    if (lit === shaded) return;
+    g.fillStyle = iconShade(col, lit ? 0.16 : -0.2);
+    g.fillRect(x * scale, y * scale, scale, scale);
+  }));
   if (badge && BADGES[badge]) {
     // knock out a little space, then draw the mark in the corner
     g.clearRect(7 * scale, 7 * scale, 5 * scale, 5 * scale);

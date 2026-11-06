@@ -23,7 +23,7 @@
   text-align: center;
   box-shadow: inset 0 0 0 3px var(--red), 0 0.35em 0 rgba(0, 0, 0, 0.5);
 }
-.modal-box h3 { margin: 0 0 0.4em; font-family: var(--display); font-weight: 400; font-size: 1.7em; line-height: 1; }
+.modal-box h3 { margin: 0 0 0.4em; font-family: var(--title); font-weight: 400; font-size: 1.7em; line-height: 1; }
 .modal-box p { font-size: 0.88em; color: var(--ink-dim); }
 .modal-box .btn { padding: 0.6em 0.8em; white-space: nowrap; }
 .modal.gold .modal-box { box-shadow: inset 0 0 0 3px var(--gold), 0 0.35em 0 rgba(0, 0, 0, 0.5); }
@@ -90,7 +90,7 @@
 
 /* How to play */
 .howto p { font-size: 0.86em; line-height: 1.45; margin: 0 0 0.6em; text-align: left; }
-.howto-about { font-family: var(--display); font-weight: 400; font-size: 1.5em; margin: 0.9em 0 0.3em; color: var(--accent); }
+.howto-about { font-family: var(--title); font-weight: 400; font-size: 1.5em; margin: 0.9em 0 0.3em; color: var(--accent); }
 .howto-credit { color: var(--ink-dim); }
 .howto-build { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.72em !important; color: var(--ink-dim); }
 
@@ -144,7 +144,7 @@
 .book-page.collect:not(.locked) { background: #fbf1cf; box-shadow: inset 6px 0 10px rgba(0, 0, 0, 0.18), 0 0 0 3px #d4a73a, 0 0.3em 0 rgba(0, 0, 0, 0.35); }
 .book-art { display: block; width: 100%; height: auto; aspect-ratio: 160 / 60; image-rendering: pixelated; border-radius: 0.2em; margin: 0.15em 0 0.65em; box-shadow: 0 0 0 2px #3a2e1e, 0 0 0 4px #f3ead2, 0 0 0 5px #8a7350, 0 0.3em 0.5em 0.2em rgba(60, 40, 10, 0.25); }
 .book-num { font-size: 0.72em; color: #9a8a68; margin-bottom: 0.15em; }
-.book-title { font-family: var(--display); font-weight: 400; font-size: 1.6em; line-height: 1; margin: 0 0 0.5em; color: #2a1e10; }
+.book-title { font-family: var(--title); font-weight: 400; font-size: 1.6em; line-height: 1; margin: 0 0 0.5em; color: #2a1e10; }
 .coil-box { margin-top: 0.55em; padding: 0.4em 0.6em; border: 2px dashed #8f4dff; border-radius: 0.5em; background: rgba(143, 77, 255, 0.08); color: #4a2a8a; font-family: Georgia, serif; font-style: italic; font-size: 0.82em; line-height: 1.4; }
 .coil-box.locked { color: #a898c8; letter-spacing: 0.25em; font-style: normal; text-align: center; }
 .book-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 0.6em; font-size: 0.78em; color: var(--ink-dim); }
