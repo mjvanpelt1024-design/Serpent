@@ -18,10 +18,15 @@
 const MAP_W = 600;            // map pixels (each one is 2 world units)
 const MAP_H = 830;
 /* x, y: the middle of the island's grassy top. w: its width. th: half the depth of the
-   grassy top. depth: how far the rock hangs down. dir: which way its path runs (1 = right). */
+   grassy top. depth: how far the rock hangs down (each island's own, from ISLE_SHAPE in
+   src/ui/map-isles.js). dir: which way its path runs (1 = right).
+   They climb the sky in a zigzag: each one sits toward the side the Coil comes up on,
+   [x from the middle, y]. */
+const ISLE_STAGGER = [[-72, 0], [70, -2], [-62, 2], [78, -4], [-66, -10]];
 const ISLANDS = {};
 CAMP.islands.forEach((isl, i) => {
-  ISLANDS[isl.id] = { id: isl.id, n: i, x: 300, y: 722 - i * 138, w: 300, th: 32, depth: 76, dir: i % 2 ? -1 : 1, name: isl.name };
+  const [sx, sy] = ISLE_STAGGER[i % ISLE_STAGGER.length];
+  ISLANDS[isl.id] = { id: isl.id, n: i, x: 300 + sx, y: 722 - i * 138 + sy, w: 300, th: 32, depth: 76, dir: i % 2 ? -1 : 1, name: isl.name };
 });
 const MAP_PLACES = ISLANDS;
 const MAP_ORDER = CAMP.islands.map(i => i.id);
@@ -121,68 +126,22 @@ function mapTree(g, x, y, canopy, fruit) {
   if (fruit) { mapRect(g, x - 1, y, 1, 1, fruit); mapRect(g, x + 1, y + 1, 1, 1, fruit); }
 }
 
-/* How wide the grassy top is at a row: a soft, wide plateau rather than a thin oval */
-function isleHalf(isl, dy) {
-  const k = Math.min(1, Math.abs(dy) / (isl.th + 0.5));
-  return (isl.w / 2) * Math.pow(1 - Math.pow(k, 2.6), 1 / 2.6);
-}
-
-/* ----- One island, painted once into its own canvas (again when its paths change) ----- */
+/* ----- One island, painted once into its own canvas (again when its paths change) -----
+   Its outline, the rock under it and the grass on top come from src/ui/map-isles.js:
+   every island has its own shape there. */
 const ISLE_ROOM = 46;         // room above the grass for towers, trees and smoke
 function paintIsland(key, fog) {
   const isl = ISLANDS[key];
-  const W = isl.w + 24, H = ISLE_ROOM + isl.th * 2 + isl.depth + 12;
+  const form = isleForm(key);
+  const W = form.reach * 2 + 24, H = ISLE_ROOM + form.back + form.front + form.drop + 16;
   const c = document.createElement("canvas");
   c.width = W;
   c.height = H;
   const g = c.getContext("2d");
-  const cx = Math.floor(W / 2), cy = ISLE_ROOM + isl.th;
+  const cx = Math.floor(W / 2), cy = ISLE_ROOM + form.back;
   // an island you haven't reached is a silhouette against the sky around it
   const haze = k => { const [r, gg, bb] = skyAt(isl.y); return "#" + [r, gg, bb].map(v => Math.round(v * k).toString(16).padStart(2, "0")).join(""); };
-  const [a, b, edge] = fog ? [haze(0.84), haze(0.8), haze(0.7)] : MAP_BIOME[key];
-  const seed = isl.n * 31 + 7;
-  // the rock underneath, tapering to a ragged point, in bands: soil, stone, deep stone
-  for (let r = 0; r <= isl.depth; r++) {
-    const f = 1 - r / isl.depth;
-    const half = (isl.w / 2 - 4) * (r < 6 ? 1 - r * 0.012 : Math.pow(f, 1.25) * 0.93 + 0.0) + (mapNoise(r, seed, 4, 3) - 0.5) * 8 + (mapHash(r, seed, 3) - 0.5) * 2;
-    if (half < 0.6) break;
-    const y = cy + isl.th - 3 + r;
-    const wob = Math.sin(r * 0.35 + seed) * 1.2;
-    for (let x = -Math.round(half); x <= Math.round(half); x++) {
-      const band = r + mapNoise(x, r, 9, seed) * 6 - 3 + wob;
-      let col;
-      if (fog) col = (x + r) % 3 ? haze(0.66) : haze(0.62);
-      else col = isleRockColor(key, x, r, band, isl.depth, seed);
-      if (x >= Math.round(half) - 1) col = fog ? haze(0.56) : "#2e2420";
-      else if (x <= -Math.round(half) + 1 && !fog) col = shadeHex(col, 0.18);
-      mapRect(g, cx + x, y, 1, 1, col);
-    }
-  }
-  // roots, vines and drips hanging off the underside
-  if (!fog) for (let k = 0; k < 9; k++) {
-    const x = cx - isl.w * 0.4 + k * (isl.w * 0.8 / 8) + (mapHash(k, seed, 5) - 0.5) * 8;
-    const y0 = cy + isl.th - 2 + Math.round(isl.depth * 0.25 * mapHash(k, seed, 9));
-    const len = 3 + Math.floor(mapHash(k, seed, 11) * 9);
-    isleHanging(g, key, x, y0, len, k);
-  }
-  // the soil lip under the front of the grass, for depth
-  for (let dy = isl.th - 5; dy <= isl.th; dy++) {
-    const half = isleHalf(isl, dy);
-    for (let x = -Math.round(half); x <= Math.round(half); x++) {
-      mapRect(g, cx + x, cy + dy + 2, 1, 1, fog ? haze(0.7) : mapHash(x, dy, seed + 7) > 0.5 ? "#6c482b" : "#7a5232");
-    }
-  }
-  // the grassy top
-  for (let dy = -isl.th; dy <= isl.th; dy++) {
-    const half = isleHalf(isl, dy) + (mapHash(dy, seed, 13) - 0.5) * 1.4;
-    for (let x = -Math.round(half); x <= Math.round(half); x++) {
-      let col = ((x + dy) & 1) && mapHash(x, dy, seed + 5) > 0.45 ? b : a;
-      if (!fog) col = isleGroundColor(key, x, dy, col, isl);
-      if (dy >= isl.th - 2) col = edge;
-      if (dy === -isl.th || (dy < 0 && Math.abs(x) >= Math.round(half) - 1)) col = fog ? haze(0.92) : shadeHex(a, 0.2);
-      mapRect(g, cx + x, cy + dy, 1, 1, col);
-    }
-  }
+  const body = paintIsleBody(g, key, cx, cy, fog, haze);
   if (fog) {
     // only the outline of its landmark shows through the haze
     const sil = document.createElement("canvas");
@@ -198,7 +157,7 @@ function paintIsland(key, fog) {
     paintIslePaths(g, key, cx, cy, isl);
     paintIsleScenery(g, key, cx, cy, isl, "over");
   }
-  return { c, ox: cx, oy: cy };
+  return { c, ox: cx, oy: cy, tips: body.tips };
 }
 
 function shadeHex(hex, k) {

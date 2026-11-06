@@ -35,7 +35,9 @@ const COIL = (() => {
     pts.push(Object.assign(end(I, I.dir, -4), { seg: 2 * i, open: 1 }));
     const next = isl[i + 1];
     if (next) {
-      const side = I.x + I.dir * (I.w / 2 + 34);
+      // the climb swings wide of both islands, whichever reaches further out on that side
+      const out = I.dir > 0 ? Math.max(I.x, next.x) : Math.min(I.x, next.x);
+      const side = out + I.dir * (I.w / 2 + 34);
       pts.push({ x: side, y: I.y - 22, seg: 2 * i + 1, open: 1 }, { x: side, y: next.y + 34, seg: 2 * i + 1, open: 1 });
     } else {
       // past the last island, the neck reaches out to where the head lies

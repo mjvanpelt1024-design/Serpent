@@ -17,7 +17,7 @@ This file is the design and the map of where things live. The numbers themselves
 | The signatures of all of the above | `content/campaign/manifest.dat` (made by a tool, never by hand) |
 | The save, its schema and the data check | `src/campaign/integrity.js`, `src/campaign/camp-save.js` |
 | The map: islands, paths, stops, pins, camera | `src/ui/map.js` (the Coil and the sky: `map-coil.js`) |
-| What's painted on each island | `src/ui/map-isles.js` |
+| What's painted on each island, and each island's shape | `src/ui/map-isles.js` (`ISLE_SHAPE`) |
 | Playing a level on the old engine | `src/campaign/camp-run.js`, `camp-levels.js`, `camp-boss.js`, `camp-items.js` |
 | The HUD beside the board, the result card | `src/campaign/camp-hud.js`, `camp-screens.js` |
 | Shops, shopkeeper scenes, the kit box, trees | `camp-shops.js`, `camp-scenes.js`, `camp-kit.js`, `camp-tree.js` |
@@ -56,7 +56,11 @@ stats. Nothing of the campaign lives in it.
 
 ## The map
 
-The 46.1 map, with five big islands stacked up the sky from the sunrise to the stars. The Coil's tail
+The 46.1 map, with five big islands climbing the sky in a zigzag from the sunrise to the stars, each pushed
+toward the side the Coil comes up on (`ISLE_STAGGER` in `map.js`). Every island has its own outline and
+underside (`ISLE_SHAPE` in `map-isles.js`): the rock is a stack of ever smaller copies of the grassy top, so
+its layers curve with the front rim, with crystals, coral, obsidian or earth hanging off it and little
+islets floating nearby. Shapes there must keep every stop on the grass. The Coil's tail
 rises out of the cloud sea, threads under each island's grass from its home end to its far end, swings out
 past the end and climbs to the next island, which runs the other way. It's green and gold up to where
 you've reached, glows with golden cracks on the climb ahead, and is stone beyond. The next island is a
