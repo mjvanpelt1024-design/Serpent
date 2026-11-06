@@ -50,6 +50,10 @@
   quests and save codes. **Shift+Alt+C** opens and closes it from anywhere (a level pauses behind it).
   Opening it marks the campaign save as cheated, for good. `dev everything.unlock` makes a save 100%;
   `dev everything.reset` (then type CONFIRM) wipes the game back to a brand new, uncheated save.
+- **Straight back to the map.** No result card after a level: the map flies to the next stop (a boss's shop
+  first) with the run's numbers in a plate at the side. Click a stop's own pin to play it: a card over the
+  map shows the objective, then Start. The Play button and the Rules signpost are gone.
+- The rails beside the board are a little smaller and shrink to fit the window; the pocket is one row of four.
 - Fixed: coming back to the map from a shop left the stop's scroll open on top of the island's banner.
 
 ## v:11.06.2026_b:50: runes for keeps

@@ -85,9 +85,11 @@ your money there, Home base and the next level; the arrows (or a swipe up or dow
 
 **There are no popups on the path.** Click a stop and the camera flies right down to it (`renderNodeFocus`
 in `map.js`): its name on a parchment scroll at the top (with the level's goal and challenge, or the
-shopkeeper's line), its button standing on the stop itself (Play, Play again, Visit, Cross) and a little
-Rules signpost beside it that opens the rules card. Big arrows on either side step to the stop before
-and after along `NODE_SEQ` (also the left and right arrow keys, or A and D), and say where they go:
+shopkeeper's line), and the stop's own pin glowing, with a caption under it (Play, Play again, Visit,
+Cross, or why it's locked). Click the pin itself: a shop opens, and a level first shows its objective on a
+card over the map (`openMapGoal`) with Start and Back. The stop's record (objective, best, wins, challenge,
+reward) and your last run's numbers sit in a plate at the side (`renderNodeSide`). Big arrows on either
+side step to the stops around it (also the arrow keys, or WASD), and say where they go:
 Home before level 1, Boss before a lair, the shopkeeper's name before a shop, Next island at the bridge.
 Esc, a click on the grass or scrolling out flies back up. Home doesn't stop to ask: it dives straight
 into home base.
@@ -138,7 +140,8 @@ countdown, and the cursor hides until the run ends or you pause.
   face, its name, where it waits and the reward. The boss's own hearts, stamina and mood only show while
   you fight it.
 
-On a narrow screen both sides line up under the board.
+On a narrow screen both sides line up under the board. On a wide one each rail shrinks to fit the
+window (`campFitRails` in `camp-hud.js`): never a scrollbar, never cut off.
 
 ### Snacks
 
@@ -181,8 +184,10 @@ per tier, up to five. The engine's rule stays: at zero hearts you're still alive
 - In the HUD each slot is a pixel heart: **red** is a heart, **gold** a heart with a plate over it,
   **silver** a plate where you have no heart. Bosses use the same pictures (silver while armored).
 
-The result shows on the old game-over card: the money won (a first win pays more, a flawless one a quarter
-extra), what this run's points paid, what just opened, and a Next button.
+There's no result card: the game goes straight back to the map, up close on the next stop (after a boss,
+its shop, the challenger or the bank; after a quest trial, the challenger; after a loss, the same level),
+with the run's numbers at the side: the money won (a first win pays more, a flawless one a quarter extra),
+what this run's points paid, what you found, what just opened.
 
 ### Ways to win (a level's `goal`)
 

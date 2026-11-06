@@ -354,10 +354,7 @@ function campFail(cause) {
   campGiveFinds(lines, "Kept");
   campLast = { isl: campRun.isl, n: campRun.n, challenge: campRun.challenge };
   saveCamp();
-  if (cause === "quit") {
-    if (pts > 0) showToast(`Your ${fmtInt(score)} points paid ${campMoney(campRun.isl, pts)}.`);
-    campLeaveRun(); openScreen("modes"); return;
-  }
+  if (cause === "quit") { showCampResult(false, lines, [], "You left the level."); return; }
   sfx("death");
   buzz([90, 50, 190]);
   // a plain word on what happened: no narrator during play

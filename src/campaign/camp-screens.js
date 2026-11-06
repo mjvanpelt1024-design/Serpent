@@ -8,9 +8,31 @@
    ========================================================= */
 "use strict";
 
-/* ----- The result: the old game-over card, retitled ----- */
+/* ----- The result: straight back to the map (build 51) -----
+   No card in between: the map flies to the next stop (after a boss, its shop or the challenger
+   or the bank, before the next level; after a quest trial, the challenger; after a loss, the same
+   level) and the run's numbers sit at the side of the close-up (renderNodeSide in map.js). */
 let campResultShown = false;
+const BOSS_SHOP_AFTER = { 5: "merchant", 10: "challenger", 15: "banker" };
 function showCampResult(won, lines, notes, line = "") {
+  const { isl, n, def } = campRun;
+  const rec = camp.levels[campLevelId(isl, n)];
+  const report = {
+    won, isl, n, name: def.name, score: Math.floor(score), lines, notes, line,
+    title: won ? (def.kind === "boss" ? (def.goal.fight === 3 ? "Boss defeated!" : "Boss beaten!") : "Level complete!") : line === "You left the level." ? "Left the level" : "Defeated",
+    best: !!(won && rec && rec.wins > 1 && score >= rec.best && campRun.prevBest < score)
+  };
+  let target = { key: isl, id: n };
+  if (campRun.challenge >= 0) target = { key: isl, id: "challenger" };
+  else if (won && BOSS_SHOP_AFTER[n] && campShopOpen(isl, BOSS_SHOP_AFTER[n])) target = { key: isl, id: BOSS_SHOP_AFTER[n] };
+  else if (won && n < LEVEL_COUNT && campLevelOpen(isl, n + 1)) target = { key: isl, id: n + 1 };
+  else if (won && n === LEVEL_COUNT) target = { key: isl, id: "bridge" };
+  campLeaveRun();
+  clearPauseState();
+  campBackToMap(report, target);
+}
+/* The old card, kept for anything that still calls it by name */
+function showCampResultCard(won, lines, notes, line = "") {
   const el = screenEls.gameover;
   const { isl, n, def } = campRun;
   const nextOpen = n < LEVEL_COUNT && campLevelOpen(isl, n + 1);

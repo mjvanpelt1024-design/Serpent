@@ -644,7 +644,8 @@ function updatePins() {
     pin.hidden = isArea ? (near && !fog) : !near;
     const key = pin.dataset.key;
     pin.classList.toggle("selected", !!mapPop && mapPop.key === area && key === nodeKey(area, mapPop.j));
-    if (mapPop && mapPop.focus && key === nodeKey(mapPop.key, mapPop.j)) pin.hidden = true;
+    // up close, the stop's own pin is the button (it glows): click it to play, visit or cross
+    pin.classList.toggle("focused", !!(mapPop && mapPop.focus && key === nodeKey(mapPop.key, mapPop.j)));
     const last = !!lastPlayed && key === nodeKey(lastPlayed.key, lastPlayed.j);
     pin.classList.toggle("last", last);
     const tag = pin.querySelector(".last-tag");
@@ -848,6 +849,8 @@ function stepNode(d, vertical = false) {
 
 function openLevelPop(key, j, nm, pinEl) {
   if (j === "home") { openNode(key, "home"); return; }
+  // a click on the stop that's already up close: play it, or walk in
+  if (mapPop && mapPop.focus && mapPop.key === key && mapPop.j === j) { actOnNode(key, j); return; }
   if (mapSel !== key) selectPlace(key);
   mapPop = { key, j, nm: false, pin: pinEl, focus: true };
   mapRules = false;
@@ -867,7 +870,9 @@ function renderNodeFocus() {
   const st = nodeState(key, j);
   const p = nodeAt(key, j);
   nodeHereEl.style.left = p.x * 2 + "px";
-  nodeHereEl.style.top = p.y * 2 + "px";
+  // the caption hangs just under the stop's pin (side stops' pins stand higher, over their buildings)
+  const lift = typeof j === "number" ? (isBossLevel(j) ? 19 : 5) : (NODE_PIN_LIFT[j] || 20) - 12;
+  nodeHereEl.style.top = (p.y - lift + 6) * 2 + "px";
   nodeHereEl.style.setProperty("--m", I.colors.accent);
   let title = nodeTitle(key, j), sub = "", line = "", why = "", go = "", tag = "";
   if (typeof j === "number") {
@@ -899,12 +904,14 @@ function renderNodeFocus() {
   nodeScrollEl.classList.add("open");
   const locked = st === "locked";
   nodeHereEl.className = "node-here open" + (typeof j === "number" ? " level" : " side") + (locked ? " locked" : "") + (ISLANDS[key].dir < 0 ? " flip" : "");
-  nodeHereEl.innerHTML = `<button class="btn ${locked ? "" : "btn-primary"} nh-go" data-go ${locked ? "disabled" : ""}>${locked ? LOCK_SVG + " " : ""}${go}</button>` +
-    (why ? `<span class="nh-why">${escapeAttr(why)}</span>` : tag ? `<span class="nh-tag">${escapeAttr(tag)}</span>` : "") +
-    (typeof j === "number" ? `<button class="nh-sign" data-rules aria-label="Rules for ${escapeAttr(title)}"><span>Rules</span></button>` : "");
-  nodeHereEl.querySelector("[data-go]").addEventListener("click", e => { e.stopPropagation(); if (typeof j === "number") playLevel(key, j); else openNode(key, j); });
-  const rules = nodeHereEl.querySelector("[data-rules]");
-  if (rules) rules.addEventListener("click", e => { e.stopPropagation(); openLevelRules(); });
+  // no button and no rules sign: the stop's own pin is what you click; a caption under it says so
+  nodeHereEl.innerHTML = "";
+  // the caption hangs off the pin itself, so it's always right under it
+  mapPinsEl.querySelectorAll(".pin-hint").forEach(el => el.remove());
+  const pinEl = mapPinsEl.querySelector(`[data-key="${nodeKey(key, j)}"]`);
+  if (pinEl) pinEl.insertAdjacentHTML("beforeend", why ? `<span class="pin-hint why">${LOCK_SVG} ${escapeAttr(why)}</span>` : `<span class="pin-hint">&#9650; ${go}</span>`);
+  void tag;
+  renderNodeSide();
   // the arrows: on the side each stop really lies, stacked when two go the same way
   nodeLinksNow = nodeLinks(key, j);
   nodeArrows.forEach(a => { a.className = "btn node-arrow"; a._to = null; });
@@ -924,7 +931,8 @@ function renderNodeFocus() {
   });
   setTimeout(() => {
     if (!mapPop || !mapPop.focus) return;
-    const b = nodeHereEl.querySelector("[data-go]:not(:disabled)") || nodeArrows.find(a => !a.disabled);
+    const pin = mapPinsEl.querySelector(`[data-key="${nodeKey(mapPop.key, mapPop.j)}"]`);
+    const b = pin && nodeState(mapPop.key, mapPop.j) !== "locked" ? pin : nodeArrows.find(a => a._to);
     if (b) b.focus({ preventScroll: true });
   }, 60);
 }
@@ -936,6 +944,9 @@ function positionPop() { }
    (its scroll would sit right on top of the island's banner) */
 function resetNodeFocus() {
   nodeHereEl.className = "node-here";
+  mapPinsEl.querySelectorAll(".pin-hint").forEach(el => el.remove());
+  nodeSideEl.classList.remove("open");
+  closeMapGoal();
   nodeScrollEl.classList.remove("open");
   nodeArrows.forEach(a => { a.className = "btn node-arrow"; a._to = null; });
   nodeLinksNow = [];
@@ -973,13 +984,119 @@ document.addEventListener("keydown", e => {
   }
 }, true);
 
+/* The stop up close was clicked: a level shows its objective first; the others walk in */
+function actOnNode(key, j) {
+  if (nodeState(key, j) === "locked") { sfx("bad"); return; }
+  if (typeof j === "number") openMapGoal(key, j);
+  else openNode(key, j);
+}
+
 function playLevel(key, j) {
   if (!campLevelOpen(key, j)) return;
   camp.at = key;
   saveCamp();
   lastPlayed = { key, j, nm: false };
   mapReturnTo = key;
+  closeMapGoal();
   campBeginLevel(key, j);
+}
+
+/* ----- The objective, on a card over the map, before a level begins ----- */
+const mapGoalEl = document.createElement("div");
+mapGoalEl.id = "map-goal";
+mapGoalEl.className = "map-goal";
+mapGoalEl.setAttribute("role", "dialog");
+mapGoalEl.setAttribute("aria-modal", "true");
+mapEl.appendChild(mapGoalEl);
+let mapGoalFor = null;
+function openMapGoal(key, j) {
+  if (!campLevelOpen(key, j)) return;
+  const I = CAMP.islandById[key], def = campLevelDef(key, j);
+  const rec = camp.levels[campLevelId(key, j)];
+  const first = !campWon(key, j);
+  mapGoalFor = { key, j };
+  const bonus = def.bonus ? `<div class="mg-row"><span class="mg-k">Challenge</span><span>${escapeAttr(bonusText(def.bonus))} <em>(${escapeAttr(bonusOnce(def.bonus) && bonusEarned(key, j) ? "earned" : bonusRewardText(key, def.bonus))})</em></span></div>` : "";
+  mapGoalEl.innerHTML = `<div class="mg-card">
+      <p class="mg-kicker">${escapeAttr(I.name)} · level ${j} · ${escapeAttr(levelKindText(def))}</p>
+      <h3 class="mg-title">${isBossLevel(j) ? SKULL_SVG : ""}${escapeAttr(def.name)}</h3>
+      <p class="mg-label">Objective</p>
+      <p class="mg-goal">${escapeAttr(goalText(def.goal))}</p>
+      <p class="mg-text">${escapeAttr(def.text || "")}</p>
+      ${bonus}
+      <div class="mg-row"><span class="mg-k">Reward</span><span>${coinHtml(key)} ${fmtInt(campRewardPreview(key, j, first))}${first ? " (first win)" : ""}, plus your points</span></div>
+      ${rec && rec.wins ? `<div class="mg-row"><span class="mg-k">Best</span><span>${fmtInt(rec.best)}${rec.flawless ? " · flawless" : ""}</span></div>` : ""}
+      <div class="mg-acts"><button class="btn" data-mg="back">Back</button><button class="btn btn-primary" data-mg="go">Start</button></div>
+    </div>`;
+  mapGoalEl.classList.add("open");
+  sfx("tab");
+  mapGoalEl.querySelector('[data-mg="go"]').addEventListener("click", e => { e.stopPropagation(); playLevel(key, j); });
+  mapGoalEl.querySelector('[data-mg="back"]').addEventListener("click", e => { e.stopPropagation(); closeMapGoal(); });
+  mapGoalEl.onclick = e => { if (e.target === mapGoalEl) closeMapGoal(); };
+  setTimeout(() => { const b = mapGoalEl.querySelector('[data-mg="go"]'); if (b) b.focus({ preventScroll: true }); }, 40);
+}
+function closeMapGoal() {
+  if (!mapGoalFor) return false;
+  mapGoalFor = null;
+  mapGoalEl.classList.remove("open");
+  mapGoalEl.innerHTML = "";
+  return true;
+}
+// Esc (or Back) closes the card before anything else on the map
+(() => {
+  const back = goBack;
+  window.goBack = function () {
+    if (currentScreen === "modes" && closeMapGoal()) return;
+    return back.apply(this, arguments);
+  };
+})();
+
+/* ----- At the side of a close-up: the stop's record, and how your last run went ----- */
+const nodeSideEl = document.createElement("div");
+nodeSideEl.id = "node-side";
+nodeSideEl.className = "node-side plate";
+nodeSideEl.setAttribute("aria-live", "polite");
+mapEl.appendChild(nodeSideEl);
+let campLastReport = null;      // { won, title, isl, n, name, score, best, lines, notes, line }
+function renderNodeSide() {
+  if (!mapPop || !mapPop.focus) { nodeSideEl.classList.remove("open"); return; }
+  const { key, j } = mapPop;
+  let html = "";
+  const R = campLastReport;
+  if (R) {
+    html += `<div class="nsd-run ${R.won ? "won" : "lost"}"><button class="nsd-x" data-nsd="x" aria-label="Dismiss">&times;</button>
+      <p class="nsd-kick">Last run · ${escapeAttr(CAMP.islandById[R.isl].name)} ${R.n}. ${escapeAttr(R.name)}</p>
+      <p class="nsd-title">${escapeAttr(R.title)}</p>
+      <p class="nsd-score">${fmtInt(R.score)} points${R.best ? ' <span class="nsd-best">new best!</span>' : ""}</p>
+      ${R.lines.map(l => `<p class="nsd-line">${l}</p>`).join("")}${R.notes.map(l => `<p class="nsd-line nsd-new">${escapeAttr(l)}</p>`).join("")}
+      ${R.line ? `<p class="nsd-line nsd-cause">${escapeAttr(R.line)}</p>` : ""}</div>`;
+  }
+  if (typeof j === "number") {
+    const def = campLevelDef(key, j), rec = camp.levels[campLevelId(key, j)];
+    html += `<div class="nsd-rec"><p class="nsd-kick">${escapeAttr(levelKindText(def))}</p>
+      <p class="nsd-line"><b>Objective</b> ${escapeAttr(goalText(def.goal))}</p>
+      <p class="nsd-line"><b>Best</b> ${rec && rec.wins ? `${fmtInt(rec.best)}${rec.flawless ? " · flawless" : ""}` : "not won yet"}</p>
+      ${rec && rec.wins ? `<p class="nsd-line"><b>Wins</b> ${fmtInt(rec.wins)}</p>` : ""}
+      ${def.bonus ? `<p class="nsd-line"><b>Challenge</b> ${bonusOnce(def.bonus) && bonusEarned(key, j) ? "earned" : escapeAttr(bonusRewardText(key, def.bonus))}</p>` : ""}
+      <p class="nsd-line"><b>Reward</b> ${coinHtml(key)} ${fmtInt(campRewardPreview(key, j, !campWon(key, j)))}</p></div>`;
+  }
+  nodeSideEl.innerHTML = html;
+  nodeSideEl.classList.toggle("open", !!html);
+  const x = nodeSideEl.querySelector('[data-nsd="x"]');
+  if (x) x.addEventListener("click", e => { e.stopPropagation(); campLastReport = null; renderNodeSide(); });
+}
+
+/* After a level: straight back to the map, up close on the next stop (its shop first, after a
+   boss), with the run's numbers at the side. A loss comes back to the same level. */
+function campBackToMap(report, target) {
+  campLastReport = report;
+  mapReturnTo = target.key;
+  lastPlayed = { key: report.isl, j: report.n, nm: false };
+  openScreen("modes");
+  setTimeout(() => {
+    if (currentScreen !== "modes") return;
+    if (mapSel !== target.key) selectPlace(target.key);
+    openLevelPop(target.key, target.id, false, mapPinsEl.querySelector(`[data-key="${nodeKey(target.key, target.id)}"]`));
+  }, 90);
 }
 
 /* The side stops: home, the three shopkeepers, the bridge */

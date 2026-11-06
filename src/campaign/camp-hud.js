@@ -340,3 +340,40 @@ function campHudUpdate() {
   };
 })();
 window.addEventListener("resize", () => requestAnimationFrame(campHudPlace));
+
+/* ----- The rails always fit (build 51) -----
+   A touch smaller than they used to be, and smaller still whenever a column would run past the
+   bottom of the window: never a scrollbar, never cut off. Checked as the plates change. */
+const RAIL_BASE = 0.88;
+let railFitAt = 0;
+function campFitRails() {
+  const wide = document.body.classList.contains("wide");
+  [cpLeft, cpRight].forEach(el => { el.style.zoom = ""; });
+  if (!campRun || !wide || cpLeft.hidden) return;
+  // the rail runs from where it starts to the bottom of the window; if it's taller, it shrinks.
+  // The column re-centers once it fits, so check twice.
+  const fit = (rail, column) => {
+    rail.style.zoom = RAIL_BASE;
+    for (let pass = 0; pass < 3; pass++) {
+      const r = rail.getBoundingClientRect();
+      const room = window.innerHeight - 10 - r.top;
+      const over = column.scrollHeight > column.clientHeight + 1;
+      if ((r.bottom <= window.innerHeight - 6 && !over) || r.height <= 0) break;
+      const z = parseFloat(rail.style.zoom) || RAIL_BASE;
+      const want = over ? Math.min(room, r.height - (column.scrollHeight - column.clientHeight)) : room;
+      rail.style.zoom = Math.max(0.5, z * want / r.height).toFixed(3);
+    }
+  };
+  fit(cpLeft, document.getElementById("hud"));
+  fit(cpRight, document.getElementById("below"));
+}
+(() => {
+  const place = campHudPlace;
+  window.campHudPlace = function () { place.apply(this, arguments); campFitRails(); };
+  const upd = campHudUpdate;
+  window.campHudUpdate = function () {
+    upd.apply(this, arguments);
+    const now = performance.now();
+    if (now - railFitAt > 300) { railFitAt = now; campFitRails(); }
+  };
+})();
