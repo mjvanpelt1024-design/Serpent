@@ -78,6 +78,8 @@ function campBonusDone(lines) {
   b.done = true;
   const r = b.reward || {};
   let paid = "";
+  // build 51: a challenge done now and then pays a spell upgrade point too
+  if (roll((CAMP.craft.spells || {}).challengePointChance || 0)) { camp.spellPts++; if (lines) lines.push("+1 spell upgrade point"); else showToast("+1 spell upgrade point"); }
   if (r.points) { score += r.points; paid = `+${fmtInt(r.points)} points`; }
   else if (!bonusEarned(isl, n)) {
     if (r.gems) addGems(r.gems);

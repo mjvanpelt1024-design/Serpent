@@ -13,7 +13,8 @@
 
 let campRun = null;
 /* The spawns that hurt: a rune that hurries or calms hazards changes these, not the good ones */
-const HAZARD_SPAWNS = ["popsicle", "flea", "fire", "molasses", "rock", "bramble", "wasp", "lightning", "ice", "bomb", "ghost", "spikes", "gust", "sinkhole", "shears"];
+const HAZARD_SPAWNS = ["popsicle", "flea", "fire", "molasses", "rock", "bramble", "wasp", "lightning", "ice", "bomb", "ghost", "spikes", "gust", "sinkhole", "shears",
+  "bee", "yellowjacket", "imp", "mole", "crab", "wisp", "ember", "acid", "frost", "lava", "trap"];
 
 /* How many hearts a level starts with. You start the game with none (one hit ends a run);
    Stout Heart on the first island's tree adds them, and a rune can add or take some (halves too). */
@@ -128,10 +129,16 @@ function campStart(isl, n, challengeIdx = -1) {
 
   // your rune: yours for good, so nothing is used up; both its sides work all level
   const rIt = campEquipped("rune");
-  const rune = rIt && !mods.includes("bare") ? runeForRun(rIt) : null;
-  const rv = stat => (rune && rune.vals[stat]) || 0;
+  const rune = rIt && !mods.includes("bare") && !itemAway(rIt.uid) ? runeForRun(rIt) : null;
+  // the worn gear's trinket adds to the same table (build 51)
+  const extra = mods.includes("bare") ? {} : gearExtras();
+  const rv = stat => ((rune && rune.vals[stat]) || 0) + (extra[stat] || 0);
+  // gear and spells last for good: whole again for every level
+  campRefillKit();
 
   const spawns = JSON.parse(JSON.stringify(def.spawns || {}));
+  // build 51: the island's own enemies and hazards, the zones every island shares, and the answers to them
+  if (typeof campZoneSpawns === "function") campZoneSpawns(isl, n, def, spawns);
   if (mods.includes("swarm")) Object.values(spawns).forEach(s => {
     if (s.max) s.max *= 2;
     if (s.count) s.count *= 2;
@@ -161,7 +168,7 @@ function campStart(isl, n, challengeIdx = -1) {
   modes.campaign = { label: def.name, speed, edge, multiplier: mult, startOrbs: 0, orbChance: 0, apples, hunter: !!def.hunter, rules: "" };
 
   campRun = {
-    isl, islandN: island.n, n, def, mods, challenge: challengeIdx, rune,
+    isl, islandN: island.n, n, def, mods, challenge: challengeIdx, rune, extra,
     apples: 0, lostHeart: false, loot: [], canisters: [], lootAt: performance.now() + 6000,
     castReadyAt: 0, fieldUntil: 0, pet: null, gearFx: 0, blinkFx: 0,
     secondWind: upVal("secondwind") > 0, echoReady: rv("echo") > 0, echoUsed: false, freeCasts: rv("freeCasts"), dmgCarry: 0,
@@ -263,13 +270,15 @@ function campReward(first) {
 
 /* Trinkets and heart canisters picked up on the board go into the satchel */
 function campGiveFinds(lines, verb) {
-  const cans = campRun.canisters || [];
+  const cans = campRun.canisters || [], runes = campRun.runes || [];
   campRun.loot.forEach(id => campGive(id));
   cans.forEach(r => campGive("canister", r));
-  const names = campRun.loot.map(id => CAMP.lootById[id].name).concat(cans.map(r => `${rarityName(r)} Heart Canister`));
+  runes.forEach(r => campGive(r.id, r.rarity));
+  const names = campRun.loot.map(id => CAMP.lootById[id].name).concat(cans.map(r => `${rarityName(r)} Heart Canister`), runes.map(r => campItemName({ id: r.id, rarity: r.rarity, grade: -1 })));
   if (names.length) lines.push(`${verb}: ${names.join(", ")}`);
   campRun.loot = [];
   campRun.canisters = [];
+  campRun.runes = [];
 }
 
 function campStopBoard() {
@@ -351,7 +360,8 @@ function campFail(cause) {
   }
   sfx("death");
   buzz([90, 50, 190]);
-  const line = causeLine(cause) || getCommentary(cause);
+  // a plain word on what happened: no narrator during play
+  const line = campCauseText(cause);
   showCampResult(false, lines, [], line);
   const shakeClass = { subtle: "shake-subtle", normal: "shake", quake: "shake-quake" }[save.settings.shake];
   stageEl.classList.remove("shake", "shake-subtle", "shake-quake");
@@ -361,6 +371,7 @@ function campFail(cause) {
 /* Back to the menus: the engine forgets the level */
 function campLeaveRun() {
   campRun = null;
+  campRefillKit();
   boss = null;
   pulse = null;
   campObjs = [];

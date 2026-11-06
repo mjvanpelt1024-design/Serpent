@@ -39,7 +39,8 @@ FAMILIES = {"gear", "spell", "food", "pet", "rune"}     # sold by merchants, fiv
 RUNE_STATS = {"applePoints", "points", "apples", "hazards", "speed", "money", "hearts", "armor", "damage", "bossDrain", "bite",
               "echo", "echoCut", "loot", "freeCasts", "castCooldown", "gemChance", "growth", "graceSecs"}
 SPECIAL_FAMILIES = {"vessel"}                         # never sold: found on the board or won
-CAUSES = {"boss", "bomb", "spikes", "hunter", "lightning", "ghost", "poison", "wasp", "bramble", "flea", "fire", "echo"}
+CAUSES = {"boss", "bomb", "spikes", "hunter", "lightning", "ghost", "poison", "wasp", "bramble", "flea", "fire", "echo",
+          "bee", "yellowjacket", "imp", "mole", "crab", "wisp", "ember", "acid", "frost", "lava", "trap", "rivalbonk"}
 NPC_KINDS = ("merchant", "challenger", "banker")
 HATS = {"helm", "hennin", "tophat", "wizard", "hood", "fez", "chef", "beret", "straw", "shell", "tricorn", "horns", "crown", ""}
 EXTRAS = {"beard", "monocle", "mustache", "eyepatch", "none", ""}
@@ -222,12 +223,49 @@ def check_items(items):
         if f in SPECIAL_FAMILIES:
             check(count >= 1, rel, f"family {f} needs at least one item")
             continue
-        if f == "rune":
-            check(count >= 5, rel, f"family rune has {count} items; the merchant needs at least 5")
+        if f in ("rune", "food"):
+            check(count >= 5, rel, f"family {f} has {count} items; the merchant needs at least 5")
             continue
         check(count == 5, rel, f"family {f} has {count} items; each merchant needs exactly 5")
     for l in items.get("loot", []):
         check(num(l.get("value"), 1, 1e6) and num(l.get("island"), 1, 5), f"{rel} loot {l.get('id')}", "needs a value and an island (1-5)")
+        check(l.get("grade") in ("common", "uncommon", "rare"), f"{rel} loot {l.get('id')}", "grade must be common, uncommon or rare")
+
+
+# build 51: the workshops (content/campaign/crafting.json)
+TRINKET_STATS = RUNE_STATS | {"thiefGuard", "stingGuard", "coldWard", "heatWard"}
+def check_crafting(cr, items):
+    rel = "crafting.json"
+    if not cr or not items:
+        return
+    loot = {l["id"]: l.get("grade") for l in items.get("loot", [])}
+    food = {i["id"] for i in items.get("items", []) if i.get("family") == "food"}
+    seen = set()
+    for t in cr.get("trinkets", []):
+        where = f"{rel} trinket {t.get('id')}"
+        check(t.get("id") not in seen, where, "id used twice"); seen.add(t.get("id"))
+        check(t.get("stat") in TRINKET_STATS, where, f"stat \"{t.get('stat')}\" unknown")
+        m = t.get("needs", [])
+        check(all(x in loot for x in m), where, "needs a material that isn't in items.json loot")
+        g = [loot.get(x) for x in m]
+        check(3 <= len(m) <= 5 and len(set(m)) == len(m), where, "needs three to five different materials")
+        check(g.count("rare") == 1 and g.count("uncommon") == 1, where, "needs exactly one rare and one uncommon material")
+        check(t.get("tier") in (1, 2, 3, 4), where, "tier must be 1-4")
+    for p in cr.get("parts", []):
+        where = f"{rel} part {p.get('id')}"
+        check(p.get("id") not in seen, where, "id used twice"); seen.add(p.get("id"))
+        m = p.get("needs", [])
+        g = [loot.get(x) for x in m]
+        check(all(x in loot for x in m) and len(set(m)) == 5, where, "needs five different materials from items.json loot")
+        check(g.count("rare") == 2 and 1 <= g.count("uncommon") <= 2, where, "needs two rare and one or two uncommon materials")
+        check(p.get("fits") in ("armor", "weapon"), where, "fits must be armor or weapon")
+        check(num(p.get("hours"), 2, 8), where, "takes 2 to 8 hours")
+    ing = {i["id"] for i in cr.get("ingredients", [])}
+    for r in cr.get("recipes", []):
+        where = f"{rel} recipe {r.get('id')}"
+        check(r.get("makes") in food, where, "makes a snack that isn't in items.json")
+        check(all(x in ing for x in r.get("needs", [])), where, "needs an ingredient that isn't listed")
+        check(r.get("source") in ("shop", "find", "quest"), where, "source must be shop, find or quest")
 
 
 def check_upgrades(ups, island_ids):
@@ -268,7 +306,7 @@ def check_rules(rules):
     check(num(c.get("levels"), 1, 3), rel, "challenge.levels must be 1-3")
     check(sum(p.get("weight", 0) for p in c.get("pool", [])) > 0, rel, "the challenge pool needs weights")
     for p in c.get("pool", []):
-        check(p.get("kind") in ("gems", "item", "canister", "skin", "theme"), rel, f"challenge pool kind \"{p.get('kind')}\" unknown")
+        check(p.get("kind") in ("gems", "item", "canister", "skin", "theme", "spellpts", "recipe"), rel, f"challenge pool kind \"{p.get('kind')}\" unknown")
     b = rules.get("bank", {})
     check(num(b.get("rateToPrev"), 1, 1000) and num(b.get("feePrev"), 0, 1e6) and num(b.get("snaycoinPerGem"), 1, 1e9), rel, "bank needs rateToPrev, feePrev and snaycoinPerGem")
     for a in rules.get("achievements", []):
@@ -290,6 +328,7 @@ def main():
             check(isl.get("n") == i + 1, rel, f"n should be {i + 1} (its place in _index.dat)")
             check_island(isl, rel, fams, curs)
     check_items(load("items.json"))
+    check_crafting(load("crafting.json"), load("items.json"))
     check_upgrades(load("upgrades.json"), ids)
     check_rules(load("rules.json"))
     if problems:

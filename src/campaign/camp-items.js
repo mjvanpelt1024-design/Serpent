@@ -5,29 +5,42 @@
    ========================================================= */
 "use strict";
 
-const ENEMY_CAUSES = ["flea", "wasp", "ghost", "hunter", "boss", "echo"];
-const ELEMENT_CAUSES = ["fire", "lightning", "bomb"];
+const ENEMY_CAUSES = ["flea", "wasp", "ghost", "hunter", "boss", "echo", "bee", "yellowjacket", "imp", "mole", "crab", "wisp", "rivalbonk"];
+const ELEMENT_CAUSES = ["fire", "lightning", "bomb", "ember", "lava"];
 
 const campBare = () => !!(campRun && campRun.mods.includes("bare"));
-const campEquippedId = slot => { if (campBare()) return null; const it = campEquipped(slot); return it ? it.id : null; };
+/* What you're wearing in a slot, by id. Spent gear (no hits left this level) counts as nothing. */
+const campEquippedId = slot => { if (campBare()) return null; const it = campEquipped(slot); if (it && slot === "gear" && campRun && it.uses <= 0) return null; return it ? it.id : null; };
 const campEquippedRarity = slot => { const it = campEquipped(slot); return it ? it.rarity : null; };
-const campItemPower = it => { const d = campItemDef(it.id); return d && d.power ? d.power[rarityIdx(it.rarity)] : 0; };
+/* An item's power at its rarity: a spell's levels and seal add to it, training sharpens a familiar */
+const campItemPower = it => {
+  const d = campItemDef(it.id);
+  if (!d || !d.power) return 0;
+  const base = d.power[rarityIdx(it.rarity)];
+  if (d.family === "spell") return d.unit === "targets" || d.unit === "squares" ? base + Math.floor((it.lv || 0) / 4) + (it.seal ? 1 : 0) : Math.round(base * spellPowerMult(it) * 10) / 10;
+  if (d.family === "pet") return petPower(it, base);
+  return base;
+};
 
-/* Spends one use of the worn gear; at none left it breaks */
+/* Spends one of the worn gear's hits for this level. Gear lasts for good now (build 51):
+   at none left it's spent until the next level, and it's whole again then. */
 function campUseGear(id, free = false) {
   const it = campEquipped("gear");
-  if (campBare() || !it || it.id !== id) return false;
+  if (campBare() || !it || it.id !== id || it.uses <= 0) return false;
   if (free) { campRun.gearFx = performance.now(); return true; }
   it.uses--;
   campRun.gearFx = performance.now();
   if (it.uses <= 0) {
-    showToast(`Your ${campItemName(it)} broke!`);
-    campDrop(it.uid);
+    showToast(`Your ${campItemDef(it.id).name} is spent for this level.`);
     campBump("itemsBroken");
     sfx("bad");
   }
-  saveCamp();
   return true;
+}
+/* Gear and spells are whole again for every level */
+function campRefillKit() {
+  if (!camp) return;
+  camp.satchel.forEach(it => { const s = campItemSlot(it.id); if (s === "gear" || s === "spell") it.uses = freshUses(it.id, it.rarity, it); });
 }
 
 /* ----- The pocket: four snacks, eaten with keys 1 to 4 -----
@@ -54,14 +67,14 @@ function campEatSnack(i) {
     said = "Honey Bread! Your armor grows back.";
   } else if (it.id === "pie") {
     const g = campEquipped("gear");
-    const full = g ? freshUses(g.id, g.rarity) : 0;
+    const full = g ? freshUses(g.id, g.rarity, g) : 0;
     if (!g || g.uses >= full) { showToast(g ? "Your gear is good as new." : "You have no gear to patch."); sfx("bad"); return; }
     g.uses = Math.min(full, g.uses + p);
     campRun.gearFx = performance.now();
     said = `Tinker's Pie patched your ${d && campItemDef(g.id).name}!`;
   } else if (it.id === "jerky") {
     const s = campEquipped("spell");
-    const full = s ? freshUses(s.id, s.rarity) : 0;
+    const full = s ? freshUses(s.id, s.rarity, s) : 0;
     if (!s || s.uses >= full) { showToast(s ? "Your spell is fully charged." : "You have no spell to recharge."); sfx("bad"); return; }
     s.uses = Math.min(full, s.uses + p);
     said = "Spice Jerky! Your spell gets its spark back.";
@@ -69,6 +82,11 @@ function campEatSnack(i) {
     if (campRun.phoenix) { showToast("The tart's warmth is already with you."); sfx("bad"); return; }
     campRun.phoenix = p;
     said = "Phoenix Tart! The next blow that would end you won't.";
+  } else {
+    // the six snacks of build 51: each a few seconds of something (camp-foes.js reads them)
+    const r = campSnackEffect(it.id, p, leg);
+    if (!r) return;
+    said = r;
   }
   it.uses--;
   lastHeartsKey = "";
@@ -170,6 +188,7 @@ const fieldOn = (ts = performance.now()) => !!campRun && ts < (campRun.fieldUnti
 function campCast() {
   if (!campRun || gameState !== "PLAYING" || paused) return;
   const it = campEquipped("spell");
+  if (it && it.uses <= 0 && !campBare() && !(campRun.freeCasts > 0)) { showToast("Your spell is out of charges for this level."); sfx("bad"); return; }
   if (!it || campBare()) { showToast(campBare() ? "Bare Scales: no spells on this quest." : "No spell ready. Buy one on the Arcanum Spire."); return; }
   const ts = performance.now();
   if (ts < campRun.castReadyAt) return;
@@ -193,10 +212,9 @@ function campCast() {
   else it.uses--;
   campBump("spellsCast");
   campBonusEvent("spell");
-  if (it.uses <= 0) {
-    showToast(`Your ${campItemDef(it.id).name} is spent.`);
-    campDrop(it.uid);
-  }
+  campNoteCast();
+  // spells last for good now (build 51): out of charges until the next level
+  if (it.uses <= 0) showToast(`Your ${campItemDef(it.id).name} is out of charges for this level.`);
   saveCamp();
 }
 

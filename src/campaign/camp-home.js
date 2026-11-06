@@ -28,13 +28,20 @@ const homeViewEl = document.getElementById("home-view");
 const homeWorldEl = document.getElementById("home-world");
 const homePinsEl = document.getElementById("home-pins");
 /* The things you can click: where they stand (dx from the middle, y), how big, what they're called */
+/* Build 51: each kind of thing has its own place, shown once you can get that kind of thing */
+const homeHas = fam => { const I = CAMP.islands.find(x => x.merchantFamily === fam); return (I && campShopOpen(I.id, "merchant")) || camp.satchel.some(it => campItemDef(it.id) && campItemDef(it.id).family === fam); };
 const HOME_SPOTS = [
   { id: "tree", label: "Upgrades" },
   { id: "satchel", dx: 11, y: 87, w: 17, h: 19, label: "Satchel" },
   { id: "trophy", dx: -66, y: 77, w: 20, h: 28, label: "Achievements" },
   { id: "mirror", dx: 43, y: 66, w: 18, h: 40, label: "Skins" },
-  { id: "easel", dx: 68, y: 74, w: 21, h: 33, label: "Themes" }
+  { id: "easel", dx: 68, y: 74, w: 21, h: 33, label: "Themes" },
+  { id: "rack", dx: -76, y: 99, w: 21, h: 33, label: "Armory rack", when: () => homeHas("gear") },
+  { id: "shelf", dx: -52, y: 104, w: 19, h: 26, label: "Spell shelf", when: () => homeHas("spell") },
+  { id: "den", dx: 17, y: 116, w: 23, h: 15, label: "Familiar den", when: () => homeHas("pet") },
+  { id: "stones", dx: 54, y: 110, w: 17, h: 20, label: "Rune stones", when: () => homeHas("rune") }
 ];
+const homeSpotsNow = () => HOME_SPOTS.filter(sp => !sp.when || sp.when());
 let homeHover = null;           // the thing under the pointer (or keyboard focus)
 const homeTagEl = document.createElement("span");
 homeTagEl.className = "home-tag scroll-frame";
@@ -96,7 +103,7 @@ function layoutHome() {
 /* Each thing gets a button the size of its picture: invisible, so the picture is what you click */
 function renderHomePins() {
   homePinsEl.innerHTML = "";
-  HOME_SPOTS.forEach(sp => {
+  homeSpotsNow().forEach(sp => {
     const b = spotBox(sp);
     const btn = document.createElement("button");
     btn.className = "home-spot";
@@ -119,7 +126,9 @@ function renderHomePins() {
 /* A little scroll over whatever's under the pointer, saying what it is */
 function placeHomeTag(sp) {
   const b = spotBox(sp);
-  const extra = sp.id === "tree" && treeReady() ? " +" : sp.id === "satchel" && camp.satchel.length ? ` (${camp.satchel.length})` : sp.id === "trophy" ? ` ${Object.keys(camp.achievements).length}/${CAMP.rules.achievements.length}` : "";
+  const count = room => (typeof picItems === "function" ? picItems(room).length : 0);
+  const room = { satchel: "satchel", rack: "rack", shelf: "shelf", den: "den", stones: "stones" }[sp.id];
+  const extra = sp.id === "tree" && treeReady() ? " +" : room && count(room) ? ` (${count(room)})` : sp.id === "trophy" ? ` ${Object.keys(camp.achievements).length}/${CAMP.rules.achievements.length}` : "";
   homeTagEl.textContent = sp.label + extra;
   homeTagEl.style.left = (b.x + b.w / 2) + "px";
   homeTagEl.style.top = b.y + "px";
@@ -137,7 +146,7 @@ function openHomeThing(id) {
   homeHover = null;
   homeTagEl.classList.remove("open");
   if (id === "tree") openCampTree(homeIsl);
-  else if (id === "satchel") { invTab = "items"; openScreen("inventory"); }
+  else if (["satchel", "rack", "shelf", "den", "stones"].includes(id)) openPicRoom(id);
   else if (id === "trophy") openScreen("achievements");
   else { upgradeTab = id === "mirror" ? "skins" : "backdrops"; openScreen("upgrades"); }
 }
@@ -146,6 +155,7 @@ function openHomeThing(id) {
 function drawHomeHover(g, t) {
   if (!homeHover) return;
   const sp = HOME_SPOTS.find(x => x.id === homeHover);
+  if (!sp) return;
   const b = spotBox(sp);
   const a = 0.55 + 0.35 * Math.sin(t * 6);
   g.fillStyle = `rgba(255,240,170,${a})`;
@@ -255,6 +265,9 @@ function drawHome(t) {
   drawHomeEasel(g, cx + 78, 106, t);
   drawHomeSatchel(g, cx + 13, 105, t);
   drawHomeCarving(g, t);
+  // build 51: the rack, the shelf, the den and the stones, each once you can fill it
+  const has = id => homeSpotsNow().some(sp => sp.id === id);
+  if (has("rack")) drawHomeRack(g, cx - 66, 132, t);
   // you, curled up by the roots
   const skin = currentSkin();
   const sx = cx - 24, sy = 112;
@@ -278,7 +291,55 @@ function drawHome(t) {
   // fireflies in the evening islands, petals and leaves everywhere
   if (isle.n >= 2) for (let i = 0; i < 10; i++) { const glow = Math.sin(t * 2 + i * 1.7); if (glow > 0.1) R(10 + mapHash(i, 4, 5) * (HOME_W - 20) + Math.sin(t * 0.6 + i) * 8, 60 + mapHash(i, 5, 5) * 50 + Math.cos(t * 0.5 + i) * 5, 1, 1, glow > 0.6 ? "#fff6a8" : "#c8d060"); }
   for (let k = 0; k < 6; k++) { const ph = (t * 0.1 + k / 6) % 1; R(cx - 50 + k * 18 + Math.sin(t + k * 2) * 8, 20 + ph * 90, 1, 1, CTREE_LEAVES[isl][k % 3]); }
+  if (has("shelf")) drawHomeShelf(g, cx - 43, 130, t);
+  if (has("den")) drawHomeDen(g, cx + 28, 131, t);
+  if (has("stones")) drawHomeStones(g, cx + 62, 130, t);
   drawHomeHover(g, t);
+}
+
+/* A weapon rack and an armor stand: whatever gear you wear hangs on it */
+function drawHomeRack(g, x, y, t) {
+  const R = (a, b, w, h, c) => mapRect(g, a, b, w, h, c);
+  R(x - 10, y - 2, 21, 2, "#4a3018");
+  R(x - 9, y - 30, 2, 28, "#6a4628"); R(x + 8, y - 30, 2, 28, "#6a4628"); R(x - 10, y - 31, 21, 2, "#7a5232");
+  R(x - 8, y - 20, 17, 1, "#5a3a20"); R(x - 8, y - 9, 17, 1, "#5a3a20");
+  // a spear and a sword leaning on it, a shield hanging
+  R(x - 6, y - 29, 1, 27, "#9aa3ad"); R(x - 7, y - 31, 3, 3, "#c8ced6");
+  R(x + 5, y - 26, 1, 22, "#d8dde6"); R(x + 3, y - 8, 5, 1, "#c08a10");
+  const it = campEquipped("gear");
+  if (it) { const spec = ICON_FOR["ci:" + it.id] || ["shield"]; g.drawImage(objSprite(spec[0], spec[2]), x - 5, y - 22, 10, 10); }
+  else { R(x - 4, y - 21, 8, 9, "#8a6a4a"); R(x - 3, y - 20, 6, 7, "#a8845a"); }
+  if (Math.sin(t * 1.7) > 0.93) R(x + 5, y - 25, 1, 1, "#ffffff");
+}
+/* A little bookcase of spell scrolls, a candle on top */
+function drawHomeShelf(g, x, y, t) {
+  const R = (a, b, w, h, c) => mapRect(g, a, b, w, h, c);
+  R(x - 9, y - 24, 19, 24, "#4a2e18"); R(x - 8, y - 23, 17, 22, "#2a1a0e");
+  R(x - 8, y - 16, 17, 1, "#6a4628"); R(x - 8, y - 8, 17, 1, "#6a4628");
+  const cols = ["#b36bff", "#3a82e0", "#d1202a", "#3ddc84", "#ffd23f"];
+  for (let i = 0; i < 4; i++) { R(x - 7 + i * 4, y - 22, 3, 6, cols[i]); R(x - 7 + i * 4, y - 14, 3, 6, cols[(i + 2) % 5]); R(x - 6 + i * 4, y - 6, 2, 5, cols[(i + 4) % 5]); }
+  R(x + 4, y - 28, 2, 4, "#e8dcc0"); const fl = Math.sin(t * 9) > 0 ? 1 : 0; R(x + 4, y - 30 - fl, 2, 2, "#ffb020");
+  g.fillStyle = `rgba(255,200,120,${0.12 + 0.05 * Math.sin(t * 5)})`; g.fillRect(x, y - 34, 10, 10);
+}
+/* A round cushioned basket; the familiar you bring naps in it */
+function drawHomeDen(g, x, y, t) {
+  const R = (a, b, w, h, c) => mapRect(g, a, b, w, h, c);
+  R(x - 11, y - 8, 23, 8, "#b08040"); for (let k = -10; k < 12; k += 3) R(x + k, y - 7, 1, 6, "#8a6030");
+  R(x - 10, y - 10, 21, 3, "#7a6aa8"); R(x - 9, y - 10, 19, 1, "#9a8ac8"); R(x - 11, y, 23, 1, "rgba(0,0,0,0.3)");
+  const it = campEquipped("pet");
+  if (it) drawPetSprite(g, it.id, x - 6, y - 19 + Math.round(Math.sin(t * 1.5)), 12, t * 1000, { shells: 1 });
+}
+/* Three standing stones with carved runes; the active one glows */
+function drawHomeStones(g, x, y, t) {
+  const R = (a, b, w, h, c) => mapRect(g, a, b, w, h, c);
+  const on = campEquipped("rune");
+  const glow = on ? campItemDef(on.id).color : null;
+  [[-7, 14], [0, 19], [7, 12]].forEach(([dx, h], i) => {
+    R(x + dx - 3, y - h, 6, h, "#6a6260"); R(x + dx - 3, y - h, 6, 1, "#8a8280"); R(x + dx + 2, y - h, 1, h, "#4a4240");
+    R(x + dx - 1, y - h + 4, 2, 1, i === 1 && glow ? glow : "#3a3230"); R(x + dx, y - h + 5, 1, 3, i === 1 && glow ? glow : "#3a3230");
+  });
+  if (glow) { g.fillStyle = glow; g.globalAlpha = 0.18 + 0.1 * Math.sin(t * 2); g.fillRect(x - 4, y - 24, 8, 10); g.globalAlpha = 1; }
+  R(x - 11, y, 23, 1, "rgba(0,0,0,0.3)");
 }
 
 /* The carving in the trunk: an oval of bark stripped back and a sprouting leaf cut into it.

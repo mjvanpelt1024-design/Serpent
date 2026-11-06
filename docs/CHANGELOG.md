@@ -1,5 +1,56 @@
 # Changelog
 
+## v:11.06.2026_b:51: workshops, pictures, foes, and a title screen of your own
+
+- **Gear and spells are yours for good.** Gear absorbs one hit a level, plus one for each part fitted and one
+  for a trinket; it's whole again every level. Uncommon gear comes with Better Materials (or Tempered Steel)
+  fitted, rare and legendary with both parts. Spells get their charges back every level. Snacks and heart
+  canisters are still used up.
+- **The shops are pictures.** No list under the scene: three things sit on a shelf of five spots (one with a
+  red sale tag), the bell rings in new stock for gems, the crate takes what you sell. The sign on the counter
+  pans over to the merchant's **workshop**, and the keeper slithers across:
+  - Brightscale Keep, the workbench: 45 junk materials (common, uncommon, rare) make 18 trinkets and 4 parts on
+    fixed recipes (2 to 8 hours); fit them to gear for good at the fitting stand. One trinket per piece, each
+    part once; a trinket adds a hit and a small perk.
+  - Arcanum Spire, the lectern: spell upgrade points (a daily gift, quests, level challenges, casting, gems)
+    raise a spell through ten levels (1, 2, 3, 5, 7... points each). The seal press locks a spell's level
+    for a bigger boost, for an uncommon or rare piece of junk and 8 hours.
+  - Feastwood Hollow, the kitchen: six new snacks (Sugar Plum, Fire Pepper, Mint Leaf, Glow Berry, Rock
+    Candy, Royal Jelly) and 14 recipes (one always on the shelf, some found in levels, the best from quests).
+    Buy the ingredients with several islands' money and a fresh snack (one extra charge) comes out of the oven.
+  - Tidecoil Reef, the training lagoon: familiars go away for one to three days and come back 12% better.
+  - Cinder Crown, the rune anvil: five of a rune in one condition forge into the next: refurbished, repaired,
+    polished (a little under the condition they copy) or legendary (past pristine). Runes now turn up in
+    levels on every island.
+  - Three orders at a time per workshop. A blurb over the merchant's stall and a note on the map say when an
+    order is ready.
+- **Your things, in pictures.** Home base has an armory rack, a spell shelf, a familiar den and rune stones
+  (each once you can buy that kind of thing), and the Satchel only holds snacks (with your pocket of four),
+  heart canisters, junk, crafted pieces and recipes. Click a thing to see it; wear, carry or pocket it there.
+- **Foes for every island.** Thieves steal a set number of points from your body (never half your score);
+  biters hurt your head. Bees on the Keep, wasps in the Hollow and on the Reef, yellow jackets on the Crown;
+  imps on the Spire (their hex goes through armor), moles in the Hollow, crabs on the Reef, wisps on the
+  Crown. A rival snake turns up on any island now and then, wanders after an apple, eats it and leaves.
+  Bonk heads with it and lose a heart through armor; if it runs into you, it's gone.
+- **Hazards that fit their island:** embers (Keep, Hollow), acid (Spire, through armor), frost (Reef, slows
+  you), fire (Crown: half a heart through armor and a burst of speed) and lava. Every island shares zones:
+  the rim crumbles into sinkholes, the merchant's ice box leaks popsicles, traps lie in the grass, and the
+  climb to the last lair gathers storms, more lightning every level up. The map shows each zone. Power-ups
+  answer the trouble: honey, a waterskin, mittens, a lightning rod, a rope, an antidote, a net.
+- **The title screen** wears your theme again (no more drifting map behind the board). Around the board:
+  every island's money, your adventure in numbers, a wanted poster for every boss (crossed out when it
+  falls), and a sticker for every island you finish that covers part of a number and peels back when you
+  point at it. Posters can carry quest pins (data only for now).
+- **The map's arrows** sit on the side of the screen their stop really lies on. A boss has two ways on (its
+  shop and the next level); shops are dead ends back to their boss.
+- **The story stays in the book.** No boss taunts, no narrator on the result card. In their place, a page for
+  every island you reach and every boss fight you win, waiting for its words.
+- **The terminal speaks campaign.** Seven groups (dev, debug, attribute, item, upgrade, level, data) for
+  every item, every island's money, upgrades, unlocks, spawning any foe, bosses, workshop orders, shops,
+  quests and save codes. **Shift+Alt+C** opens and closes it from anywhere (a level pauses behind it).
+  Opening it marks the campaign save as cheated, for good.
+- Fixed: coming back to the map from a shop left the stop's scroll open on top of the island's banner.
+
 ## v:11.06.2026_b:50: runes for keeps
 
 - **Runes are permanent.** They never wear out or burn up. One is active at a time, and you swap it or take

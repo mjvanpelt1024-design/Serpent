@@ -3,8 +3,8 @@
   "snake": {"hearts": 0, "armorCap": 3, "armorPieces": 4, "startLength": 4},
   "damage": {
     "_about": "What a hit does. Every half heart of damage knocks one of an armor plate's four pieces off (dent, crack, half, gone). crush: breakers, double damage to armor. pierce: goes straight through armor to the hearts.",
-    "crush": ["boss", "bomb", "spikes", "hunter"],
-    "pierce": ["lightning", "ghost", "poison"]
+    "crush": ["boss", "bomb", "spikes", "hunter", "lava"],
+    "pierce": ["lightning", "ghost", "poison", "fire", "acid", "imp", "rivalbonk"]
   },
   "rewards": {
     "winBase": 30, "perLevel": 6, "bossMult": 2.5, "replayShare": 0.35,
@@ -31,7 +31,9 @@
       {"kind": "item", "rarity": "legendary", "weight": 9},
       {"kind": "canister", "weight": 10},
       {"kind": "skin", "weight": 9},
-      {"kind": "theme", "weight": 6}
+      {"kind": "theme", "weight": 6},
+      {"kind": "spellpts", "weight": 18, "min": 2, "max": 5},
+      {"kind": "recipe", "weight": 8}
     ]
   },
   "bank": {"rateToPrev": 10, "feePrev": 5, "snaycoinPerGem": 500, "gemFee": 1},
@@ -71,5 +73,6 @@
     {"id": "road", "name": "Long Road", "text": "Travel 3,000 meters in tunnels.", "stat": "distance", "need": 3000, "gems": 15},
     {"id": "banker", "name": "Exchange Rate", "text": "Make a trade at a bank.", "stat": "trades", "need": 1, "gems": 5},
     {"id": "upg25", "name": "Green Thumb", "text": "Buy 25 upgrade tiers.", "stat": "upgradesBought", "need": 25, "gems": 20}
-  ]
+  ],
+  "zones": {"_about": "Build 51: where every island's levels sit. edge: the rim crumbles into sinkholes. shop: by the merchant, whose ice box leaks popsicles. trap: snares in the grass. mountain: the climb to the last lair, more lightning at every level up.", "edge": [2, 3], "shop": [6], "trap": [8, 9], "mountain": [11, 12, 13, 14]}
 }

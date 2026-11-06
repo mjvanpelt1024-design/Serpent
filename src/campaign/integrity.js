@@ -124,22 +124,48 @@ const itemIds = () => CAMP.items.map(i => i.id);
 const rarityIds = () => CAMP.rarities.map(r => r.id);
 const slotIds = () => CAMP.slots.map(s => s.id);
 const lootIds = () => CAMP.loot.map(l => l.id);
+const craftIds = () => Object.keys(CAMP.craftById || {});
 const upgradeMax = id => (CAMP.upgradeById[id] ? CAMP.upgradeById[id].values.length - 1 : 0);
 const BIG = 1e12;
 
 const ITEM_RULE = S.obj({
   uid: S.int(1, 1e9, 1),
-  id: S.oneOf(() => itemIds().concat(lootIds()), "shield", true),
+  id: S.oneOf(() => itemIds().concat(lootIds(), craftIds()), "shield", true),
   rarity: S.oneOf(rarityIds, "common", true),
   uses: S.int(0, 99, 0),
-  qty: S.int(1, 999, 1)
+  qty: S.int(1, 999, 1),
+  // build 51: gear's fitted parts and trinket, a spell's level and seal, a familiar's training,
+  // a rune's exact condition (0-7: broken to legendary; -1 = from its rarity), a fresh snack
+  parts: S.list(S.oneOf(craftIds, "p_materials"), 2),
+  trinket: S.str(24, ""),
+  lv: S.int(0, 10, 0),
+  seal: S.bool(false),
+  train: S.int(0, 3, 0),
+  grade: S.int(-1, 7, -1),
+  fresh: S.bool(false)
 });
 
 const STOCK_RULE = S.obj({
   id: S.oneOf(itemIds, "shield", true),
   rarity: S.oneOf(rarityIds, "common", true),
   sold: S.bool(false),
-  deal: S.bool(false)
+  deal: S.bool(false),
+  spot: S.int(0, 4, 0),                 // which of the shop's five display spots it sits in
+  recipe: S.str(24, "")                 // the kitchen's recipe slot: a recipe, not a snack
+});
+
+/* A workshop order: something being made, sealed, cooked, trained or forged, ready at readyAt */
+const ORDER_KINDS = ["craft", "seal", "cook", "train", "forge"];
+const ORDER_RULE = S.obj({
+  n: S.int(1, 1e9, 1),
+  kind: S.oneOf(() => ORDER_KINDS, "craft", true),
+  isl: S.oneOf(islandIds, "keep"),
+  what: S.str(24, ""),
+  uid: S.int(0, 1e9, 0),
+  rarity: S.oneOf(rarityIds, "common"),
+  grade: S.int(-1, 7, -1),
+  at: S.int(0, 9e15, 0),
+  readyAt: S.int(0, 9e15, 0)
 });
 
 const SAVE_SCHEMA = S.obj({
@@ -176,6 +202,17 @@ const SAVE_SCHEMA = S.obj({
   skin: S.oneOf(() => CONTENT.skins.map(s => s.id), "classic"),
   theme: S.oneOf(() => CONTENT.themes.map(t => t.id), "black"),
   at: S.oneOf(islandIds, "keep"),
+  // story pages already shown ("keep:boss1"); storyInit: beats passed before build 51 were marked seen
+  storySeen: S.list(S.str(24), 60),
+  storyInit: S.bool(false),
+  // build 51: workshop orders, spell upgrade points, the daily gift, known recipes, the title screen's things
+  orders: S.list(ORDER_RULE, 40),
+  nextOrder: S.int(1, 1e9, 1),
+  spellPts: S.int(0, 1e6, 0),
+  castPts: S.int(0, 1e6, 0),
+  daily: S.int(0, 1e7, 0),
+  recipes: S.list(S.oneOf(() => Object.keys(CAMP.recipeById || {}), "r_stew"), 100),
+  pins: S.map(islandIds, S.list(S.str(24), 6)),
   flags: S.obj({ modded: S.bool(false), cheats: S.bool(false), restored: S.int(0, 1e6, 0) })
 });
 

@@ -212,10 +212,10 @@ function campHudUpdate() {
   };
   const kit = [];
   const gear = bare ? null : campEquipped("gear");
-  kit.push(row("gear", gear, gear ? pips(gear.uses, Math.max(gear.uses, freshUses(gear.id, gear.rarity))) : "", gear && ts - campRun.gearFx < 300 ? "flash" : ""));
+  kit.push(row("gear", gear, gear ? pips(gear.uses, Math.max(gear.uses, freshUses(gear.id, gear.rarity, gear))) : "", gear && ts - campRun.gearFx < 300 ? "flash" : ""));
   const spell = bare ? null : campEquipped("spell");
   const cd = spell ? Math.max(0, campRun.castReadyAt - ts) : 0;
-  kit.push(row("spell", spell, spell ? `${pips(spell.uses, Math.max(spell.uses, freshUses(spell.id, spell.rarity)))} <kbd>${isTouchDevice() ? "Spell" : "Space"}</kbd>${campRun.freeCasts > 0 ? ` <span class="cp-free">+${campRun.freeCasts} free</span>` : ""}${cd > 0 ? " <span class='cp-cd'>...</span>" : ""}` : ""));
+  kit.push(row("spell", spell, spell ? `${pips(spell.uses, Math.max(spell.uses, freshUses(spell.id, spell.rarity, spell)))} <kbd>${isTouchDevice() ? "Spell" : "Space"}</kbd>${campRun.freeCasts > 0 ? ` <span class="cp-free">+${campRun.freeCasts} free</span>` : ""}${cd > 0 ? " <span class='cp-cd'>...</span>" : ""}` : ""));
   setHtml($(".cp-kit-rows"), kit.join(""));
 
   // the pocket: four snacks on keys 1 to 4 (tap one on a touch screen)
@@ -223,7 +223,7 @@ function campHudUpdate() {
   setHtml($(".cp-pocket-row"), [0, 1, 2, 3].map(i => {
     const it = bare ? null : pocketItem(i);
     if (!it) return `<button class="cp-snack empty" data-pocket="${i}" aria-label="Pocket slot ${i + 1}: empty"><span class="ci-icon small"></span>${key(i)}</button>`;
-    const full = Math.max(it.uses, freshUses(it.id, it.rarity));
+    const full = Math.max(it.uses, freshUses(it.id, it.rarity, it));
     return `<button class="cp-snack" data-pocket="${i}" title="${escapeAttr(campItemName(it))}: ${escapeAttr(campItemDef(it.id).does)}" aria-label="Eat ${escapeAttr(campItemName(it))}, ${it.uses} left">${campItemIconHtml(it, "small")}${key(i)}<span class="cp-left">${it.uses}${full > 1 ? `/${full}` : ""}</span></button>`;
   }).join("") + (campRun.phoenix ? `<span class="cp-chip cp-phoenix" style="--c:#ff8a3d">Phoenix</span>` : ""));
 

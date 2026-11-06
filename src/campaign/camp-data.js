@@ -26,6 +26,12 @@ const CAMP = (() => {
     slots: C.items.slots || [],
     loot: C.items.loot || [],
     lootById: Object.fromEntries((C.items.loot || []).map(l => [l.id, l])),
+    lootGrades: C.items.lootGrades || [],
+    // the workshops behind the merchants (build 51): recipes, parts, training, the forge, the kitchen
+    craft: C.crafting || {},
+    craftById: Object.fromEntries([].concat((C.crafting || {}).trinkets || [], (C.crafting || {}).parts || []).map(t => [t.id, t])),
+    recipeById: Object.fromEntries(((C.crafting || {}).recipes || []).map(r => [r.id, r])),
+    ingredientById: Object.fromEntries(((C.crafting || {}).ingredients || []).map(r => [r.id, r])),
     upgradeById,
     treeOf,
     rules: C.rules

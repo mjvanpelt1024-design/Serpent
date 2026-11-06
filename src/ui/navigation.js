@@ -47,6 +47,7 @@ function openScreen(name) {
   if (name === "modes") {
     mapSel = null; mapNight = false; mapCam = null; mapPop = null; mapRules = false;
     mapBriefEl.classList.remove("open"); mapBriefEl.innerHTML = ""; mapPopEl.className = "map-pop"; mapBannerEl.classList.remove("open");
+    if (typeof resetNodeFocus === "function") resetNodeFocus();
     mapEl.classList.remove("zoomed", "night");
     renderModes();
     updateDock();

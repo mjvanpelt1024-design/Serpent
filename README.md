@@ -74,6 +74,7 @@ SnakeGame/
 | Change an item, its rarities or prices | `content/campaign/items.json` |
 | Change an upgrade tree | `content/campaign/upgrades.json` |
 | Change rewards, the bank, challenges, achievements or gem prices | `content/campaign/rules.json` |
+| Change a workshop: junk recipes, parts, spell levels, seals, the kitchen, training, the rune forge | `content/campaign/crafting.json` |
 | Change a price, how fast the game climbs, badge and contract rewards | `content/economy.txt` (see `docs/DESIGN-46.md`) |
 | Change what turns up on an island (hazards, power-ups) | the `[spawns.*]` parts of its `world.txt` |
 | Change what an upgrade does per tier, its name or text | its `.upg` file: `content/worlds/builtin/<island>/upgrades/` or `content/great-tree/upgrades/` |

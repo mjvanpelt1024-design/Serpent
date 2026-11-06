@@ -1,4 +1,4 @@
-# The campaign (builds 47 to 50)
+# The campaign (builds 47 to 51)
 
 Five islands strung up the sky along the Coil, fifteen levels each, one boss per island fought three times,
 shopkeepers off every path, and an economy where every island has its own money. It looks the way build
@@ -13,7 +13,8 @@ This file is the design and the map of where things live. The numbers themselves
 | Islands, their people, boss, currency and 15 levels | `content/campaign/islands/<id>.json` (order: `islands/_index.dat`) |
 | Every item, rarity, price and loot trinket | `content/campaign/items.json` |
 | The five upgrade trees | `content/campaign/upgrades.json` |
-| Rewards, timers, the bank, challenges, achievements, cosmetics | `content/campaign/rules.json` |
+| Rewards, timers, the bank, challenges, achievements, cosmetics, zones | `content/campaign/rules.json` |
+| The workshops: junk recipes, parts, spell levels and seals, recipes and ingredients, training, the forge | `content/campaign/crafting.json` |
 | The signatures of all of the above | `content/campaign/manifest.dat` (made by a tool, never by hand) |
 | The save, its schema and the data check | `src/campaign/integrity.js`, `src/campaign/camp-save.js` |
 | The map: islands, paths, stops, pins, camera | `src/ui/map.js` (the Coil and the sky: `map-coil.js`) |
@@ -29,6 +30,13 @@ This file is the design and the map of where things live. The numbers themselves
 | The pixel frames on every panel, button and window | `src/art/ui-frames.js`, `styles/16-retro-fantasy.css` |
 | Scrolls, the cursor, coins and their card, the title screen's world | `src/art/ui-scroll.js`, `coins.js`, `title-scene.js`, `styles/17-hub-nodes.css` |
 | One save, no profiles, settings rows | `camp-menu.js` |
+| The workshops' rules: orders, parts and trinkets, spell levels, training, the forge, the kitchen | `camp-craft.js` |
+| The shops as pictures, and their workshops | `camp-shop-stage.js` |
+| Your things in pictures: the rack, the shelf, the den, the stones, the Satchel | `camp-invpics.js` |
+| Enemies, hazards, power-ups, the rival snake, zones and their map cues, the new snacks | `camp-foes.js` |
+| The title screen's numbers, posters, stickers and pins | `camp-title.js` |
+| Story placeholder pages | `camp-story.js` |
+| The terminal's campaign commands, Shift+Alt+C | `src/dev/terminal/cmd-camp.js` |
 
 After changing any campaign file:
 
@@ -203,8 +211,8 @@ go in the pocket, four at most; one familiar, one rune and one heart canister co
 
 | Kind | Island | Behaves | The five |
 |---|---|---|---|
-| Gear | 1 | worn; uses wear out (1/3/5/5), then it breaks; legendaries add an immunity | Kite Shield, Arming Sword, Bulwark Helm, Ember Cloak, Thorn Mail |
-| Spell | 2 | Space casts; rarity sets charges and duration | Force Field, Fireball, Blink, Frost Nova, Apple Call |
+| Gear | 1 | worn; absorbs hits each level (1 + parts + trinket), lasts for good; legendaries add an immunity | Kite Shield, Arming Sword, Bulwark Helm, Ember Cloak, Thorn Mail |
+| Spell | 2 | Space casts; rarity and level set charges (every level) and power | Force Field, Fireball, Blink, Frost Nova, Apple Call |
 | Snack | 3 | in the pocket; 1 to 4 eat one: heals, regrows armor, repairs gear, recharges a spell, a second chance | Hearty Stew, Honey Bread, Tinker's Pie, Spice Jerky, Phoenix Tart |
 | Familiar | 4 | follows you into every level; never wears out | Lantern Firefly, Snip the Crab, Shellby the Turtle, Puff the Pufferfish, Sir Seahorse |
 | Rune | 5 | yours for good; one active at a time, a good side and a bad side in every level | Plenty, Stillness, Fortune, Fury, Echoes, Haste, Iron, Vigor, the Magpie, the Sage, Greed, Calm, Grace |
@@ -314,13 +322,69 @@ your quest are pinned up in the corner.
 
 ## The title screen
 
-Behind the menu the whole world drifts by (`title-scene.js`): the map's own painter, one map pixel to a
-screen block, panning up from the sunrise to the stars and back over two minutes. The board is a window
-onto it (the renderer leaves it clear there), with the demo snake still chasing apples across the sky.
+Since build 51 the board wears your theme, with your numbers, the wanted posters and island stickers
+around it (below). The drifting world of build 49 (`title-scene.js`) is still in the code, switched off.
+
+## Build 51
+
+### Gear, spells and the rest
+
+Gear and spells last for good. Gear absorbs `armory.baseUses` (1) hit a level, plus one for each **part**
+fitted and one for a **trinket**; uncommon gear comes from the merchant with one part fitted, rare and
+legendary with both (`armory.builtIn`). Spells get their charges back every level; their **level** (0-10)
+adds `powerPerLevel`% power and a charge at `chargeAt`, a **seal** adds more and locks the level. A familiar's
+**training** (0-3) makes it `better`% better. A rune's condition is 0-7 (`grade`, -1 means from its rarity):
+broken, refurbished, cracked, repaired, fine, polished, pristine, legendary; the forged in-betweens are
+`lower`% under the condition they copy, legendary `legendBoost`% past pristine (`runeStatAt`). Snacks and
+canisters are still used up; a **fresh** snack (from the kitchen) has `freshCharges` more. A trinket's perk
+uses the rune stat table (`runeVal` adds the worn gear's trinket), plus four stats of its own: thiefGuard,
+stingGuard, coldWard, heatWard.
+
+**Junk** (items.json `loot`) has a grade, common, uncommon or rare (`lootGrades` weights how often each turns
+up), and sells for more the rarer it is. It's what trinkets and parts are made of.
+
+### The shops and their workshops
+
+A merchant's screen is a picture (320 x 100): the shop on the right with a shelf of five spots, three
+stocked (`spot` in the stock; a five-item family gives each its own spot, the kitchen keeps one for a recipe),
+and the workshop on the left. The sign on the counter pans across; the keeper slithers after you. Every timed
+job is an **order** (`camp.orders`: kind craft, seal, cook, train or forge, ready at `readyAt`), three per
+workshop. A seal or training takes the item away until it's collected (`itemAway`). Ready orders show as a
+blurb over the merchant's stall and a note on the map, and over the workshop sign in the shop.
+
+### Foes
+
+New entities in `ENTITY_TYPES` (camp-foes.js), all 12 x 12 sprites. Each island swaps or adds its own
+(`ISLAND_FOES`): bees for wasps on the Keep, imps and acid on the Spire, embers for fire and moles in the
+Hollow, crabs and frost on the Reef, yellow jackets, wisps and lava on the Crown. Thieves steal
+`steal x (1 + 0.35 per island above the first)` points from your body (`campSteal`; the old share-of-score
+losses are flat amounts too). The **zones** in rules.json (`edge`, `shop`, `trap`, `mountain`) add sinkholes,
+popsicles, traps and lightning (more every level up the mountain) to those levels on every island, drawn on
+the map as cracks, frost, snares and storm clouds (`drawZoneCues`). `POWER_FOR` adds a power-up wherever the
+trouble it answers turns up. The rival snake (`campRival`) comes on a timer in any level that isn't a boss,
+an endless road or a maze.
+
+### The title screen
+
+The theme's board and backdrop, with camp-title.js laying the numbers, posters and stickers out around the
+board: wide (plates either side), compact (everything shrunk to the room there is) or narrow (strips above
+and below). `camp.pins[island]` holds quest pin ids for the posters (`campPin`, `campUnpin`).
+
+### The story
+
+Nothing tells it during play. Each island's `story` entry (arrive, boss1-3) gives a page its title and words;
+while the words are empty the page says it's coming. Seen pages are in `camp.storySeen`.
+
+### The terminal
+
+Shift+Alt+C, or tap the build number in Settings five times. The first time, it marks the campaign save as
+cheated for good. `help`, `help item`, tab completion and history work as before. A few to start with:
+`item sword.give legendary parts trinket=t_rivet`, `item fireball.give rare lv=10 seal`,
+`item plenty.give polished`, `attribute money.set 5000 all`, `level reef.unlock all`, `dev run.play crown 15 hold`,
+`dev spawn.rival`, `dev orders.finish`, `upgrade tree.max all`, `data list.junk`.
 
 ## Decided, and not done yet
 
 - From the earlier plan, kept as a checklist: one commit per task; satchel roles (carried, cast, passive,
   loot to sell); the bank's cash-out to gems.
-- Not done yet, on purpose: the console's campaign commands (the sticky cheat flag is in the save), a
-  seeded RNG in bug reports, save versioning beyond `v: 1`, headless tests, real-money gems.
+- Not done yet, on purpose: a seeded RNG in bug reports, save versioning beyond `v: 1`, headless tests, real-money gems.

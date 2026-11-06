@@ -414,8 +414,23 @@ function maybeLoot(ts) {
   if (!s) return;
   // now and then it's a heart canister instead of a trinket
   if (Math.random() < (CAMP.rules.rewards.canisterShare || 0)) { campObjs.push({ kind: "loot", x: s.x, y: s.y, id: "canister", rarity: rollRarity(), until: ts + 12000 }); return; }
-  const pool = CAMP.loot.filter(l => l.island === campRun.islandN);
-  const pick = pool[Math.floor(Math.random() * pool.length)];
+  // a rune (any island, rarer conditions rarer), or a recipe only found in levels (build 51)
+  if (Math.random() < ((CAMP.craft.forge || {}).findShare || 0)) {
+    const runes = CAMP.items.filter(i => i.family === "rune");
+    campObjs.push({ kind: "loot", x: s.x, y: s.y, id: runes[Math.floor(Math.random() * runes.length)].id, rarity: rollRarity(), rune: true, until: ts + 12000 });
+    return;
+  }
+  const finds = Object.values(CAMP.recipeById || {}).filter(r => r.source === "find" && !camp.recipes.includes(r.id));
+  if (finds.length && Math.random() < ((CAMP.craft.kitchen || {}).findShare || 0)) {
+    // rarer recipes turn up less: common 4, uncommon 2, rare 1
+    const w = r => [4, 2, 1, 1][rarityIdx(r.rarity)];
+    let k = Math.random() * finds.reduce((a, r) => a + w(r), 0), pick = finds[0];
+    for (const r of finds) { k -= w(r); if (k <= 0) { pick = r; break; } }
+    campObjs.push({ kind: "loot", x: s.x, y: s.y, id: pick.id, recipe: true, until: ts + 12000 });
+    return;
+  }
+  // junk: common, uncommon or rare, from this island
+  const pick = rollLoot(campRun.islandN);
   if (pick) campObjs.push({ kind: "loot", x: s.x, y: s.y, id: pick.id, until: ts + 12000 });
 }
 
@@ -427,8 +442,20 @@ function collectLoot(o) {
     showToast(`Found a ${rarityName(o.rarity)} Heart Canister! It's yours, win or lose.`);
     return;
   }
+  if (o.rune) {
+    (campRun.runes = campRun.runes || []).push({ id: o.id, rarity: o.rarity });
+    showToast(`Found a ${campItemName({ id: o.id, rarity: o.rarity, grade: -1 })}! It's yours, win or lose.`);
+    return;
+  }
+  if (o.recipe) {
+    const r = CAMP.recipeById[o.id];
+    if (!camp.recipes.includes(o.id)) camp.recipes.push(o.id);
+    saveCamp();
+    showToast(`Found a recipe: ${r.name}! Cook it in the kitchen on ${CAMP.islands.find(I => I.merchantFamily === "food").name}.`);
+    return;
+  }
   campRun.loot.push(o.id);
-  showToast(`Found: ${CAMP.lootById[o.id].name}. Sell it at any merchant.`);
+  showToast(`Found: ${CAMP.lootById[o.id].name} (${lootGrade(o.id)}). Junk to sell, or to craft with.`);
 }
 
 /* ----- Drawing the goal pieces ----- */
@@ -525,7 +552,7 @@ function drawCampObj(g, o, x, y, w, ts) {
   } else if (o.kind === "loot") {
     g.save();
     g.globalAlpha = o.until ? Math.max(0.3, Math.min(1, (o.until - ts) / 2500)) : 1;
-    const spec = ICON_FOR["ci:" + o.id] || ["gift"];
+    const spec = o.recipe ? ["scroll"] : ICON_FOR["ci:" + o.id] || ["gift"];
     put(spec[0], "#ffffff", spec[2], bob, 0.9);
     g.restore();
   }

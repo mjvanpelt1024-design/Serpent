@@ -123,7 +123,7 @@ function campResultNext() {
   const orig = showScreen;
   window.showScreen = function (name) {
     if (name !== "gameover") campResultShown = false;
-    if (campRun && name && !["gameover", "settings", "controls", "howto"].includes(name)) campLeaveRun();
+    if (campRun && name && !["gameover", "settings", "controls", "howto", "console"].includes(name)) campLeaveRun();
     orig.apply(this, arguments);
     if (name !== "gameover") {
       screenEls.gameover.classList.remove("won");

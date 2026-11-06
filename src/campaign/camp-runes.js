@@ -22,7 +22,8 @@
 "use strict";
 
 const RUNE_GRADE_IDS = ["broken", "cracked", "fine", "pristine"];
-const runeGradeId = it => RUNE_GRADE_IDS[rarityIdx(it.rarity)] || "fine";
+/* A rune's picture: one of the eight conditions (the forged in-betweens are build 51's) */
+const runeGradeId = it => (typeof runeGrade === "function" ? RUNE_GRADES8[runeGrade(it)] : RUNE_GRADE_IDS[rarityIdx(it.rarity)]) || "fine";
 
 /* ----- What a rune can do ----- */
 const runeAbs = v => Math.abs(v);
@@ -54,10 +55,10 @@ const RUNE_STATS = {
    Runecraft (the Ember Ash) makes the good side's percentages stronger. */
 function runeSides(it) {
   const d = campItemDef(it.id);
-  const g = rarityIdx(it.rarity);
+  const g = runeGrade(it);
   const craft = 1 + upPct("runecraft");
   const side = (list, good) => (list || []).map(s => {
-    let v = s.v[g];
+    let v = runeStatAt(s.v, g, good);
     if (good && RUNE_STATS[s.stat] && RUNE_STATS[s.stat].pct) v = Math.round(v * craft);
     return { stat: s.stat, v };
   });
@@ -68,10 +69,11 @@ function runeSides(it) {
 function runeForRun(it) {
   const s = runeSides(it), vals = {};
   s.good.concat(s.bad).forEach(x => { vals[x.stat] = (vals[x.stat] || 0) + x.v; });
-  return { id: it.id, rarity: it.rarity, uid: it.uid, vals };
+  return { id: it.id, rarity: it.rarity, grade: runeGrade(it), uid: it.uid, vals };
 }
 /* What the running level's rune does to `stat` (0 when there's no rune) */
-const runeVal = stat => (campRun && campRun.rune && campRun.rune.vals[stat]) || 0;
+/* ...plus what the worn gear's trinket adds (campRun.extra, build 51) */
+const runeVal = stat => ((campRun && campRun.rune && campRun.rune.vals[stat]) || 0) + ((campRun && campRun.extra && campRun.extra[stat]) || 0);
 
 /* Words: each side as a list of phrases */
 function runeWords(it, form = "long") {

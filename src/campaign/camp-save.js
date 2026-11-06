@@ -52,8 +52,12 @@ function repairCamp(c) {
   if (c.equip.food) { if (!pocket.includes(c.equip.food)) { const i = pocket.indexOf(0); if (i >= 0) pocket[i] = c.equip.food; } delete c.equip.food; }
   c.pocket = pocket.map((uid, i) => (uid && isSnack(uid) && pocket.indexOf(uid) === i ? uid : 0));
   if (!campIslandOpen(c.at, c)) c.at = CAMP.islands[0].id;
+  // later files fill in their own parts of the save (the story, workshops, orders...)
+  CAMP_REPAIRS.forEach(fn => fn(c));
   return c;
 }
+/* Each part of the game that keeps something in the save can add a repair here: fn(save) */
+const CAMP_REPAIRS = [];
 
 function loadCamp() {
   const got = readSigned(CAMP_KEY);
@@ -67,6 +71,7 @@ function loadCamp() {
     else if (issues.length) campLoadNote = "Some save values were out of range and have been fixed.";
     if (issues.length) console.warn("Save fixes:", issues);
   }
+  camp = c;                 // repairs may read upgrades through camp
   camp = repairCamp(c);
   const files = checkCampaignFiles();
   if (!files.ok) {
@@ -99,7 +104,7 @@ function campCheatEdit(change) {
 /* Starting over: the old save is kept aside, not deleted */
 function resetCamp() {
   try { const old = store.getItem(CAMP_KEY); if (old) store.setItem(CAMP_KEY + "_reset_" + Date.now(), old); } catch (e) { /* full */ }
-  camp = freshCamp();
+  camp = repairCamp(freshCamp());
   saveCamp();
 }
 
@@ -209,18 +214,20 @@ function campBuyUpgrade(id) {
 
 /* ----- The satchel ----- */
 const campItemDef = id => CAMP.itemById[id] || null;
-const campItemSlot = id => (campItemDef(id) ? CAMP.families[campItemDef(id).family].slot : "loot");
+const campItemSlot = id => (campItemDef(id) ? CAMP.families[campItemDef(id).family].slot : CAMP.craftById && CAMP.craftById[id] ? "craft" : "loot");
 const satchelItem = uid => camp.satchel.find(it => it.uid === uid) || null;
 const campEquipped = slot => satchelItem(camp.equip[slot]);
 
-/* How many uses or charges a fresh item starts with, after upgrades */
-function freshUses(id, rarity) {
+/* How many uses or charges an item has, after upgrades. Gear and spells last for good now
+   (build 51): this is what they have at the start of every level. Pass the item itself to count
+   its fitted parts and trinket, its spell level and seal, or a fresh snack's extra charge. */
+function freshUses(id, rarity, it = null) {
   const d = campItemDef(id);
   const r = rarityIdx(rarity);
   const slot = campItemSlot(id);
-  if (slot === "gear") return d.uses[r] + upVal("sturdy");
-  if (slot === "spell") return d.charges[r] + upVal("potent");
-  if (slot === "food") return d.charges[r] + upVal("hearty");
+  if (slot === "gear") return it ? gearUses(it) : gearUses({ parts: builtInParts(id, rarity), trinket: "" });
+  if (slot === "spell") return d.charges[r] + upVal("potent") + (it ? spellCharges(it) : 0);
+  if (slot === "food") return d.charges[r] + upVal("hearty") + (it && it.fresh ? (CAMP.craft.kitchen || {}).freshCharges || 1 : 0);
   // a canister counts what's left of it in pieces: two to a heart, four to an armor plate
   if (slot === "canister") return d.armor[r] > 0 ? d.armor[r] * (CAMP.rules.snake.armorPieces || 4) : d.hearts[r] * 2;
   return 0;
@@ -230,30 +237,35 @@ function freshUses(id, rarity) {
 const fmtHalf = v => (Math.floor(v + 1e-9) || (v % 1 ? "" : "0")) + (v % 1 > 0.25 ? "½" : "");
 function campItemLeft(it) {
   const slot = campItemSlot(it.id);
-  if (slot === "pet") return "Never wears out";
+  if (slot === "pet") return it.train ? `Trained ${"★".repeat(it.train)}` : "Never wears out";
   if (slot === "rune") return "Yours for good";
+  if (slot === "gear") { const n = freshUses(it.id, it.rarity, it); return `Absorbs ${n} hit${n === 1 ? "" : "s"} a level`; }
+  if (slot === "spell") { const n = freshUses(it.id, it.rarity, it); return `${n} charge${n === 1 ? "" : "s"} a level`; }
+  if (slot === "loot" || slot === "craft") return it.qty > 1 ? `You have ${it.qty}` : "You have one";
   if (slot === "canister") {
     const d = campItemDef(it.id), armor = d.armor[rarityIdx(it.rarity)] > 0;
     const n = armor ? it.uses / (CAMP.rules.snake.armorPieces || 4) : it.uses / 2;
     const whole = Math.ceil(n - 1e-9);
     return armor ? `${whole} purple plate${whole === 1 ? "" : "s"} left${n % 1 ? " (one damaged)" : ""}` : `${fmtHalf(n)} purple heart${n <= 1 ? "" : "s"} left`;
   }
-  const full = freshUses(it.id, it.rarity);
-  return `${it.uses} of ${Math.max(full, it.uses)} ${slot === "gear" ? "uses" : "charges"} left`;
+  const full = freshUses(it.id, it.rarity, it);
+  return `${it.uses} of ${Math.max(full, it.uses)} charges left`;
 }
 
-function campGive(id, rarity = "common") {
+function campGive(id, rarity = "common", extra = null) {
   const slot = campItemSlot(id);
-  // loot stacks; everything else is its own piece
-  if (slot === "loot") {
-    const have = camp.satchel.find(it => it.id === id && it.rarity === rarity);
+  // junk and crafted pieces stack; everything else is its own piece
+  if (slot === "loot" || slot === "craft") {
+    const have = camp.satchel.find(it => it.id === id);
     if (have) { have.qty = Math.min(999, have.qty + 1); return have; }
   }
-  const it = { uid: camp.nextUid++, id, rarity, uses: slot === "loot" || slot === "rune" || slot === "pet" ? 0 : freshUses(id, rarity), qty: 1 };
+  const it = { uid: camp.nextUid++, id, rarity, uses: 0, qty: 1, parts: slot === "gear" ? builtInParts(id, rarity) : [], trinket: "", lv: 0, seal: false, train: 0, grade: -1, fresh: false };
+  if (extra) Object.assign(it, extra);
+  if (!["loot", "craft", "rune", "pet"].includes(slot)) it.uses = freshUses(id, rarity, it);
   camp.satchel.push(it);
   // the first piece of a kind goes straight on; a snack goes into a free pocket slot
   if (slot === "food") { const i = camp.pocket.indexOf(0); if (i >= 0) camp.pocket[i] = it.uid; }
-  else if (slot !== "loot" && !camp.equip[slot]) camp.equip[slot] = it.uid;
+  else if (slot !== "loot" && slot !== "craft" && !camp.equip[slot]) camp.equip[slot] = it.uid;
   return it;
 }
 
@@ -265,8 +277,10 @@ function campDrop(uid) {
 
 function campItemName(it) {
   const d = campItemDef(it.id);
-  if (!d) return (CAMP.lootById[it.id] || { name: it.id }).name;
-  return `${campGradeName(it.id, it.rarity)} ${d.name}`;
+  if (!d) return (CAMP.lootById[it.id] || CAMP.craftById[it.id] || { name: it.id }).name;
+  if (d.family === "rune") return `${(CAMP.craft.forge || {}).grades ? CAMP.craft.forge.grades[runeGrade(it)] : campGradeName(it.id, it.rarity)} ${d.name}`;
+  const lv = d.family === "spell" && it.lv ? ` +${it.lv}` : "";
+  return `${it.fresh ? "Fresh " : ""}${campGradeName(it.id, it.rarity)} ${d.name}${lv}`;
 }
 /* "Rare", or for a rune its condition: "Pristine" */
 function campGradeName(id, rarity) {
@@ -278,18 +292,32 @@ function campGradeName(id, rarity) {
 function campSellPrice(it) {
   const bonus = 1 + upPct("salvage");
   const d = campItemDef(it.id);
-  if (!d) return Math.round((CAMP.lootById[it.id] || { value: 1 }).value * bonus);
-  const base = CAMP.families[d.family].price[rarityIdx(it.rarity)];
-  // worn gear and spent spells are worth less
-  const full = freshUses(it.id, it.rarity);
-  const wear = full > 0 ? Math.max(0.25, it.uses / full) : 1;
-  return Math.max(1, Math.round(base * CAMP.rules.merchant.sellShare * wear * bonus));
+  if (!d) {
+    // a crafted piece is worth what went into it
+    const c = CAMP.craftById[it.id];
+    if (c) return Math.max(1, Math.round(c.needs.reduce((a, id) => a + (CAMP.lootById[id] || { value: 1 }).value, 0) * 0.8 * bonus));
+    return Math.round((CAMP.lootById[it.id] || { value: 1 }).value * bonus);
+  }
+  const P = CAMP.families[d.family].price;
+  let base = P[rarityIdx(it.rarity)];
+  // a rune is priced by its exact condition; snacks by what's left of them
+  if (d.family === "rune") base = P[0] * ((CAMP.craft.forge || {}).sell || [0.35, 0.7, 1, 1.6, 2.4, 3.2, 3.8, 6])[runeGrade(it)] / 0.35;
+  let wear = 1;
+  if (d.family === "food" || d.family === "vessel") { const full = freshUses(it.id, it.rarity, it); wear = full > 0 ? Math.max(0.25, it.uses / full) : 1; }
+  // fitted parts and trinkets, spell levels and seals, training: all worth a little more
+  let extra = 1;
+  if (d.family === "gear") extra += (it.parts || []).length * 0.15 + (it.trinket ? 0.3 : 0);
+  if (d.family === "spell") extra += (it.lv || 0) * ((CAMP.craft.spells || {}).sellPerLevel || 8) / 100 + (it.seal ? 0.25 : 0);
+  if (d.family === "pet") extra += (it.train || 0) * 0.2;
+  if (it.fresh) extra += 0.2;
+  return Math.max(1, Math.round(base * CAMP.rules.merchant.sellShare * wear * extra * bonus));
 }
 
 /* Which island's currency an item is bought and sold in */
 function campItemIsland(id) {
   const d = campItemDef(id);
   if (!d) {
+    if (CAMP.craftById[id]) return CAMP.islands[0].id;
     const l = CAMP.lootById[id];
     return l ? CAMP.islands[Math.max(0, Math.min(CAMP.islands.length - 1, l.island - 1))].id : CAMP.islands[0].id;
   }

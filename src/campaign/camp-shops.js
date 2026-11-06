@@ -111,17 +111,20 @@ function fmtLeft(ms) {
 }
 
 /* What an item does, as shop-row text */
-function itemFacts(id, rarity) {
+function itemFacts(id, rarity, own = null) {
   const d = campItemDef(id), r = rarityIdx(rarity);
   if (d.family === "rune") {
     // a rune: its two sides, with this condition's numbers
-    const it = { id, rarity };
+    const it = own || { id, rarity, grade: -1 };
     return `<div class="shop-desc">${escapeAttr(d.does)} Yours for good.</div>
     <div class="shop-meta"><span class="cs-good">Good: ${escapeAttr(campItemDoes(it))}</span></div>
     <div class="shop-meta"><span class="cs-weak">Bad: ${escapeAttr(campItemWeak(it))}</span></div>`;
   }
   const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
-  const stat = d.uses ? plural(d.uses[r] + upVal("sturdy"), "use") : d.charges ? plural(d.charges[r] + (d.family === "spell" ? upVal("potent") : upVal("hearty")), "charge") : d.power ? `${d.power[r]} ${d.unit}` : "";
+  // gear absorbs hits and spells hold charges every level now (build 51); your own piece counts its upgrades
+  const it = own || { id, rarity, parts: d.family === "gear" ? builtInParts(id, rarity) : [], trinket: "", lv: 0, train: 0 };
+  const n = freshUses(id, rarity, it);
+  const stat = d.family === "gear" ? `${plural(n, "hit")} a level` : d.family === "spell" ? `${plural(n, "charge")} a level${d.power ? `, ${campItemPower(it)} ${d.unit}` : ""}` : d.charges ? `${plural(n, "charge")}${d.power ? `, ${campItemPower(it)} ${d.unit}` : ""}` : d.power ? `${campItemPower(it)} ${d.unit}` : "";
   return `<div class="shop-desc">${escapeAttr(d.does)}</div>
     <div class="shop-meta"><span class="cs-stat">${stat}</span><span class="cs-good">Good: ${escapeAttr(d.strong)}</span></div>
     <div class="shop-meta"><span class="cs-weak">Weak: ${escapeAttr(d.weak)}</span></div>
@@ -211,7 +214,7 @@ function challengerHtml() {
   }).join("");
   const pool = CAMP.rules.challenge.pool;
   const total = pool.reduce((a, p) => a + p.weight, 0);
-  const odds = pool.map(p => `<li><span class="pn-label">${p.kind === "gems" ? `${p.min} to ${p.max} gems` : p.kind === "item" ? (CAMP.families[I.merchantFamily].grades ? `A ${CAMP.families[I.merchantFamily].grades[rarityIdx(p.rarity)].toLowerCase()} rune` : `A ${rarityName(p.rarity).toLowerCase()} ${escapeAttr(CAMP.families[I.merchantFamily].name.toLowerCase())} item`) : p.kind === "canister" ? "A Heart Canister (any rarity)" : p.kind === "skin" ? "An exclusive skin" : "An exclusive theme"}</span><span class="pn-count">${Math.round(p.weight / total * 100)}%</span></li>`).join("");
+  const odds = pool.map(p => `<li><span class="pn-label">${p.kind === "gems" ? `${p.min} to ${p.max} gems` : p.kind === "item" ? (CAMP.families[I.merchantFamily].grades ? `A ${CAMP.families[I.merchantFamily].grades[rarityIdx(p.rarity)].toLowerCase()} rune` : `A ${rarityName(p.rarity).toLowerCase()} ${escapeAttr(CAMP.families[I.merchantFamily].name.toLowerCase())} item`) : p.kind === "canister" ? "A Heart Canister (any rarity)" : p.kind === "spellpts" ? `${p.min} to ${p.max} spell upgrade points` : p.kind === "recipe" ? "A rare recipe for the kitchen" : p.kind === "skin" ? "An exclusive skin" : "An exclusive theme"}</span><span class="pn-count">${Math.round(p.weight / total * 100)}%</span></li>`).join("");
   const reward = `<div class="core-box cs-reward"><span class="ribbon rank-3">Reward</span>
     <p class="shop-note">${coinTag(shopIsl, challengeCurrency())} ${escapeAttr(I.currency.plural)}, and one roll of the prize pool:</p>
     <ul class="prestige-needs">${odds}</ul></div>`;
@@ -246,6 +249,19 @@ function rollChallengeReward(isl) {
     const r = rollRarity();
     campGive("canister", r);
     return `a ${rarityName(r)} Heart Canister`;
+  }
+  // build 51: spell upgrade points, and the best recipes (only ever won from quests)
+  if (pick.kind === "spellpts") {
+    const n = pick.min + Math.floor(Math.random() * (pick.max - pick.min + 1));
+    campGiveSpellPts(n);
+    return `${n} spell upgrade points`;
+  }
+  if (pick.kind === "recipe") {
+    const left = Object.values(CAMP.recipeById).filter(r => r.source === "quest" && !camp.recipes.includes(r.id));
+    if (!left.length) { pick = { min: 15, max: 30 }; return gems() + " (you know every quest recipe already)"; }
+    const r = left[Math.floor(Math.random() * left.length)];
+    camp.recipes.push(r.id);
+    return `the recipe for ${r.name}`;
   }
   const isSkin = pick.kind === "skin";
   const list = CAMP.rules.cosmetics[isSkin ? "exclusiveSkins" : "exclusiveThemes"].filter(id => !(isSkin ? camp.skins : camp.themes).includes(id));

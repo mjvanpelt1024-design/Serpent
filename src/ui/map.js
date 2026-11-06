@@ -701,6 +701,8 @@ function stepPlace(d) {
 function renderBanner() {
   const key = mapSel;
   if (!key) return;
+  // up close on a stop, its scroll owns the top of the screen: never both at once
+  if (mapPop && mapPop.focus) { mapBannerEl.classList.remove("open"); return; }
   const st = placeState(key);
   const I = CAMP.islandById[key];
   const b = mapBannerEl;
@@ -760,13 +762,16 @@ nodeScrollEl.id = "node-scroll";
 nodeScrollEl.className = "node-scroll scroll-frame";
 nodeScrollEl.setAttribute("aria-live", "polite");
 mapEl.appendChild(nodeScrollEl);
-const nodeArrows = ["prev", "next"].map(side => {
+/* Up to four arrows: each one sits on the side of the screen its stop lies on, and a boss
+   has two ways on (its shop and the next level). Shops are dead ends: back to the boss. */
+const nodeArrows = [0, 1, 2, 3].map(() => {
   const b = document.createElement("button");
-  b.className = "btn node-arrow " + side;
-  b.addEventListener("click", e => { e.stopPropagation(); stepNode(side === "prev" ? -1 : 1); });
+  b.className = "btn node-arrow";
+  b.addEventListener("click", e => { e.stopPropagation(); if (b._to) goNode(b._to); });
   mapEl.appendChild(b);
   return b;
 });
+let nodeLinksNow = [];
 
 /* The stop before or after this one along the path, crossing to the island below or above */
 function neighborNode(key, id, d) {
@@ -775,6 +780,38 @@ function neighborNode(key, id, d) {
   const k = MAP_ORDER[MAP_ORDER.indexOf(key) + d];
   if (!k || placeState(k) === "fog") return null;
   return { key: k, id: d > 0 ? "home" : "bridge" };
+}
+
+/* Where you can walk from a stop: { to, role } with role back, next or shop.
+   The path runs home, 1 to 15, the bridge; each boss also has its shop off to the side. */
+const BOSS_SHOP = { 5: "merchant", 10: "challenger", 15: "banker" };
+function nodeLinks(key, id) {
+  const out = [];
+  const add = (to, role) => { if (to) out.push({ to, role }); };
+  const other = d => { const k = MAP_ORDER[MAP_ORDER.indexOf(key) + d]; return k && placeState(k) !== "fog" ? k : null; };
+  if (id === "home") { const k = other(-1); if (k) add({ key: k, id: "bridge" }, "back"); add({ key, id: 1 }, "next"); }
+  else if (typeof id === "number") {
+    add({ key, id: id === 1 ? "home" : id - 1 }, "back");
+    add({ key, id: id === LEVEL_COUNT ? "bridge" : id + 1 }, "next");
+    if (BOSS_SHOP[id]) add({ key, id: BOSS_SHOP[id] }, "shop");
+  } else if (NPC_KINDS.includes(id)) add({ key, id: SHOP_AFTER[id] }, "back");
+  else if (id === "bridge") { add({ key, id: LEVEL_COUNT }, "back"); const k = other(1); if (k) add({ key: k, id: "home" }, "next"); }
+  // which side of the screen each lies on: the way it really is from here
+  const from = nodeAt(key, id), dir = ISLANDS[key].dir;
+  out.forEach(l => {
+    const p = nodeAt(l.to.key, l.to.id);
+    const dx = p.x - from.x;
+    l.side = Math.abs(dx) >= 4 ? Math.sign(dx) : (l.role === "back" ? -dir : dir);
+    l.dy = p.y - from.y;
+  });
+  return out;
+}
+
+function goNode(to) {
+  if (!mapPop || !mapPop.focus) return;
+  if (to.id === "home") { openNode(to.key, "home"); return; }
+  if (to.key !== mapPop.key) selectPlace(to.key);
+  openLevelPop(to.key, to.id, false, mapPinsEl.querySelector(`[data-key="${nodeKey(to.key, to.id)}"]`));
 }
 
 function nodeTitle(key, id) {
@@ -787,7 +824,7 @@ function nodeTitle(key, id) {
 }
 
 /* What an arrow says about where it goes: Home, Boss, Next island, a shop, or just Next */
-function arrowLabel(from, to, d) {
+function arrowLabel(from, to, d, role) {
   if (!to) return { word: d < 0 ? "Previous" : "Next", sub: "", cls: "" };
   const sub = nodeTitle(to.key, to.id);
   if (to.key !== from.key) return { word: d > 0 ? "Next island" : "Island below", sub: CAMP.islandById[to.key].name, cls: "island" };
@@ -795,16 +832,18 @@ function arrowLabel(from, to, d) {
   if (typeof to.id === "number" && isBossLevel(to.id)) return { word: "Boss", sub, cls: "boss" };
   if (NPC_KINDS.includes(to.id)) return { word: NODE_LABEL[to.id], sub, cls: "shop" };
   if (to.id === "bridge") return { word: "Bridge", sub: "", cls: "island" };
-  return { word: d < 0 ? "Previous" : "Next", sub, cls: "" };
+  return { word: role === "back" || d < 0 ? "Back" : "Next", sub, cls: "" };
 }
 
-function stepNode(d) {
-  if (!mapPop || !mapPop.focus) return;
-  const to = neighborNode(mapPop.key, mapPop.j, d);
-  if (!to) return;
-  if (to.id === "home") { openNode(to.key, "home"); return; }
-  if (to.key !== mapPop.key) selectPlace(to.key);
-  openLevelPop(to.key, to.id, false, mapPinsEl.querySelector(`[data-key="${nodeKey(to.key, to.id)}"]`));
+/* The arrow keys: left and right take the arrow on that side (the way on before the way
+   back, the way back before a shop); up and down take whichever goes up or down the island */
+function stepNode(d, vertical = false) {
+  if (!mapPop || !mapPop.focus || !nodeLinksNow.length) return;
+  const rank = { next: 0, back: 1, shop: 2 };
+  let pick = null;
+  if (vertical) pick = nodeLinksNow.filter(l => Math.sign(l.dy) === d && Math.abs(l.dy) > 3).sort((a, b) => d * (b.dy - a.dy) || rank[a.role] - rank[b.role])[0];
+  else pick = nodeLinksNow.filter(l => l.side === d).sort((a, b) => rank[a.role] - rank[b.role])[0];
+  if (pick) goNode(pick.to);
 }
 
 function openLevelPop(key, j, nm, pinEl) {
@@ -866,12 +905,22 @@ function renderNodeFocus() {
   nodeHereEl.querySelector("[data-go]").addEventListener("click", e => { e.stopPropagation(); if (typeof j === "number") playLevel(key, j); else openNode(key, j); });
   const rules = nodeHereEl.querySelector("[data-rules]");
   if (rules) rules.addEventListener("click", e => { e.stopPropagation(); openLevelRules(); });
-  [-1, 1].forEach((d, i) => {
-    const to = neighborNode(key, j, d), a = nodeArrows[i], L = arrowLabel({ key }, to, d);
-    a.disabled = !to;
-    a.className = `btn node-arrow ${d < 0 ? "prev" : "next"} open ${L.cls}`;
-    a.innerHTML = `<span class="na-chev" aria-hidden="true">${d < 0 ? "&#9664;" : "&#9654;"}</span><span class="na-word">${L.cls === "boss" ? SKULL_SVG : ""}${escapeAttr(L.word)}</span>${L.sub ? `<span class="na-sub">${escapeAttr(L.sub)}</span>` : ""}`;
-    a.setAttribute("aria-label", to ? `${L.word}${L.sub ? ": " + L.sub : ""}` : "Nothing further this way");
+  // the arrows: on the side each stop really lies, stacked when two go the same way
+  nodeLinksNow = nodeLinks(key, j);
+  nodeArrows.forEach(a => { a.className = "btn node-arrow"; a._to = null; });
+  [-1, 1].forEach(side => {
+    const here = nodeLinksNow.filter(l => l.side === side).sort((a, b) => a.dy - b.dy);
+    here.forEach((l, k) => {
+      const a = nodeArrows[nodeLinksNow.indexOf(l)];
+      const d = l.role === "back" ? -1 : 1;
+      const L = arrowLabel({ key }, l.to, d, l.role);
+      a._to = l.to;
+      a.disabled = false;
+      a.className = `btn node-arrow ${side < 0 ? "prev" : "next"} open ${L.cls}${l.role === "shop" ? " fork" : ""}`;
+      a.style.top = `calc(50% + ${((k - (here.length - 1) / 2) * 5.6).toFixed(2)}em)`;
+      a.innerHTML = `<span class="na-chev" aria-hidden="true">${side < 0 ? "&#9664;" : "&#9654;"}</span><span class="na-word">${L.cls === "boss" ? SKULL_SVG : ""}${escapeAttr(L.word)}</span>${L.sub ? `<span class="na-sub">${escapeAttr(L.sub)}</span>` : ""}`;
+      a.setAttribute("aria-label", `${L.word}${L.sub ? ": " + L.sub : ""}`);
+    });
   });
   setTimeout(() => {
     if (!mapPop || !mapPop.focus) return;
@@ -883,6 +932,16 @@ function renderNodeFocus() {
 /* kept for the old callers: the focus has no bubble to place */
 function positionPop() { }
 
+/* Coming back to the map from a shop or a level: nothing of the old close-up stays up
+   (its scroll would sit right on top of the island's banner) */
+function resetNodeFocus() {
+  nodeHereEl.className = "node-here";
+  nodeScrollEl.classList.remove("open");
+  nodeArrows.forEach(a => { a.className = "btn node-arrow"; a._to = null; });
+  nodeLinksNow = [];
+  mapEl.classList.remove("focus");
+}
+
 function closeLevelPop(quiet = false) {
   if (!mapPop && !mapRules) return false;
   const was = mapPop;
@@ -892,9 +951,7 @@ function closeLevelPop(quiet = false) {
   mapBriefEl.classList.remove("open");
   mapNight = false;
   mapEl.classList.remove("night", "focus");
-  nodeHereEl.className = "node-here";
-  nodeScrollEl.classList.remove("open");
-  nodeArrows.forEach(a => a.classList.remove("open"));
+  resetNodeFocus();
   updatePins();
   if (mapSel) { renderBanner(); layoutMap(); }
   if (!quiet && was) {
@@ -908,10 +965,11 @@ function closeLevelPop(quiet = false) {
 document.addEventListener("keydown", e => {
   if (currentScreen !== "modes" || !mapPop || !mapPop.focus || mapRules || e.target.tagName === "INPUT") return;
   const k = e.key.toLowerCase();
-  if (k === "arrowleft" || k === "a" || k === "arrowright" || k === "d") {
+  const dir = { arrowleft: [-1, false], a: [-1, false], arrowright: [1, false], d: [1, false], arrowup: [-1, true], w: [-1, true], arrowdown: [1, true], s: [1, true] }[k];
+  if (dir) {
     e.preventDefault();
     e.stopImmediatePropagation();
-    if (!e.repeat) stepNode(k === "arrowleft" || k === "a" ? -1 : 1);
+    if (!e.repeat) stepNode(dir[0], dir[1]);
   }
 }, true);
 

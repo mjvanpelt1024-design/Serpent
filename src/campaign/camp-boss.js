@@ -37,7 +37,7 @@ function spawnBoss(def, fight) {
     nextCharge: now + BOSS_DELAY + 4000 + Math.random() * 2000, chargeUntil: 0,
     dmg: 0, beaten: false
   };
-  showToast(`${B.name}: "${B.taunt}"`);
+  // no taunt: the story stays in the book (build 51)
   sfx("bad");
 }
 

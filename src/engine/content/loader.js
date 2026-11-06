@@ -205,16 +205,17 @@ const ContentLoader = (() => {
   }
   async function campaign() {
     const ids = Formats.list(await need("content/campaign/islands/_index.dat"));
-    const [islands, items, upgrades, rules, manifest] = await Promise.all([
+    const [islands, items, upgrades, rules, crafting, manifest] = await Promise.all([
       Promise.all(ids.map(id => json(`content/campaign/islands/${id}.json`))),
       json("content/campaign/items.json"),
       json("content/campaign/upgrades.json"),
       json("content/campaign/rules.json"),
+      json("content/campaign/crafting.json"),
       read("content/campaign/manifest.dat")
     ]);
-    const texts = { "items.json": items.text, "upgrades.json": upgrades.text, "rules.json": rules.text };
+    const texts = { "items.json": items.text, "upgrades.json": upgrades.text, "rules.json": rules.text, "crafting.json": crafting.text };
     ids.forEach((id, i) => { texts[`islands/${id}.json`] = islands[i].text; });
-    return { islands: islands.map(x => x.data), items: items.data, upgrades: upgrades.data, rules: rules.data, texts, manifest: manifest || "" };
+    return { islands: islands.map(x => x.data), items: items.data, upgrades: upgrades.data, rules: rules.data, crafting: crafting.data, texts, manifest: manifest || "" };
   }
 
   async function load() {
