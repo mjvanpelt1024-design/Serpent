@@ -48,7 +48,8 @@
 - **The terminal speaks campaign.** Seven groups (dev, debug, attribute, item, upgrade, level, data) for
   every item, every island's money, upgrades, unlocks, spawning any foe, bosses, workshop orders, shops,
   quests and save codes. **Shift+Alt+C** opens and closes it from anywhere (a level pauses behind it).
-  Opening it marks the campaign save as cheated, for good.
+  Opening it marks the campaign save as cheated, for good. `dev everything.unlock` makes a save 100%;
+  `dev everything.reset` (then type CONFIRM) wipes the game back to a brand new, uncheated save.
 - Fixed: coming back to the map from a shop left the stop's scroll open on top of the island's banner.
 
 ## v:11.06.2026_b:50: runes for keeps

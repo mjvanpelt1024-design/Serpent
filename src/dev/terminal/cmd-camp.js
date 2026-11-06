@@ -225,6 +225,67 @@ CR("dev", "quest", "done", "[island]", "Accept the island's quest and finish all
 });
 CR("dev", "daily", "reset", "", "Let the daily gift (a spell upgrade point) come again the next time the map opens.", () => { camp.daily = 0; campChanged(); say("[ok] the daily gift is waiting"); });
 
+/* ----- The whole game at once ----- */
+CR("dev", "everything", "unlock", "", "100%: every level won flawlessly with its challenge earned, every tree maxed, every achievement (with its gems), every recipe, skin and theme, every story page seen.", () => {
+  let won = 0;
+  CAMP.islands.forEach(I => {
+    for (let n = 1; n <= LEVEL_COUNT; n++) {
+      winRec(I.id, n);
+      Object.assign(camp.levels[campLevelId(I.id, n)], { flawless: true, bonus: true });
+      won++;
+    }
+    STORY_BEATS.forEach(b => { if (!camp.storySeen.includes(storyId(I.id, b))) camp.storySeen.push(storyId(I.id, b)); });
+  });
+  Object.values(CAMP.upgradeById).forEach(u => { camp.upgrades[u.id] = u.values.length - 1; });
+  let gems = 0;
+  CAMP.rules.achievements.forEach(x => { if (!camp.achievements[x.id]) { camp.achievements[x.id] = true; camp.gems += x.gems; gems += x.gems; } });
+  Object.keys(CAMP.recipeById).forEach(id => { if (!camp.recipes.includes(id)) camp.recipes.push(id); });
+  CONTENT.skins.forEach(s => { if (!camp.skins.includes(s.id)) camp.skins.push(s.id); });
+  CONTENT.themes.forEach(s => { if (!camp.themes.includes(s.id)) camp.themes.push(s.id); });
+  campChanged();
+  say(`[ok] 100%: ${won} levels won flawlessly, ${Object.keys(CAMP.upgradeById).length} upgrades maxed, ${CAMP.rules.achievements.length} achievements (+${gems} gems), ${camp.recipes.length} recipes, ${camp.skins.length} skins, ${camp.themes.length} themes`);
+  note("want a full kit too? item everything.give legendary");
+}, { aliases: ["100", "complete"] });
+
+/* Wiping the whole game waits for the word CONFIRM, typed exactly, on the next line */
+let resetPending = false;
+CR("dev", "everything", "reset", "", "Reset the whole game back to nothing: a brand new save, every bent rule back to normal, the cheated marker gone. Asks you to type CONFIRM first, then closes the terminal.", () => {
+  resetPending = true;
+  consolePrint("This wipes EVERYTHING: every level, coin, gem, item, upgrade, recipe, skin and theme. Your settings stay.", "err");
+  consolePrint("The save will no longer be marked as cheated. There is no undo.", "err");
+  say("Type CONFIRM (in capitals) to reset the game. Anything else cancels.");
+  return "quiet";
+}, { aliases: ["wipe"] });
+function resetEverythingForReal() {
+  if (campRun) campLeaveRun();
+  clearPauseState();
+  resetCamp();                          // a fresh save (the old one is kept aside in storage, never loaded)
+  camp.flags.cheats = false;
+  camp.flags.restored = 0;
+  saveCamp();
+  // the old engine's half of the save: the terminal asks again next time, every rule back to normal
+  save.cheats = false;
+  save.dev = defaultDev();
+  persist();
+  applyCampCosmetics();
+  campOrdersChanged();
+  consoleLogEl.innerHTML = "";
+  campTermBooted = false;
+  showToast("The game is reset. A brand new adventure starts with Play.");
+  openScreen("main");
+}
+(() => {
+  const run = runConsole;
+  window.runConsole = function (raw) {
+    if (!resetPending) return run.apply(this, arguments);
+    resetPending = false;
+    const line = String(raw || "").trim();
+    consolePrint(">> " + line, "in");
+    if (line === "CONFIRM") { resetEverythingForReal(); return; }
+    consolePrint("[cancelled] nothing was reset", "dim");
+  };
+})();
+
 /* =========================================================
    attribute
    ========================================================= */

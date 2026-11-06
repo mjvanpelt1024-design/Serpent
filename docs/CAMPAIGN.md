@@ -382,6 +382,10 @@ cheated for good. `help`, `help item`, tab completion and history work as before
 `item sword.give legendary parts trinket=t_rivet`, `item fireball.give rare lv=10 seal`,
 `item plenty.give polished`, `attribute money.set 5000 all`, `level reef.unlock all`, `dev run.play crown 15 hold`,
 `dev spawn.rival`, `dev orders.finish`, `upgrade tree.max all`, `data list.junk`.
+`dev everything.unlock` makes a save 100% (every level won flawlessly with its challenge, every tree, achievement,
+recipe, skin and theme). `dev everything.reset` wipes the whole game back to a brand new save once you type
+CONFIRM on the next line: every bent rule goes back to normal, the cheated marker is cleared, and the terminal
+closes (settings are kept).
 
 ## Decided, and not done yet
 
