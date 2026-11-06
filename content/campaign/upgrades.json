@@ -41,7 +41,7 @@
         {"id": "exhaust", "name": "Long Naps", "icon": "zzz", "text": "Tired bosses stay slow {v}% longer.", "values": [0, 12, 24, 36, 50, 65], "prices": [55, 120, 240, 430, 730]},
         {"id": "bite", "name": "Sharp Fangs", "icon": "fang", "text": "{v}% chance a bite deals double damage.", "values": [0, 10, 20, 30, 40, 50], "prices": [70, 150, 300, 540, 900]},
         {"id": "petbond", "name": "Kindred Spirits", "icon": "paw", "text": "Familiars work {v}% faster.", "values": [0, 10, 20, 30, 40, 50], "prices": [65, 140, 280, 500, 840]},
-        {"id": "treasure", "name": "Trial Spoils", "icon": "chest", "text": "Challenge rewards are {v}% bigger.", "values": [0, 15, 30, 50, 75, 100], "prices": [50, 110, 220, 400, 680]},
+        {"id": "treasure", "name": "Trial Spoils", "icon": "chest", "text": "Quest rewards are {v}% bigger.", "values": [0, 15, 30, 50, 75, 100], "prices": [50, 110, 220, 400, 680]},
         {"id": "salvage", "name": "Salvager", "icon": "hammer", "text": "Things sell for {v}% more.", "values": [0, 10, 20, 32, 46, 60], "prices": [45, 100, 200, 360, 620]}
       ]
     },

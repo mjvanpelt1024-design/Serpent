@@ -359,7 +359,10 @@ function render(ts) {
   const boardActive = gameState === "PLAYING" || gameState === "GAMEOVER";
   const view = makeView(ts);
 
-  if (view.bgX || view.bgY) {
+  if (!boardActive && document.body.classList.contains("title-world")) {
+    // the title screen: the board is a window onto the world behind it (src/art/title-scene.js)
+    ctx.clearRect(0, 0, boardSize, viewH);
+  } else if (view.bgX || view.bgY) {
     // The backdrop glides with the camera
     const offX = ((view.bgX % boardSize) + boardSize) % boardSize;
     const offY = ((view.bgY % boardSize) + boardSize) % boardSize;

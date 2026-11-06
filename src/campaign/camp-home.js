@@ -6,8 +6,10 @@
    satchel leaning on the trunk, a trophy on its plinth, a standing
    mirror with your snake in it and an easel showing your theme.
    Painted like the map (one chunky pixel at a time, lit from the top
-   left), in the sky at the island's height. Each thing opens its page:
-     the tree     the island's upgrades (src/campaign/camp-tree.js)
+   left), in the sky at the island's height. Nothing floats over the
+   picture: you click the things themselves (they light up under the
+   pointer), and each opens its page:
+     the carving  in the tree's trunk: the island's upgrades (camp-tree.js)
      the satchel  your kit and loot (the old Satchel screen)
      the trophy   achievements (the old Trophy Hall)
      the mirror   skins, and the easel themes (the old Tailor, for gems)
@@ -25,14 +27,30 @@ const homeCanvas = document.getElementById("home-canvas");
 const homeViewEl = document.getElementById("home-view");
 const homeWorldEl = document.getElementById("home-world");
 const homePinsEl = document.getElementById("home-pins");
-/* The things around the tree: where they stand (from the middle), what they're called, what they open */
+/* The things you can click: where they stand (dx from the middle, y), how big, what they're called */
 const HOME_SPOTS = [
-  { id: "tree", dx: 0, y: 28, label: "Upgrades", icon: "tree" },
-  { id: "satchel", dx: 20, y: 88, label: "Satchel", icon: "satchel" },
-  { id: "trophy", dx: -56, y: 74, label: "Achievements", icon: "trophy" },
-  { id: "mirror", dx: 52, y: 66, label: "Skins", icon: "tophat" },
-  { id: "easel", dx: 78, y: 74, label: "Themes", icon: "bucket" }
+  { id: "tree", label: "Upgrades" },
+  { id: "satchel", dx: 11, y: 87, w: 17, h: 19, label: "Satchel" },
+  { id: "trophy", dx: -66, y: 77, w: 20, h: 28, label: "Achievements" },
+  { id: "mirror", dx: 43, y: 66, w: 18, h: 40, label: "Skins" },
+  { id: "easel", dx: 68, y: 74, w: 21, h: 33, label: "Themes" }
 ];
+let homeHover = null;           // the thing under the pointer (or keyboard focus)
+const homeTagEl = document.createElement("span");
+homeTagEl.className = "home-tag scroll-frame";
+const homeNotesEl = document.createElement("div");
+homeNotesEl.id = "home-notes";
+screenEls.camphome.appendChild(homeNotesEl);
+
+/* The carving in the trunk: low on the trunk, the height of a snake's head */
+function homeCarving() {
+  const ups = CAMP.islandById[homeIsl].tree.upgrades;
+  const have = ups.reduce((a, u) => a + upTier(u.id), 0), total = ups.reduce((a, u) => a + u.values.length - 1, 0);
+  const h = 40 + Math.round((total ? have / total : 0) * 26);
+  return { x: Math.round(HOME_W / 2) - 5, y: 102 - Math.round(h * 0.42) - 6, w: 11, h: 13 };
+}
+const spotBox = sp => (sp.id === "tree" ? homeCarving() : { x: Math.round(HOME_W / 2) + sp.dx, y: sp.y, w: sp.w, h: sp.h });
+const treeReady = () => CAMP.islandById[homeIsl].tree.upgrades.some(u => upNextPrice(u.id) !== null && campWallet(homeIsl) >= upNextPrice(u.id));
 
 /* From the map: the camera dives at the home tree, then the home opens */
 function openCampHome(isl) {
@@ -75,33 +93,65 @@ function layoutHome() {
   homeWorldEl.style.setProperty("--inv", (1 / s * (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--mui")) || 1)).toFixed(4));
 }
 
+/* Each thing gets a button the size of its picture: invisible, so the picture is what you click */
 function renderHomePins() {
   homePinsEl.innerHTML = "";
-  const counts = {
-    tree: (() => { const ups = CAMP.islandById[homeIsl].tree.upgrades; return ups.some(u => upNextPrice(u.id) !== null && campWallet(homeIsl) >= upNextPrice(u.id)); })(),
-    satchel: camp.satchel.length, trophy: Object.keys(camp.achievements).length
-  };
   HOME_SPOTS.forEach(sp => {
-    const pin = document.createElement("button");
-    pin.className = "map-pin prop home-pin" + (sp.id === "tree" && counts.tree ? " ready" : "");
-    pin.dataset.key = "home-" + sp.id;
-    pin.style.left = (Math.round(HOME_W / 2) + sp.dx) + "px";
-    pin.style.top = sp.y + "px";
-    pin.style.setProperty("--m", sp.id === "tree" ? CAMP.islandById[homeIsl].colors.accent : "#d09a5a");
-    const extra = sp.id === "satchel" && counts.satchel ? `<span class="grow">${counts.satchel}</span>` : sp.id === "trophy" && counts.trophy ? `<span class="grow">${counts.trophy}</span>` : sp.id === "tree" && counts.tree ? `<span class="grow">+</span>` : "";
-    pin.innerHTML = `<img class="pi" src="${iconUrl(sp.icon, 2)}" alt=""><span class="lbl">${sp.label}</span>${extra}`;
-    pin.setAttribute("aria-label", sp.label);
-    pin.addEventListener("click", () => openHomeThing(sp.id));
-    homePinsEl.appendChild(pin);
+    const b = spotBox(sp);
+    const btn = document.createElement("button");
+    btn.className = "home-spot";
+    btn.dataset.key = "home-" + sp.id;
+    Object.assign(btn.style, { left: b.x + "px", top: b.y + "px", width: b.w + "px", height: b.h + "px" });
+    btn.setAttribute("aria-label", sp.id === "tree" ? `Upgrades: ${CAMP.islandById[homeIsl].tree.name}` : sp.label);
+    const show = () => { homeHover = sp.id; placeHomeTag(sp); };
+    const hide = () => { if (homeHover === sp.id) { homeHover = null; homeTagEl.classList.remove("open"); } };
+    btn.addEventListener("pointerenter", show);
+    btn.addEventListener("focus", show);
+    btn.addEventListener("pointerleave", hide);
+    btn.addEventListener("blur", hide);
+    btn.addEventListener("click", () => openHomeThing(sp.id));
+    homePinsEl.appendChild(btn);
   });
+  homePinsEl.appendChild(homeTagEl);
+  renderHomeNotes();
+}
+
+/* A little scroll over whatever's under the pointer, saying what it is */
+function placeHomeTag(sp) {
+  const b = spotBox(sp);
+  const extra = sp.id === "tree" && treeReady() ? " +" : sp.id === "satchel" && camp.satchel.length ? ` (${camp.satchel.length})` : sp.id === "trophy" ? ` ${Object.keys(camp.achievements).length}/${CAMP.rules.achievements.length}` : "";
+  homeTagEl.textContent = sp.label + extra;
+  homeTagEl.style.left = (b.x + b.w / 2) + "px";
+  homeTagEl.style.top = b.y + "px";
+  homeTagEl.classList.add("open");
+}
+
+/* The notice board beside the tree: the bounty on the island's next boss, and your quest */
+function renderHomeNotes() {
+  const bounty = campBountyHtml(homeIsl);
+  homeNotesEl.innerHTML = (bounty ? `<div class="plate cp-bounty">${bounty}</div>` : "") + `<div class="plate cp-trials">${campQuestHtml(null)}</div>`;
 }
 
 function openHomeThing(id) {
   sfx("tab");
+  homeHover = null;
+  homeTagEl.classList.remove("open");
   if (id === "tree") openCampTree(homeIsl);
   else if (id === "satchel") { invTab = "items"; openScreen("inventory"); }
   else if (id === "trophy") openScreen("achievements");
   else { upgradeTab = id === "mirror" ? "skins" : "backdrops"; openScreen("upgrades"); }
+}
+
+/* The outline of whatever's under the pointer, a pixel wide, gently pulsing */
+function drawHomeHover(g, t) {
+  if (!homeHover) return;
+  const sp = HOME_SPOTS.find(x => x.id === homeHover);
+  const b = spotBox(sp);
+  const a = 0.55 + 0.35 * Math.sin(t * 6);
+  g.fillStyle = `rgba(255,240,170,${a})`;
+  g.fillRect(b.x - 1, b.y - 1, b.w + 2, 1); g.fillRect(b.x - 1, b.y + b.h, b.w + 2, 1);
+  g.fillRect(b.x - 1, b.y, 1, b.h); g.fillRect(b.x + b.w, b.y, 1, b.h);
+  [[b.x - 1, b.y - 1], [b.x + b.w, b.y - 1], [b.x - 1, b.y + b.h], [b.x + b.w, b.y + b.h]].forEach(([x, y]) => { g.fillStyle = "#ffffff"; g.fillRect(x, y, 1, 1); });
 }
 
 function homeLoop(ts) {
@@ -204,18 +254,54 @@ function drawHome(t) {
   drawHomeMirror(g, cx + 52, 104, t);
   drawHomeEasel(g, cx + 78, 106, t);
   drawHomeSatchel(g, cx + 13, 105, t);
+  drawHomeCarving(g, t);
   // you, curled up by the roots
   const skin = currentSkin();
   const sx = cx - 24, sy = 112;
-  for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2 + 0.3; R(sx + Math.cos(a) * 7, sy + Math.sin(a) * 3, 3, 3, skinColorAt(skin, 13 - i, t * 1000)); R(sx + Math.cos(a) * 7, sy + Math.sin(a) * 3, 3, 1, "rgba(255,255,255,0.22)"); }
+  // its shadow on the grass, then one unbroken coil: from the tail tip, tucked under, round to the neck
+  g.fillStyle = "rgba(0,0,0,0.16)";
+  [[-7, 15], [-8, 17], [-7, 15]].forEach(([dx, w], j) => g.fillRect(Math.round(sx + 1.5 + dx), sy + 3 + j, w, 1));
+  const COIL = 40;
+  for (let k = COIL - 1; k >= 0; k--) {
+    const u = k / (COIL - 1), a = -0.5 + u * Math.PI * 2 * 0.96;   // u: 0 at the neck, 1 at the tail
+    const s = u > 0.94 ? 1 : u > 0.82 ? 2 : 3, off = (3 - s) / 2;
+    const x = sx + Math.cos(a) * 7 + off, y = sy + Math.sin(a) * 3 + off;
+    R(x, y, s, s, skinColorAt(skin, 1 + Math.floor(u * 12), t * 1000));
+    R(x, y, s, 1, "rgba(255,255,255,0.22)");
+  }
   const awake = Math.sin(t * 0.35) > 0.2;
   const hx = sx + 8, hy = sy - 3 + (awake ? -2 : 0);
+  if (awake) R(hx, hy + 3, 3, 3, skinColorAt(skin, 0, t * 1000));           // the neck, raised
   R(hx, hy, 4, 4, skinColorAt(skin, 0, t * 1000)); R(hx, hy, 4, 1, "rgba(255,255,255,0.3)");
   if (awake) { R(hx + 2, hy + 1, 2, 2, "#ffffff"); R(hx + 3, hy + 1 + (Math.sin(t * 0.7) > 0.95 ? 0 : 1), 1, 1, "#111"); if (Math.sin(t * 3) > 0.7) R(hx + 4, hy + 3, 2, 1, "#ff3b6b"); }
   else { R(hx + 2, hy + 2, 2, 1, "#111"); for (let i = 0; i < 2; i++) { const ph = (t * 0.4 + i / 2) % 1; g.globalAlpha = 1 - ph; g.fillStyle = "#e8e0ff"; g.font = `6px ${GAME_FONT}`; g.fillText("z", hx + 6 + ph * 6, hy - 2 - ph * 10); g.globalAlpha = 1; } }
   // fireflies in the evening islands, petals and leaves everywhere
   if (isle.n >= 2) for (let i = 0; i < 10; i++) { const glow = Math.sin(t * 2 + i * 1.7); if (glow > 0.1) R(10 + mapHash(i, 4, 5) * (HOME_W - 20) + Math.sin(t * 0.6 + i) * 8, 60 + mapHash(i, 5, 5) * 50 + Math.cos(t * 0.5 + i) * 5, 1, 1, glow > 0.6 ? "#fff6a8" : "#c8d060"); }
   for (let k = 0; k < 6; k++) { const ph = (t * 0.1 + k / 6) % 1; R(cx - 50 + k * 18 + Math.sin(t + k * 2) * 8, 20 + ph * 90, 1, 1, CTREE_LEAVES[isl][k % 3]); }
+  drawHomeHover(g, t);
+}
+
+/* The carving in the trunk: an oval of bark stripped back and a sprouting leaf cut into it.
+   When an upgrade is in reach, the cuts fill with gold and the edge glows. */
+const CARVE_ROWS = [".....x.....", "....xxx....", "...x.x.x...", "..x..x..x..", ".....x.....", "...x.x.x...", "....xxx....", ".....x.....", ".....x....."];
+function drawHomeCarving(g, t) {
+  const b = homeCarving();
+  const ready = treeReady();
+  const R = (x, y, w, h, c) => mapRect(g, x, y, w, h, c);
+  const widths = [5, 7, 9, 11, 11, 11, 11, 11, 11, 11, 9, 7, 5];
+  const glow = 0.5 + 0.5 * Math.sin(t * 3);
+  widths.forEach((w, j) => {
+    const x0 = b.x + (11 - w) / 2;
+    R(x0, b.y + j, w, 1, j === 0 || j === 12 ? "#24140a" : j < 4 ? "#c8945a" : "#a8784a");
+    R(x0, b.y + j, 1, 1, ready ? `rgba(255,${200 + Math.round(40 * glow)},90,1)` : "#24140a");
+    R(x0 + w - 1, b.y + j, 1, 1, ready ? `rgba(255,${200 + Math.round(40 * glow)},90,1)` : "#24140a");
+  });
+  if (ready) { g.fillStyle = `rgba(255,210,90,${0.12 + 0.12 * glow})`; g.fillRect(b.x - 2, b.y - 2, b.w + 4, b.h + 4); }
+  CARVE_ROWS.forEach((row, j) => [...row].forEach((ch, i) => {
+    if (ch !== "x") return;
+    R(b.x + i, b.y + 2 + j, 1, 1, ready ? (j < 3 ? "#fff0a0" : "#ffd23f") : "#3a2414");
+    if (!ready) R(b.x + i + 1, b.y + 3 + j, 1, 1, "#d8a868");
+  }));
 }
 
 /* The tree, close up: trunk and boughs as thick as the upgrades bought, leaves and fruit */

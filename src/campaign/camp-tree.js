@@ -81,36 +81,79 @@ function drawCampTree(c, isl, t) {
       R(cx + x, iy + dy, 1, 1, col);
     }
   }
-  // limbs, thicker as their part grows
-  const limb = (x0, y0, x1, y1, w) => {
-    const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0));
-    for (let i = 0; i <= n; i++) {
-      const f = i / n, x = x0 + (x1 - x0) * f, y = y0 + (y1 - y0) * f;
-      const ww = Math.max(1, Math.round(w * (1 - f * 0.35)));
-      R(x - ww / 2, y, ww, 1, "#5a3a20");
-      R(x - ww / 2, y, 1, 1, "#7a5232");
+  // ----- the tree: one trunk from the roots to the crown, boughs curving out to each upgrade,
+  // a canopy that's always there and fills out tier by tier -----
+  const total = tiers.reduce((a, b) => a + b, 0), most = maxes.reduce((a, b) => a + b, 0) || 1;
+  const grown = total / most;
+  const nodes = CTREE_NODES.map((n, i) => ({ x: n.x + (i ? sway(i) : 0), y: n.y }));
+  const bark = ["#3a2414", "#5a3a20", "#7a5232", "#9a6a40"];        // shadow, body, lit, shine
+  // a brush that paints a round dab of bark, lit on its left
+  const dab = (x, y, w) => {
+    const r = w / 2;
+    for (let dy = -Math.floor(r); dy <= Math.floor(r); dy++) {
+      const half = Math.round(Math.sqrt(Math.max(0, r * r - dy * dy)));
+      R(x - half, y + dy, half * 2 + 1, 1, bark[1]);
+      R(x - half, y + dy, 1, 1, bark[2]);
+      R(x + half, y + dy, 1, 1, bark[0]);
     }
   };
-  const total = tiers.reduce((a, b) => a + b, 0);
-  const nodes = CTREE_NODES.map((n, i) => ({ x: n.x + sway(i), y: n.y }));
-  const tw = 4 + Math.floor(total / 6);
-  limb(cx, iy, cx, 70, tw);
-  R(cx - tw / 2 - 3, iy - 1, 3, 2, "#5a3a20"); R(cx + tw / 2, iy - 1, 3, 2, "#5a3a20");
-  [[1, 92], [2, 90], [3, 70], [4, 70], [5, 60]].forEach(([i, fy]) => {
-    const w = 2 + Math.floor(tiers[i] / 2);
-    limb(cx, fy, nodes[i].x, nodes[i].y + 4, w);
-  });
-  // leaves: a cluster on every part, fuller with every tier; fruit when it's fully grown
-  nodes.forEach((n, i) => {
-    const frac = maxes[i] ? tiers[i] / maxes[i] : 0;
-    const count = 24 + Math.round(frac * 110);
-    const rad = 8 + frac * 11;
-    for (let k = 0; k < count; k++) {
-      const a = mapHash(k, i, 21) * Math.PI * 2, d = Math.sqrt(mapHash(k, i, 23)) * rad;
-      R(n.x + Math.cos(a) * d * 1.25 + Math.sin(t * 1.5 + k) * 0.4, n.y + Math.sin(a) * d * 0.8, 2, 2, leaves[k % 3]);
+  // a curved limb from (x0, y0) to (x1, y1), bowing up toward (bx, by), tapering w0 -> w1
+  const limb = (x0, y0, bx, by, x1, y1, w0, w1) => {
+    const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) * 1.5);
+    for (let i = 0; i <= n; i++) {
+      const f = i / n, u = 1 - f;
+      dab(u * u * x0 + 2 * u * f * bx + f * f * x1, u * u * y0 + 2 * u * f * by + f * f * y1, w0 + (w1 - w0) * f);
     }
-    if (tiers[i] >= maxes[i] && maxes[i]) for (let k = 0; k < 5; k++) {
-      const a = k * 1.3 + 0.4, x = n.x + Math.cos(a) * rad * 0.9, y = n.y + Math.sin(a) * rad * 0.55;
+  };
+  // roots, spreading over the grass
+  [-1, 1].forEach(side => { for (let k = 0; k < 3; k++) limb(cx, iy - 2, cx + side * (8 + k * 5), iy - 1 + k, cx + side * (14 + k * 7), iy + 2 + k, 3 - k * 0.5, 1); });
+  // the trunk, all the way up to the crown's fruit, swaying a little at the top
+  const tw0 = 10 + grown * 6, top = nodes[5];
+  for (let y = iy; y >= top.y + 6; y--) {
+    const f = (iy - y) / (iy - top.y);
+    const x = cx + Math.sin(f * 2.4) * 2 * f + (top.x - cx) * f * f;
+    const w = tw0 * (1 - f * 0.72);
+    dab(x, y, w);
+    // bark lines and a knot or two
+    if (y % 5 === 0) R(x - w * 0.15, y, 1, 3, bark[0]);
+    if (y === iy - 30) { R(x - 2, y, 3, 3, bark[0]); R(x - 1, y + 1, 1, 1, bark[3]); }
+  }
+  const trunkAt = y => { const f = (iy - y) / (iy - top.y); return cx + Math.sin(f * 2.4) * 2 * f + (top.x - cx) * f * f; };
+  // boughs: low ones leave the trunk low, high ones high, each bowing up to its upgrade
+  [[1, 100], [2, 98], [3, 74], [4, 72]].forEach(([i, fromY]) => {
+    const n = nodes[i], x0 = trunkAt(fromY), side = Math.sign(n.x - cx);
+    const frac = maxes[i] ? tiers[i] / maxes[i] : 0;
+    limb(x0, fromY, x0 + (n.x - x0) * 0.45, fromY - 4 - (fromY - n.y) * 0.9, n.x, n.y + 3, 5 + frac * 2, 2);
+    // a twig reaching on past the fruit
+    limb(n.x, n.y + 3, n.x + side * 6, n.y - 2, n.x + side * 9, n.y - 6, 2, 1);
+  });
+  // a short sprig on the trunk where its own upgrade hangs
+  limb(trunkAt(nodes[0].y + 2), nodes[0].y + 2, cx - 5, nodes[0].y - 2, cx - 9, nodes[0].y - 3, 2, 1);
+
+  // the canopy: dark leaves behind, then the body, then the light catching the top-left of each clump
+  const clumps = [
+    [100, 24, 20], [74, 34, 16], [126, 36, 16], [62, 50, 15], [138, 52, 15], [50, 78, 14], [150, 80, 14], [100, 46, 18], [86, 62, 13], [114, 62, 13]
+  ];
+  const owner = [5, 3, 4, 3, 4, 1, 2, 5, 3, 4];          // which upgrade's growth fills out each clump
+  const layer = (shade, dx, dy, k0) => clumps.forEach(([x, y, r0], ci) => {
+    const fr = maxes[owner[ci]] ? tiers[owner[ci]] / maxes[owner[ci]] : 0;
+    const r = r0 * (0.62 + 0.38 * Math.max(fr, grown));
+    const count = Math.round(r * r * 0.55);
+    for (let k = 0; k < count; k++) {
+      const a = mapHash(k + k0, ci, 21) * Math.PI * 2, d = Math.sqrt(mapHash(k + k0, ci, 23)) * r;
+      const lx = x + Math.cos(a) * d * 1.2 + dx + Math.sin(t * 1.4 + k * 0.7 + ci) * 0.4, ly = y + Math.sin(a) * d * 0.8 + dy;
+      const lit = Math.cos(a) * -0.7 + Math.sin(a) * -0.7 > 0.35 && d > r * 0.45;
+      R(lx, ly, 2, 2, shade === 0 ? shadeHex(leaves[0], -0.25) : shade === 1 ? leaves[(k % 2)] : lit ? leaves[2] : leaves[1]);
+    }
+  });
+  layer(0, 2, 3, 0);
+  layer(1, 0, 0, 500);
+  layer(2, -1, -1, 900);
+  // fruit on the boughs that are fully grown, glinting
+  nodes.forEach((n, i) => {
+    if (!maxes[i] || tiers[i] < maxes[i]) return;
+    for (let k = 0; k < 5; k++) {
+      const a = k * 1.3 + 0.4, x = n.x + Math.cos(a) * 11, y = n.y + Math.sin(a) * 7;
       R(x, y, 2, 2, leaves[3]);
       if (Math.sin(t * 3 + k * 2 + i) > 0.85) R(x, y, 1, 1, "#ffffff");
     }

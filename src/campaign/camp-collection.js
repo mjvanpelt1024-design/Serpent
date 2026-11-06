@@ -4,7 +4,7 @@
      the Satchel     your kit (equip one of each kind between levels),
                      loot to sell, and your wardrobe
      the Tailor      skins and themes, bought with gems; some are only
-                     ever won from challenges
+                     ever won from quests
      the Trophy Hall the campaign's achievements, each paying gems
    They open from home base (src/campaign/camp-home.js), and Back
    returns there.
@@ -50,7 +50,7 @@ function campWearCosmetic(kind, id) {
     return Object.assign(out, {
       owned, on: (kind === "skins" ? camp.skin : camp.theme) === id, open: true, reward: excl && !owned,
       price: campCosmeticPrice(kind),
-      sub: excl ? `${kind === "skins" ? "Skin" : "Theme"}, won from challenges` : out.sub,
+      sub: excl ? `${kind === "skins" ? "Skin" : "Theme"}, won from quests` : out.sub,
       desc: excl && !owned ? "Not for sale. The challengers hand these out to snakes who finish their trials." : out.desc,
       buy: () => campBuyCosmetic(kind, id), equip: () => campWearCosmetic(kind, id)
     });
@@ -81,7 +81,7 @@ function campWearCosmetic(kind, id) {
       buy.innerHTML = `${can ? "Buy for" : "Need"} ${gem(i.price)}`;
     }
     const act = bubbleCardEl.querySelector(".bc-act");
-    if (i.reward && act) act.innerHTML = `<button class="btn" disabled>${LOCK_SVG} Won from challenges</button>`;
+    if (i.reward && act) act.innerHTML = `<button class="btn" disabled>${LOCK_SVG} Won from quests</button>`;
   };
   const after = afterBubble;
   window.afterBubble = function () {
@@ -103,7 +103,7 @@ function campWearCosmetic(kind, id) {
     const note = document.createElement("p");
     note.className = "shop-note tailor-note";
     note.innerHTML = sale.every(it => campOwns(kind, it.id)) ? `You own every ${kind === "skins" ? "skin" : "theme"} that's for sale.`
-      : `Every ${kind === "skins" ? "skin" : "theme"} costs <strong>${fmtInt(campCosmeticPrice(kind))} gems</strong> right now, a little more for each one you own. Gems come from achievements, challenges and the banks.`;
+      : `Every ${kind === "skins" ? "skin" : "theme"} costs <strong>${fmtInt(campCosmeticPrice(kind))} gems</strong> right now, a little more for each one you own. Gems come from achievements, quests, level challenges and the banks.`;
     body.appendChild(note);
     body.appendChild(groupHead("Yours", false));
     body.appendChild(bubbleCluster(kind, all.filter(it => campOwns(kind, it.id)).map(it => it.id), "shop"));
@@ -114,7 +114,7 @@ function campWearCosmetic(kind, id) {
     });
     const prizes = ex.filter(it => !campOwns(kind, it.id));
     if (prizes.length) {
-      body.appendChild(groupHead("Challenge prizes", true));
+      body.appendChild(groupHead("Quest prizes", true));
       body.appendChild(bubbleCluster(kind, prizes.map(it => it.id), "shop"));
     }
   };
@@ -138,33 +138,40 @@ window.renderInventory = function () {
   body.innerHTML = "";
   const empty = text => { const p = document.createElement("div"); p.className = "soon"; p.innerHTML = text; body.appendChild(p); };
   if (invTab === "items") {
-    const kit = camp.satchel.filter(it => KIT_SLOTS.includes(campItemSlot(it.id)));
+    const kit = camp.satchel.filter(it => CARRIED.includes(campItemSlot(it.id)));
     if (!kit.length) { empty("<strong>Nothing to carry yet</strong>Each island's merchant sells one kind of thing: gear on the first island, spells on the second, snacks, familiars, runes. The challengers hand some out too."); return; }
     const note = document.createElement("p");
     note.className = "shop-note";
-    note.textContent = "One of each kind goes with you into a level. Swap them here or just before a level starts.";
+    note.textContent = "Your kit is one gear, one spell and one rune. Snacks go in your pocket, four at most, eaten with keys 1 to 4 in a level. Change any of it here or just before a level starts.";
     body.appendChild(note);
-    KIT_SLOTS.forEach(slot => {
+    const button = (it, on, label, onLabel, fn) => {
+      const btn = makeBuyButton(on ? onLabel : label, `inv-${it.uid}`);
+      btn.classList.add(on ? "equipped" : "equip");
+      btn.addEventListener("click", () => { fn(); saveCamp(); sfx("tab"); renderInventory(); });
+      return btn;
+    };
+    KIT_SLOTS.concat(["food"], KIT_EXTRAS).forEach(slot => {
       const items = kit.filter(it => campItemSlot(it.id) === slot);
       if (!items.length) return;
       const s = CAMP.slots.find(x => x.id === slot);
       body.appendChild(groupHead(`${s.name}: ${s.help}`, false));
-      items.sort((a, b) => rarityIdx(b.rarity) - rarityIdx(a.rarity)).forEach(it => {
-        const on = camp.equip[slot] === it.uid;
-        const left = campItemLeft(it);
+      items.sort((x, y) => rarityIdx(y.rarity) - rarityIdx(x.rarity)).forEach(it => {
         const row = document.createElement("div");
         row.className = "shop-row";
         row.innerHTML = `${campItemIconHtml(it)}<div><div class="shop-name" style="color:${rarityColor(it.rarity)}">${escapeAttr(campItemName(it))}</div>
-          <div class="shop-desc">${escapeAttr(campItemDef(it.id).does)}</div><div class="shop-meta"><span class="cs-stat">${left}</span><span class="cs-weak">Weak: ${escapeAttr(campItemDef(it.id).weak)}</span></div></div>`;
-        const btn = makeBuyButton(on ? "Carrying" : "Carry", `inv-${it.uid}`);
-        btn.classList.add(on ? "equipped" : "equip");
-        btn.addEventListener("click", () => {
-          if (on) delete camp.equip[slot]; else camp.equip[slot] = it.uid;
-          saveCamp();
-          sfx("tab");
-          renderInventory();
-        });
-        row.appendChild(btn);
+          <div class="shop-desc">${escapeAttr(campItemDef(it.id).does)}</div><div class="shop-meta"><span class="cs-stat">${campItemLeft(it)}</span><span class="cs-weak">Weak: ${escapeAttr(campItemDef(it.id).weak)}</span></div></div>`;
+        if (slot === "food") {
+          const at = camp.pocket.indexOf(it.uid);
+          row.appendChild(button(it, at >= 0, "Pocket it", `In slot ${at + 1}`, () => {
+            if (at >= 0) { camp.pocket[at] = 0; return; }
+            const free = camp.pocket.indexOf(0);
+            if (free < 0) { showToast("Your pocket is full: take a snack out first."); return; }
+            camp.pocket[free] = it.uid;
+          }));
+        } else {
+          const on = camp.equip[slot] === it.uid;
+          row.appendChild(button(it, on, slot === "pet" ? "Bring" : "Carry", slot === "pet" ? "With you" : "Carrying", () => { if (on) delete camp.equip[slot]; else camp.equip[slot] = it.uid; }));
+        }
         body.appendChild(row);
       });
     });

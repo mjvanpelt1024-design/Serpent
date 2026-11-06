@@ -150,12 +150,14 @@ const SAVE_SCHEMA = S.obj({
   played: S.int(0, 9e15, 0),
   gems: S.int(0, 1e9, 0),
   wallet: S.map(currencyIds, S.int(0, BIG, 0)),
-  // levels won: "keep:3" -> { wins, best, flawless }
-  levels: S.map(/^[a-z]+:(1[0-5]|[1-9])$/, S.obj({ wins: S.int(0, 1e7, 0), best: S.int(0, BIG, 0), flawless: S.bool(false) })),
+  // levels played: "keep:3" -> { wins, best, flawless, bonus (its bonus challenge's reward was earned) }
+  levels: S.map(/^[a-z]+:(1[0-5]|[1-9])$/, S.obj({ wins: S.int(0, 1e7, 0), best: S.int(0, BIG, 0), flawless: S.bool(false), bonus: S.bool(false) })),
   shops: S.map(/^[a-z]+:(merchant|challenger|banker|bridge)$/, S.bool(false)),
   upgrades: S.map(() => Object.keys(CAMP.upgradeById), k => S.int(0, upgradeMax(k), 0)),
   satchel: S.list(ITEM_RULE, 400),
   equip: S.map(slotIds, S.int(0, 1e9, 0)),
+  // the snack pocket: four slots, each an item uid or 0
+  pocket: S.list(S.int(0, 1e9, 0), 4),
   nextUid: S.int(1, 1e9, 1),
   merchants: S.map(islandIds, S.obj({ stock: S.list(STOCK_RULE, 6), restockAt: S.int(0, 9e15, 0) })),
   challenges: S.map(islandIds, S.obj({
@@ -167,7 +169,7 @@ const SAVE_SCHEMA = S.obj({
     claimed: S.bool(false),
     active: S.bool(false)
   })),
-  stats: S.map(/^[a-zA-Z]+$/, S.int(0, BIG, 0), 80),
+  stats: S.map(/^[a-zA-Z_]+$/, S.int(0, BIG, 0), 80),         // "earned_keep" and friends count each money
   achievements: S.map(() => CAMP.rules.achievements.map(a => a.id), S.bool(false)),
   skins: S.list(S.oneOf(() => CONTENT.skins.map(s => s.id), "classic"), 200),
   themes: S.list(S.oneOf(() => CONTENT.themes.map(t => t.id), "black"), 200),

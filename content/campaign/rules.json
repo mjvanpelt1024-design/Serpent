@@ -35,7 +35,7 @@
     ]
   },
   "bank": {"rateToPrev": 10, "feePrev": 5, "snaycoinPerGem": 500, "gemFee": 1},
-  "gems": {"startGems": 0, "storeSoon": "Gem packs arrive when the game launches. Until then gems come from achievements, challenges and the bank."},
+  "gems": {"startGems": 0, "storeSoon": "Gem packs arrive when the game launches. Until then gems come from achievements, quests, level challenges and the bank."},
   "cosmetics": {
     "freeSkins": ["classic"],
     "freeThemes": ["black"],

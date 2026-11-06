@@ -41,6 +41,8 @@ ui/rules-screen.js
 ui/map.js
 ui/map-coil.js
 ui/map-isles.js
+art/coins.js
+art/title-scene.js
 ui/upgrades-screen.js
 game/story/story.js
 ui/tour.js
@@ -58,6 +60,7 @@ ui/tailor.js
 ui/profiles.js
 ui/inventory.js
 game/flow/loadout-and-pause.js
+art/ui-scroll.js
 art/flair-drawing.js
 ui/stats.js
 ui/achievements.js
@@ -89,6 +92,7 @@ engine/input/touch.js
 engine/input/keyboard.js
 game/wiring.js
 campaign/camp-levels.js
+campaign/camp-bonus.js
 campaign/camp-boss.js
 campaign/camp-items.js
 campaign/camp-art.js

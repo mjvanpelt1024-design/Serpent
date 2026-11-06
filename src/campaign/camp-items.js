@@ -13,7 +13,7 @@ const campEquippedId = slot => { if (campBare()) return null; const it = campEqu
 const campEquippedRarity = slot => { const it = campEquipped(slot); return it ? it.rarity : null; };
 const campItemPower = it => { const d = campItemDef(it.id); return d && d.power ? d.power[rarityIdx(it.rarity)] : 0; };
 
-/* Spends one use of the worn gear. A Tinker's Pie patches it instead of letting it break. */
+/* Spends one use of the worn gear; at none left it breaks */
 function campUseGear(id, free = false) {
   const it = campEquipped("gear");
   if (campBare() || !it || it.id !== id) return false;
@@ -21,27 +21,63 @@ function campUseGear(id, free = false) {
   it.uses--;
   campRun.gearFx = performance.now();
   if (it.uses <= 0) {
-    const pie = campEquipped("food");
-    if (pie && pie.id === "pie" && pie.uses > 0) {
-      it.uses += campItemPower(pie);
-      useFood(pie, `Tinker's Pie patched your ${campItemDef(it.id).name}!`);
-    } else {
-      showToast(`Your ${campItemName(it)} broke!`);
-      campDrop(it.uid);
-      campBump("itemsBroken");
-      sfx("bad");
-    }
+    showToast(`Your ${campItemName(it)} broke!`);
+    campDrop(it.uid);
+    campBump("itemsBroken");
+    sfx("bad");
   }
   saveCamp();
   return true;
 }
 
-function useFood(it, text) {
+/* ----- The pocket: four snacks, eaten with keys 1 to 4 -----
+   Each bite spends a charge; at none left the snack is gone and its slot empties.
+   A bite that would do nothing (full hearts, whole armor, no gear) isn't taken. */
+const pocketItem = i => (camp.pocket[i] ? satchelItem(camp.pocket[i]) : null);
+function campEatSnack(i) {
+  if (!campRun || gameState !== "PLAYING" || paused || campRun.over) return;
+  const it = pocketItem(i);
+  if (campBare()) { showToast("Bare Scales: no snacks in this quest."); return; }
+  if (!it) { showToast(`Pocket slot ${i + 1} is empty.`); sfx("bad"); return; }
+  const d = campItemDef(it.id), p = campItemPower(it), leg = it.rarity === "legendary";
+  const P = ARMOR_PIECES();
+  let said = "";
+  if (it.id === "stew") {
+    const max = campRun.startHearts || 0;
+    if (currentHearts >= max) { showToast(max ? "Your hearts are already full." : "You have no hearts to heal yet."); sfx("bad"); return; }
+    currentHearts = Math.min(max, currentHearts + p);
+    said = "Hearty Stew! You feel better already.";
+  } else if (it.id === "bread") {
+    if (campRun.armor >= campRun.armorMax) { showToast(campRun.armorMax ? "Your armor is whole." : "You have no armor for it to grow back."); sfx("bad"); return; }
+    campRun.armor = Math.min(campRun.armorMax, (Math.floor(campRun.armor / P) + p) * P);
+    campSyncArmor();
+    said = "Honey Bread! Your armor grows back.";
+  } else if (it.id === "pie") {
+    const g = campEquipped("gear");
+    const full = g ? freshUses(g.id, g.rarity) : 0;
+    if (!g || g.uses >= full) { showToast(g ? "Your gear is good as new." : "You have no gear to patch."); sfx("bad"); return; }
+    g.uses = Math.min(full, g.uses + p);
+    campRun.gearFx = performance.now();
+    said = `Tinker's Pie patched your ${d && campItemDef(g.id).name}!`;
+  } else if (it.id === "jerky") {
+    const s = campEquipped("spell");
+    const full = s ? freshUses(s.id, s.rarity) : 0;
+    if (!s || s.uses >= full) { showToast(s ? "Your spell is fully charged." : "You have no spell to recharge."); sfx("bad"); return; }
+    s.uses = Math.min(full, s.uses + p);
+    said = "Spice Jerky! Your spell gets its spark back.";
+  } else if (it.id === "tart") {
+    if (campRun.phoenix) { showToast("The tart's warmth is already with you."); sfx("bad"); return; }
+    campRun.phoenix = p;
+    said = "Phoenix Tart! The next blow that would end you won't.";
+  }
   it.uses--;
-  showToast(text);
+  lastHeartsKey = "";
+  showToast(said);
   sfx("heart");
-  if (it.uses <= 0) { campDrop(it.uid); showToast(`That was the last of the ${campItemDef(it.id).name}.`); }
+  campBump("snacksEaten");
+  if (it.uses <= 0) { campDrop(it.uid); showToast(`That was the last of the ${d.name}.`); }
   saveCamp();
+  updateHud();
 }
 
 /* Pushes a hazard or enemy one or two squares to the side of the snake's path */
@@ -69,7 +105,7 @@ function campGearMeets(type) {
   if (fieldOn()) { sfx("pop"); return "kill"; }
   const enemy = ["flea", "wasp", "ghost"].includes(type);
   if (gear === "sword") {
-    if (enemy) { campUseGear("sword"); showToast("Your sword cut it down!"); sfx("rock"); return "kill"; }
+    if (enemy) { campUseGear("sword"); showToast("Your sword cut it down!"); sfx("rock"); campBonusEvent("kill"); return "kill"; }
     if (["rock", "popsicle", "bramble", "spikes"].includes(type)) {
       const it = campEquipped("gear");
       if (leg) campUseGear("sword");
@@ -134,7 +170,7 @@ const fieldOn = (ts = performance.now()) => !!campRun && ts < (campRun.fieldUnti
 function campCast() {
   if (!campRun || gameState !== "PLAYING" || paused) return;
   const it = campEquipped("spell");
-  if (!it || campBare()) { showToast(campBare() ? "Bare Scales: no spells in this challenge." : "No spell ready. Buy one on the Arcanum Spire."); return; }
+  if (!it || campBare()) { showToast(campBare() ? "Bare Scales: no spells on this quest." : "No spell ready. Buy one on the Arcanum Spire."); return; }
   const ts = performance.now();
   if (ts < campRun.castReadyAt) return;
   campRun.castReadyAt = ts + 1500 * (1 - upPct("recharge"));
@@ -154,15 +190,10 @@ function campCast() {
   if (!ok) { campRun.castReadyAt = ts + 300; return; }
   it.uses--;
   campBump("spellsCast");
+  campBonusEvent("spell");
   if (it.uses <= 0) {
-    const jerky = campEquipped("food");
-    if (jerky && jerky.id === "jerky" && jerky.uses > 0) {
-      it.uses += campItemPower(jerky);
-      useFood(jerky, "Spice Jerky! Your spell got its spark back.");
-    } else {
-      showToast(`Your ${campItemDef(it.id).name} is spent.`);
-      campDrop(it.uid);
-    }
+    showToast(`Your ${campItemDef(it.id).name} is spent.`);
+    campDrop(it.uid);
   }
   saveCamp();
 }
@@ -213,8 +244,8 @@ function fireballHits(t) {
     if (boss.fight === 2 && boss.armor > 0) damageBoss(1, "fireball");
     else { boss.stamina = Math.max(0.02, boss.stamina - 0.2); showToast("Fireball! It's winded."); }
   } else if (t.kind === "hunter" && hunter && hunter.alive) stunHunter("star");
-  else if (t.kind === "entity") removeEntity(t.ref);
-  else if (t.kind === "hazard") { const i = hazards.indexOf(t.ref); if (i >= 0) hazards.splice(i, 1); }
+  else if (t.kind === "entity") { if (["wasp", "ghost"].includes(t.ref.type)) campBonusEvent("kill"); removeEntity(t.ref); }
+  else if (t.kind === "hazard") { const i = hazards.indexOf(t.ref); if (i >= 0) { if (t.ref.type === "flea") campBonusEvent("kill"); hazards.splice(i, 1); } }
   else if (t.kind === "popsicle") { const i = popsicles.indexOf(t.ref); if (i >= 0) popsicles.splice(i, 1); }
 }
 
@@ -300,8 +331,8 @@ function tickPet(ts) {
     const r = it.rarity === "legendary" ? rocks.find(x => near(x, range)) : null;
     const hit = e || f || r;
     if (!hit) { P.nextAt = ts + 500; return; }
-    if (e) removeEntity(e);
-    else if (f) hazards.splice(hazards.indexOf(f), 1);
+    if (e) { if (e.type === "wasp") campBonusEvent("kill"); removeEntity(e); }
+    else if (f) { campBonusEvent("kill"); hazards.splice(hazards.indexOf(f), 1); }
     else rocks.splice(rocks.indexOf(r), 1);
     P.fxAt = { x: hit.x, y: hit.y }; P.fx = ts;
     sfx("rock");

@@ -25,6 +25,9 @@ LAYOUTS = {"open", "pillars", "rooms", "cross", "lanes", "ring", "comb", "diamon
 STATIC_LAYOUTS = LAYOUTS - {"tunnel", "maze", "field", "pulse"}
 EDGES = {"wrap", "wall", "mirror", "endless", "maze"}
 GOALS = {"apples", "score", "length", "survive", "distance", "keys", "buttons", "relic", "shards", "thief", "boss"}
+# a level's bonus challenge: type -> does it need a number to reach
+BONUSES = {"streak": True, "fast": True, "rocks": True, "length": True, "points": True, "untouched": False, "kills": True, "spells": True, "loot": True}
+BONUS_REWARDS = {"gems": (1, 10), "coins": (1, 5000), "points": (1, 100000)}
 RELICS = {"crown", "grimoire", "ladle", "pearl", "eye"}
 SPAWNS = {"popsicle", "flea", "fire", "molasses", "rock", "apple", "xp",
           "bramble", "wasp", "lightning", "ice", "bomb", "ghost", "spikes", "gust", "sinkhole",
@@ -76,6 +79,7 @@ def check_island(isl, rel, families_used, currencies):
     for key in ("id", "name", "plural", "short", "color"):
         check(key in cur, rel, f"currency is missing \"{key}\"")
     check(cur.get("id") not in currencies, rel, f"currency id \"{cur.get('id')}\" is used by another island")
+    check(isinstance(cur.get("tale"), str) and len(cur.get("tale", "")) >= 10, rel, "currency needs a tale (a line about the coin, shown when you flip it)")
     currencies.add(cur.get("id"))
     fam = isl.get("merchantFamily")
     check(fam in FAMILIES, rel, f"merchantFamily \"{fam}\" isn't one of {sorted(FAMILIES)}")
@@ -133,6 +137,19 @@ def check_island(isl, rel, families_used, currencies):
             check(layout == "tunnel", where, "distance goals only work in the tunnel")
         if gt == "buttons":
             check(num(g.get("need"), 1, 8), where, "buttons need 1-8 plates")
+        bonus = lv.get("bonus")
+        if check(isinstance(bonus, dict), where, "missing its bonus challenge (\"bonus\")"):
+            bt = bonus.get("type")
+            check(bt in BONUSES, where, f"bonus type \"{bt}\" isn't one of {sorted(BONUSES)}")
+            if BONUSES.get(bt):
+                check(num(bonus.get("need"), 1, 1e7), where, "bonus.need must be a positive number")
+            if bt == "streak":
+                check(num(bonus.get("secs"), 3, 120), where, "a streak bonus needs secs (3-120)")
+            if bt == "rocks":
+                check("rock" in lv.get("spawns", {}), where, "a rocks bonus needs rocks on the board")
+            rw = bonus.get("reward", {})
+            check(isinstance(rw, dict) and len(rw) == 1 and all(k in BONUS_REWARDS and num(v, *BONUS_REWARDS[k]) for k, v in rw.items()), where,
+                  f"bonus.reward must be one of {sorted(BONUS_REWARDS)} with a sensible amount")
         if layout == "tunnel":
             for k in lv.get("spawns", {}):
                 check(k in ENDLESS_SPAWNS, where, f"the tunnel can't spawn \"{k}\" (only {sorted(ENDLESS_SPAWNS)})")

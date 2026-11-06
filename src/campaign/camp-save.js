@@ -19,7 +19,7 @@ function freshCamp() {
     v: 1, name: "Noodle", named: false, created: now, played: now,
     gems: CAMP.rules.gems.startGems || 0,
     wallet: Object.fromEntries(CAMP.islands.map(i => [i.currency.id, 0])),
-    levels: {}, shops: {}, upgrades: {}, satchel: [], equip: {}, nextUid: 1,
+    levels: {}, shops: {}, upgrades: {}, satchel: [], equip: {}, pocket: [0, 0, 0, 0], nextUid: 1,
     merchants: {}, challenges: {}, stats: {}, achievements: {},
     skins: CAMP.rules.cosmetics.freeSkins.slice(), themes: CAMP.rules.cosmetics.freeThemes.slice(),
     skin: CAMP.rules.cosmetics.freeSkins[0] || "classic", theme: CAMP.rules.cosmetics.freeThemes[0] || "black",
@@ -43,6 +43,12 @@ function repairCamp(c) {
     const it = c.satchel.find(x => x.uid === c.equip[slot]);
     if (!it || !CAMP.itemById[it.id] || CAMP.families[CAMP.itemById[it.id].family].slot !== slot) delete c.equip[slot];
   });
+  // snacks live in the pocket now: four slots, each a snack in the satchel, none twice
+  const isSnack = uid => { const it = c.satchel.find(x => x.uid === uid); return !!(it && CAMP.itemById[it.id] && CAMP.itemById[it.id].family === "food"); };
+  const pocket = (c.pocket || []).slice(0, 4);
+  while (pocket.length < 4) pocket.push(0);
+  if (c.equip.food) { if (!pocket.includes(c.equip.food)) { const i = pocket.indexOf(0); if (i >= 0) pocket[i] = c.equip.food; } delete c.equip.food; }
+  c.pocket = pocket.map((uid, i) => (uid && isSnack(uid) && pocket.indexOf(uid) === i ? uid : 0));
   if (!campIslandOpen(c.at, c)) c.at = CAMP.islands[0].id;
   return c;
 }
@@ -243,14 +249,16 @@ function campGive(id, rarity = "common") {
   }
   const it = { uid: camp.nextUid++, id, rarity, uses: slot === "loot" || slot === "rune" || slot === "pet" ? 0 : freshUses(id, rarity), qty: 1 };
   camp.satchel.push(it);
-  // the first piece of a kind goes straight on
-  if (slot !== "loot" && !camp.equip[slot]) camp.equip[slot] = it.uid;
+  // the first piece of a kind goes straight on; a snack goes into a free pocket slot
+  if (slot === "food") { const i = camp.pocket.indexOf(0); if (i >= 0) camp.pocket[i] = it.uid; }
+  else if (slot !== "loot" && !camp.equip[slot]) camp.equip[slot] = it.uid;
   return it;
 }
 
 function campDrop(uid) {
   camp.satchel = camp.satchel.filter(it => it.uid !== uid);
   Object.keys(camp.equip).forEach(s => { if (camp.equip[s] === uid) delete camp.equip[s]; });
+  camp.pocket = camp.pocket.map(u => (u === uid ? 0 : u));
 }
 
 function campItemName(it) {

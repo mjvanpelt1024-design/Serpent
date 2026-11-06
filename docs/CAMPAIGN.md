@@ -1,4 +1,4 @@
-# The campaign (build 47)
+# The campaign (builds 47 to 49)
 
 Five islands strung up the sky along the Coil, fifteen levels each, one boss per island fought three times,
 shopkeepers off every path, and an economy where every island has its own money. It looks the way build
@@ -22,9 +22,11 @@ This file is the design and the map of where things live. The numbers themselves
 | The hub beside the board, the result card | `src/campaign/camp-hud.js`, `camp-screens.js` |
 | Hearts and armor: the rules (`campDamage`) and their pictures | `camp-run.js`, `camp-hearts.js` |
 | Shops, shopkeeper scenes, the kit box, trees | `camp-shops.js`, `camp-scenes.js`, `camp-kit.js`, `camp-tree.js` |
+| Every level's challenge (its `bonus`) | `camp-bonus.js` |
 | Home base, the Satchel, Tailor and Trophy Hall | `camp-home.js`, `camp-collection.js` |
 | Item and goal pictures (12 x 12, like every icon) | `camp-art.js` (goal pieces: `camp-levels.js`) |
 | The pixel frames on every panel, button and window | `src/art/ui-frames.js`, `styles/16-retro-fantasy.css` |
+| Scrolls, the cursor, coins and their card, the title screen's world | `src/art/ui-scroll.js`, `coins.js`, `title-scene.js`, `styles/17-hub-nodes.css` |
 | One save, no profiles, settings rows | `camp-menu.js` |
 
 After changing any campaign file:
@@ -72,6 +74,15 @@ opens when you reach that island and burns purple once its last boss falls.
 Drag to explore, scroll or pinch to zoom; click an island to fly in. Up close the banner shows its name,
 your money there, Home base and the next level; the arrows (or a swipe up or down) step between islands.
 
+**There are no popups on the path.** Click a stop and the camera flies right down to it (`renderNodeFocus`
+in `map.js`): its name on a parchment scroll at the top (with the level's goal and challenge, or the
+shopkeeper's line), its button standing on the stop itself (Play, Play again, Visit, Cross) and a little
+Rules signpost beside it that opens the rules card. Big arrows on either side step to the stop before
+and after along `NODE_SEQ` (also the left and right arrow keys, or A and D), and say where they go:
+Home before level 1, Boss before a lair, the shopkeeper's name before a shop, Next island at the bridge.
+Esc, a click on the grass or scrolling out flies back up. Home doesn't stop to ask: it dives straight
+into home base.
+
 Every island has the same twenty stops on a winding dirt path (paths you've opened are trodden smooth):
 
 ```
@@ -100,19 +111,44 @@ tree, which grows as you buy that island's upgrades. The shopkeepers stand by th
 
 ## Playing a level
 
-Play (or the level's rules card) opens the old "Bring anything?" box when you own something to carry: one
-gear, spell, snack, familiar, rune and heart canister, picked with arrows. Then the old 3-2-1 countdown.
+Play (on the stop, or on the rules card) opens the old "Bring anything?" box, now "What will you carry?",
+when you own something to carry: **your kit** (one gear, one spell, one rune, picked with arrows), your
+familiar and heart canister, and **the pocket**, four snack slots you click to fill (never the same
+snack twice). The Satchel's Kit tab changes the same things between levels. Then the old 3-2-1
+countdown, and the cursor hides until the run ends or you pause.
 
 **Nothing is drawn on the board but the game.** The hub around it, in pixel-framed plates:
 
 - **Left, you:** your hearts and armor, the score and the pause button (the game's own HUD), your purse
-  (this island's money and your gems, and what this run's points will pay), your kit with what's left of
-  each piece, effects, and what you've found.
-- **Right, the world:** the island and level, the quest (the goal), the challenge's three trials while one
-  is on, and a wanted poster with the bounty on the next boss: its face, its name, where it waits and the
-  reward. The boss's own hearts, stamina and mood only show while you fight it.
+  (this island's money and your gems, and what this run's points will pay), your kit (gear, spell with
+  its Space key, rune), the pocket (four snacks with their keys 1 to 4 and charges left; click one to eat
+  it too), a chip with your familiar (or No familiar), effects, and what you've found.
+- **Right, the world:** the island and level, then three plates: **Objective** (the level's goal),
+  **Quest** (the challenger's three trials while one is on, from any island; None otherwise) and
+  **Challenge** (the level's extra, below), and a wanted poster with the bounty on the next boss: its
+  face, its name, where it waits and the reward. The boss's own hearts, stamina and mood only show while
+  you fight it.
 
 On a narrow screen both sides line up under the board.
+
+### Snacks
+
+Snacks don't fire by themselves any more: **1 to 4** (number row or keypad) eat the one in that pocket
+slot, once the countdown is over. Each bite spends a charge, the last one empties the slot. A bite that
+would do nothing is refused and costs nothing: Hearty Stew heals hearts up to your full hearts, Honey
+Bread grows armor plates back, Tinker's Pie gives your gear its uses back, Spice Jerky puts charges back
+in your spell (up to full), and Phoenix Tart readies a second chance for this level (`campRun.phoenix`).
+The save keeps the pocket as four item ids (`pocket`, 0 for empty); an old save's carried snack moves
+into it.
+
+### Challenges
+
+Every level has one (`bonus` in its island file, checked by `tools/check-campaign.py`), shown on the map
+and beside the board even when you can't manage it yet: eat N apples within S seconds (`streak`), win
+within N seconds (`fast`), smash into N boulders (`rocks`, only where rocks fall), grow to N (`length`),
+score N (`points`), win without a hit (`untouched`), defeat N enemies (`kills`: sword, fireball, crab,
+the hunter), cast N spells (`spells`), find N trinkets (`loot`). The reward is `{"points"}` every time
+you do it, or `{"gems"}` / `{"coins"}` once (the level's record keeps `bonus: true`).
 
 ### Hearts and armor
 
@@ -156,19 +192,20 @@ plate beside the board; silver hearts are armor.
 
 ## Items
 
-Four rarities (Common, Uncommon, Rare, Legendary), five kinds, one of each carried at a time:
+Four rarities (Common, Uncommon, Rare, Legendary), five kinds. Your kit is one gear, one spell and one
+rune; snacks go in the pocket, four at most; one familiar and one heart canister come along too:
 
 | Kind | Island | Behaves | The five |
 |---|---|---|---|
 | Gear | 1 | worn; uses wear out (1/3/5/5), then it breaks; legendaries add an immunity | Kite Shield, Arming Sword, Bulwark Helm, Ember Cloak, Thorn Mail |
 | Spell | 2 | Space casts; rarity sets charges and duration | Force Field, Fireball, Blink, Frost Nova, Apple Call |
-| Snack | 3 | fires by itself when needed: heals, regrows armor, repairs gear | Hearty Stew, Honey Bread, Tinker's Pie, Spice Jerky, Phoenix Tart |
+| Snack | 3 | in the pocket; 1 to 4 eat one: heals, regrows armor, repairs gear, recharges a spell, a second chance | Hearty Stew, Honey Bread, Tinker's Pie, Spice Jerky, Phoenix Tart |
 | Familiar | 4 | follows you into every level; never wears out | Lantern Firefly, Snip the Crab, Shellby the Turtle, Puff the Pufferfish, Sir Seahorse |
 | Rune | 5 | burns up when a level starts and changes that level | Plenty, Stillness, Fortune, Fury, Echoes |
 | Canister | never sold | purple hearts on top of your own, lost first; they never refill | Heart Canister |
 
 The **Heart Canister** is found on the board now and then (`rewards.canisterShare` of loot drops) or won
-from a challenge (`challenge.pool`). Common, uncommon and rare ones hold 1, 2 and 3 **purple hearts**; a
+from a quest (`challenge.pool`). Common, uncommon and rare ones hold 1, 2 and 3 **purple hearts**; a
 legendary holds 5 plates of **shiny purple armor** (four pieces each, like yours). Its pieces are spent
 before your own armor and hearts, a lost one is gone for good, and the jar crumbles when it's empty. It's
 switched off by the Glass Scales and Bare Scales twists. Stored in the save as its pieces left (`uses`).
@@ -186,7 +223,7 @@ animated scene of their shop in the story book's style.
 - **Merchant** (after boss 1): three different items of the island's kind, each a random rarity (Common
   55, Uncommon 28, Rare 13, Legendary 4), one on sale. New stock every 2 hours, or now for gems. A Sell tab
   buys anything back in the money of the island it came from.
-- **Challenger** (after boss 2): three of the island's won levels (never a boss) with two nightmare-style
+- **Challenger** (after boss 2): a **quest**, three of the island's won levels (never a boss) with two nightmare-style
   twists each (faster, a bigger goal, a swarm, no hearts or armor, darkness, no items, a 90 second clock,
   rockslides), different twists on each trial. Once accepted it stays until it's done or its week runs out
   (`challenge.days`). Finishing pays the island's money plus one weighted roll from `challenge.pool`
@@ -197,7 +234,10 @@ animated scene of their shop in the story book's style.
 
 ## Money and upgrades
 
-Each island has its own money, earned on its levels and from its challenges. **Every run's points pay
+Each island has its own money, earned on its levels, its quests and some challenges. Every coin has its
+island's mark on its tails side; click the coin in the top bar and it flips to heads (a snake's head in
+the island's hat, `coins.js`) with a card about the money (its `tale` in the island file). Esc or a click
+anywhere else puts it away and flips it back. **Every run's points pay
 too, won or lost**: one coin per `rewards.pointsPerCoin` points (50), with Coil Mastery's bonus, on top of
 a win's reward. Even quitting pays for the points you made. Each upgrade tree is paid in
 its own island's money, but **every upgrade works on every island**:
@@ -210,8 +250,8 @@ its own island's money, but **every upgrade works on every island**:
 | The Coral Fig | 4 | boss stamina drain, longer exhaustion, double bites, faster familiars, bigger challenge rewards, better sell prices |
 | The Ember Ash | 5 | second wind, survival points, gem finder, runecraft, more of every currency, more armor slots |
 
-**Gems** are the one shared currency: from achievements, challenges and the banks (and, once the game
-launches, real money). They buy skins and themes at the Tailor. Some skins and themes are challenge prizes
+**Gems** are the one shared currency: from achievements, quests, challenges and the banks (and, once the game
+launches, real money). They buy skins and themes at the Tailor. Some skins and themes are quest prizes
 only (`cosmetics.exclusiveSkins` / `exclusiveThemes`).
 
 ## Home base
@@ -220,12 +260,22 @@ The home stop on every island is its tree. Click it and the map's camera dives a
 of the island's home in the map's own pixel style, in the sky at that island's height: the upgrade tree,
 as tall and full as its upgrades (a fruit for every tier), your satchel leaning on the trunk with what you
 carry peeking out, a golden trophy on a plinth, a standing mirror with your snake in it, an easel painted
-with your theme, and your snake curled up by the roots. Each opens its page on the old screens:
+with your theme, and your snake curled up by the roots. There are no buttons: point at a thing and it
+glows with its name on a little scroll, click it and its page opens on the old screens. The bounty and
+your quest are pinned up in the corner.
 
-- the tree: the island's upgrade tree (the old tree screen)
+- the carving on the trunk (it turns gold when you can afford an upgrade): the island's upgrade tree, one
+  trunk from the roots to the crown with a bough out to every upgrade and a canopy that fills out tier
+  by tier
 - the satchel: the Satchel (Kit to carry, Loot, Wardrobe)
 - the trophy: the Trophy Hall (the campaign's achievements and their gem rewards)
 - the mirror and the easel: the Tailor (skins and themes for gems)
+
+## The title screen
+
+Behind the menu the whole world drifts by (`title-scene.js`): the map's own painter, one map pixel to a
+screen block, panning up from the sunrise to the stars and back over two minutes. The board is a window
+onto it (the renderer leaves it clear there), with the demo snake still chasing apples across the sky.
 
 ## Decided, and not done yet
 

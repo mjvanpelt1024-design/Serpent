@@ -1,5 +1,32 @@
 # Changelog
 
+## v:11.06.2026_b:49: the pocket, challenges, and the map up close
+
+- **Your kit is three things**: one gear, one spell, one rune. **Snacks go in a pocket** of four and you
+  eat them yourself with **1 to 4** (or a click beside the board); they no longer fire on their own, and a
+  bite that would do nothing is refused for free. Your familiar has its own chip beside the board, or
+  says No familiar. The "What will you carry?" box and the Satchel's Kit tab both fill the pocket.
+- **Objective, Quest and Challenge** beside the board. The challenger's three trials are now a *quest*
+  (shown from any island while one is on, None otherwise). Every one of the 75 levels has a
+  **challenge**, something extra to do for points every time or coins or a gem once: smash three
+  boulders, eat four apples in fifteen seconds, win without a hit, win inside two minutes...
+- **No popups on the path.** Clicking a stop flies the camera down to it: the Play button stands on the
+  stop, a Rules signpost beside it, the name on a parchment scroll, and arrows on both sides of the
+  screen to the stop before and after (Home, Boss, the shopkeeper, Next island). Left and right arrow
+  keys walk the path; Esc flies back out. Home dives straight in.
+- **Home base** has no buttons: click the tree's carving for upgrades, the satchel, the trophy, the
+  mirror or the easel. The bounty and your quest are pinned in the corner, and the place's name is on a
+  scroll.
+- **The upgrade tree** is one tree now, trunk to crown with a bough to every upgrade, roots, and a canopy
+  in layers that fills out as you grow it.
+- **Coins** carry their island's mark. Click the coin in the top bar to flip it to heads, with the
+  money's name and a little story; Esc or a click away flips it back.
+- **The title screen** looks out over the whole world, drifting from the sunrise to the stars, through
+  the board.
+- **A brass pointer** for a cursor (a gloved hand over anything clickable), hidden while you play.
+- Fixed: every save reload said "Some save values were out of range" once you'd earned any island's
+  money (its per-island tally was refused by the save check).
+
 ## v:11.05.2026_b:48: hearts, armor and the hub, in full retro fantasy dress
 
 - **Points pay.** Every run's points turn into the island's money, won or lost (1 coin per 50 points,

@@ -181,6 +181,7 @@ function campStart(isl, n, challengeIdx = -1) {
   goldHearts = 0;
   if (def.dark || mods.includes("dark")) nm.dark = true;
   campSetupGoal(def, mods);
+  campBonusSetup(def);
   if (def.goal.type === "boss") spawnBoss(def, def.goal.fight);
   campPetSetup();
   if (rune) showToast(`${campItemName(rune)} burns bright.`);
@@ -302,11 +303,12 @@ function campWinLevel() {
   }
   campGiveFinds(lines, "Found");
   if (roll(upVal("gemfinder"))) { addGems(1); lines.push("+1 gem (Gem Finder)"); }
+  campBonusAtWin(lines);
   // the challenge
   const C = camp.challenges[isl];
   if (campRun.challenge >= 0 && C && C.active) {
     C.done[campRun.challenge] = true;
-    lines.push(C.done.every(Boolean) ? "Challenge complete! Claim your reward from the challenger." : `Challenge trial ${C.done.filter(Boolean).length} of 3 done`);
+    lines.push(C.done.every(Boolean) ? "Quest complete! Claim your reward from the challenger." : `Quest trial ${C.done.filter(Boolean).length} of 3 done`);
   }
   // what just opened
   const notes = [];
@@ -314,7 +316,7 @@ function campWinLevel() {
     if (n < LEVEL_COUNT) notes.push(`Level ${n + 1} is open: ${campLevelDef(isl, n + 1).name}`);
     const isle = CAMP.islandById[isl];
     if (n === SHOP_AFTER.merchant) notes.push(`${isle.npcs.merchant.name} opened ${isle.npcs.merchant.shop}`);
-    if (n === SHOP_AFTER.challenger) notes.push(`${isle.npcs.challenger.name} has challenges for you`);
+    if (n === SHOP_AFTER.challenger) notes.push(`${isle.npcs.challenger.name} has a quest for you`);
     if (n === LEVEL_COUNT) {
       notes.push(`${isle.npcs.banker.name}'s bank is open`);
       const next = CAMP.islands[campIslandIdx(isl) + 1];
@@ -380,8 +382,7 @@ function campTryRevive(cause) {
     return true;
   };
   if (campRun.secondWind) { campRun.secondWind = false; showToast("Second Wind! Not today."); return back(upVal("secondwind")); }
-  const tart = campBare() ? null : campEquipped("food");
-  if (tart && tart.id === "tart" && tart.uses > 0) { useFood(tart, "Phoenix Tart! You rise from the crumbs."); return back(campItemPower(tart)); }
+  if (campRun.phoenix) { const h = campRun.phoenix; campRun.phoenix = 0; showToast("The Phoenix Tart! You rise from the crumbs."); return back(h); }
   if (campRun.echoReady) {
     campRun.echoReady = false; campRun.echoUsed = true;
     showToast("The Rune of Echoes calls you back!");
@@ -453,22 +454,8 @@ function campTryRevive(cause) {
     if (campGuardHit(cause)) return false;
     if (guardHit()) return false;                 // the Rampage Star, or a bubble shield
     if (campRun.rune && campRun.rune.id === "fury" && hearts !== Infinity) hearts *= 2;
-    const armorBefore = campRun.armor, before = currentHearts;
+    campRun.hitTaken = true;
     if (campDamage(hearts, cause)) return true;
-    // snacks that fire after the fact
-    const food = campBare() ? null : campEquipped("food");
-    if (food && food.uses > 0) {
-      if (food.id === "stew" && currentHearts < 1 && currentHearts < before) {
-        currentHearts = Math.min(Math.max(campRun.startHearts, 1), currentHearts + campItemPower(food));
-        useFood(food, "Hearty Stew! You feel better already.");
-        lastHeartsKey = "";
-        updateHud();
-      } else if (food.id === "bread" && armorBefore > 0 && campRun.armor === 0) {
-        const n = campItemPower(food) * ARMOR_PIECES();
-        useFood(food, "Honey Bread! Your armor is growing back.");
-        setTimeout(() => { if (campRun && gameState === "PLAYING") { campRun.armor = Math.min(campRun.armor + n, campRun.armorMax); campSyncArmor(); updateHud(); } }, 1500);
-      }
-    }
     return false;
   });
   // armor only comes from upgrades in the campaign: a stray armor pickup pays points instead
@@ -507,6 +494,7 @@ function campTryRevive(cause) {
   /* Gear against what the head runs into */
   wrap("hitRock", orig => function (rock) {
     if (!campRun) return orig.apply(this, arguments);
+    campBonusEvent("rock");
     const r = campGearMeets("rock");
     if (r === "shove") { shoveAside(rock); rocks.push(rock); return; }
     if (r === "kill") return;
@@ -545,7 +533,7 @@ function campTryRevive(cause) {
   wrap("hunterTouchedBy", orig => function (nx, ny) {
     if (!campRun || !hunter || !hunter.alive || !hunter.cells.some(c => c.x === nx && c.y === ny)) return orig.apply(this, arguments);
     const gear = campEquippedId("gear");
-    if (gear === "sword" && campUseGear("sword")) { beatHunter(); return false; }
+    if (gear === "sword" && campUseGear("sword")) { beatHunter(); campBonusEvent("kill"); return false; }
     if (gear === "shield" && campUseGear("shield")) { stunHunter("body"); return false; }
     if (campGuardHit("hunter")) { hunterRetreat(); return false; }
     return orig.apply(this, arguments);
@@ -559,6 +547,7 @@ function campTryRevive(cause) {
     if (campRun.magnetDouble && performance.now() < campRun.magnetDouble) extra += 1;
     if (extra > 0) score += Math.round((score - before) * extra);
     campRun.apples++;
+    campBonusEvent("apple");
     campBump("applesEaten");
   });
 
@@ -575,6 +564,7 @@ function campTryRevive(cause) {
     orig.apply(this, arguments);
     if (!campRun || gameState !== "PLAYING" || campRun.over) return;
     tickCampLevel(ts, delta);
+    campBonusTick();
     tickBoss(ts, delta);
     tickShots(ts, delta);
     tickPet(ts);

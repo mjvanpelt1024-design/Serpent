@@ -1,30 +1,36 @@
 /* =========================================================
    src/campaign/camp-kit.js
    Choosing what to carry, between levels. The old "Bring anything?"
-   box asks before every level once you own something to carry: one
-   gear, one spell, one snack, one familiar and one rune, each picked
-   with arrows from what's in your satchel (or nothing). Items can't be
-   swapped in the middle of a level.
+   box asks before every level once you own something to carry:
+     your kit     one gear, one spell and one rune, picked with arrows
+     the pocket   four snacks, eaten with keys 1 to 4 in the level;
+                  click a slot to change what's in it
+     a familiar   to come along beside you
+     a canister   extra hearts in a jar
+   Nothing can be swapped in the middle of a level.
    ========================================================= */
 "use strict";
 
 let kitFor = null;            // { isl, n, challenge } while the box is open
-const KIT_SLOTS = ["gear", "spell", "food", "pet", "rune", "canister"];
+const KIT_SLOTS = ["gear", "spell", "rune"];
+const KIT_EXTRAS = ["pet", "canister"];
+const CARRIED = KIT_SLOTS.concat(KIT_EXTRAS, ["food"]);
 
 /* Opens the box if there's anything to choose; false means just play */
 function openCampKit(isl, n, challengeIdx) {
-  const owned = camp.satchel.filter(it => KIT_SLOTS.includes(campItemSlot(it.id)));
+  const owned = camp.satchel.filter(it => CARRIED.includes(campItemSlot(it.id)));
   if (!owned.length) return false;
   kitFor = { isl, n, challenge: challengeIdx };
   loadoutOpen = true;
   const def = campLevelDef(isl, n);
   document.getElementById("loadout-title").textContent = "What will you carry?";
-  document.querySelector("#loadout .loadout-sub").textContent = `${n}. ${def.name}: ${goalText(def.goal)}. One of each kind; they can't be swapped mid-level.`;
+  document.querySelector("#loadout .loadout-sub").textContent = `${n}. ${def.name}: ${goalText(def.goal)}. Nothing can be swapped once the level starts.`;
   document.getElementById("loadout-none").textContent = "Back";
   document.getElementById("loadout-go").textContent = "Start";
   renderCampKit();
   document.getElementById("loadout").classList.add("active");
   document.getElementById("loadout-go").focus({ preventScroll: true });
+  updatePauseButton();
   return true;
 }
 
@@ -32,12 +38,22 @@ function kitChoices(slot) {
   return [null].concat(camp.satchel.filter(it => campItemSlot(it.id) === slot));
 }
 
+/* The snacks that could go in pocket slot i: whatever isn't already in another slot */
+function pocketChoices(i) {
+  return [null].concat(camp.satchel.filter(it => campItemSlot(it.id) === "food" && !camp.pocket.some((u, j) => j !== i && u === it.uid)));
+}
+
 function renderCampKit() {
   const list = document.getElementById("loadout-list");
   list.innerHTML = "";
-  KIT_SLOTS.forEach(slot => {
+  const head = text => { const h = document.createElement("p"); h.className = "kit-head"; h.textContent = text; list.appendChild(h); };
+  let headed = false;
+  KIT_SLOTS.concat(KIT_EXTRAS).forEach(slot => {
     const choices = kitChoices(slot);
     if (choices.length < 2) return;
+    if (!headed && KIT_SLOTS.includes(slot)) { head("Your kit"); headed = true; }
+    if (slot === "pet") head("Beside you");
+    if (slot === "canister") head("With your hearts");
     const it = campEquipped(slot);
     const s = CAMP.slots.find(x => x.id === slot);
     const row = document.createElement("div");
@@ -65,6 +81,34 @@ function renderCampKit() {
     row.querySelector(`[data-key="kit-${slot}-next"]`).addEventListener("click", () => step(1));
     list.appendChild(row);
   });
+  // the pocket: four slots, click one to change what's in it
+  if (camp.satchel.some(it => campItemSlot(it.id) === "food")) {
+    head("Pocket: keys 1 to 4 in the level");
+    const row = document.createElement("div");
+    row.className = "loadout-row kit-pocket";
+    [0, 1, 2, 3].forEach(i => {
+      const it = pocketItem(i);
+      const b = document.createElement("button");
+      b.className = "kit-snack" + (it ? "" : " empty");
+      b.dataset.key = "kit-pocket-" + i;
+      b.title = it ? `${campItemName(it)}: ${campItemDef(it.id).does}` : "Empty: click to put a snack here";
+      b.setAttribute("aria-label", `Pocket slot ${i + 1}: ${it ? campItemName(it) : "empty"}`);
+      b.innerHTML = `<kbd>${i + 1}</kbd>${it ? campItemIconHtml(it, "small") : `<span class="ci-icon small"></span>`}<span class="ks-name">${it ? escapeAttr(campItemDef(it.id).name) : "Empty"}</span>${it ? `<span class="ks-left">${it.uses} left</span>` : ""}`;
+      b.addEventListener("click", () => {
+        const choices = pocketChoices(i);
+        const at = choices.findIndex(c => (c ? c.uid : 0) === camp.pocket[i]);
+        const next = choices[(at + 1) % choices.length];
+        camp.pocket[i] = next ? next.uid : 0;
+        saveCamp();
+        sfx("click");
+        renderCampKit();
+        const again = list.querySelector(`[data-key="kit-pocket-${i}"]`);
+        if (again) again.focus({ preventScroll: true });
+      });
+      row.appendChild(b);
+    });
+    list.appendChild(row);
+  }
 }
 
 function closeCampKit() {
@@ -73,6 +117,7 @@ function closeCampKit() {
   document.getElementById("loadout").classList.remove("active");
   document.getElementById("loadout-title").textContent = "Bring anything?";
   document.getElementById("loadout-none").textContent = "Just play";
+  updatePauseButton();
 }
 
 /* The box's buttons and keys: Start plays, Back (or Esc) closes */

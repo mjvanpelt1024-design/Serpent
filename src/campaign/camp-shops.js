@@ -95,7 +95,7 @@ function shopTimerText() {
   }
   if (shopKind === "challenger") {
     const C = camp.challenges[shopIsl];
-    if (C && C.claimed) return `A new challenge in ${fmtLeft(C.endsAt - Date.now())}`;
+    if (C && C.claimed) return `A new quest in ${fmtLeft(C.endsAt - Date.now())}`;
     return C && C.active ? `Ends in ${fmtLeft(C.endsAt - Date.now())}` : "";
   }
   return "";
@@ -158,7 +158,7 @@ const slotName = id => (CAMP.slots.find(s => s.id === id) || { name: id }).name;
 function challengeState(isl) {
   let C = camp.challenges[isl];
   const now = Date.now();
-  if (C && C.active && now >= C.endsAt) { C = null; showToast("Your challenge ran out of time. Here's a fresh one."); }
+  if (C && C.active && now >= C.endsAt) { C = null; showToast("Your quest ran out of time. Here's a fresh one."); }
   // a finished challenge waits out its week before the next one
   if (C && C.claimed && now < C.endsAt) return C;
   if (!C || C.claimed || (!C.active && !C.levels.length)) C = newChallenge(isl);
@@ -209,15 +209,15 @@ function challengerHtml() {
     <p class="shop-note">${coinTag(shopIsl, challengeCurrency())} ${escapeAttr(I.currency.plural)}, and one roll of the prize pool:</p>
     <ul class="prestige-needs">${odds}</ul></div>`;
   let note, foot = "";
-  if (C.claimed) note = `Challenge done. ${escapeAttr(I.npcs.challenger.name)} is planning the next one. <span id="cs-timer">${shopTimerText()}</span>`;
+  if (C.claimed) note = `Quest done. ${escapeAttr(I.npcs.challenger.name)} is planning the next one. <span id="cs-timer">${shopTimerText()}</span>`;
   else if (!C.levels.length) note = "Win more of this island's levels first: the trials are picked from the ones you've beaten.";
   else if (!C.active) {
-    note = `Three trials on this island, each with twists. Once you accept, you have ${CAMP.rules.challenge.days} days, and the challenge stays until it's done.`;
-    foot = `<div class="row-buttons cs-btns"><button class="btn btn-small${camp.gems >= CAMP.rules.challenge.rerollGems ? "" : ""}" data-act="newch" ${camp.gems >= CAMP.rules.challenge.rerollGems ? "" : "disabled"}>Other trials: ${gemTag(CAMP.rules.challenge.rerollGems)}</button><button class="btn btn-primary" data-act="accept">Accept the challenge</button></div>`;
+    note = `Three trials on this island, each with twists. Once you accept, you have ${CAMP.rules.challenge.days} days, and the quest stays until it's done.`;
+    foot = `<div class="row-buttons cs-btns"><button class="btn btn-small${camp.gems >= CAMP.rules.challenge.rerollGems ? "" : ""}" data-act="newch" ${camp.gems >= CAMP.rules.challenge.rerollGems ? "" : "disabled"}>Other trials: ${gemTag(CAMP.rules.challenge.rerollGems)}</button><button class="btn btn-primary" data-act="accept">Accept the quest</button></div>`;
   } else if (C.done.every(Boolean)) {
     note = "Every trial is done. Your reward is waiting.";
     foot = `<div class="row-buttons cs-btns"><button class="btn btn-gold" data-act="claim">Claim the reward</button></div>`;
-  } else note = `Your challenge is on. <span id="cs-timer">${shopTimerText()}</span>`;
+  } else note = `Your quest is on. <span id="cs-timer">${shopTimerText()}</span>`;
   return `<p class="shop-note">${note}</p>${trials}${C.claimed || !C.levels.length ? "" : reward}${foot}`;
 }
 
@@ -363,7 +363,7 @@ function shopAct(a, d) {
     const C = challengeState(shopIsl);
     C.active = true; C.startedAt = Date.now(); C.endsAt = Date.now() + CAMP.rules.challenge.days * 86400000; C.claimed = false;
     saveCamp(); sfx("unlock");
-    showToast("Challenge accepted. Play the trials from here.");
+    showToast("Quest accepted. Play the trials from here, or right from the map.");
     renderShop();
     return;
   }
@@ -391,7 +391,7 @@ function shopAct(a, d) {
     saveCamp();
     sfx("medal");
     confetti();
-    openConfirm({ title: "Challenge complete!", text: `${CAMP.islandById[shopIsl].npcs.challenger.name} hands over ${fmtInt(money)} ${campCurrency(shopIsl).plural}. And the prize roll: ${prize}!`, ok: "Wonderful", gold: true, onOk: () => {} });
+    openConfirm({ title: "Quest complete!", text: `${CAMP.islandById[shopIsl].npcs.challenger.name} hands over ${fmtInt(money)} ${campCurrency(shopIsl).plural}. And the prize roll: ${prize}!`, ok: "Wonderful", gold: true, onOk: () => {} });
     renderShop();
     return;
   }

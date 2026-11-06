@@ -5,10 +5,12 @@
 
    Left, everything about you: your hearts and armor, the score and the
    pause button (the game's own HUD), then your purse (this island's money,
-   gems, and what this run's points will pay), your kit and effects, and
+   gems, and what this run's points will pay), your kit (gear, spell,
+   rune), the pocket of snacks on keys 1 to 4, your familiar, effects, and
    what you've found. Right, everything about the world: where you are,
-   the quest (the level's goal), the challenge's trials, and the bounty on
-   the next boss. A boss's own stats only show while you're fighting it.
+   the objective (the level's goal), your quest (or none), the level's
+   bonus challenge, and the bounty on the next boss. A boss's own stats
+   only show while you're fighting it.
    On a narrow screen both sides line up under the board.
    In the menus the top bar shows the island's money and your gems.
    ========================================================= */
@@ -22,13 +24,16 @@ cpLeft.className = cpRight.className = "cp-rail";
 cpLeft.innerHTML = `
   <div class="plate cp-purse"><span class="cp-k">Purse</span><div class="cp-purse-row"></div><span class="cp-earn"></span></div>
   <div class="plate cp-kit"><span class="cp-k cp-head">Your kit</span><div class="cp-kit-rows"></div></div>
+  <div class="plate cp-pocket"><span class="cp-k cp-head">Pocket</span><div class="cp-pocket-row"></div></div>
+  <div class="plate cp-pet"></div>
   <div class="plate cp-fx" hidden></div>
   <div class="plate cp-loot" hidden></div>`;
 cpRight.innerHTML = `
   <div class="plate cp-where"><span class="cp-isl"></span><strong class="cp-lvl"></strong></div>
-  <div class="plate cp-goal"><span class="cp-k cp-head">Quest</span><span class="cp-goal-t"></span><div class="cp-bar"><span></span></div><span class="cp-goal-n"></span></div>
+  <div class="plate cp-goal"><span class="cp-k cp-head">Objective</span><span class="cp-goal-t"></span><div class="cp-bar"><span></span></div><span class="cp-goal-n"></span></div>
   <div class="plate cp-extra" hidden></div>
-  <div class="plate cp-trials" hidden></div>
+  <div class="plate cp-trials"></div>
+  <div class="plate cp-bonus"></div>
   <div class="plate cp-bounty" hidden></div>
   <div class="plate cp-boss" hidden>
     <span class="cp-k cp-head">Boss</span>
@@ -40,6 +45,7 @@ cpRight.innerHTML = `
   </div>
   <div class="plate cp-point" hidden><span class="cp-k">This way</span><svg class="cp-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l7 9h-4v11H9V11H5z"/></svg><span class="cp-dist"></span></div>`;
 cpLeft.hidden = cpRight.hidden = true;
+cpLeft.addEventListener("click", e => { const b = e.target.closest("[data-pocket]"); if (b) campEatSnack(+b.dataset.pocket); });
 
 /* The top bar in the menus: this island's money and your gems, instead of XP and Snakebucks */
 const campWalletEl = document.createElement("div");
@@ -50,15 +56,18 @@ function campWalletUpdate() {
   if (!camp) return;
   const key = campRun ? campRun.isl : currentScreen === "campshop" ? shopIsl : currentScreen === "tree" && treeArea === "camp" ? campTreeIsl : campIslandOpen(camp.at) ? camp.at : CAMP.islands[0].id;
   const cur = campCurrency(key);
-  campWalletEl.innerHTML = `<span class="plate cw-chip" title="${escapeAttr(cur.plural)}, the money of ${escapeAttr(CAMP.islandById[key].name)}">${coinHtml(key)}<b>${fmtInt(campWallet(key))}</b></span>` +
-    `<span class="plate cw-chip gems" title="Gems: shared by every island, for skins and themes"><img class="gem-ico" src="${iconUrl("gem", 2)}" alt=""><b>${fmtInt(camp.gems)}</b></span>`;
+  if (typeof coinCard !== "undefined" && coinCard) return;
+  // no plates: the coin itself, big enough to show its carving, and the gem, each with its count in the corner
+  const html = `<span class="cw-chip" title="${escapeAttr(cur.plural)}, the money of ${escapeAttr(CAMP.islandById[key].name)}">${coinHtml(key, 20)}<b>${fmtInt(campWallet(key))}</b></span>` +
+    `<span class="cw-chip gems" title="Gems: shared by every island, for skins and themes"><img class="gem-ico" src="${iconUrl("gem", 3)}" alt=""><b>${fmtInt(camp.gems)}</b></span>`;
+  if (campWalletEl._h !== html) { campWalletEl.innerHTML = html; campWalletEl._h = html; }
 }
 
 let campHudAt = 0;
 function campHudBuild() {
   cpLeft.hidden = cpRight.hidden = false;
   const isl = CAMP.islandById[campRun.isl];
-  cpRight.querySelector(".cp-isl").textContent = `${isl.name}${campRun.challenge >= 0 ? " · Challenge" : ""}`;
+  cpRight.querySelector(".cp-isl").textContent = `${isl.name}${campRun.challenge >= 0 ? " · Quest" : ""}`;
   cpRight.querySelector(".cp-lvl").textContent = `${campRun.def.n}. ${campRun.def.name}`;
   cpRight.querySelector(".cp-goal-t").textContent = goalText(campGoal);
   document.documentElement.style.setProperty("--isl", isl.colors.accent);
@@ -132,6 +141,49 @@ function bossFaceUrl(isl) {
   return (bossFaceCache[isl] = c.toDataURL());
 }
 
+/* Your quest: the challenger's three trials, wherever one is on. `here` marks the trial being played. */
+function campActiveQuest() {
+  const isl = CAMP.islands.map(i => i.id).find(id => { const C = camp.challenges[id]; return C && C.active && !C.claimed && C.levels.length && Date.now() < C.endsAt; });
+  return isl ? { isl, C: camp.challenges[isl] } : null;
+}
+function campQuestHtml(here) {
+  const q = campActiveQuest();
+  if (!q) return `<span class="cp-k cp-head">Quest</span><span class="cp-sub cp-none">None. The challengers hand them out.</span>`;
+  const { isl, C } = q;
+  return `<span class="cp-k cp-head">Quest</span><span class="cp-qfrom">${escapeAttr(CAMP.islandById[isl].npcs.challenger.name)}, ${escapeAttr(CAMP.islandById[isl].name)}</span>` +
+    C.levels.map((n, i) => `<div class="cp-trial${C.done[i] ? " done" : ""}${here === isl && campRun && campRun.challenge === i ? " now" : ""}"><span class="cp-tick">${C.done[i] ? "&#10003;" : i + 1}</span><span>${n}. ${escapeAttr(campLevelDef(isl, n).name)}</span></div>`).join("") +
+    `<span class="cp-sub">${C.done.every(Boolean) ? "All done: claim your prize" : `Ends in ${fmtLeft(Math.max(0, C.endsAt - Date.now()))}`}</span>`;
+}
+
+/* The level's bonus challenge: what it asks, how it's going, what it pays */
+function campBonusHtml() {
+  const b = campRun && campRun.bonus;
+  if (!b) return `<span class="cp-k cp-head">Challenge</span><span class="cp-sub cp-none">None on this level</span>`;
+  const { isl } = campRun;
+  let how = "";
+  if (b.done) how = `<span class="cp-bdone">&#10003; Done!</span>`;
+  else if (b.type === "fast") { const s = Math.floor(runMs / 1000); how = `<span class="${s > b.need ? "cp-late" : ""}">${s}s / ${b.need}s</span>`; }
+  else if (b.type === "untouched") how = campRun.hitTaken ? `<span class="cp-late">You took a hit</span>` : "Not a scratch so far";
+  else if (b.type === "streak") how = `${b.times.length} / ${b.need} in a row`;
+  else how = `${fmtInt(Math.min(b.have, b.need))} / ${fmtInt(b.need)}`;
+  const pay = b.before ? "Reward earned before" : `${b.done ? "Earned" : "Reward"}: ${escapeAttr(bonusRewardText(isl, b))}`;
+  return `<span class="cp-k cp-head">Challenge</span><span class="cp-btext">${escapeAttr(bonusText(b))}</span>` +
+    (b.need && !b.done && !["fast", "untouched"].includes(b.type) ? `<div class="cp-bar cp-bbar"><span style="width:${Math.min(100, (b.type === "streak" ? b.times.length : b.have) / b.need * 100).toFixed(1)}%"></span></div>` : "") +
+    `<span class="cp-sub">${how}</span><span class="cp-reward">${pay}</span>`;
+}
+
+/* The wanted poster for an island's next boss, or "" once all three fights are won */
+function campBountyHtml(isl) {
+  const next = campNextBoss(isl);
+  if (!next) return "";
+  const I = CAMP.islandById[isl];
+  return `<span class="cp-wanted">Bounty</span>
+      <img class="cp-face" src="${bossFaceUrl(isl)}" alt="">
+      <strong class="cp-bname">${escapeAttr(I.boss.name)}</strong>
+      <span class="cp-sub">Waits at level ${next.n}${next.fight === 3 ? ": its last stand" : `, fight ${next.fight} of 3`}</span>
+      <span class="cp-reward">${coinHtml(isl)}<b>${fmtInt(campRewardPreview(isl, next.n, true))}</b> reward</span>`;
+}
+
 /* The next boss on this island that you haven't beaten: { n, fight } or null */
 function campNextBoss(isl) {
   for (let i = 0; i < BOSS_LEVELS.length; i++) if (!campWon(isl, BOSS_LEVELS[i])) return { n: BOSS_LEVELS[i], fight: i + 1 };
@@ -164,19 +216,29 @@ function campHudUpdate() {
   const spell = bare ? null : campEquipped("spell");
   const cd = spell ? Math.max(0, campRun.castReadyAt - ts) : 0;
   kit.push(row("spell", spell, spell ? `${pips(spell.uses, Math.max(spell.uses, freshUses(spell.id, spell.rarity)))} <kbd>${isTouchDevice() ? "Spell" : "Space"}</kbd>${cd > 0 ? " <span class='cp-cd'>...</span>" : ""}` : ""));
-  const food = bare ? null : campEquipped("food");
-  kit.push(row("food", food, food ? pips(food.uses, Math.max(food.uses, freshUses(food.id, food.rarity))) : ""));
+  if (campRun.rune) kit.push(`<div class="cp-slot">${campItemIconHtml(campRun.rune)}<span class="cp-sl"><span class="cp-k">Rune</span><span class="cp-name" style="color:${rarityColor(campRun.rune.rarity)}">${escapeAttr(campItemDef(campRun.rune.id).name)}</span><span class="cp-sub">${campRun.echoUsed ? "Echo spent" : "Burning"}</span></span></div>`);
+  else kit.push(row("rune", null, ""));
+  setHtml($(".cp-kit-rows"), kit.join(""));
+
+  // the pocket: four snacks on keys 1 to 4 (tap one on a touch screen)
+  const key = i => (isTouchDevice() ? "" : `<kbd>${i + 1}</kbd>`);
+  setHtml($(".cp-pocket-row"), [0, 1, 2, 3].map(i => {
+    const it = bare ? null : pocketItem(i);
+    if (!it) return `<button class="cp-snack empty" data-pocket="${i}" aria-label="Pocket slot ${i + 1}: empty"><span class="ci-icon small"></span>${key(i)}</button>`;
+    const full = Math.max(it.uses, freshUses(it.id, it.rarity));
+    return `<button class="cp-snack" data-pocket="${i}" title="${escapeAttr(campItemName(it))}: ${escapeAttr(campItemDef(it.id).does)}" aria-label="Eat ${escapeAttr(campItemName(it))}, ${it.uses} left">${campItemIconHtml(it, "small")}${key(i)}<span class="cp-left">${it.uses}${full > 1 ? `/${full}` : ""}</span></button>`;
+  }).join("") + (campRun.phoenix ? `<span class="cp-chip cp-phoenix" style="--c:#ff8a3d">Phoenix</span>` : ""));
+
+  // the familiar, trotting along
   const pet = bare ? null : campEquipped("pet");
   let petSub = "";
   if (pet && campRun.pet) {
     if (pet.id === "turtle") petSub = campRun.pet.shells > 0 ? `Shell ready${campRun.pet.shells > 1 ? " x" + campRun.pet.shells : ""}` : `Recovering ${Math.ceil(Math.max(0, campRun.pet.readyAt - ts) / 1000)}s`;
     else petSub = "With you";
   }
-  kit.push(row("pet", pet, petSub));
-  if (campRun.rune) kit.push(`<div class="cp-slot">${campItemIconHtml(campRun.rune)}<span class="cp-sl"><span class="cp-k">Rune</span><span class="cp-name" style="color:${rarityColor(campRun.rune.rarity)}">${escapeAttr(campItemDef(campRun.rune.id).name)}</span><span class="cp-sub">${campRun.echoUsed ? "Echo spent" : "Burning"}</span></span></div>`);
-  const can = campVessel();
-  if (can || campEquipped("canister")) kit.push(row("canister", can, can ? campItemLeft(can) : ""));
-  setHtml($(".cp-kit-rows"), kit.join(""));
+  setHtml($(".cp-pet"), pet
+    ? `${campItemIconHtml(pet, "small")}<span class="cp-sl"><span class="cp-k">Familiar</span><span class="cp-name" style="color:${rarityColor(pet.rarity)}">${escapeAttr(campItemDef(pet.id).name)}</span><span class="cp-sub">${petSub}</span></span>`
+    : `<span class="ci-icon small"></span><span class="cp-sl"><span class="cp-k">Familiar</span><span class="cp-sub">${bare ? "Bare scales" : "No familiar"}</span></span>`);
 
   // effects: everything that used to be a bar along the bottom of the board
   const fxs = [];
@@ -214,29 +276,14 @@ function campHudUpdate() {
   setHtml(ex, extra.join(""));
   ex.hidden = !extra.length;
 
-  // the challenge's three trials, while one is on
-  const C = camp.challenges[isl];
-  const trialsEl = $(".cp-trials");
-  const trialsOn = !!(C && C.active && !C.claimed && C.levels.length);
-  trialsEl.hidden = !trialsOn;
-  if (trialsOn) {
-    const left = Math.max(0, C.endsAt - Date.now());
-    setHtml(trialsEl, `<span class="cp-k cp-head">Challenge</span>` + C.levels.map((n, i) => `<div class="cp-trial${C.done[i] ? " done" : ""}${campRun.challenge === i ? " now" : ""}"><span class="cp-tick">${C.done[i] ? "&#10003;" : i + 1}</span><span>${n}. ${escapeAttr(campLevelDef(isl, n).name)}</span></div>`).join("") +
-      `<span class="cp-sub">${C.done.every(Boolean) ? "All done: claim your prize" : `Ends in ${fmtLeft(left)}`}</span>`);
-  }
+  setHtml($(".cp-trials"), campQuestHtml(campRun.challenge >= 0 ? isl : null));
+  setHtml($(".cp-bonus"), campBonusHtml());
 
   // the bounty on the next boss: just its name and where it waits, until you face it
-  const next = campNextBoss(isl);
   const bounty = $(".cp-bounty");
-  bounty.hidden = !!boss || !next;
-  if (!boss && next) {
-    const pay = campRewardPreview(isl, next.n, true);
-    setHtml(bounty, `<span class="cp-wanted">Bounty</span>
-      <img class="cp-face" src="${bossFaceUrl(isl)}" alt="">
-      <strong class="cp-bname">${escapeAttr(I.boss.name)}</strong>
-      <span class="cp-sub">Waits at level ${next.n}${next.fight === 3 ? ": its last stand" : `, fight ${next.fight} of 3`}</span>
-      <span class="cp-reward">${coinHtml(isl)}<b>${fmtInt(pay)}</b> reward</span>`);
-  }
+  const bountyHtml = boss ? "" : campBountyHtml(isl);
+  bounty.hidden = !bountyHtml;
+  if (bountyHtml) setHtml(bounty, bountyHtml);
 
   // the boss itself, only while you fight it: hearts (silver while armored), stamina, its mood
   const bp = $(".cp-boss");

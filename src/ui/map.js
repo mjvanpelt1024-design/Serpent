@@ -216,6 +216,18 @@ function drawMap(ts) {
   const t = ts / 1000;
   drawSky(t);
   g.clearRect(0, 0, MAP_W, MAP_H);
+  paintMapWorld(g, t);
+
+  // pins ride along with their island
+  mapPinsEl.querySelectorAll(".map-pin").forEach(pin => {
+    const v = bob(ISLANDS[pin.dataset.area], t) * 2;
+    if (pin._bob !== v) { pin._bob = v; pin.style.setProperty("--bob", v + "px"); }
+  });
+}
+
+/* Everything in the world but the sky: clouds, the Coil, the islands and all that lives on them,
+   your snake, the fog and the cloud sea. The title screen paints it too (src/art/title-scene.js). */
+function paintMapWorld(g, t) {
 
   // clouds drifting between the islands, tinted by the sky around them
   for (let i = 0; i < 22; i++) {
@@ -277,12 +289,6 @@ function drawMap(ts) {
     mapRect(g, x, MAP_H - h, 1, 2, "#ffffff");
     if ((x + Math.floor(t * 6)) % 23 === 0) mapRect(g, x, MAP_H - h + 3, 4, 1, "#f2cdb8");
   }
-
-  // pins ride along with their island
-  mapPinsEl.querySelectorAll(".map-pin").forEach(pin => {
-    const v = bob(ISLANDS[pin.dataset.area], t) * 2;
-    if (pin._bob !== v) { pin._bob = v; pin.style.setProperty("--bob", v + "px"); }
-  });
 }
 
 /* Where your snake waits: the last level you played, or the next one to play */
@@ -375,7 +381,14 @@ function layoutMap() {
   mapWorldEl.style.width = WORLD_W + "px";
   mapWorldEl.style.height = WORLD_H + "px";
   let c;
-  if (mapSel) {
+  if (mapPop && mapPop.focus) {
+    // close enough to see the stop's own little picture and its neighbors on either side
+    const p = nodeAt(mapPop.key, mapPop.j);
+    const s = Math.max(mapNear() * 1.6, Math.min(mapMax() * 1.25, vh / 170));
+    c = { s, tx: vw / 2 - p.x * 2 * s, ty: vh * 0.58 - (p.y - 6) * 2 * s };
+    c.tx = Math.min(0, Math.max(vw - WORLD_W * s, c.tx));
+    c.ty = Math.min(0, Math.max(vh - WORLD_H * s, c.ty));
+  } else if (mapSel) {
     // Frame the whole island, from its tallest tower down to its rock, below the banner
     const isl = ISLANDS[mapSel];
     const top = isl.y - isl.th - 34, bottom = isl.y + isl.th + isl.depth * 0.5;
@@ -512,7 +525,7 @@ function zoomMapAt(factor, px, py) {
       wheelOut = Math.max(0, wheelOut + e.deltaY);
       clearTimeout(mapEl._wheelOutT);
       mapEl._wheelOutT = setTimeout(() => { wheelOut = 0; }, 250);
-      if (wheelOut > 80) { wheelOut = 0; closePlace(); }
+      if (wheelOut > 80) { wheelOut = 0; if (mapPop && mapPop.focus) closeLevelPop(); else closePlace(); }
       return;
     }
     e.preventDefault();
@@ -610,7 +623,7 @@ function renderModes(justUnlocked) {
         const name = npc ? npc.name : id === "home" ? "Home base" : "The bridge";
         add(`prop node ${id} ${ns}`, nodeKey(key, id), key, p.x, p.y - NODE_PIN_LIFT[id],
           `<img class="pi" src="${iconUrl(NODE_ICON[id], 2)}" alt="">${ns === "locked" ? `<span class="nlock">${LOCK_SVG}</span>` : ""}<span class="lbl">${NODE_LABEL[id]}</span>`,
-          `${name}${ns === "locked" ? ", locked" : ""}`, pin => openLevelPop(key, id, false, pin));
+          `${name}${ns === "locked" ? ", locked" : ""}`, pin => (id === "home" ? openNode(key, "home") : openLevelPop(key, id, false, pin)));
       }
     });
   });
@@ -631,6 +644,7 @@ function updatePins() {
     pin.hidden = isArea ? (near && !fog) : !near;
     const key = pin.dataset.key;
     pin.classList.toggle("selected", !!mapPop && mapPop.key === area && key === nodeKey(area, mapPop.j));
+    if (mapPop && mapPop.focus && key === nodeKey(mapPop.key, mapPop.j)) pin.hidden = true;
     const last = !!lastPlayed && key === nodeKey(lastPlayed.key, lastPlayed.j);
     pin.classList.toggle("last", last);
     const tag = pin.querySelector(".last-tag");
@@ -722,7 +736,7 @@ function renderBanner() {
   });
 }
 
-/* A little coin in an island's currency color */
+/* A little coin: struck in pixels by src/art/coins.js */
 function coinHtml(key) {
   return `<span class="coin" style="--cc:${CAMP.islandById[key].currency.color}" aria-hidden="true"></span>`;
 }
@@ -733,80 +747,141 @@ function levelKindText(def) {
   return { static: "Still board", enemy: "Board with enemies", dynamic: "Moving board" }[def.kind] || "Level";
 }
 
+/* ----- Up close on one stop: no bubble. The camera flies in to it, its button sits right on
+   it (Play, Visit, Cross), a signpost beside a level holds its rules, a scroll at the top
+   names it, and arrows at the sides of the screen step along the path. Esc steps back out. ----- */
+const NODE_SEQ = ["home", 1, 2, 3, 4, 5, "merchant", 6, 7, 8, 9, 10, "challenger", 11, 12, 13, 14, 15, "banker", "bridge"];
+const nodeHereEl = document.createElement("div");
+nodeHereEl.id = "node-here";
+nodeHereEl.className = "node-here";
+mapWorldEl.appendChild(nodeHereEl);
+const nodeScrollEl = document.createElement("div");
+nodeScrollEl.id = "node-scroll";
+nodeScrollEl.className = "node-scroll scroll-frame";
+nodeScrollEl.setAttribute("aria-live", "polite");
+mapEl.appendChild(nodeScrollEl);
+const nodeArrows = ["prev", "next"].map(side => {
+  const b = document.createElement("button");
+  b.className = "btn node-arrow " + side;
+  b.addEventListener("click", e => { e.stopPropagation(); stepNode(side === "prev" ? -1 : 1); });
+  mapEl.appendChild(b);
+  return b;
+});
+
+/* The stop before or after this one along the path, crossing to the island below or above */
+function neighborNode(key, id, d) {
+  const i = NODE_SEQ.indexOf(id) + d;
+  if (i >= 0 && i < NODE_SEQ.length) return { key, id: NODE_SEQ[i] };
+  const k = MAP_ORDER[MAP_ORDER.indexOf(key) + d];
+  if (!k || placeState(k) === "fog") return null;
+  return { key: k, id: d > 0 ? "home" : "bridge" };
+}
+
+function nodeTitle(key, id) {
+  if (typeof id === "number") return `${id}. ${campLevelDef(key, id).name}`;
+  const I = CAMP.islandById[key];
+  if (NPC_KINDS.includes(id)) return I.npcs[id].name;
+  if (id === "home") return "Home base";
+  const next = CAMP.islands[campIslandIdx(key) + 1];
+  return next ? `Bridge to ${next.name}` : "The Coil's head";
+}
+
+/* What an arrow says about where it goes: Home, Boss, Next island, a shop, or just Next */
+function arrowLabel(from, to, d) {
+  if (!to) return { word: d < 0 ? "Previous" : "Next", sub: "", cls: "" };
+  const sub = nodeTitle(to.key, to.id);
+  if (to.key !== from.key) return { word: d > 0 ? "Next island" : "Island below", sub: CAMP.islandById[to.key].name, cls: "island" };
+  if (to.id === "home") return { word: "Home", sub: "", cls: "home" };
+  if (typeof to.id === "number" && isBossLevel(to.id)) return { word: "Boss", sub, cls: "boss" };
+  if (NPC_KINDS.includes(to.id)) return { word: NODE_LABEL[to.id], sub, cls: "shop" };
+  if (to.id === "bridge") return { word: "Bridge", sub: "", cls: "island" };
+  return { word: d < 0 ? "Previous" : "Next", sub, cls: "" };
+}
+
+function stepNode(d) {
+  if (!mapPop || !mapPop.focus) return;
+  const to = neighborNode(mapPop.key, mapPop.j, d);
+  if (!to) return;
+  if (to.id === "home") { openNode(to.key, "home"); return; }
+  if (to.key !== mapPop.key) selectPlace(to.key);
+  openLevelPop(to.key, to.id, false, mapPinsEl.querySelector(`[data-key="${nodeKey(to.key, to.id)}"]`));
+}
+
 function openLevelPop(key, j, nm, pinEl) {
+  if (j === "home") { openNode(key, "home"); return; }
   if (mapSel !== key) selectPlace(key);
-  mapPop = { key, j, nm: false, pin: pinEl };
+  mapPop = { key, j, nm: false, pin: pinEl, focus: true };
   mapRules = false;
   mapBriefEl.classList.remove("open");
+  mapPopEl.className = "map-pop";
+  mapBannerEl.classList.remove("open");
+  mapEl.classList.add("focus");
   sfx("click");
   updatePins();
+  renderNodeFocus();
+  layoutMap();
+}
+
+function renderNodeFocus() {
+  const { key, j } = mapPop;
   const I = CAMP.islandById[key];
   const st = nodeState(key, j);
-  mapPopEl.style.setProperty("--m", I.colors.accent);
-  mapPopEl.className = "map-pop open";
+  const p = nodeAt(key, j);
+  nodeHereEl.style.left = p.x * 2 + "px";
+  nodeHereEl.style.top = p.y * 2 + "px";
+  nodeHereEl.style.setProperty("--m", I.colors.accent);
+  let title = nodeTitle(key, j), sub = "", line = "", why = "", go = "", tag = "";
   if (typeof j === "number") {
     const def = campLevelDef(key, j);
     const rec = camp.levels[campLevelId(key, j)];
-    let why = "";
+    sub = `${levelKindText(def)} · ${goalText(def.goal)}`;
+    if (def.bonus) line = `Challenge: ${bonusText(def.bonus)} (${bonusOnce(def.bonus) && bonusEarned(key, j) ? "earned" : bonusRewardText(key, def.bonus)})`;
     if (!campIslandOpen(key)) why = "Reach this island first";
     else if (st === "locked") why = `Win ${j - 1}. ${campLevelDef(key, j - 1).name} first`;
-    mapPopEl.innerHTML = `<p class="mp-name">${isBossLevel(j) ? SKULL_SVG : ""}${j}. ${escapeAttr(def.name)}</p>
-      <p class="mp-sub">${levelKindText(def)}${rec && rec.wins ? `, best ${fmtCompact(rec.best)}` : ""}</p>
-      <p class="mp-goal">${escapeAttr(goalText(def.goal))}</p>
-      ${why ? `<p class="mp-why">${LOCK_SVG}${escapeAttr(why)}</p>` : ""}
-      <div class="mp-btns"><button class="btn btn-small" data-rules>Rules</button><button class="btn btn-small btn-primary" data-play ${st === "locked" ? "disabled" : ""}>${st === "done" ? "Again" : "Play"}</button></div>`;
-    mapPopEl.querySelector("[data-rules]").addEventListener("click", () => openLevelRules());
-    mapPopEl.querySelector("[data-play]").addEventListener("click", () => playLevel(key, j));
+    go = st === "done" ? "Play again" : "Play";
+    if (rec && rec.wins) tag = `Best ${fmtInt(rec.best)}${rec.flawless ? " · flawless" : ""}`;
   } else {
-    const npc = NPC_KINDS.includes(j) ? I.npcs[j] : null;
     const next = CAMP.islands[campIslandIdx(key) + 1];
-    let name, sub, line, why = "", go;
-    if (npc) {
-      name = npc.name; sub = npc.shop; line = `"${npc.line}"`;
+    if (NPC_KINDS.includes(j)) {
+      sub = I.npcs[j].shop;
+      line = `"${I.npcs[j].line}"`;
       if (st === "locked") why = `Beat the boss at level ${SHOP_AFTER[j]} first`;
       go = "Visit";
-    } else if (j === "home") {
-      name = "Home base"; sub = I.tree.name; line = "The island's upgrade tree, your satchel and everything you've collected.";
-      go = "Go home";
     } else {
-      name = next ? `Bridge to ${next.name}` : "The Coil's head"; sub = next ? "Ride the Coil up" : "The end of the road";
+      sub = next ? "Ride the Coil up" : "The end of the road";
       line = next ? next.blurb : "There's nowhere higher to go. You made it.";
       if (!next) why = "This is the last island";
       else if (st === "locked") why = `Beat the boss at level ${LEVEL_COUNT} first`;
       go = "Cross";
     }
-    mapPopEl.innerHTML = `<p class="mp-name">${escapeAttr(name)}</p><p class="mp-sub">${escapeAttr(sub)}</p>
-      <p class="mp-line">${escapeAttr(line)}</p>
-      ${why ? `<p class="mp-why">${LOCK_SVG}${escapeAttr(why)}</p>` : ""}
-      <div class="mp-btns one"><button class="btn btn-small btn-primary" data-go ${st === "locked" ? "disabled" : ""}>${go}</button></div>`;
-    mapPopEl.querySelector("[data-go]").addEventListener("click", () => openNode(key, j));
   }
-  positionPop(pinEl);
+  nodeScrollEl.innerHTML = `<p class="ns-kicker">${escapeAttr(I.name)}</p><h3 class="ns-title">${typeof j === "number" && isBossLevel(j) ? SKULL_SVG : ""}${escapeAttr(title)}</h3>` +
+    `<p class="ns-sub">${escapeAttr(sub)}</p>${line ? `<p class="ns-line">${escapeAttr(line)}</p>` : ""}`;
+  nodeScrollEl.classList.add("open");
+  const locked = st === "locked";
+  nodeHereEl.className = "node-here open" + (typeof j === "number" ? " level" : " side") + (locked ? " locked" : "") + (ISLANDS[key].dir < 0 ? " flip" : "");
+  nodeHereEl.innerHTML = `<button class="btn ${locked ? "" : "btn-primary"} nh-go" data-go ${locked ? "disabled" : ""}>${locked ? LOCK_SVG + " " : ""}${go}</button>` +
+    (why ? `<span class="nh-why">${escapeAttr(why)}</span>` : tag ? `<span class="nh-tag">${escapeAttr(tag)}</span>` : "") +
+    (typeof j === "number" ? `<button class="nh-sign" data-rules aria-label="Rules for ${escapeAttr(title)}"><span>Rules</span></button>` : "");
+  nodeHereEl.querySelector("[data-go]").addEventListener("click", e => { e.stopPropagation(); if (typeof j === "number") playLevel(key, j); else openNode(key, j); });
+  const rules = nodeHereEl.querySelector("[data-rules]");
+  if (rules) rules.addEventListener("click", e => { e.stopPropagation(); openLevelRules(); });
+  [-1, 1].forEach((d, i) => {
+    const to = neighborNode(key, j, d), a = nodeArrows[i], L = arrowLabel({ key }, to, d);
+    a.disabled = !to;
+    a.className = `btn node-arrow ${d < 0 ? "prev" : "next"} open ${L.cls}`;
+    a.innerHTML = `<span class="na-chev" aria-hidden="true">${d < 0 ? "&#9664;" : "&#9654;"}</span><span class="na-word">${L.cls === "boss" ? SKULL_SVG : ""}${escapeAttr(L.word)}</span>${L.sub ? `<span class="na-sub">${escapeAttr(L.sub)}</span>` : ""}`;
+    a.setAttribute("aria-label", to ? `${L.word}${L.sub ? ": " + L.sub : ""}` : "Nothing further this way");
+  });
   setTimeout(() => {
-    const b = mapPopEl.querySelector("[data-play]:not(:disabled), [data-go]:not(:disabled)") || mapPopEl.querySelector("[data-rules]");
+    if (!mapPop || !mapPop.focus) return;
+    const b = nodeHereEl.querySelector("[data-go]:not(:disabled)") || nodeArrows.find(a => !a.disabled);
     if (b) b.focus({ preventScroll: true });
-  }, 30);
+  }, 60);
 }
 
-/* Sits above the pin, or below it if there is no room, and never off the edges */
-function positionPop(pinEl) {
-  if (!pinEl || !mapPop) return;
-  requestAnimationFrame(() => {
-    if (!mapPop) return;
-    const m = mapEl.getBoundingClientRect(), p = pinEl.getBoundingClientRect();
-    const w = mapPopEl.offsetWidth, h = mapPopEl.offsetHeight;
-    let x = p.left + p.width / 2 - m.left - w / 2;
-    let y = p.top - m.top - h - 10;
-    let below = false;
-    if (y < 6) { y = p.bottom - m.top + 10; below = true; }
-    x = Math.max(6, Math.min(m.width - w - 6, x));
-    y = Math.max(6, Math.min(m.height - h - 6, y));
-    mapPopEl.style.left = x + "px";
-    mapPopEl.style.top = y + "px";
-    mapPopEl.style.setProperty("--tail", (p.left + p.width / 2 - m.left - x) + "px");
-    mapPopEl.classList.toggle("below", below);
-  });
-}
+/* kept for the old callers: the focus has no bubble to place */
+function positionPop() { }
 
 function closeLevelPop(quiet = false) {
   if (!mapPop && !mapRules) return false;
@@ -816,14 +891,29 @@ function closeLevelPop(quiet = false) {
   mapPopEl.className = "map-pop";
   mapBriefEl.classList.remove("open");
   mapNight = false;
-  mapEl.classList.remove("night");
+  mapEl.classList.remove("night", "focus");
+  nodeHereEl.className = "node-here";
+  nodeScrollEl.classList.remove("open");
+  nodeArrows.forEach(a => a.classList.remove("open"));
   updatePins();
+  if (mapSel) { renderBanner(); layoutMap(); }
   if (!quiet && was) {
     const pin = mapPinsEl.querySelector(`[data-key="${nodeKey(was.key, was.j)}"]`);
     if (pin) setKbdFocus(pin);
   }
   return true;
 }
+
+/* While a stop is up close, the left and right arrow keys walk the path */
+document.addEventListener("keydown", e => {
+  if (currentScreen !== "modes" || !mapPop || !mapPop.focus || mapRules || e.target.tagName === "INPUT") return;
+  const k = e.key.toLowerCase();
+  if (k === "arrowleft" || k === "a" || k === "arrowright" || k === "d") {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (!e.repeat) stepNode(k === "arrowleft" || k === "a" ? -1 : 1);
+  }
+}, true);
 
 function playLevel(key, j) {
   if (!campLevelOpen(key, j)) return;
@@ -860,7 +950,6 @@ function openLevelRules() {
   const def = campLevelDef(key, j);
   const I = CAMP.islandById[key];
   mapRules = true;
-  mapPopEl.className = "map-pop";
   const open = campLevelOpen(key, j);
   const facts = '<dl class="facts">' + campLevelFacts(key, j).map(([label, t, frame]) =>
     `<div class="fact"><dt>${label}</dt><dd>${frame ? `<span class="frame-dot ${frame}" aria-hidden="true"></span>` : ""}${t}</dd></div>`).join("") + "</dl>";
@@ -902,6 +991,7 @@ function campLevelFacts(key, j) {
   const sp = Object.keys(def.spawns || {}).map(k => SPAWN_NAMES[k] || k);
   if (def.goal.type === "boss") sp.unshift(CAMP.islandById[key].boss.name);
   if (sp.length) out.push(["Watch for", escapeAttr(sp.join(", "))]);
+  if (def.bonus) out.push(["Challenge", `${escapeAttr(bonusText(def.bonus))} (${bonusOnce(def.bonus) && bonusEarned(key, j) ? "earned" : escapeAttr(bonusRewardText(key, def.bonus))})`]);
   const first = !campWon(key, j);
   out.push(["Reward", `${coinHtml(key)} ${fmtInt(campRewardPreview(key, j, first))} ${escapeAttr(campCurrency(key).plural)}${first ? " (first win)" : ""}, plus 1 for every ${fmtInt(CAMP.rules.rewards.pointsPerCoin || 50)} points, win or lose`]);
   return out;
@@ -911,13 +1001,15 @@ function campLevelFacts(key, j) {
 mapBriefEl.addEventListener("click", e => e.stopPropagation());
 mapPopEl.addEventListener("click", e => e.stopPropagation());
 mapBannerEl.addEventListener("click", e => e.stopPropagation());
+nodeHereEl.addEventListener("click", e => e.stopPropagation());
+nodeScrollEl.addEventListener("click", e => e.stopPropagation());
 document.getElementById("map-out").addEventListener("click", e => { e.stopPropagation(); closePlace(); });
 mapEl.addEventListener("click", e => {
   if (!e.target.isConnected) return;
   if (closeLevelPop()) return;
   if (mapSel) closePlace();
 });
-if (window.ResizeObserver) new ResizeObserver(() => { if (currentScreen === "modes") { layoutMap(); if (mapPop && !mapRules) setTimeout(() => positionPop(mapPop && mapPop.pin), 720); } }).observe(mapEl);
+if (window.ResizeObserver) new ResizeObserver(() => { if (currentScreen === "modes") layoutMap(); }).observe(mapEl);
 else window.addEventListener("resize", () => { if (currentScreen === "modes") layoutMap(); });
 
 function updateDock() { /* the old Commons' landmarks are gone: home base is on every island */ }

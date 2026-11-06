@@ -2,7 +2,8 @@
    src/campaign/camp-screens.js
    A campaign level inside the game's own screens: the game-over card
    says how the level went (with a Next button once it's won), Space
-   casts your spell during a level (Esc or P pauses), the pause menu
+   casts your spell during a level, 1 to 4 eat from the pocket (Esc or
+   P pauses), the pause menu
    drops the Tailor, and leaving a level by any other door tidies up.
    ========================================================= */
 "use strict";
@@ -86,7 +87,7 @@ function campResultNext() {
   window.leaveGameover = function () { if (campResultShown) { campResultMap(); return; } return leave.apply(this, arguments); };
 })();
 
-/* ----- Keys: Space casts during a level, Esc or P pauses ----- */
+/* ----- Keys: Space casts during a level, 1 to 4 eat a snack, Esc or P pauses ----- */
 (() => {
   const orig = handleKeyDown;
   document.removeEventListener("keydown", orig);
@@ -96,6 +97,9 @@ function campResultNext() {
       const key = e.key.toLowerCase();
       if (e.code === "Space") { e.preventDefault(); if (!e.repeat && !reviveCountdown) campCast(); return true; }
       if (key === "e") { e.preventDefault(); return true; }            // no shedding in the campaign
+      // 1 to 4: a bite of whatever's in that pocket slot (the number row or the keypad)
+      const slot = /^(Digit|Numpad)([1-4])$/.exec(e.code);
+      if (slot) { e.preventDefault(); if (!e.repeat && !reviveCountdown) campEatSnack(+slot[2] - 1); return true; }
     }
     return false;
   };

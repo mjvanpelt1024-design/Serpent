@@ -421,6 +421,7 @@ function maybeLoot(ts) {
 
 function collectLoot(o) {
   sfx("shimmer");
+  campBonusEvent("loot");
   if (o.id === "canister") {
     campRun.canisters.push(o.rarity);
     showToast(`Found a ${rarityName(o.rarity)} Heart Canister! It's yours, win or lose.`);
