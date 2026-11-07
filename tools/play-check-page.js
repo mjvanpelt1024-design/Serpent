@@ -172,6 +172,22 @@
     closeNmTunnels(true);
     await log("nightmare: first tunnel played end to end");
 
+    // ----- 3b. the sandbox is on the title screen, under Play
+    openScreen("main");
+    const sbBtn = document.getElementById("menu-sandbox");
+    check(!!sbBtn && sbBtn.offsetParent !== null, "sandbox: a Sandbox button on the title screen");
+    if (sbBtn) sbBtn.click();
+    check(currentScreen === "shelf", `sandbox: it opens the level select (got ${currentScreen})`);
+    const backBtn = document.querySelector("#screen-shelf [data-back]");
+    if (backBtn) backBtn.click();
+    check(currentScreen === "main", `sandbox: Back returns to the title screen (got ${currentScreen})`);
+    document.getElementById("menu-sandbox").click();
+    document.getElementById("shelf-new").click();
+    check(currentScreen === "sandbox", `sandbox: New level opens the editor (got ${currentScreen})`);
+    openRules();
+    check(document.querySelectorAll("#rules-list select[data-kit][data-part=id]").length === 6, "sandbox: the editor's Loadout panel has the kit");
+    closeRules();
+
     // ----- 4. a sandbox level with a kit: plays as a campaign level wearing it, and leaves the save alone
     {
       const L = normalizeLevel(newLevel("Kit test"));

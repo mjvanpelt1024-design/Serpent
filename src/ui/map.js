@@ -751,8 +751,10 @@ mapEl.appendChild(mapLegendEl);
 mapLegendEl.addEventListener("click", e => e.stopPropagation());
 mapLegendEl.addEventListener("pointerdown", e => e.stopPropagation());
 function renderLegend() {
-  const key = mapSel;
+  // the island you're looking at, or (on the whole map, build 53) the one you're on: the legend is always there
+  const key = mapSel || (camp && placeState(camp.at) === "open" ? camp.at : null);
   if (!key || currentScreen !== "modes" || placeState(key) !== "open" || !camp) { mapLegendEl.classList.remove("open"); mapLegendEl._h = ""; return; }
+  mapLegendEl.dataset.key = key;
   const I = CAMP.islandById[key];
   const items = [{ k: "home", icon: iconUrl("pin:home", 2), tip: "Home base", cls: "home" }];
   NPC_KINDS.forEach(k => {
@@ -770,7 +772,7 @@ function renderLegend() {
   if (mapLegendEl._h !== html) {
     mapLegendEl.innerHTML = html;
     mapLegendEl._h = html;
-    mapLegendEl.querySelectorAll("[data-lg]").forEach(b => b.addEventListener("click", () => legendGo(mapSel, b.dataset.lg)));
+    mapLegendEl.querySelectorAll("[data-lg]").forEach(b => b.addEventListener("click", () => legendGo(mapSel || mapLegendEl.dataset.key, b.dataset.lg)));
   }
   mapLegendEl.classList.add("open");
 }

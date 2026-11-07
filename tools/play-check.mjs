@@ -106,9 +106,12 @@ if (SHOTS && browser) {
     ["nightmare-roots", "nmEl.querySelector('[data-nm=roots]').click(); 1"],
     ["nightmare-first", "nmIsl = CAMP.nightmare.order[0]; nmPanel = 'shop'; renderNightmare(); 1"],
     ["gem-shop", "closeNmTunnels(true); openScreen('modes'); camp.gemDaily = 0; campWalletUpdate(); openGemShop(); 1"],
-    ["map-legend", "closeGemShop(); openScreen('modes'); mapSel = 'keep'; renderLegend(); 1"],
+    ["map-overview", "closeGemShop(); openScreen('modes'); 1"],
+    ["map-legend", "openScreen('modes'); mapSel = 'keep'; renderLegend(); 1"],
     ["home", "openNode('keep', 'home'); 1"],
-    ["title", "openScreen('main'); renderTitleDeco(); 1"]
+    ["title", "openScreen('main'); renderTitleDeco(); 1"],
+    ["sandbox-shelf", "document.getElementById('menu-sandbox').click(); 1"],
+    ["sandbox-kit", "document.getElementById('shelf-new').click(); openRules(); const k = sbLevel.kit = { gear: { id: 'flamebrand', r: 'legendary' }, rune: { id: 'fury', r: 'fine' } }; renderRules(); document.querySelector('#rules-list .sb-kit').scrollIntoView(); 1"]
   ]).catch(e => console.log("  shots failed: " + e.message));
 }
 if (browser) browser.kill();

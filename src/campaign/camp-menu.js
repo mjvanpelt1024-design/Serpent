@@ -73,6 +73,9 @@ function campNaming(mode) {
   btn.id = "menu-play";
   play.replaceWith(btn);
   btn.addEventListener("click", campPlay);
+  // Sandbox, under Play: the level select (My Levels, New level, Paste Code)
+  const sb = document.getElementById("menu-sandbox");
+  if (sb) sb.addEventListener("click", () => { sfx("tab"); openShelf("mine"); });
 })();
 
 /* The old story book's scenes belong to the old islands */
@@ -83,9 +86,12 @@ window.sceneForUnlock = (id, then) => { if (then) then(); };
   const orig = openScreen;
   window.openScreen = function (name) {
     if (name === "profiles") name = "main";
-    if (["modes", "inventory"].includes(name)) campEngineSlot();
+    // the sandbox keeps its levels in the engine's slot too (build 53: it's on the title screen, under Play)
+    if (["modes", "inventory", "shelf", "sandbox"].includes(name)) campEngineSlot();
     return orig.call(this, name);
   };
+  // the sandbox opens from the title screen, so its level select goes back there (build 53)
+  BACK_TARGET.shelf = "main";
   const back = goBack;
   window.goBack = function () {
     if (currentScreen === "name" && String(namingFor).startsWith("camp-")) { openScreen(namingFor === "camp-first" ? "main" : "settings"); return; }

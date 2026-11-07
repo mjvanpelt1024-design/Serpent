@@ -508,7 +508,8 @@ The style is unchanged; what changed is where things are and how many words they
   The whole-map button is just its magnifier; "Drag to explore" is gone.
 - **The legend** (`renderLegend` in `map.js`): symbols down the left side for home, the three shops,
   the next level (a flag, or a skull before a boss) and, while a quest is on, the quest (a glowing scroll).
-  Words only on hover. Each one flies the map there; home and the shops walk straight in.
+  Words only on hover. Each one flies the map there; home and the shops walk straight in. On the whole
+  map it shows the island you're on (`camp.at`).
 - **Home and the shops don't ask.** A click on their pin, an edge zone or a legend symbol walks in.
   A locked one still flies close and says why.
 - **Up close, the sides of the screen walk the path.** The arrow buttons became zones a fifth of the
