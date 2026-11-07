@@ -110,9 +110,10 @@ won, boss lairs with eyes that watch you (a banner flies over them once beaten),
 challenger's tent, the bank with a coin turning on its roof, the bridge gate with torches, and the home
 tree, which grows as you buy that island's upgrades. The shopkeepers stand by their stalls.
 
-- **Levels 1-4** are still boards (no mazes, no endless roads). **6-9** are still boards with enemies
-  (fleas, bees, ghosts, rival snakes). **11-14** move: the endless road, the endless maze, the endless
-  mirrored field and walls that rise and fall on a beat.
+- **Levels 1-4 and 11** are still boards (no mazes, no endless roads). Level 11 is a comb board on every
+  island: the endless road was taken off the path (see `docs/PHYSICS.md`, "The scroller" for where it
+  can come back). **6-9** are still boards with enemies (fleas, bees, ghosts, rival snakes). **12-14**
+  move: the endless maze, the endless mirrored field and walls that rise and fall on a beat.
 - Every level needs the one before it, so every boss stands between you and what's past it.
 
 | # | Island | Theme | Currency | Merchant sells | Boss (hearts / armor) |

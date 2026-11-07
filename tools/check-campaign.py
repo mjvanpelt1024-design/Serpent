@@ -20,7 +20,7 @@ CAMP = os.path.join(ROOT, "content", "campaign")
 
 LEVELS_PER_ISLAND = 15
 BOSS_AT = {5: 1, 10: 2, 15: 3}                      # level -> boss fight number
-KIND_AT = {n: "static" for n in (1, 2, 3, 4)} | {n: "enemy" for n in (6, 7, 8, 9)} | {n: "dynamic" for n in (11, 12, 13, 14)} | {n: "boss" for n in BOSS_AT}
+KIND_AT = {n: "static" for n in (1, 2, 3, 4, 11)} | {n: "enemy" for n in (6, 7, 8, 9)} | {n: "dynamic" for n in (12, 13, 14)} | {n: "boss" for n in BOSS_AT}
 LAYOUTS = {"open", "pillars", "rooms", "cross", "lanes", "ring", "comb", "diamond", "checker", "spiral", "arena", "tunnel", "maze", "field", "pulse"}
 STATIC_LAYOUTS = LAYOUTS - {"tunnel", "maze", "field", "pulse"}
 EDGES = {"wrap", "wall", "mirror", "endless", "maze"}

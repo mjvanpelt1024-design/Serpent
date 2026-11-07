@@ -5,7 +5,8 @@
    Layouts (a level's "layout" in content/campaign/islands/*.json):
      static boards (20 x 20): open, pillars, rooms, cross, lanes, ring,
        comb, diamond, checker, spiral, arena
-     dynamic: tunnel (the endless scroller), maze (the wrap-around maze),
+     dynamic: tunnel (the endless scroller; not on any island's path now,
+       see docs/PHYSICS.md "The scroller"), maze (the wrap-around maze),
        field (an endless wrap-around hall of mirrored walls that cascade
        out from the middle), pulse (walls that rise and fall on a beat)
 
