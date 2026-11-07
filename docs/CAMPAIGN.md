@@ -553,15 +553,16 @@ once the payment has cleared). Each offer's `price` is there for that store, in 
 
 ## Build 53: nightmare mode
 
-Unlocked by winning the last island's last level (`nightmare.json` `unlock`). **It's on the map** (`src/ui/map-deep.js`):
-the first time the map shows after that boss, it flies to the Cinder Crown, the ground gives way, a hole is dug in
-its grass at the far end, and you go down. Underground (`mapUnder`) the view drops below the island and the
-ground is cut away: a cave hangs under it, the Great Tree's roots reaching down from its ceiling, a ladder up to
-the hole, the tunnel winding through three rows of stops, and the Maw coiled on the cave floor, its eye open in
-the dark. The stops are map pins (`nm-<island>-<id>`); a level's opens its card (objective, twist, snakes, pay,
-Start), the roots and the shop open a panel over the map, and after a run you're back down there with the run
-in the same card. The hole's pin (a moon) goes down, the ladder's pin (or Back) comes up, and the moon in the
-legend goes to the deepest open tunnel. The Maw's body is the Coil; under each island, from the top down
+Unlocked by winning the last island's last level (`nightmare.json` `unlock`). **It's on the map**
+(`src/ui/map-deep.js`): the first time the map shows after that boss, it flies to the Cinder Crown, the ground
+gives way and a hole is dug in its grass at the far end; then **every island turns over** (`mapFlip`), rock
+pointing up into a darker sky, undersides facing you. An island whose tunnel is open has it carved into its
+underside: the hole you came through (daylight), ten levels in two rows, the Great Tree's roots poking through,
+the shop of the deep, and along the back a trench where the Maw lies, crimson and awake, bone once beaten there.
+An island whose tunnel isn't open is plain, sealed stone. The stops are map pins (`nm-<island>-<id>`); a
+level's opens its card (objective, twist, snakes, pay, Start), the roots and the shop open a panel over the map,
+and after a run the map is turned over again with the run in the same card. The hole's pin (a moon) turns the
+islands over, the daylight's pin, Back or the moon in the legend turns them back. The Maw's body is the Coil; under each island, from the top down
 (`order`: the Cinder Crown first, Grimscale's Keep last), a tunnel:
 
 - **The roots** (the tree at the top of the shaft): upgrades that work in every nightmare level and never
@@ -576,8 +577,8 @@ legend goes to the deepest open tunnel. The Maw's body is the Coil; under each i
   their `acts` (snacks can borrow too now), go in the normal slots, and the normal workshops take them. No
   merchant ever stocks them (`CAMP.nmItems`, kept out of `CAMP.items`).
 - **The Maw** (level 11): its last stand, from `maw`, a little bigger in each tunnel (`perTunnel`). Beating
-  it opens the next tunnel down (closing its report digs that island and takes you down), it turns to bone on its
-  cave floor, and its stretch of the Coil on the map turns to bone (`COIL_BONE` in
+  it opens the next tunnel down (closing its report digs that island and turns the islands over there), it turns to bone in
+  its trench, and its stretch of the Coil on the map turns to bone (`COIL_BONE` in
   `map-coil.js`). After the fifth the Coil's head is bone with its eye crossed out.
 
 Wins pay like a level 15 + n, times `payMult`; that is where the last of the upper islands' upgrades get paid

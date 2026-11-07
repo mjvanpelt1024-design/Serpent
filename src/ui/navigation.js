@@ -46,7 +46,7 @@ function openScreen(name) {
   if (name === "global") { treeArea = "global"; if (!treeSel || !GLOBAL_KEYS.concat("prestige").includes(treeSel) && !String(treeSel).startsWith("item:")) treeSel = "xp"; name = "tree"; }
   if (name === "modes") {
     mapSel = null; mapNight = false; mapCam = null; mapPop = null; mapRules = false;
-    if (typeof mapUnder !== "undefined") { mapUnder = null; mapEl.classList.remove("under"); }
+    if (typeof mapFlip !== "undefined") { mapFlip = false; deepFlipAnim = null; mapEl.classList.remove("flipped"); }
     mapBriefEl.classList.remove("open"); mapBriefEl.innerHTML = ""; mapPopEl.className = "map-pop"; mapBannerEl.classList.remove("open");
     if (typeof resetNodeFocus === "function") resetNodeFocus();
     mapEl.classList.remove("zoomed", "night");
@@ -108,7 +108,7 @@ function goBack() {
     else closeLevelPop();
     return;
   }
-  if (currentScreen === "modes" && typeof mapUnder !== "undefined" && mapUnder) { leaveUnder(); return; }   // underground: up first
+  if (currentScreen === "modes" && typeof mapFlip !== "undefined" && mapFlip) { leaveUnder(); return; }   // turned over: back first
   if (currentScreen === "modes" && mapSel) {
     closePlace();
     return;

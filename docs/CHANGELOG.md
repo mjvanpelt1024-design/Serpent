@@ -8,9 +8,9 @@
   roots hang into every tunnel with upgrades that only work down there, and after level 5 a shop sells
   things only the deep has (they work in the normal shops and workshops too). Beat the Maw five times: each
   one turns its stretch of the Coil to bone, and the last crosses out its new wanted poster and earns its
-  sticker. It's on the map: when the last boss falls the ground gives way under the Cinder Crown, and you go
-  down through the hole into a cave hanging under the island, the Maw coiled on its floor and the tunnel's
-  stops as pins. All numbers are placeholders for playtesting.
+  sticker. It's on the map: when the last boss falls the ground gives way under the Cinder Crown, a hole is dug,
+  and every island turns over: the tunnel is carved into the underside, the Maw in a trench along the back,
+  the stops as pins. All numbers are placeholders for playtesting.
 - **The gem shop.** Click your gems in the top bar: gem packs (10 to 2,500), two boosters that last a number
   of levels (power-up surge, lucky finds), a bundle, and a free daily gift. A placeholder for real purchases:
   in development everything is free and only adds to your save.

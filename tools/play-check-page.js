@@ -97,16 +97,17 @@
     await wait(() => mapSel === top && deepReveal[top] !== undefined, 40);
     check(camp.nm.open && mapSel === top && deepReveal[top] !== undefined, "nightmare: the map flies to the top island and digs it open");
     const pin = id => mapPinsEl.querySelector(`[data-key="nm-${top}-${id}"]`);
-    await wait(() => mapUnder === top, 30);
-    check(mapUnder === top, "nightmare: then you go down into the tunnel");
-    check(["roots", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "shop", 11, "up"].every(id => !!pin(id) && !pin(id).hidden) && !mapPinsEl.querySelector(`[data-key^="nm-${N.order[1]}-"]`), "nightmare: the cave's stops are pins, showing underground (and none under the next island yet)");
-    check(!!pin("hole") && pin("hole").hidden && [...mapPinsEl.querySelectorAll(`.map-pin.level:not(.nm)[data-area="${top}"]`)].every(p => p.hidden), "nightmare: underground, the surface's pins are hidden");
+    await wait(() => mapFlip && mapSel === top && !deepFlipping(), 40);
+    check(mapFlip && mapSel === top && !deepFlipping(), "nightmare: then the islands turn over, onto the tunnel's side");
+    check(["roots", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "shop", 11, "up"].every(id => !!pin(id) && !pin(id).hidden) && !mapPinsEl.querySelector(`[data-key^="nm-${N.order[1]}-"]`), "nightmare: the tunnel's stops are pins on the underside (and none on the next island yet)");
+    check(!!pin("hole") && pin("hole").hidden && [...mapPinsEl.querySelectorAll(`.map-pin.level:not(.nm)[data-area="${top}"]`)].every(p => p.hidden), "nightmare: turned over, the surface's pins are hidden");
     check(mapBannerEl.textContent.includes(N.tunnels[top].name), "nightmare: the scroll says the tunnel's name");
     check(!pin(1).hidden && pin(2).classList.contains("locked") && pin("shop").classList.contains("locked"), "nightmare: level 1 is open; level 2 and the shop start locked");
     {
-      const inCave = id => { const p = deepStop(top, id); return deepInside(top, p.x, p.y); };
-      check(["roots", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "shop", 11, "up"].every(inCave), "nightmare: every stop sits inside the cave");
-      check(deepArt(top).width > 0, "nightmare: the cave is painted");
+      const onFace = id => { const p = deepStop(top, id); return deepOnFace(top, p.x, p.y); };
+      const off = ["roots", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "shop", 11, "up"].filter(id => !onFace(id));
+      check(!off.length, "nightmare: every stop sits on the island's underside" + (off.length ? " (off: " + off.join(", ") + ")" : ""));
+      check(deepBackArt(top).art.width > 0 && deepBackArt(N.order[2]).tag === "sealed", "nightmare: the underside is painted, and a sealed one for an island not dug yet");
     }
     const money0 = camp.wallet[cur];
     // level 1: its pin opens its card, Start plays it
@@ -125,7 +126,7 @@
     campWinLevel();
     await report();
     check(camp.nm.levels[`${top}:1`] === 1 && camp.wallet[cur] > money0, "nightmare: a win is recorded and paid in the island's money");
-    check(!campRun && currentScreen === "modes" && mapSel === top && mapUnder === top && !!mapGoalEl.querySelector(".nm-card.won"), "nightmare: after a win, back underground with the report");
+    check(!campRun && currentScreen === "modes" && mapSel === top && mapFlip && !!mapGoalEl.querySelector(".nm-card.won"), "nightmare: after a win, back on the turned-over map with the report");
     check(!!mapGoalEl.querySelector('[data-mg="next"]'), "nightmare: the report offers the next level");
     // levels 2-10 through the report's Next button
     for (let k = 2; k <= N.levels; k++) {
@@ -167,13 +168,15 @@
     // closing the report digs the next island down
     mapGoalEl.querySelector('[data-mg="back"]').click();
     await wait(() => mapSel === N.order[1] && deepReveal[N.order[1]] !== undefined, 30);
-    await wait(() => mapUnder === N.order[1], 30);
-    check(mapSel === N.order[1] && mapUnder === N.order[1] && !!mapPinsEl.querySelector(`[data-key="nm-${N.order[1]}-1"]`), "nightmare: then the map flies down, digs the next island and goes down into it");
+    await wait(() => mapFlip && mapSel === N.order[1] && !deepFlipping(), 40);
+    check(mapSel === N.order[1] && mapFlip && !!mapPinsEl.querySelector(`[data-key="nm-${N.order[1]}-1"]`) && !mapPinsEl.querySelector(`[data-key="nm-${N.order[1]}-1"]`).hidden, "nightmare: then the map flies down, digs the next island and turns over again");
     // back up, and down again by the hole
     goBack();
-    check(!mapUnder && mapSel === N.order[1], "nightmare: Back climbs out to the island");
+    check(!mapFlip && mapSel === N.order[1], "nightmare: Back turns the islands right way up");
+    await wait(() => !deepFlipping(), 30);
     selectPlace(top); pin("hole").click();
-    check(mapUnder === top, "nightmare: the hole in the grass goes back down");
+    check(mapFlip, "nightmare: the hole in the grass turns them over again");
+    await wait(() => !deepFlipping(), 30);
     try { coilCache = null; coilArt(); check(coilCache.tag.includes(top), "nightmare: the Coil redraws with the beaten Maw's stretch in bone"); } catch (e) { problems.push("nightmare: the Coil: " + e.message); }
     // the roots, from their pin
     camp.wallet[cur] = 1e6;

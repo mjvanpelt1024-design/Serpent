@@ -1,34 +1,36 @@
 /* =========================================================
    src/ui/map-deep.js
-   Nightmare mode on the map (build 53): the tunnel under an island.
+   Nightmare mode on the map (build 53): the back side of the islands.
 
    Once a tunnel is open (camp-nightmare.js nmTunnelOpen), its island has a
-   hole dug in the grass at its far end (a pin: go underground). Underground
-   (mapUnder), the view drops below the island and the ground is cut away: a
-   cave hangs under it, the roots of the Great Tree reaching down from its
-   ceiling, the tunnel winding through three rows of stops (levels 1 to 10,
-   the shop of the deep off level 5), and on the cave floor the Maw itself,
-   coiled, its eye open in the dark, bone once it's beaten there.
+   hole dug in the grass at its far end. Click it and the whole map flips:
+   every island turns over (mapFlip), its rock pointing up into a darker
+   sky, and its underside faces you. On the underside of an island whose
+   tunnel is open, the tunnel is carved into the stone: the hole you came
+   through at the far end, ten levels winding back and forth, the roots of
+   the Great Tree poking through, the shop of the deep, and along the back
+   a trench where the Maw lies, crimson and awake, bone once it's beaten
+   there. An island whose tunnel isn't open yet is plain, sealed stone.
 
    The stops are ordinary map pins (map.js renderModes): "nm-<island>-<id>",
-   id roots, 1-10, shop, 11 (the Maw), and hole (on the grass: go down) and
-   up (at the top of the shaft: back to the surface). They show only while
-   you're underground there.
+   id roots, 1-10, shop, 11 (the Maw), up (the hole, from below: flip back),
+   and hole (on the grass: flip over). The tunnel's pins show only flipped,
+   the surface's only unflipped.
    ========================================================= */
 "use strict";
 
 const DEEP_IDS = ["roots", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "shop", 11];
-const DEEP_TOP = 40, DEEP_BOTTOM = 182, DEEP_HALF = 150;     // the cave, below the island's middle (map pixels)
-const deepCache = {};
-const deepReveal = {};       // island -> the time its cave was dug open (for the dig)
-let mapUnder = null;         // the island you're underground at, or null
-
-/* Where the stops are, from the island's middle: [along its flow (+ = the far end), down] */
+/* Where the stops are on the underside, from the island's middle: [along its flow (+ = the far end), dy] */
 const DEEP_SPOTS = {
-  1: [112, 66], 2: [64, 66], 3: [16, 66], 4: [-32, 66], 5: [-80, 66], roots: [-108, 56],
-  shop: [-120, 104], 6: [-72, 106], 7: [-24, 106], 8: [24, 106], 9: [72, 106],
-  10: [96, 146], 11: [8, 150], up: [98, 47]
+  up: [140, -10], 1: [104, 17], 2: [66, 17], 3: [28, 17], 4: [-10, 17], 5: [-48, 17], shop: [-92, 22], roots: [-134, 12],
+  6: [-74, -4], 7: [-36, -4], 8: [2, -4], 9: [40, -4], 10: [78, -4], 11: [-20, -24]
 };
+const deepCache = {};
+const deepReveal = {};       // island -> the time its hole was dug (for the dig)
+let mapFlip = false;         // the map is turned over: every island's underside
+let deepFlipAnim = null;     // { to, at } while the islands turn
+const DEEP_FLIP_SECS = 0.8;
+
 function deepStop(key, id) {
   const I = ISLANDS[key];
   if (id === "hole") return deepHole(key);
@@ -44,131 +46,156 @@ function deepHole(key) {
   for (let f = 132; f > 60; f -= 2) if (free(f, 14, 4, 1.2)) { hf = f; break; }
   return (C.hole = { x: Math.round(I.x + I.dir * hf), y: Math.round(I.y + 14) });
 }
-
-/* The cave's outline: half its width on each row, from the island's middle */
-function deepRows(key) {
-  const C = deepCache[key] || (deepCache[key] = {});
-  if (C.rows) return C.rows;
-  const seed = ISLANDS[key].n * 13 + 5, rows = [];
-  for (let y = DEEP_TOP; y <= DEEP_BOTTOM; y++) {
-    const u = (y - DEEP_TOP) / (DEEP_BOTTOM - DEEP_TOP);
-    // wide under the island, swelling in the middle, rounding off at the floor
-    const shape = Math.sin(Math.min(1, u * 1.15) * Math.PI * 0.92 + 0.25);
-    const w = DEEP_HALF * (0.62 + 0.4 * shape) + (mapNoise(y, 3, 9, seed) - 0.5) * 10;
-    const mid = Math.sin(u * 5 + seed) * 4;
-    rows.push([y, Math.round(mid - w), Math.round(mid + w)]);
-  }
-  return (C.rows = rows);
-}
-/* Is a map point inside the cave under island key? */
-function deepInside(key, x, y) {
-  const I = ISLANDS[key], r = deepRows(key).find(r => r[0] === Math.round(y - I.y));
-  if (!r) return false;
-  const lx = (x - I.x) * I.dir;      // the rows are drawn mirrored on a left-running island
-  return lx > r[1] + 4 && lx < r[2] - 4;
+/* Is a map point on an island's underside face? */
+function deepOnFace(key, x, y) {
+  const I = ISLANDS[key], s = isleSpan(key, (x - I.x) * I.dir);
+  // turned over, the face is the grass's outline mirrored top to bottom
+  return !!s && y - I.y > -s[1] + 2 && y - I.y < -s[0] - 2;
 }
 
-/* The cave, painted once (again when its progress or the Maw changes), in map pixels from
-   (island x - DEEP_HALF - 12, island y + DEEP_TOP - 8) */
-function deepArt(key) {
-  const tag = DEEP_IDS.map(id => (typeof id !== "number" ? "" : nmLevelWon(key, id) ? "w" : nmTunLevelOpen(key, id) ? "o" : "-")).join("") + (nmMawSlain(key) ? "S" : "") + (nmShopOpen(key) ? "s" : "");
+/* -1 (turned over) to 1 (right way up), easing while the islands turn */
+function deepFlipK(t) {
+  if (!deepFlipAnim) return mapFlip ? -1 : 1;
+  if (deepFlipAnim.at === null) deepFlipAnim.at = t;
+  const p = Math.min(1, (t - deepFlipAnim.at) / DEEP_FLIP_SECS);
+  const k = Math.cos(Math.PI * p) * (deepFlipAnim.to ? 1 : -1);
+  if (p >= 1) { deepFlipAnim = null; updatePins(); }
+  return k;
+}
+
+/* An island's underside, painted once (again when its progress changes). Origin: (C.ox, C.oy) = its middle. */
+function deepBackArt(key) {
+  const open = typeof nmTunnelOpen === "function" && camp && camp.nm && nmTunnelOpen(key);
+  const tag = !open ? "sealed" : DEEP_IDS.map(id => (typeof id !== "number" ? "" : nmLevelWon(key, id) ? "w" : nmTunLevelOpen(key, id) ? "o" : "-")).join("") + (nmMawSlain(key) ? "S" : "") + (nmShopOpen(key) ? "s" : "");
   const C = deepCache[key] || (deepCache[key] = {});
-  if (C.art && C.tag === tag) return C.art;
-  const I = ISLANDS[key], seed = I.n * 13 + 5, d = I.dir;
-  const W = DEEP_HALF * 2 + 24, H = DEEP_BOTTOM - DEEP_TOP + 22;
-  const ox = DEEP_HALF + 12, oy = 8 - DEEP_TOP;          // island-middle-relative (lx, dy) -> canvas (ox + lx, oy + dy)
+  if (C.art && C.tag === tag) return C;
+  const I = ISLANDS[key], d = I.dir, seed = I.n * 13 + 5;
+  const art = islandArt(key), src = texCanvas(`map:${key}:under`), form = isleForm(key);
+  const lift = form.drop + 20;                                 // room above for the rock, now pointing up
+  const W = src.width, H = src.height + lift;
   const c = document.createElement("canvas");
   c.width = W; c.height = H;
   const g = c.getContext("2d");
+  const ox = art.ox, oy = art.oy + lift;
+  // the island turned over: its picture mirrored top to bottom about its middle
+  g.save();
+  g.translate(0, 2 * oy);
+  g.scale(1, -1);
+  g.drawImage(src, 0, lift);
+  g.restore();
   const px = (x, y, col) => { g.fillStyle = col; g.fillRect(x, y, 1, 1); };
-  const rock = (ISLE_THEME[key] && ISLE_THEME[key].rock) || [["#4a3a30", "#3a2c24"], ["#3a2c24", "#2a2018"], ["#2a2018", "#1a1410"]];
-  const rows = deepRows(key);
-  // the rock around the cave: the island's own, a band six thick, darker toward the bottom
-  rows.forEach(([y, l, r], i) => {
-    const u = i / rows.length, layer = u < 0.3 ? 0 : u < 0.7 ? 1 : 2;
-    for (let lx = l - 7; lx <= r + 7; lx++) {
-      const x = ox + lx * d, yy = oy + y;
-      if (lx >= l && lx <= r) {
-        let col = u < 0.5 ? "#1f0f1a" : "#140810";
-        if (mapHash(lx, y, seed) > 0.94) col = "#2c1626";
-        px(x, yy, col);
-      } else {
-        const [c0, c1] = rock[layer];
-        px(x, yy, ((lx + y) & 1) && mapHash(lx, y, seed + 2) > 0.5 ? c1 : c0);
+  const T = (ISLE_THEME[key] || {}).rock || [["#4a3a30", "#3a2c24"], ["#3a2c24", "#2a2018"], ["#2a2018", "#1a1410"]];
+  // the face: where the grass was (mirrored, as the whole island is), now its underside, raw stone
+  const local = (f, dy) => [Math.round(ox + d * f), Math.round(oy + dy)];
+  const faceSpan = lx => { const s = form.top[lx - ox + form.reach]; return s ? [-s[1], -s[0]] : null; };
+  const faceAt = (lx, ly) => { const s = faceSpan(lx); return s && ly - oy > s[0] && ly - oy < s[1] ? s : null; };
+  for (let lx = ox - form.reach; lx <= ox + form.reach; lx++) {
+    const s = faceSpan(lx);
+    if (!s) continue;
+    for (let ly = Math.ceil(oy + s[0]); ly <= Math.floor(oy + s[1]); ly++) {
+      const edge = Math.min(ly - (oy + s[0]), oy + s[1] - ly);
+      const band = (ly - oy - s[0]) / Math.max(1, s[1] - s[0]);
+      const [c0, c1] = T[band < 0.5 ? 1 : 0];
+      let col = ((lx + ly) & 1) && mapHash(lx, ly, seed) > 0.5 ? c1 : c0;
+      if (edge < 1.5) col = shadeHex(c0, ly - oy > 0 ? 0.18 : -0.3);
+      else if (mapHash(lx, ly, seed + 9) > 0.97) col = shadeHex(c0, -0.25);
+      if (!open) col = shadeHex(col, -0.35);
+      px(lx, ly, col);
+    }
+  }
+  if (open) {
+    // the Maw's trench along the back, and the Maw in it
+    const slain = nmMawSlain(key);
+    const pal = slain ? ["#3a3530", "#6a6058", "#9a9080", "#c8bfa8", "#efe8d4"] : ["#2a0818", "#5a1430", "#8a2046", "#c04a6a", "#f0a0b0"];
+    for (let f = -150; f <= 150; f++) {
+      const cy = -24 + Math.round(Math.sin(f * 0.05 + seed) * 2);
+      for (let o = -6; o <= 6; o++) {
+        const [x, y] = local(f, cy + o);
+        if (!faceAt(x, y) || !faceAt(x, y - 2) || !faceAt(x, y + 2)) continue;
+        if (Math.abs(o) >= 5) { px(x, y, "#0e0608"); continue; }       // the trench's dark walls
+        const e = Math.abs(o) / 4;
+        let shade = e > 0.8 ? 0 : e > 0.5 ? 1 : o < 0 ? 3 : 2;
+        if (Math.floor((f + (o > 0 ? 2 : 0)) / 4) % 2 && shade > 1) shade--;
+        if (o === -1 && ((f % 7) + 7) % 7 < 2) shade = 4;
+        px(x, y, pal[shade]);
       }
     }
-  });
-  // the floor and the roof: a closing band of rock under the cave
-  for (let k = 1; k <= 7; k++) {
-    const [y, l, r] = rows[rows.length - 1];
-    const shrink = k * k * 1.6;
-    for (let lx = Math.round(l - 7 + shrink); lx <= Math.round(r + 7 - shrink); lx++) px(ox + lx * d, oy + y + k, rock[2][(lx + k) & 1]);
-  }
-  const rowAt = y => rows.find(r => r[0] === y);
-  const open = (lx, y) => { const r = rowAt(y); return !!r && lx > r[1] && lx < r[2]; };
-  // a lighter rim along the cave's ceiling
-  rows.forEach(([y, l, r]) => { for (let lx = l; lx <= r; lx++) if (!open(lx, y - 1)) px(ox + lx * d, oy + y, "#5a3440"); });
-  // the Maw on the floor: a great coil of body across the cave, its head by the lair
-  const slain = nmMawSlain(key);
-  const pal = slain ? ["#3a3530", "#6a6058", "#9a9080", "#c8bfa8", "#efe8d4"] : ["#2a0818", "#5a1430", "#8a2046", "#c04a6a", "#f0a0b0"];
-  const floor = DEEP_BOTTOM - 14;
-  for (let lx = -DEEP_HALF; lx <= DEEP_HALF; lx++) {
-    const cy = floor + Math.round(Math.sin(lx * 0.05 + seed) * 4);
-    for (let o = -6; o <= 6; o++) {
-      if (!open(lx, cy + o)) continue;
-      const edge = Math.abs(o) / 6;
-      let shade = edge > 0.8 ? 0 : edge > 0.5 ? 1 : o < 0 ? 3 : 2;
-      if (Math.floor((lx + (o > 0 ? 2 : 0)) / 4) % 2 && shade > 1) shade--;
-      if (o === -2 && ((lx % 7) + 7) % 7 < 2) shade = 4;
-      px(ox + lx * d, oy + cy + o, pal[shade]);
+    // its head, raised at the lair, jaw open
+    const [mf, mdy] = DEEP_SPOTS[11];
+    for (let o = -6; o <= 5; o++) for (let k = -12; k <= 12; k++) {
+      const e = (k * k) / 144 + (o * o) / (o < 0 ? 36 : 25);
+      if (e > 1) continue;
+      const [x, y] = local(mf - 22 + k, mdy + o);
+      px(x, y, e > 0.8 ? pal[0] : o < -2 ? pal[3] : pal[2]);
     }
-  }
-  // its head, by the lair: a wide snout, the jaw a little open
-  const [hf, hdy] = DEEP_SPOTS[11];
-  const hx = hf - 34, hy = floor - 2;
-  for (let o = -9; o <= 7; o++) for (let k = -14; k <= 14; k++) {
-    const e = (k * k) / 196 + (o * o) / (o < 0 ? 81 : 49);
-    if (e > 1 || !open(hx + k, hy + o)) continue;
-    px(ox + (hx + k) * d, oy + hy + o, e > 0.8 ? pal[0] : o < -3 ? pal[3] : pal[2]);
-  }
-  if (!slain) for (let k = -10; k <= 10; k += 3) px(ox + (hx + k) * d, oy + hy + 3, "#efe8d4");     // teeth
-  // the roots of the Great Tree, hanging from the ceiling
-  rows.slice(0, 2).forEach(([y, l, r]) => {
-    for (let lx = l + 4; lx < r - 4; lx += 5 + Math.floor(mapHash(lx, y, seed + 3) * 7)) {
-      const len = 4 + Math.floor(mapHash(lx, y, seed + 4) * 14);
+    if (!slain) for (let k = -9; k <= 9; k += 3) { const [x, y] = local(mf - 22 + k, mdy + 3); px(x, y, "#efe8d4"); }
+    // the tunnel between the stops: dug out, lit where you've won
+    const spot = id => local(DEEP_SPOTS[id][0], DEEP_SPOTS[id][1]);
+    const leg = (a, b, lit) => {
+      const n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]));
+      for (let i = 0; i <= n; i++) {
+        const x = Math.round(a[0] + (b[0] - a[0]) * i / n), y = Math.round(a[1] + (b[1] - a[1]) * i / n + Math.sin(i * 0.4 + n) * 0.8);
+        if (!lit && i % 3) continue;
+        px(x - 1, y, lit ? "#1a0a0e" : "#2a1a1e"); px(x, y, lit ? "#1a0a0e" : "#2a1a1e"); px(x + 1, y, lit ? "#1a0a0e" : "#2a1a1e");
+        if (lit) px(x, y + 1, "#3a2028");
+      }
+    };
+    leg(spot("up"), spot(1), true);
+    for (let k = 1; k < 11; k++) leg(spot(k), spot(k + 1), nmLevelWon(key, k));
+    leg(spot(5), spot("shop"), nmShopOpen(key));
+    leg(spot("shop"), spot("roots"), true);
+    // the roots of the Great Tree, poking through all over
+    for (let i = 0; i < 26; i++) {
+      const f = -140 + mapHash(i, 4, seed) * 280, dy = -20 + mapHash(i, 5, seed) * 42;
+      let [x, y] = local(f, dy);
+      if (!faceAt(x, y)) continue;
+      const len = 3 + Math.floor(mapHash(i, 6, seed) * 6);
       for (let k = 0; k < len; k++) {
-        const xx = lx + (k > len / 2 && mapHash(lx, k, seed) > 0.5 ? 1 : 0);
-        if (!open(xx, y + k)) break;
-        px(ox + xx * d, oy + y + k, k % 3 ? "#6a4a2a" : "#4a3018");
+        if (!faceAt(x, y)) break;
+        px(x, y, k % 2 ? "#6a4a2a" : "#4a3018");
+        x += mapHash(i, k, seed) > 0.5 ? 1 : -1; y += k % 2;
       }
     }
-  });
-  // the tunnel between the stops: lit where you've won
-  const spot = id => { const [f, dy] = DEEP_SPOTS[id]; return { x: ox + f * d, y: oy + dy }; };
-  const leg = (a, b, lit) => {
-    const n = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y));
-    for (let i = 0; i <= n; i += lit ? 1 : 2) {
-      const x = Math.round(a.x + (b.x - a.x) * i / n), y = Math.round(a.y + (b.y - a.y) * i / n + Math.sin(i * 0.3) * 0.8);
-      g.fillStyle = lit ? "#a8705a" : "#4a2a36"; g.fillRect(x - (lit ? 1 : 0), y, lit ? 3 : 1, lit ? 2 : 1);
+    // a knot of them at the roots' stop
+    const [rx, ry] = spot("roots");
+    for (let k = -5; k <= 5; k++) { px(rx + k, ry + Math.round(Math.sin(k) * 2), "#6a4a2a"); px(rx + Math.round(Math.cos(k) * 3), ry + k / 2, "#4a3018"); }
+    // the hole you came through, from below
+    const [hx, hy] = spot("up");
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -8; dx <= 8; dx++) {
+      const e = (dx * dx) / 64 + (dy * dy) / 9;
+      if (e <= 1.1) px(hx + dx, hy + dy, e > 0.7 ? "#6a4a2a" : "#f6e8c8");      // daylight through it
     }
-  };
-  leg(spot("up"), spot(1), true);
-  for (let k = 1; k < 11; k++) leg(spot(k), spot(k + 1), nmLevelWon(key, k));
-  leg(spot(5), spot("shop"), nmShopOpen(key));
-  leg(spot(5), spot("roots"), true);
-  // the shaft up to the hole: a ladder against the ceiling
-  const up = spot("up");
-  for (let y = 2; y < up.y; y++) { px(up.x - 3 * d, y, "#7a5a3a"); px(up.x + 3 * d, y, "#7a5a3a"); if (y % 4 === 0) for (let k = -2; k <= 2; k++) px(up.x + k * d, y, "#5a3e24"); }
-  C.art = c; C.tag = tag; C.ox = ox; C.oy = oy;
-  return c;
+  }
+  Object.assign(C, { art: c, tag, ox, oy });
+  return C;
 }
 
-/* Each frame. On the surface: the hole in the grass. Underground: the cave over everything below. */
-function drawDeep(g, key, t, by) {
+/* One island on the map, for paintMapWorld: right way up (surface()), turned over, or turning */
+function deepDrawIsland(g, key, t, by, k, surface) {
+  const I = ISLANDS[key];
+  if (k === 1 || placeFogged(key)) { surface(); return; }
+  g.save();
+  g.translate(0, I.y + by);
+  g.scale(1, Math.max(0.02, Math.abs(k)));
+  g.translate(0, -(I.y + by));
+  if (k > 0) surface();
+  else {
+    const B = deepBackArt(key);
+    g.drawImage(B.art, I.x - B.ox, I.y - B.oy + by);
+    // the Maw's eye, open in its trench
+    if (k === -1 && nmTunnelOpen(key) && !nmMawSlain(key) && (t % 5) > 0.25) {
+      const [mf, mdy] = DEEP_SPOTS[11];
+      mapRect(g, I.x + I.dir * (mf - 30) - 1, I.y + mdy - 3 + by, 3, 2, `rgba(255, 58, 58, ${0.7 + 0.3 * Math.sin(t * 3)})`);
+    }
+  }
+  g.restore();
+}
+
+/* The hole in the grass, right way up (it opens as it's dug, with a little dust) */
+function drawDeepHole(g, key, t, by) {
   if (typeof nmTunnelOpen !== "function" || !camp || !camp.nm || !nmTunnelOpen(key) || placeFogged(key)) return;
-  const I = ISLANDS[key], h = deepHole(key);
+  const h = deepHole(key);
   const since = deepReveal[key] !== undefined ? t - deepReveal[key] : 99;
-  // the hole: a dark pit with a ring of dug earth, opening as it's dug
   const grow = Math.min(1, Math.max(0.2, since / 1.2));
   for (let dy = -3; dy <= 3; dy++) for (let dx = -9; dx <= 9; dx++) {
     const e = ((dx * dx) / 81 + (dy * dy) / 9) / grow;
@@ -179,44 +206,43 @@ function drawDeep(g, key, t, by) {
     const x = h.x + (mapHash(i, 3, 9) - 0.5) * 16, y = h.y - 2 - ((since * 26 + i * 5) % 18);
     mapRect(g, x, y + by, 1, 1, "#8a6a4a");
   }
-  if (mapUnder !== key) return;
-  const art = deepArt(key), C = deepCache[key];
-  g.drawImage(art, I.x - C.ox, I.y - C.oy + by);
-  // the Maw's eye, open in the dark (a slow blink)
-  if (!nmMawSlain(key)) {
-    const [hf] = DEEP_SPOTS[11], ex = I.x + I.dir * (hf - 34 - 7), ey = I.y + DEEP_BOTTOM - 14 - 7 + by;
-    if ((t % 5) > 0.25) { mapRect(g, ex, ey, 3, 2, `rgba(255, 58, 58, ${0.7 + 0.3 * Math.sin(t * 3)})`); mapRect(g, ex + 1, ey, 1, 2, "#1a0408"); }
-  }
 }
 
-/* Going down, and back up */
+/* Turning the map over, and back. key: the island to look at once it's over. */
 function enterUnder(key) {
   if (typeof nmTunnelOpen !== "function" || !nmTunnelOpen(key)) return;
+  if (!mapFlip) {
+    mapFlip = true;
+    deepFlipAnim = { to: true, at: null };
+    mapEl.classList.add("flipped");
+    sfx("whoosh");
+  }
   if (mapSel !== key) selectPlace(key);
-  mapUnder = key;
-  if (typeof mapEl !== "undefined") mapEl.classList.add("under");
-  sfx("whoosh");
   updatePins();
   renderBanner();
+  renderLegend();
   layoutMap();
 }
 function leaveUnder() {
-  if (!mapUnder) return false;
-  mapUnder = null;
-  mapEl.classList.remove("under");
+  if (!mapFlip) return false;
+  mapFlip = false;
+  deepFlipAnim = { to: false, at: null };
+  mapEl.classList.remove("flipped");
   sfx("whoosh");
   updatePins();
   renderBanner();
+  renderLegend();
   layoutMap();
   return true;
 }
+const deepFlipping = () => !!deepFlipAnim;
 
-/* The dig: the moment a tunnel opens, the map flies to its island, the ground gives way and you go down */
+/* The dig: the moment a tunnel opens, the map flies to its island, the ground gives way, and it all turns over */
 function deepDig(key) {
   if (currentScreen !== "modes") return;
   deepReveal[key] = performance.now() / 1000;
   if (deepCache[key]) deepCache[key].art = null;
-  if (mapUnder && mapUnder !== key) leaveUnder();
+  if (mapFlip) leaveUnder();
   selectPlace(key);
   sfx("rock");
   mapEl.classList.remove("shake");
@@ -224,5 +250,5 @@ function deepDig(key) {
   mapEl.classList.add("shake");
   setTimeout(() => mapEl.classList.remove("shake"), 900);
   showToast(`The ground gives way under ${CAMP.islandById[key].name}. Something vast is down there.`);
-  setTimeout(() => { if (currentScreen === "modes" && mapSel === key) { sfx("portal"); enterUnder(key); } }, 1500);
+  setTimeout(() => { if (currentScreen === "modes" && mapSel === key) { sfx("portal"); enterUnder(key); } }, 1600);
 }

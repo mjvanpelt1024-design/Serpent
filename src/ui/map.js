@@ -237,23 +237,28 @@ function paintMapWorld(g, t) {
   // the Coil: the body every island hangs on
   drawCoil(g, t);
 
-  // the islands, bobbing gently, with everything that lives on them
+  // the islands, bobbing gently, with everything that lives on them; turned over (build 53,
+  // nightmare: map-deep.js), their undersides with the tunnels carved in
+  const flipK = typeof deepFlipK === "function" ? deepFlipK(t) : 1;
   MAP_ORDER.forEach(key => {
     const isl = ISLANDS[key];
     const art = islandArt(key);
     const by = bob(isl, t);
-    if (!placeFogged(key)) drawIsleBehind(g, key, t, by);
-    g.drawImage(art.c, isl.x - art.ox, isl.y - art.oy + by);
-    if (placeFogged(key)) return;
-    drawIsleLiving(g, key, t, by);
-    NODE_ORDER.forEach(id => drawNodeArt(g, key, id, nodeState(key, id), t, by));
-    drawQuestTrail(g, key, t, by);
-    // build 53: an open nightmare tunnel, cut into the rock (map-deep.js)
-    if (typeof drawDeep === "function") drawDeep(g, key, t, by);
+    const surface = () => {
+      if (!placeFogged(key)) drawIsleBehind(g, key, t, by);
+      g.drawImage(art.c, isl.x - art.ox, isl.y - art.oy + by);
+      if (placeFogged(key)) return;
+      drawIsleLiving(g, key, t, by);
+      NODE_ORDER.forEach(id => drawNodeArt(g, key, id, nodeState(key, id), t, by));
+      drawQuestTrail(g, key, t, by);
+      if (typeof drawDeepHole === "function") drawDeepHole(g, key, t, by);
+    };
+    if (flipK === 1 || typeof deepDrawIsland !== "function") surface();
+    else deepDrawIsland(g, key, t, by, flipK, surface);
   });
 
-  // your snake, waiting by the next thing to do
-  drawTraveler(g, t);
+  // your snake, waiting by the next thing to do (not while the islands are turned over)
+  if (flipK === 1) drawTraveler(g, t);
 
   // clouds over the places you have not reached, thinning as they open
   MAP_ORDER.forEach(k => {
@@ -395,10 +400,10 @@ function layoutMap() {
     c.ty = Math.min(0, Math.max(vh - WORLD_H * s, c.ty));
   } else if (mapSel) {
     // Frame the whole island, from its tallest tower down to its rock, below the banner;
-    // underground (build 53, map-deep.js), from its grass down to the cave's floor
+    // turned over (build 53, map-deep.js), its rock pointing up over its underside
     const isl = ISLANDS[mapSel];
-    const under = typeof mapUnder !== "undefined" && mapUnder === mapSel;
-    const top = under ? isl.y - 16 : isl.y - isl.th - 34, bottom = under ? isl.y + DEEP_BOTTOM + 10 : isl.y + isl.th + isl.depth * 0.5;
+    const under = typeof mapFlip !== "undefined" && mapFlip;
+    const top = under ? isl.y - isl.th - isl.depth * 0.5 : isl.y - isl.th - 34, bottom = under ? isl.y + isl.th + 12 : isl.y + isl.th + isl.depth * 0.5;
     const tall = (bottom - top) * 2, wide = (isl.w + 50) * 2;
     const bannerBottom = mapBannerEl.classList.contains("open") ? mapBannerEl.offsetTop + mapBannerEl.offsetHeight + 6 : 6;
     const room = Math.max(vh * 0.4, vh - bannerBottom - 8);
@@ -650,9 +655,9 @@ function renderModes(justUnlocked) {
     // the hole in the grass (go down), and the top of the shaft (back up)
     const h = deepStop(key, "hole"), u = deepStop(key, "up");
     add("prop node nmhole open", `nm-${key}-hole`, key, h.x, h.y - 12, `<img class="pi" src="${iconUrl("moon", 2)}" alt=""><span class="lbl">${escapeAttr(T.name)}</span>`,
-      `Go down into ${T.name}`, () => enterUnder(key));
-    add("prop node nm nmup open", `nm-${key}-up`, key, u.x, u.y - 10, `<span class="up-arrow" aria-hidden="true">&#9650;</span><span class="lbl">Back up to ${escapeAttr(CAMP.islandById[key].name)}</span>`,
-      `Back up to ${CAMP.islandById[key].name}`, () => leaveUnder());
+      `Turn the islands over: ${T.name}`, () => enterUnder(key));
+    add("prop node nm nmup open", `nm-${key}-up`, key, u.x, u.y - 10, `<span class="up-arrow" aria-hidden="true">&#8634;</span><span class="lbl">Turn the islands back over</span>`,
+      "Turn the islands back over", () => leaveUnder());
     DEEP_IDS.forEach(id => {
       const p = deepStop(key, id);
       if (typeof id === "number") {
@@ -688,10 +693,12 @@ function updatePins() {
     const isArea = pin.classList.contains("area");
     const fog = placeFogged(area);
     pin.hidden = isArea ? (near && !fog) : !near;
-    // build 53: underground (map-deep.js) only the cave's stops show; on the surface, never them
+    // build 53: turned over (map-deep.js) only the tunnels' stops show; right way up, never them;
+    // while the islands turn, none
     const deep = pin.classList.contains("nm");
-    if (typeof mapUnder !== "undefined") {
-      if (mapUnder) pin.hidden = !(deep && area === mapUnder);
+    if (typeof mapFlip !== "undefined") {
+      if (deepFlipping()) pin.hidden = true;
+      else if (mapFlip) { if (!deep && !isArea) pin.hidden = true; }
       else if (deep) pin.hidden = true;
     }
     const key = pin.dataset.key;
@@ -722,8 +729,6 @@ function placeTraveler() {
 
 function selectPlace(key) {
   const switching = key !== mapSel;
-  // another island: back up out of any tunnel first (map-deep.js)
-  if (typeof mapUnder !== "undefined" && mapUnder && mapUnder !== key) { mapUnder = null; mapEl.classList.remove("under"); }
   closeLevelPop(true);
   mapSel = key;
   mapNight = false;
@@ -743,7 +748,6 @@ function closePlace() {
   if (!mapSel) return;
   const was = mapSel;
   closeLevelPop(true);
-  if (typeof mapUnder !== "undefined" && mapUnder) { mapUnder = null; mapEl.classList.remove("under"); }
   mapSel = null;
   mapNight = false;
   sfx("whoosh");
@@ -777,7 +781,7 @@ function renderBanner() {
   const I = CAMP.islandById[key];
   const b = mapBannerEl;
   b.style.setProperty("--m", I.colors.accent);
-  const under = typeof mapUnder !== "undefined" && mapUnder === key;
+  const under = typeof mapFlip !== "undefined" && mapFlip && nmTunnelOpen(key);
   const title = st === "fog" ? "Unexplored island" : under ? CAMP.nightmare.tunnels[key].name : I.name;
   // the only words up here are the island's name; the rest is a hover away
   let note = "";
@@ -841,7 +845,7 @@ function legendGo(key, k) {
   if (k === "home") { openNode(key, "home"); return; }
   if (NPC_KINDS.includes(k)) { mapFlyTo(key, k, () => openNode(key, k)); return; }
   if (k === "next") { const n = campNextLevel(key); if (n) mapFlyTo(key, n); return; }
-  if (k === "nightmare") { enterUnder(nmCurrentTunnel()); return; }
+  if (k === "nightmare") { if (mapFlip) leaveUnder(); else enterUnder(nmCurrentTunnel()); return; }
   if (k === "quest") {
     const qs = questNextStop(key);
     if (qs) mapFlyTo(key, qs.id, qs.id === "challenger" ? () => openNode(key, "challenger") : null);

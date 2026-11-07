@@ -36,7 +36,7 @@ async function shots(list) {
   for (const [name, code] of list) {
     const r = await send("Runtime.evaluate", { expression: code, awaitPromise: true });
     if (r && r.exceptionDetails) console.log(`  shot ${name}: ${r.exceptionDetails.exception ? r.exceptionDetails.exception.description : r.exceptionDetails.text}`);
-    await new Promise(res => setTimeout(res, 700));
+    await new Promise(res => setTimeout(res, 1400));
     const img = await send("Page.captureScreenshot", { format: "png" });
     fs.writeFileSync(path.join(SHOTS, name + ".png"), Buffer.from(img.data, "base64"));
     console.log(`  shot ${name}.png`);
@@ -105,6 +105,7 @@ if (SHOTS && browser) {
     ["nightmare-tunnel", "CAMP.islands.forEach(I => STORY_BEATS.forEach(b => { const id = storyId(I.id, b); if (!camp.storySeen.includes(id)) camp.storySeen.push(id); })); storyQueue = []; storyEl.classList.remove('open'); closeMapGoal(); openScreen('modes'); enterUnder(CAMP.nightmare.order[0]); 1"],
     ["nightmare-surface", "leaveUnder(); 1"],
     ["nightmare-island-2", "enterUnder(CAMP.nightmare.order[1]); 1"],
+    ["nightmare-whole", "closePlace(); mapCam = camOn(300, 300, mapFit()); applyCam(mapCam); 1"],
     ["nightmare-roots", "openNmPanel(CAMP.nightmare.order[0], 'roots'); 1"],
     ["nightmare-shop", "openNmPanel(CAMP.nightmare.order[0], 'shop'); 1"],
     ["nightmare-card", "closeNmPanel(); openNmGoal(CAMP.nightmare.order[1], 1); 1"],

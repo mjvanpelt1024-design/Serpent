@@ -4,8 +4,9 @@
 
    Win the last island's last level and the Maw's body (the Coil the islands
    sit on) opens up. On the map (src/ui/map-deep.js), the ground gives way:
-   a hole in the island's grass, and below it a cave with the tunnel's stops
-   as pins. Under each island, from the top down, a tunnel:
+   a hole in the island's grass, and the islands turn over, the tunnel carved
+   into each underside with its stops as pins. Under each island, from the
+   top down, a tunnel:
      the roots     the Great Tree's roots hang in: upgrades that work in
                    every nightmare level (one set per island), paid in that
                    island's money at deep prices

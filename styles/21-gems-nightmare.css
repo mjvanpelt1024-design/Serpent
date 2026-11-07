@@ -97,4 +97,7 @@
 /* ---------- Underground (map-deep.js) ---------- */
 .map-pin.prop.nmup .up-arrow { display: grid; place-items: center; width: 18px; height: 18px; color: #f6e0dc; background: #5a1450; box-shadow: 0 0 0 2px #e88aa0; font-size: 10px; }
 .map-pin.prop.nmhole .pi { filter: hue-rotate(260deg) saturate(1.6); }
-.map.under .map-legend .lg-btn:not(.nightmare) { opacity: 0.55; }
+/* turned over: a darker, redder sky, and only the moon in the legend (it turns them back) */
+.map.flipped #map-sky { filter: brightness(0.45) saturate(1.4) hue-rotate(-30deg); transition: filter 0.8s; }
+#map-sky { transition: filter 0.8s; }
+.map.flipped .map-legend .lg-btn:not(.nightmare), .map.flipped .map-legend .lg-isl { display: none; }
