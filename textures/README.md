@@ -42,6 +42,7 @@ textures/
 ├── bosses/               each island's boss face on its wanted poster
 ├── coins/                each island's coin, <island>-<tails|heads>-<12|20|32>.png (color-swap, below)
 ├── emblems/             each theme's little symbol in the Tailor (color-swap, below)
+├── familiars/            the familiars, <id>-<size>.png, one for each size they're shown at (below)
 ├── map/                  each island on the map: <island>/under.png (its rock and ground, under the
 │                         paths), over.png (trees, houses, props over them), fog.png (the silhouette
 │                         you see before you reach it)
@@ -238,6 +239,15 @@ head it sits on). The game scales them up to the screen with hard edges, like ev
 - **The bosses' crests** (`board/crests/<island>.png`): each one's anchor is the boss's head's top
   left corner. The Keep's knight is a sheet of four frames, its plume at four heights; the Spire's hat
   has its tip dull and twinkling, the Crown's horns dark and glowing.
+- **The familiars** (`familiars/<id>-<size>.png`) come in the sizes the game shows them at, since pixel
+  art is drawn for its size: 16 beside your snake on the board, 12 at home and in the shop, 20 and 32 in
+  the den. Repaint each one you want changed. Their frames: the crab's claw up and down, the firefly's
+  wings up and down, the turtle with its shells ready and spent. The firefly's glowing body is drawn by
+  the game, under its head and wings.
+
+Half-covered pixels at a picture's edges (where the old drawing fell between pixels) are baked into
+these PNGs, so where they sit over a scene they can come out a shade or two off what the old code
+blended; `check --legacy` counts those separately and passes them.
 
 ## The map's islands
 

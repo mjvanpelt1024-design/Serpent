@@ -62,15 +62,20 @@
         img.onerror = () => reject(new Error("can't decode " + String(url).slice(0, 80)));
         img.src = url;
       });
-      /* How many pixels differ ("" when they match) */
+      /* How many pixels differ ("" when they match). A board picture's soft edges (half-covered pixels,
+         baked into the PNG) can land a shade or two off where the old code blended them straight onto the
+         scene: pixels within 2 shades are counted as that (counts.soft) rather than failing. */
+      counts.soft = 0; counts.softPictures = 0;
       const diff = (a, b) => {
         if (a.width !== b.width || a.height !== b.height) return `size ${b.width}x${b.height}, was ${a.width}x${a.height}`;
         const pa = pixels(a), pb = pixels(b);
-        let n = 0, first = "";
+        let n = 0, near = 0, first = "";
         for (let i = 0; i < pa.length; i += 4) if (pa[i] !== pb[i] || pa[i + 1] !== pb[i + 1] || pa[i + 2] !== pb[i + 2] || pa[i + 3] !== pb[i + 3]) {
+          if (Math.max(Math.abs(pa[i] - pb[i]), Math.abs(pa[i + 1] - pb[i + 1]), Math.abs(pa[i + 2] - pb[i + 2]), Math.abs(pa[i + 3] - pb[i + 3])) <= 2) { near++; continue; }
           if (!n) first = ` (first at ${(i / 4) % a.width}, ${Math.floor(i / 4 / a.width)}: was ${[...pa.slice(i, i + 4)]}, now ${[...pb.slice(i, i + 4)]})`;
           n++;
         }
+        if (!n && near) { counts.soft += near; counts.softPictures++; }
         return n ? `${n} pixel${n === 1 ? "" : "s"} differ${first}` : "";
       };
       const compareUrls = async (what, oldUrl, newUrl) => {
@@ -395,13 +400,13 @@
       const games = [code => W.eval(code), gEval];
       counts.board = 0;
       const shot = (ev, rs, code, box) => {
-        ev(`RS = ${rs}; sizeCanvas(boardSize); ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.clearRect(0, 0, boardSize, boardSize); ctx.save(); ${code}; ctx.restore();`);
+        ev(`RS = ${rs}; sizeCanvas(boardSize); ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.fillStyle = "#4e2418"; ctx.fillRect(0, 0, boardSize, boardSize); ctx.save(); ${code}; ctx.restore();`);
         const c = document.createElement("canvas"); c.width = box[2] * rs; c.height = box[3] * rs;
         c.getContext("2d").drawImage(ev("canvas"), box[0] * rs, box[1] * rs, c.width, c.height, 0, 0, c.width, c.height);
         return c;
       };
-      const boardCheck = (what, code, box = [60, 60, 80, 80]) => {
-        for (const rs of [1, 2, 3]) {
+      const boardCheck = (what, code, box = [60, 60, 80, 80], scales = [1, 2, 3]) => {
+        for (const rs of scales) {
           const d = diff(shot(games[0], rs, code, box), shot(games[1], rs, code, box));
           if (d) problems.push(`board: ${what} at ${rs}x: ${d}`);
           counts.board++;
@@ -413,6 +418,11 @@
         boardCheck(`crest ${I.id} at ${ts.toFixed(1)}`, `campRun = { isl: "${I.id}" }; drawBossCrest(100, 100, 1, 0, ${ts})`);
       }
       games.forEach((ev, i) => { window.__was = runWas[i]; W.__was = runWas[i]; ev("campRun = __was"); });
+      // the familiars at each size, at moments that show every frame (1x: their sizes aren't whole squares,
+      // so bigger, the old smooth drawing and the pictures differ by design)
+      for (const w of [12, 16, 20, 32]) for (const id of ["firefly", "crab", "turtle", "puffer", "seahorse"]) for (const ts of [0, 20, 100, 150, 600, 1234]) for (const shells of [0, 1]) {
+        boardCheck(`familiar ${id} ${w} at ${ts}${shells ? "" : " spent"}`, `drawPetSprite(ctx, "${id}", 100, 100, ${w}, ${ts}, { shells: ${shells} })`, [80, 80, 60, 60], [1]);
+      }
     }
     // ----- nothing fell back to the checkerboard while all that was drawn
     fellBack.forEach(m => { if (!problems.includes(m)) problems.push(m); });

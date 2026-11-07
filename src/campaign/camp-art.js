@@ -20,34 +20,26 @@ function campItemIconHtml(it, cls = "") {
 const campIconUrl = (id, scale = 3) => iconUrl("ci:" + id, scale);
 const campUpIconUrl = (icon, scale = 2) => iconUrl("cu:" + icon, scale);
 
-/* ----- The familiars, drawn on the board beside your snake ----- */
+/* ----- The familiars: pet:<id>:<size> pictures in textures/familiars/, one for each size the game shows
+   them at (16 on the board, 12 at home and in the shop, 20 and 32 in the den: pixel art is drawn for its
+   size), scaled from the board's 16 when the squares are smaller. Their frames: the crab's claw up and
+   down, the firefly's wings up and down, the turtle with its shells ready and spent. The firefly's
+   glowing body is drawn here, its glow and all. ----- */
+const PET_SIZES = [12, 16, 20, 32];
+const PET_FRAME = {
+  firefly: ts => Math.sin(ts / 40) > 0 ? 0 : 1,
+  crab: ts => Math.sin(ts / 150) > 0 ? 0 : 1,
+  turtle: (ts, P) => P && P.shells > 0 ? 0 : 1
+};
 function drawPetSprite(g, id, x, y, w, ts, P) {
+  const size = PET_SIZES.includes(w) ? w : 16;
   g.save();
   if (id === "firefly") {
     g.shadowColor = "#ffe86a"; g.shadowBlur = w * (0.6 + 0.4 * Math.sin(ts / 120));
     g.fillStyle = "#ffe86a"; g.fillRect(x + w * 0.35, y + w * 0.45, w * 0.3, w * 0.3);
     g.shadowBlur = 0;
-    g.fillStyle = "#3a3020"; g.fillRect(x + w * 0.35, y + w * 0.25, w * 0.3, w * 0.22);
-    g.fillStyle = "rgba(220,240,255,0.8)"; g.fillRect(x + w * 0.1, y + w * 0.15 + (Math.sin(ts / 40) > 0 ? 0 : w * 0.08), w * 0.25, w * 0.15); g.fillRect(x + w * 0.65, y + w * 0.15 + (Math.sin(ts / 40) > 0 ? 0 : w * 0.08), w * 0.25, w * 0.15);
-  } else if (id === "crab") {
-    g.fillStyle = "#ff5a3a"; g.fillRect(x + w * 0.2, y + w * 0.4, w * 0.6, w * 0.35);
-    g.fillRect(x, y + w * 0.2 + (Math.sin(ts / 150) > 0 ? 0 : w * 0.08), w * 0.2, w * 0.2); g.fillRect(x + w * 0.8, y + w * 0.2, w * 0.2, w * 0.2);
-    g.fillStyle = "#fff"; g.fillRect(x + w * 0.32, y + w * 0.3, w * 0.1, w * 0.1); g.fillRect(x + w * 0.58, y + w * 0.3, w * 0.1, w * 0.1);
-  } else if (id === "turtle") {
-    const ready = P && P.shells > 0;
-    g.fillStyle = "#7ac85a"; g.fillRect(x + w * 0.75, y + w * 0.45, w * 0.22, w * 0.2);
-    g.fillStyle = ready ? "#3a8a3a" : "#6a6a6a"; g.fillRect(x + w * 0.1, y + w * 0.3, w * 0.65, w * 0.45);
-    g.fillStyle = ready ? "#5ab05a" : "#8a8a8a"; g.fillRect(x + w * 0.22, y + w * 0.38, w * 0.4, w * 0.25);
-  } else if (id === "puffer") {
-    g.fillStyle = "#ffcf5a"; g.beginPath(); g.arc(x + w / 2, y + w / 2, w * 0.36, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#c89a2a"; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; g.fillRect(x + w / 2 + Math.cos(a) * w * 0.42 - 1, y + w / 2 + Math.sin(a) * w * 0.42 - 1, 2, 2); }
-    g.fillStyle = "#1a1410"; g.fillRect(x + w * 0.58, y + w * 0.38, w * 0.1, w * 0.1);
-  } else if (id === "seahorse") {
-    g.fillStyle = "#ff9ac8"; g.fillRect(x + w * 0.35, y + w * 0.15, w * 0.35, w * 0.3); g.fillRect(x + w * 0.3, y + w * 0.4, w * 0.3, w * 0.35); g.fillRect(x + w * 0.42, y + w * 0.72, w * 0.18, w * 0.2);
-    g.fillRect(x + w * 0.68, y + w * 0.22, w * 0.2, w * 0.1);
-    g.fillStyle = "#1a1410"; g.fillRect(x + w * 0.5, y + w * 0.22, w * 0.08, w * 0.08);
-    g.fillStyle = "#ffd23f"; g.fillRect(x + w * 0.36, y + w * 0.05, w * 0.2, w * 0.08);   // a tiny monocle chain, presumably
   }
+  if (TextureLoader.has(`pet:${id}:${size}`)) texBoard(g, `pet:${id}:${size}`, x, y, w / size, PET_FRAME[id] ? PET_FRAME[id](ts, P) : 0);
   g.restore();
 }
 

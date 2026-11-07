@@ -1224,6 +1224,22 @@
     Object.entries(CREST_TS).forEach(([isl, times]) => add(`crest:${isl}`, `board/crests/${isl}.png`,
       fromBoard(times.map(ts => (g, x, y) => { campRun = { isl }; drawBossCrest(x, y, 1, 0, ts); }))));
     campRun = runWas;
+    // the familiars, at each size the game draws them (the firefly without its glowing body, drawn live)
+    const fireflyRest = up => (g, x, y, w) => {
+      g.fillStyle = "#3a3020"; g.fillRect(x + w * 0.35, y + w * 0.25, w * 0.3, w * 0.22);
+      g.fillStyle = "rgba(220,240,255,0.8)"; g.fillRect(x + w * 0.1, y + w * 0.15 + (up ? 0 : w * 0.08), w * 0.25, w * 0.15); g.fillRect(x + w * 0.65, y + w * 0.15 + (up ? 0 : w * 0.08), w * 0.25, w * 0.15);
+    };
+    [12, 16, 20, 32].forEach(w => {
+      const pet = (id, ts, P) => (g, x, y) => drawPetSprite(g, id, x, y, w, ts, P);
+      const PETS = {
+        firefly: [true, false].map(up => (g, x, y) => fireflyRest(up)(g, x, y, w)),
+        crab: [pet("crab", 100), pet("crab", 600)],
+        turtle: [pet("turtle", 0, { shells: 1 }), pet("turtle", 0, { shells: 0 })],
+        puffer: [pet("puffer", 0)],
+        seahorse: [pet("seahorse", 0)]
+      };
+      Object.entries(PETS).forEach(([id, frames]) => add(`pet:${id}:${w}`, `familiars/${id}-${w}.png`, fromBoard(frames)));
+    });
     return out;
   }
 

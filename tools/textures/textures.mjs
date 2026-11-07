@@ -214,7 +214,8 @@ async function check() {
   if (answer.error) { console.error("Check failed:\n" + answer.error); process.exit(1); }
   const c = answer.counts;
   console.log(`  ${c.files} files loaded` + (answer.legacy ? `; compared ${c.flat} flat pictures, ${c.menu} menu pictures, ${c.html} hearts, faces, cursors, stickers and rune stones, ${c.scenes || 0} scene pictures (rooms at many moments, marks), ${c.board || 0} board pictures (at 1x, 2x and 3x)` : ""));
-  if (answer.ok) { console.log("All pictures OK" + (answer.legacy ? ": every one matches the old game pixel for pixel." : ".")); return; }
+  if (c.soft) console.log(`  ${c.soft} pixels in ${c.softPictures} pictures are a shade or two off on soft edges (half-covered pixels baked into board pictures); everything else is exact`);
+  if (answer.ok) { console.log("All pictures OK" + (answer.legacy ? (c.soft ? ": every one matches the old game (pixel for pixel but for those soft edges)." : ": every one matches the old game pixel for pixel.") : ".")); return; }
   console.log(`${answer.problems.length} problem(s):`);
   answer.problems.forEach(p => console.log("  " + p));
   process.exit(1);
