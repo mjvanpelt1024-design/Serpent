@@ -186,7 +186,7 @@
       // ----- the story book: every page, its nightmare, every relic, old against new, at moments that catch
       // the storm's and the thunder's flashes, the mirror's wink, the fuse, the shears, the spikes, night's eye
       {
-        const storyMoments = [0, 0.05, 0.13, 0.25, 0.3, 1.1, 2.6, 2.83, 3.15, 3.3, 3.5, 4.4, 5.07, 5.25, 5.7, 6.35, 6.8, 9.9, 13.37, 27.3];
+        const storyMoments = [0, 0.05, 0.13, 0.25, 0.3, 1.1, 2.6, 2.75, 2.83, 3.15, 3.3, 3.5, 4.4, 5.07, 5.25, 5.7, 6.35, 6.8, 9.9, 13.37, 27.3];
         const firstId = {};
         Object.entries(W.eval("ART_SCENE")).forEach(([id, sc]) => { if (!(sc in firstId)) firstId[sc] = id; });
         const ids = Object.values(firstId).flatMap(id => [id, "nm-" + id]).concat(W.eval("RELICS").map(r => r.id));

@@ -20,12 +20,12 @@ Object.assign(ART_DRAW, {
     k.layer("story:sunflower:2"); // the field, the sunflowers' stalks
     for (let i = 0; i < 9; i++) {
       const x = 8 + i * 18, sway = Math.round(Math.sin(t * 1.4 + i) * 1), h = 14 + (i % 3) * 4;
-      k.R(x - 1 + sway, 44 - h, 7, 6, "#ffcf33"); k.R(x + 1 + sway, 46 - h, 3, 2, "#7a4a18");
+      k.put("story:sunflower:head", x - 1 + sway, 44 - h);
     }
     k.snake(72 + Math.round(Math.sin(t * 0.7) * 8), 52, 7, { tongue: true });
     const gx = 112, gy = 50 + Math.round(Math.sin(t * 3));
     k.glow(gx + 2, gy + 2, 7, "rgba(255,210,63,ALPHA)", 0.6);
-    k.R(gx, gy, 5, 5, "#ffd23f"); k.R(gx + 1, gy, 1, 1, "#fff6c4");
+    k.put("story:sunflower:coin", gx, gy);
   },
   bramble(k, t) {
     k.pic("story:bramble:sky");
@@ -41,22 +41,22 @@ Object.assign(ART_DRAW, {
     for (let i = 0; i < 7; i++) {
       const a = t * (1.5 + i * 0.2) + i * 1.3;
       const x = 40 + Math.cos(a) * (18 + i * 6), y = 22 + Math.sin(a * 1.3) * 10;
-      k.R(x, y, 2, 2, "#ffcf33"); k.R(x, y + 1, 2, 1, "#1a1410"); if (Math.sin(t * 30 + i) > 0) k.R(x, y - 1, 2, 1, "rgba(255,255,255,0.8)");
+      k.put("story:hive:bee", x, y); if (Math.sin(t * 30 + i) > 0) k.paint("story:hive:wing", x, y - 1);
     }
     k.snake(108 + Math.round(Math.sin(t * 0.7) * 6), 52, 7);
     k.layer("story:hive:2"); // a pail
   },
   thunder(k, t) {
     k.pic("story:thunder:sky");
-    for (let i = 0; i < 4; i++) { const cx = ((i * 50 + t * 6) % 220) - 30; k.R(cx, 6 + i * 3, 30, 5, "#4a5a6a"); k.R(cx + 6, 3 + i * 3, 16, 3, "#5a6a7a"); }
+    for (let i = 0; i < 4; i++) k.put("story:thunder:cloud", ((i * 50 + t * 6) % 220) - 30, 3 + i * 3);
     k.hills("#3a4048", 34, 10, 0.05, 1, 6);
     k.layer("story:thunder:1"); // the ground
     const flash = (t % 3.1) < 0.12;
     if (flash) {
-      k.R(0, 0, ART_W, ART_H, "rgba(255,255,255,0.35)");
-      let x = 100; for (let y = 0; y < 48; y += 4) { k.R(x, y, 2, 4, "#fff7a0"); x += (y % 8 ? -2 : 3); }
+      k.paint("story:thunder:flash", 0, 0);
+      k.pic("story:thunder:bolt");
     } else if ((t % 3.1) > 2.5) {
-      k.R(98, 46, 8, 2, Math.floor(t * 10) % 2 ? "#fff7a0" : "#9ad8ff");
+      k.put("story:thunder:spark", 98, 46, Math.floor(t * 10) % 2 ? 0 : 1);
     }
     k.fall(30, "rgba(160,200,240,0.6)", 60, 3, 4);
     k.snake(50 + Math.round(Math.sin(t * 0.8) * 6), 52, 7);
@@ -106,8 +106,7 @@ Object.assign(ART_DRAW, {
     for (let i = 0; i < 18; i++) k.R(0, 40 + (i % 6), ART_W, 1, `rgba(200,210,220,${0.05 + 0.03 * Math.sin(t + i)})`);
     for (let i = 0; i < 3; i++) {
       const x = 30 + i * 30 + Math.sin(t * 0.8 + i * 2) * 8, y = 28 + Math.sin(t * 1.3 + i) * 4;
-      k.R(x, y, 6, 6, "rgba(232,236,255,0.75)"); k.R(x + 1, y + 6, 1, 2, "rgba(232,236,255,0.6)"); k.R(x + 4, y + 6, 1, 2, "rgba(232,236,255,0.6)");
-      k.R(x + 1, y + 2, 1, 1, "#2a2a40"); k.R(x + 4, y + 2, 1, 1, "#2a2a40");
+      k.layer("story:moor:ghost", x, y);
     }
     k.snake(70, 52, 6);
   },
@@ -152,7 +151,7 @@ Object.assign(ART_DRAW, {
     for (let x = 0; x < ART_W; x += 8) { k.R(x, 0, 6, open + (x % 16 ? 2 : 0), "#e8e0c8"); k.R(x + 2, ART_H - open - 2, 6, open + 2, "#e8e0c8"); }
     k.layer("story:maw:1"); // the land between its jaws
     // pits, cracking and opening
-    for (let i = 0; i < 3; i++) { const ph = (t * 0.5 + i * 0.33) % 1, x = 24 + i * 46; if (ph > 0.5) k.R(x, 44, 10, 5, "#000000"); else k.R(x + 2, 46, 6, 1, "#5a3a20"); }
+    for (let i = 0; i < 3; i++) k.put("story:maw:pit", 24 + i * 46, 44, (t * 0.5 + i * 0.33) % 1 > 0.5 ? 0 : 1);
     k.snake(70 + Math.round(Math.sin(t * 1.2) * 6), 46, 7);
     k.pic("story:maw:gem", Math.sin(t * 4) > 0 ? 1 : 0, 140, 30); // (its rune, half and whole)
   }

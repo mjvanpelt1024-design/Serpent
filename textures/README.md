@@ -59,9 +59,11 @@ textures/
 │   │                     challenger.png (the tent), banker.png and banker-front.png (the vault)
 │   ├── story/            the story book's pictures, one folder per page (garden/, shop/, storm/, the
 │   │                     twelve islands' pages...): sky.png, then 1.png, 2.png... laid over it in that
-│   │                     order between the things that move; a few little things that only switch
-│   │                     looks (the mirror's eye, the bomb's fuse, the clockwork spikes); relic/ for
-│   │                     the relics under their spotlight; night.png, laid over a nightmare's page
+│   │                     order between the things that move; the little things that move or switch
+│   │                     looks (clouds, birds, the lamp, the mirror's eye, the bomb, ghosts, bees...);
+│   │                     kit/ for the cast every page shares (apples, orbs, popsicles, the tortoise,
+│   │                     the raccoon, the beetle, as sprite sheets); relic/ for the relics under
+│   │                     their spotlight; night.png, laid over a nightmare's page
 │   ├── keepers/          the fifteen shopkeepers, <island>-<role>.png, as sprite sheets (below)
 │   └── shops/            each island's shop and workshop: <island>/back.png (the walls),
 │                         middle.png (the workshop and the shop's shelf), the things that move in that
@@ -153,7 +155,11 @@ with the things that move drawn over it. Each of those is a PNG too:
   rolling by, your snake in your skin, flames, glows), so a layer's clear pixels show what's under it and
   its half-clear ones (the shop's shadowed planks, the jars of XP) shade it. The storm's `sky.png` has two
   frames, the second lit by lightning. A relic (`relic/brick.png`) has an anchor: the pixel that sits
-  in the middle of the spotlight as it bobs.
+  in the middle of the spotlight as it bobs. The tortoise's three frames are its head bobbing down,
+  level and up; the raccoon's two rows are eyes open and shut, by the same three bobs; the popsicle's
+  magenta is swapped for each flavor. Still drawn live: your snake (in your skin), the rolling hills,
+  flames, glows, the falling rain and rising embers, the twinkling stars, and whatever turns or stretches
+  (the vault's wheel, the Ouroboros, the curtains, the tunnel's walls, the maw's teeth).
 
 Soft glows and the dark vignette around a scene's edges are smooth gradients, not pixel art: the game
 still paints those itself, between the pictures, along with the things that move.

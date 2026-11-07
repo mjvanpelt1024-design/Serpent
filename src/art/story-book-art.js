@@ -34,7 +34,11 @@ function artKit(g, t) {
     // it, at x, y), and its layers, laid like the old drawing code laid them (see texLayer); a layer
     // with an anchor (a relic) has that pixel on x, y
     pic(id, frame = 0, x = 0, y = 0) { texDraw(g, id, x, y, frame); },
-    layer(id, x = 0, y = 0) { const r = texResolve(id), a = (r && r.e.anchor) || [0, 0]; texLayer(g, id, x - a[0], y - a[1]); },
+    layer(id, x = 0, y = 0) { const r = texResolve(id), a = (r && r.e.anchor) || [0, 0]; texLayer(g, id, Math.round(x) - a[0], Math.round(y) - a[1]); },
+    // A small picture (or a frame of it) with its anchor on x, y, rounded as the old drawing code rounded;
+    // or painted pixel by pixel, with an alpha over it or its key colors swapped (see texPaint)
+    put(id, x, y, frame = 0) { texDrawAt(g, id, Math.round(x), Math.round(y), frame); },
+    paint(id, x, y, opts) { const r = texResolve(id), a = (r && r.e.anchor) || [0, 0]; texPaint(g, id, Math.round(x) - a[0], Math.round(y) - a[1], opts); },
     // A rolling silhouette, scrolling at its own speed for parallax
     hills(color, base, amp, freq, speed, seed = 1) {
       g.fillStyle = color;
@@ -65,50 +69,25 @@ function artKit(g, t) {
       R(ex + (dir > 0 ? 1 : 0), hy + 1 + (Math.sin(t * 0.7) > 0.95 ? 0 : 1), 1, 1, "#111111");
       if (opts.tongue && Math.sin(t * 3) > 0.6) R(dir > 0 ? x + s : x - 2, hy + 2, 2, 1, "#ff3b6b");
     },
-    apple(x, y, big = false) {
-      const s = big ? 8 : 4;
-      R(x, y + 1, s, s - 1, "#d9202a");
-      R(x + 1, y, s - 2, 1, "#d9202a");
-      R(x + 1, y + 1, 1, 1, "#ff9a9a");
-      R(x + s / 2, y - 1, 1, 2, "#5a3a1a");
-      R(x + s / 2 + 1, y - 1, 2, 1, "#3ddc3d");
-    },
+    // The cast, pictures in textures/scenes/story/kit/: an apple (or a big one); an orb, its glow
+    // pulsing; a popsicle in any flavor (its key color swapped for c); the tortoise (three frames as its
+    // head bobs), the raccoon (bobbing, its eyes open then shut; its tail's stripes wave), the beetle (three steps)
+    apple(x, y, big = false) { kit.put(big ? "story:apple-big" : "story:apple", x, y); },
     orb(x, y) {
       const p = 0.5 + 0.5 * Math.sin(t * 4 + x);
-      R(x - 1, y - 1, 5, 5, `rgba(255,210,63,${0.15 + p * 0.25})`);
-      R(x, y, 3, 3, "#ffd23f");
-      R(x, y, 1, 1, "#fff6c4");
+      kit.paint("story:orb-glow", x, y, { alpha: 0.15 + p * 0.25 });
+      kit.put("story:orb", x, y);
     },
-    popsicle(x, y, c) {
-      R(x, y, 4, 6, c); R(x, y, 1, 6, "rgba(255,255,255,0.45)"); R(x + 1, y + 6, 2, 3, "#d9b98a");
-    },
-    rock(x, y, s = 5) {
-      R(x, y + 1, s + 1, s, "#4a4945"); R(x, y, s, s, "#9a9994"); R(x, y, s - 1, 1, "#c8c7c1"); R(x, y, 1, 1, "#e6e5df");
-    },
-    tortoise(x, y) {
-      const bob = Math.round(Math.sin(t * 1.5) * 0.6);
-      R(x - 7, y - 4, 14, 4, "#5f7f34"); R(x - 5, y - 6, 10, 2, "#6f9440"); R(x - 3, y - 7, 6, 1, "#7da84a");
-      R(x - 4, y - 5, 2, 2, "#4a6a2a"); R(x + 1, y - 5, 2, 2, "#4a6a2a");
-      R(x + 6, y - 4 + bob, 4, 3, "#8fb35a"); R(x + 8, y - 4 + bob, 1, 1, "#111");
-      R(x - 6, y, 3, 2, "#4a6a2a"); R(x + 3, y, 3, 2, "#4a6a2a");
-    },
+    popsicle(x, y, c) { kit.paint("story:popsicle", x, y, { colors: { ice: c } }); kit.paint("story:popsicle-shine", x, y); },
+    tortoise(x, y) { kit.put("story:tortoise", x, y, Math.round(Math.sin(t * 1.5) * 0.6) + 1); },
     raccoon(x, y) {
       const bob = Math.round(Math.sin(t * 2) * 0.6);
       const blink = (t % 3.2) < 0.12;
-      R(x - 5, y - 6 + bob, 10, 8, "#8a8a8a");
-      R(x - 6, y - 8 + bob, 3, 3, "#6a6a6a"); R(x + 3, y - 8 + bob, 3, 3, "#6a6a6a");
-      R(x - 4, y - 4 + bob, 8, 2, "#222");
-      if (!blink) { R(x - 3, y - 4 + bob, 1, 1, "#fff"); R(x + 2, y - 4 + bob, 1, 1, "#fff"); }
-      R(x - 1, y - 1 + bob, 2, 1, "#111");
-      R(x - 2, y - 11 + bob, 4, 3, "#1a1a1a"); R(x - 3, y - 9 + bob, 6, 1, "#1a1a1a"); R(x - 2, y - 10 + bob, 4, 1, "#b23a3a");
+      kit.put("story:raccoon", x, y, (blink ? 3 : 0) + bob + 1);
       // the striped tail, peeking out
-      for (let i = 0; i < 4; i++) R(x + 5 + i * 2, y + 1 - Math.round(Math.sin(t * 3 + i) * 1), 2, 2, i % 2 ? "#3a3a3a" : "#9a9a9a");
+      for (let i = 0; i < 4; i++) kit.put("story:raccoon-tail", x + 5 + i * 2, y + 1 - Math.round(Math.sin(t * 3 + i) * 1), i % 2);
     },
-    beetle(x, y) {
-      const step = Math.round(Math.sin(t * 6));
-      R(x - 3, y - 3, 6, 4, "#2b5a3a"); R(x - 3, y - 3, 6, 1, "#4f9a6a"); R(x, y - 3, 1, 4, "#1a3a24");
-      R(x + 3, y - 2, 2, 2, "#1a1a1a"); R(x - 3, y + 1, 1, 1 + step, "#111"); R(x + 2, y + 1, 1, 1 - step + 1, "#111");
-    },
+    beetle(x, y) { kit.put("story:beetle", x, y, Math.round(Math.sin(t * 6)) + 1); },
     stars(n, seed = 1, color = "#ffffff") {
       for (let i = 0; i < n; i++) {
         const x = Math.floor(mapHash(i, seed, 31) * ART_W), y = Math.floor(mapHash(i, seed, 37) * ART_H * 0.6);
@@ -166,15 +145,13 @@ const ART_DRAW = {
     k.pic("story:garden:sky");
     k.glow(132, 10, 26, "rgba(255,240,170,ALPHA)", 0.5 + Math.sin(t) * 0.1);
     k.layer("story:garden:1"); // the sun
-    for (let i = 0; i < 3; i++) { const cx = ((i * 70 + t * 3) % 220) - 30; k.R(cx, 8 + i * 5, 18, 3, "#ffffff"); k.R(cx + 4, 6 + i * 5, 9, 2, "#ffffff"); }
+    for (let i = 0; i < 3; i++) k.put("story:garden:cloud", ((i * 70 + t * 3) % 220) - 30, 6 + i * 5);
     k.hills("#9fd38a", 40, 5, 0.05, 1.5, 2);
     k.hills("#6db55a", 46, 4, 0.08, 3, 5);
     k.layer("story:garden:2"); // the meadow
     for (let x = 0; x < ART_W; x += 3) k.R(x + Math.round(Math.sin(t * 2 + x) * 0.6), 47 - (x % 2), 1, 2, "#5ab046");
     k.layer("story:garden:3"); // its flowers, and the apple tree's trunk
-    const sway = Math.round(Math.sin(t * 1.2));
-    k.R(6 + sway, 18, 22, 12, "#2f7d2a"); k.R(9 + sway, 15, 16, 4, "#3a9032"); k.R(8 + sway, 22, 4, 2, "#3a9032");
-    k.apple(12 + sway, 22); k.apple(21 + sway, 25);
+    k.put("story:garden:canopy", 6 + Math.round(Math.sin(t * 1.2)), 15); // its leaves and apples, swaying
     k.snake(92 + Math.round(Math.sin(t * 0.6) * 6), 50, 7, { tongue: true });
     k.layer("story:garden:4"); // an apple in the grass
     for (let i = 0; i < 2; i++) { const bx = 60 + Math.sin(t * 0.7 + i * 2) * 30, by = 30 + Math.sin(t * 1.3 + i) * 6; const f = Math.sin(t * 14 + i) > 0; k.R(bx, by, 1, 1, "#ffffff"); k.R(bx - 1, by - (f ? 1 : 0), 1, 1, i ? "#ffd23f" : "#ff9ad5"); k.R(bx + 1, by - (f ? 1 : 0), 1, 1, i ? "#ffd23f" : "#ff9ad5"); }
@@ -183,13 +160,13 @@ const ART_DRAW = {
     k.pic("story:dawn:sky");
     const rise = Math.min(1, (t % 12) / 6);
     k.glow(80, 44, 40, "rgba(255,200,120,ALPHA)", 0.6);
-    k.R(70, 44 - rise * 6, 20, 8, "#ffd27a"); k.R(72, 42 - rise * 6, 16, 2, "#ffd27a");
+    k.put("story:dawn:sun", 70, 42 - rise * 6);
     k.hills("#b07aa0", 44, 4, 0.06, 1, 3);
     k.layer("story:dawn:1"); // the meadow
     // curled up, asleep
     const skin = currentSkin();
     for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; k.R(80 + Math.cos(a) * 7, 50 + Math.sin(a) * 3, 4, 3, skinColorAt(skin, i, 0)); }
-    for (let i = 0; i < 3; i++) { const ph = (t * 0.4 + i / 3) % 1; g_text(k, "z", 92 + ph * 10, 44 - ph * 16, `rgba(80,60,90,${1 - ph})`); }
+    for (let i = 0; i < 3; i++) { const ph = (t * 0.4 + i / 3) % 1; k.paint("story:dawn:z", 92 + ph * 10, 44 - ph * 16, { alpha: 1 - ph }); }
   },
   tutorial(k, t) {
     k.pic("story:tutorial:sky");
@@ -210,7 +187,7 @@ const ART_DRAW = {
     [16, 30].forEach((y, r) => { for (let i = 0; i < 4; i++) [12 + i * 10, 112 + i * 10].forEach(x => { if (Math.sin(t * 2 + i + r * 3 + x) > 0.92) k.R(x + 1, y + 1, 1, 1, "#ffffff"); }); });
     // the swinging lamp
     const sw = Math.sin(t * 1.4) * 4;
-    k.R(80 + sw * 0.5, 8, 1, 8, "#222"); k.R(77 + sw, 16, 7, 3, "#2a2a2a");
+    k.put("story:shop:lamp-cord", 80 + sw * 0.5, 8); k.put("story:shop:lamp", 77 + sw, 16);
     k.glow(80 + sw, 22, 34, "rgba(255,220,140,ALPHA)", 0.38);
     k.layer("story:shop:3"); // the counter
     k.raccoon(80, 42);
@@ -222,8 +199,8 @@ const ART_DRAW = {
     k.pic("story:satchel:sky");
     k.layer("story:satchel:1"); // the wall's shadowed seams, the satchel
     const lift = Math.max(0, Math.sin(t * 0.9)) * 3;
-    k.apple(66, 22 - lift); k.orb(84, 20 - lift); k.R(95, 18 - lift, 2, 8, "#d9b98a");
-    k.R(54, 22 - lift, 52, 8, "#7a4820"); k.R(78, 28 - lift, 4, 5, "#d4a73a");
+    k.apple(66, 22 - lift); k.orb(84, 20 - lift);
+    k.put("story:satchel:flap", 54, 18 - lift); // its flap and clasp, lifting off a stick
     for (let i = 0; i < 3; i++) k.R(60 + i * 2, 8 + i, 1, 18 - lift, "#5a3410");
     k.fall(10, "rgba(255,240,200,0.6)", 3, 4, 6);
     k.vignette(0.55);
@@ -254,7 +231,7 @@ const ART_DRAW = {
     }
     const qx = 76 + ((lines % 2) * 16) + Math.sin(t * 8) * 2, qy = 34 + Math.floor(lines / 2) * 3;
     k.beetle(qx - 4, qy + 4);
-    k.R(qx, qy - 8, 1, 8, "#e8e8e8"); k.R(qx + 1, qy - 9, 2, 4, "#ffffff");
+    k.put("story:ledger:quill", qx, qy - 9);
     k.vignette(0.6);
   },
   curtain(k, t) {
@@ -264,10 +241,10 @@ const ART_DRAW = {
     for (let i = 0; i < 4; i++) {
       const cx = 46 + i * 22, cy = 22, a = t * (0.6 + i * 0.4) + i;
       k.R(cx + Math.round(Math.cos(a) * 3), cy + Math.round(Math.sin(a) * 3), 1, 1, "#b23a3a");
-      k.R(cx - 3, 36, 6, 4, Math.sin(t * 3 + i * 2) > 0 ? "#3ddc3d" : "#2a4a2a");
+      k.put("story:curtain:light", cx - 3, 36, Math.sin(t * 3 + i * 2) > 0 ? 0 : 1);
     }
     k.layer("story:curtain:2"); // the lever
-    k.R(116 + Math.round(Math.sin(t) * 2), 22, 7, 5, "#ffd23f");
+    k.put("story:curtain:knob", 116 + Math.round(Math.sin(t) * 2), 22);
     k.layer("story:curtain:3"); // the stage's floor
     k.snake(84, 46, 4, { dir: -1, wave: 0.5 });
     // velvet curtains, breathing a little
@@ -281,7 +258,7 @@ const ART_DRAW = {
   },
   classic(k, t) {
     k.pic("story:classic:sky");
-    for (let i = 0; i < 2; i++) { const bx = (t * 9 + i * 80) % 200 - 20, by = 10 + i * 4; const f = Math.sin(t * 10 + i) > 0 ? 1 : 0; k.R(bx, by + f, 2, 1, "#333"); k.R(bx + 2, by, 1, 1, "#333"); k.R(bx + 3, by + f, 2, 1, "#333"); }
+    for (let i = 0; i < 2; i++) k.put("story:classic:bird", (t * 9 + i * 80) % 200 - 20, 10 + i * 4, Math.sin(t * 10 + i) > 0 ? 1 : 0);
     k.layer("story:classic:1"); // the brick wall and the path
     // the carved brick, glowing faintly
     const p = 0.5 + 0.5 * Math.sin(t * 2);
@@ -305,7 +282,7 @@ const ART_DRAW = {
     k.pic("story:parlor:sky");
     k.layer("story:parlor:1"); // the tiled floor, the counter
     ["#4fd6ff", "#ff6fb0", "#b36bff", "#ffd23f", "#6ee7a8", "#ff8a3d", "#4fd6ff"].forEach((c, i) => k.popsicle(28 + i * 16, 28 + Math.round(Math.sin(t * 2 + i) * 1.4), c));
-    for (let i = 0; i < 5; i++) if (Math.sin(t * 3 + i * 1.9) > 0.8) { const x = 24 + i * 24, y = 24 + (i % 2) * 8; k.R(x - 1, y, 3, 1, "#fff"); k.R(x, y - 1, 1, 3, "#fff"); }
+    for (let i = 0; i < 5; i++) if (Math.sin(t * 3 + i * 1.9) > 0.8) k.put("story:parlor:sparkle", 24 + i * 24, 24 + (i % 2) * 8);
     const hue = (t * 60) % 360;
     if (Math.sin(t * 0.8) > 0.2) { k.R(80, 12 + Math.sin(t * 2) * 2, 3, 3, `hsl(${hue},100%,75%)`); k.glow(81, 13, 9, `hsla(${hue},100%,70%,ALPHA)`, 0.4); }
     k.snake(96, 51, 6, { dir: -1 });
@@ -313,10 +290,10 @@ const ART_DRAW = {
   storm(k, t) {
     const flash = (t % 5) < 0.12 || ((t % 5) > 0.22 && (t % 5) < 0.3);
     k.pic("story:storm:sky", flash ? 1 : 0); // (its second frame: lit by the lightning)
-    for (let i = 0; i < 4; i++) { const cx = ((i * 50 - t * 6) % 200 + 200) % 200 - 30; k.R(cx, 4 + (i % 2) * 3, 34, 6, "#4a5672"); k.R(cx + 6, 2 + (i % 2) * 3, 20, 3, "#56627e"); }
-    if (flash) { let x = 110; for (let y = 6; y < 40; y += 3) { x += Math.round(Math.sin(y * 7) * 2); k.R(x, y, 1, 3, "#ffffff"); } }
+    for (let i = 0; i < 4; i++) k.put("story:storm:cloud", ((i * 50 - t * 6) % 200 + 200) % 200 - 30, 2 + (i % 2) * 3);
+    if (flash) k.pic("story:storm:bolt");
     k.layer("story:storm:1"); // the grass, the trees' trunks
-    for (let i = 0; i < 6; i++) { const x = 8 + i * 28; k.R(x, 32 + Math.round(Math.sin(t * 2 + i)), 10, 7, "#2b6a26"); }
+    for (let i = 0; i < 6; i++) k.put("story:storm:canopy", 8 + i * 28, 32 + Math.round(Math.sin(t * 2 + i)));
     for (let i = 0; i < 14; i++) {
       const ph = (t * 0.5 * (0.7 + mapHash(i, 2, 3) * 0.6) + mapHash(i, 2, 5)) % 1;
       k.apple(mapHash(i, 2, 7) * 150 + Math.sin(t + i) * 3, -6 + ph * 56);
@@ -334,7 +311,7 @@ const ART_DRAW = {
     k.layer("story:mirror:2"); // the floor
     k.snake(46, 48, 5);
     k.snake(114, 48, 5, { dir: -1 });
-    for (let i = 0; i < 3; i++) { const ph = (t * 1.6 + i * 0.7) % 2; const hop = ph < 1 ? Math.sin(ph * Math.PI) * 8 : 0; k.R(30 + i * 45 + ph * 6, 44 - hop, 2, 2, "#7a4a26"); }
+    for (let i = 0; i < 3; i++) { const ph = (t * 1.6 + i * 0.7) % 2; const hop = ph < 1 ? Math.sin(ph * Math.PI) * 8 : 0; k.put("story:mirror:crumb", 30 + i * 45 + ph * 6, 44 - hop); }
   },
   vault(k, t) {
     k.pic("story:vault:sky");
@@ -345,7 +322,7 @@ const ART_DRAW = {
     for (let i = 0; i < 3; i++) { const ang = a + i * Math.PI / 3; for (let r = -10; r <= 10; r++) k.R(40 + Math.round(Math.cos(ang) * r), 26 + Math.round(Math.sin(ang) * r), 2, 2, "#6a4c1e"); }
     for (let i = 0; i < 6; i++) { const ang = a + i * Math.PI / 3; k.R(39 + Math.round(Math.cos(ang) * 10), 25 + Math.round(Math.sin(ang) * 10), 3, 3, "#ffd23f"); }
     k.layer("story:vault:2"); // the wheel's hub, the floor
-    for (let i = 0; i < 18; i++) { const x = 70 + mapHash(i, 4, 1) * 86, y = 46 + mapHash(i, 4, 2) * 10; k.R(x, y, 2, 1, Math.sin(t * 3 + i) > 0.85 ? "#ffffff" : "#ffd23f"); }
+    for (let i = 0; i < 18; i++) k.put("story:vault:glitter", 70 + mapHash(i, 4, 1) * 86, 46 + mapHash(i, 4, 2) * 10, Math.sin(t * 3 + i) > 0.85 ? 1 : 0);
     k.layer("story:vault:3"); // the golden apple
     const p = 0.5 + 0.5 * Math.sin(t * 3);
     k.glow(140, 48, 8, "rgba(255,230,120,ALPHA)", 0.3 + p * 0.4);
@@ -356,7 +333,7 @@ const ART_DRAW = {
   tunnel(k, t) {
     k.pic("story:tunnel:sky");
     k.glow(150, 30, 30, "rgba(255,210,63,ALPHA)", 0.18);
-    k.R(140 + Math.sin(t * 2) * 4, 29, 10, 2, "#ffd23f");
+    k.put("story:tunnel:light", 140 + Math.sin(t * 2) * 4, 29);
     for (let x = 0; x < ART_W + 8; x += 8) {
       const off = (t * 40) % 8;
       const xx = x - off;
@@ -371,7 +348,7 @@ const ART_DRAW = {
   furnace(k, t) {
     k.pic("story:furnace:sky");
     k.layer("story:furnace:1"); // the floor
-    for (let i = 0; i < 12; i++) k.R(i * 14 + 4, 52 + (i % 2), 6, 1, Math.sin(t * 4 + i) > 0 ? "#ff6a1a" : "#a8320e");
+    for (let i = 0; i < 12; i++) k.put("story:furnace:ember", i * 14 + 4, 52 + (i % 2), Math.sin(t * 4 + i) > 0 ? 0 : 1);
     [22, 60, 104, 140].forEach((x, i) => { k.flame(x, 50, 9 + (i % 2) * 5, i * 3); k.glow(x, 44, 14, "rgba(255,120,40,ALPHA)", 0.25); });
     const hum = 0.5 + 0.5 * Math.sin(t * 2.5);
     k.layer("story:furnace:2"); // the two purple pillars, humming
@@ -408,18 +385,13 @@ const ART_DRAW = {
   }
 };
 
-/* Small pixel letters for the sleeping z's */
-function g_text(k, ch, x, y, color) {
-  if (ch === "z") { k.R(x, y, 3, 1, color); k.R(x + 1, y + 1, 1, 1, color); k.R(x, y + 2, 3, 1, color); }
-}
-
 /* A collectible, turning slowly under a spotlight: its picture (story:relic:<id>, its anchor on the
    middle of the spotlight), and what moves on it */
 const RELIC_ART = {
   brick: k => k.layer("story:relic:brick"),
   pebble: k => k.layer("story:relic:pebble"),
   stick: k => k.layer("story:relic:stick"),
-  shard: (k, t) => { k.layer("story:relic:shard"); if (Math.sin(t * 1.3) > 0.7) { k.R(-1, -2, 4, 2, "#ffd23f"); k.R(0, -2, 2, 2, "#111"); } },
+  shard: (k, t) => { k.layer("story:relic:shard"); if (Math.sin(t * 1.3) > 0.7) k.put("story:relic:shard-eye", -1, -2); },
   map: k => k.layer("story:relic:map"),
   ember: (k, t) => { k.layer("story:relic:ember"); k.flame(0, 6, 9, 1); },
   core: k => k.layer("story:relic:core"),
@@ -445,7 +417,7 @@ function drawPageArt(c, id, t = performance.now() / 1000) {
     g.restore();
     for (let i = 0; i < 6; i++) {
       const a = t * 0.8 + i * Math.PI / 3, on = Math.sin(t * 3 + i * 2) > 0.3;
-      if (on) { const x = 80 + Math.cos(a) * 30, y = 28 + Math.sin(a) * 14; k.R(x - 1, y, 3, 1, "#fff6c4"); k.R(x, y - 1, 1, 3, "#fff6c4"); }
+      if (on) k.put("story:relic:sparkle", 80 + Math.cos(a) * 30, 28 + Math.sin(a) * 14);
     }
     k.vignette(0.6);
     return;

@@ -25,7 +25,8 @@
   islands are pictures too: under the paths, over them, and in the haze, and so are their stops (stones,
   lairs, the little home tree, the gate, the stalls); the scenes at the top of each shop and the upgrade
   tree screen's background are pictures too, and so are the story book's pages (a sky and layers each, the
-  relics, the night over a nightmare); and the Tailor's theme emblems
+  relics, the night over a nightmare, the tortoise, raccoon and beetle as sprite sheets, the clouds, birds and
+  ghosts); and the Tailor's theme emblems
   are color-swap pictures in each theme's colors. Lights and glows pulse over their PNGs; the rarity
   pip and ribbon are color-swap pictures. They look exactly as before, checked pixel by pixel at many moments
   (`node tools/textures/textures.mjs check --legacy`). How to: `textures/README.md`.

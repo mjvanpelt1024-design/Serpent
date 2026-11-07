@@ -1040,6 +1040,86 @@
       parts: { gem: { at: [140, 30], size: [7, 7], frames: [false, true].map(g2 => R => { R(140, 30, 7, 7, "#e9fff1"); R(143, 31, 1, 3, "#1f8a4a"); if (g2) R(143, 33, 2, 1, "#1f8a4a"); }) } } },
     relic: { sky: ["#1a1208", "#3a2a14"], named: { shadow: k => k.R(54, 50, 52, 4, "rgba(0,0,0,0.35)") } }
   };
+  // pictures the size of the page that only show now and then: the storm's lightning, the thunder's flash and bolt
+  STORY.storm.named = { bolt: k => { let x = 110; for (let y = 6; y < 40; y += 3) { x += Math.round(Math.sin(y * 7) * 2); k.R(x, y, 1, 3, "#ffffff"); } } };
+  STORY.thunder.named = {
+    flash: k => k.R(0, 0, ART_W, ART_H, "rgba(255,255,255,0.35)"),
+    bolt: k => { let x = 100; for (let y = 0; y < 48; y += 4) { k.R(x, y, 2, 4, "#fff7a0"); x += (y % 8 ? -2 : 3); } }
+  };
+  /* The little things that move on the pages, each drawn by the old code round the point the game puts it
+     at (its anchor): (R, x, y, kitAt) with R the old code's rounding and kitAt(t) the old kit at a moment.
+     A list is its frames; { frames, columns, keys } says more. "kit" is the cast every page shares. */
+  const RACCOON = (bob, blink) => (R, x, y) => {
+    R(x - 5, y - 6 + bob, 10, 8, "#8a8a8a");
+    R(x - 6, y - 8 + bob, 3, 3, "#6a6a6a"); R(x + 3, y - 8 + bob, 3, 3, "#6a6a6a");
+    R(x - 4, y - 4 + bob, 8, 2, "#222");
+    if (!blink) { R(x - 3, y - 4 + bob, 1, 1, "#fff"); R(x + 2, y - 4 + bob, 1, 1, "#fff"); }
+    R(x - 1, y - 1 + bob, 2, 1, "#111");
+    R(x - 2, y - 11 + bob, 4, 3, "#1a1a1a"); R(x - 3, y - 9 + bob, 6, 1, "#1a1a1a"); R(x - 2, y - 10 + bob, 4, 1, "#b23a3a");
+  };
+  const STORY_SPRITES = {
+    kit: {
+      apple: [(R, x, y, kitAt) => kitAt(0).apple(x, y)],
+      "apple-big": [(R, x, y, kitAt) => kitAt(0).apple(x, y, true)],
+      orb: [(R, x, y) => { R(x, y, 3, 3, "#ffd23f"); R(x, y, 1, 1, "#fff6c4"); }],
+      "orb-glow": [(R, x, y) => R(x - 1, y - 1, 5, 5, "rgb(255,210,63)")],
+      popsicle: { keys: { "#ff00ff": "ice" }, frames: [(R, x, y) => { R(x, y, 4, 6, "#ff00ff"); R(x + 1, y + 6, 2, 3, "#d9b98a"); }] },
+      "popsicle-shine": [(R, x, y) => R(x, y, 1, 6, "rgba(255,255,255,0.45)")],
+      // its head bobbing down, level, up (the old kit at moments that give each)
+      tortoise: [Math.PI, 0, Math.PI / 3].map(t => (R, x, y, kitAt) => kitAt(t).tortoise(x, y)),
+      raccoon: { columns: 3, frames: [false, true].flatMap(blink => [-1, 0, 1].map(bob => RACCOON(bob, blink))) },
+      "raccoon-tail": ["#9a9a9a", "#3a3a3a"].map(c => (R, x, y) => R(x, y, 2, 2, c)),
+      beetle: [Math.PI / 4, 0, Math.PI / 12].map(t => (R, x, y, kitAt) => kitAt(t).beetle(x, y))
+    },
+    garden: {
+      cloud: [(R, x, y) => { R(x, y + 2, 18, 3, "#ffffff"); R(x + 4, y, 9, 2, "#ffffff"); }],
+      canopy: [(R, x, y, kitAt) => { R(x, y + 3, 22, 12, "#2f7d2a"); R(x + 3, y, 16, 4, "#3a9032"); R(x + 2, y + 7, 4, 2, "#3a9032"); const k = kitAt(0); k.apple(x + 6, y + 7); k.apple(x + 15, y + 10); }]
+    },
+    dawn: {
+      sun: [(R, x, y) => { R(x, y + 2, 20, 8, "#ffd27a"); R(x + 2, y, 16, 2, "#ffd27a"); }],
+      z: [(R, x, y) => { R(x, y, 3, 1, "rgb(80,60,90)"); R(x + 1, y + 1, 1, 1, "rgb(80,60,90)"); R(x, y + 2, 3, 1, "rgb(80,60,90)"); }]
+    },
+    shop: { "lamp-cord": [(R, x, y) => R(x, y, 1, 8, "#222")], lamp: [(R, x, y) => R(x, y, 7, 3, "#2a2a2a")] },
+    satchel: { flap: [(R, x, y) => { R(x + 41, y, 2, 8, "#d9b98a"); R(x, y + 4, 52, 8, "#7a4820"); R(x + 24, y + 10, 4, 5, "#d4a73a"); }] },
+    ledger: { quill: [(R, x, y) => { R(x, y + 1, 1, 8, "#e8e8e8"); R(x + 1, y, 2, 4, "#ffffff"); }] },
+    curtain: { light: ["#3ddc3d", "#2a4a2a"].map(c => (R, x, y) => R(x, y, 6, 4, c)), knob: [(R, x, y) => R(x, y, 7, 5, "#ffd23f")] },
+    classic: { bird: [0, 1].map(f => (R, x, y) => { R(x, y + f, 2, 1, "#333"); R(x + 2, y, 1, 1, "#333"); R(x + 3, y + f, 2, 1, "#333"); }) },
+    parlor: { sparkle: [(R, x, y) => { R(x - 1, y, 3, 1, "#fff"); R(x, y - 1, 1, 3, "#fff"); }] },
+    storm: { cloud: [(R, x, y) => { R(x, y + 2, 34, 6, "#4a5672"); R(x + 6, y, 20, 3, "#56627e"); }], canopy: [(R, x, y) => R(x, y, 10, 7, "#2b6a26")] },
+    mirror: { crumb: [(R, x, y) => R(x, y, 2, 2, "#7a4a26")] },
+    vault: { glitter: ["#ffd23f", "#ffffff"].map(c => (R, x, y) => R(x, y, 2, 1, c)) },
+    tunnel: { light: [(R, x, y) => R(x, y, 10, 2, "#ffd23f")] },
+    furnace: { ember: ["#ff6a1a", "#a8320e"].map(c => (R, x, y) => R(x, y, 6, 1, c)) },
+    sunflower: {
+      head: [(R, x, y) => { R(x, y, 7, 6, "#ffcf33"); R(x + 2, y + 2, 3, 2, "#7a4a18"); }],
+      coin: [(R, x, y) => { R(x, y, 5, 5, "#ffd23f"); R(x + 1, y, 1, 1, "#fff6c4"); }]
+    },
+    hive: { bee: [(R, x, y) => { R(x, y, 2, 2, "#ffcf33"); R(x, y + 1, 2, 1, "#1a1410"); }], wing: [(R, x, y) => R(x, y, 2, 1, "rgba(255,255,255,0.8)")] },
+    thunder: { cloud: [(R, x, y) => { R(x, y + 3, 30, 5, "#4a5a6a"); R(x + 6, y, 16, 3, "#5a6a7a"); }], spark: ["#fff7a0", "#9ad8ff"].map(c => (R, x, y) => R(x, y, 8, 2, c)) },
+    moor: { ghost: [(R, x, y) => { R(x, y, 6, 6, "rgba(232,236,255,0.75)"); R(x + 1, y + 6, 1, 2, "rgba(232,236,255,0.6)"); R(x + 4, y + 6, 1, 2, "rgba(232,236,255,0.6)"); R(x + 1, y + 2, 1, 1, "#2a2a40"); R(x + 4, y + 2, 1, 1, "#2a2a40"); }] },
+    maw: { pit: [(R, x, y) => R(x, y, 10, 5, "#000000"), (R, x, y) => R(x + 2, y + 2, 6, 1, "#5a3a20")] },
+    relic: {
+      sparkle: [(R, x, y) => { R(x - 1, y, 3, 1, "#fff6c4"); R(x, y - 1, 1, 3, "#fff6c4"); }],
+      "shard-eye": [(R, x, y) => { R(x, y, 4, 2, "#ffd23f"); R(x + 1, y, 2, 2, "#111"); }]
+    }
+  };
+  /* A story sprite's frames, drawn round 64, 64 on scratch canvases and cut to the box they share */
+  function storySprite(id, file, spec) {
+    const S = Array.isArray(spec) ? { frames: spec } : spec, N = 128, O = 64, cols = S.columns || S.frames.length;
+    const cs = S.frames.map(f => {
+      const c = canvasOf(N, N), g = c.getContext("2d");
+      g.imageSmoothingEnabled = false;
+      f((x, y, w, h, col) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), w, h); }, O, O, t => artKit(g, t));
+      return c;
+    });
+    let x0 = N, y0 = N, x1 = -1, y1 = -1;
+    cs.forEach(c => { const p = pixels(c); for (let i = 0; i < N * N; i++) if (p[i * 4 + 3]) { const x = i % N, y = Math.floor(i / N); x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); } });
+    if (x1 < 0 || x0 === 0 || y0 === 0 || x1 === N - 1 || y1 === N - 1) throw new Error(`${id} is empty or doesn't fit its scratch canvas`);
+    const w = x1 - x0 + 1, h = y1 - y0 + 1, out = canvasOf(w * cols, h * Math.ceil(cs.length / cols)), og = out.getContext("2d");
+    cs.forEach((c, i) => og.drawImage(c, x0, y0, w, h, (i % cols) * w, Math.floor(i / cols) * h, w, h));
+    const anchor = [O - x0, O - y0];
+    return Object.assign({ id, file, canvas: out }, anchor[0] || anchor[1] ? { anchor } : {}, cs.length > 1 ? { frames: cs.length } : {}, S.columns ? { columns: S.columns } : {}, S.keys ? { keys: S.keys } : {});
+  }
   /* The relics' still parts, drawn round the middle of the spotlight (most are the old RELIC_ART itself) */
   const RELIC_STILL = {
     brick: k => RELIC_ART.brick(k, 0), pebble: k => RELIC_ART.pebble(k, 0), stick: k => RELIC_ART.stick(k, 0),
@@ -1069,7 +1149,9 @@
         const frames = P.frames.map(f => partOf(P.at, P.size, f));
         out.push(Object.assign({ id: `story:${name}:${n}`, file: `${D}${name}/${n}.png`, canvas: frames.length > 1 ? sheet(frames) : frames[0] }, frames.length > 1 ? { frames: frames.length } : {}));
       });
+      Object.entries(STORY_SPRITES[name] || {}).forEach(([n, spec]) => out.push(storySprite(`story:${name}:${n}`, `${D}${name}/${n}.png`, spec)));
     });
+    Object.entries(STORY_SPRITES.kit).forEach(([n, spec]) => out.push(storySprite(`story:${n}`, `${D}kit/${n}.png`, spec)));
     // the relics, each cut to what it painted, its anchor the middle of the spotlight
     Object.entries(RELIC_STILL).forEach(([id, draw]) => {
       const c = canvasOf(64, 64), g = c.getContext("2d");
