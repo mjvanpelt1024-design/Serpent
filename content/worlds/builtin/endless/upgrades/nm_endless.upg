@@ -8,7 +8,7 @@
 name        = Solid Footing
 description = Easier to win back ground when Crumbling. Firmer footing on a failing floor.
 slot        = nightmare            # trunk, left, right, crown or nightmare
-icon        = boot                 # a picture from src/engine/render/pixel-icons.js
+icon        = boot                 # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

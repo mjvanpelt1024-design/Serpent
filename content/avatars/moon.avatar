@@ -1,5 +1,5 @@
 # Avatar: Moon
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Moon
-picture    = moon                 # a picture from src/engine/render/pixel-icons.js
+picture    = moon                 # a picture in textures/icons/ (textures/index.json)
 background = #1b1464

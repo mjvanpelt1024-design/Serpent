@@ -9,7 +9,7 @@ name        = Echolocation
 description = Sinkholes crack for longer before they open, everywhere.
 slot        = right                  # trunk, left, right, crown or nightmare
 color       = #5a1a1a
-icon        = binoc                  # a picture from src/engine/render/pixel-icons.js
+icon        = binoc                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

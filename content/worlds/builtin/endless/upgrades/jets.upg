@@ -9,7 +9,7 @@ name        = Jump Jets
 description = A chance an apple jumps you one extra column in Endless. A small leap, gratefully received.
 slot        = crown                # trunk, left, right, crown or nightmare
 color       = #ff5a61
-icon        = rocket               # a picture from src/engine/render/pixel-icons.js
+icon        = rocket               # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

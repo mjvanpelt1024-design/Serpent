@@ -11,7 +11,7 @@ part        = branch               # trunk, bough, branch or dream
 growsFrom   = apple                # grows once this reaches the gate tier
 requires    = all                  # all = every island; nightmare = the dream roots
 position    = [184, 32]            # where it hangs on the tree picture
-icon        = apple                # a picture from src/engine/render/pixel-icons.js
+icon        = apple                # a picture in textures/icons/ (textures/index.json)
 badge       = star                 # corner mark: up, plus, x or star
 
 # What each tier is worth

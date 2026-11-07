@@ -9,7 +9,7 @@ name        = Challenge Accepted
 description = More points from apples in Challenge. Hardship, at least, is well paid here.
 slot        = trunk                # trunk, left, right, crown or nightmare
 color       = #ff8c1a
-icon        = flag                 # a picture from src/engine/render/pixel-icons.js
+icon        = flag                 # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 1                    # before the first tier

@@ -9,7 +9,7 @@ name        = Kindling
 description = Extra points while fire has you speeding. If one must burn, one may as well be paid for it.
 slot        = trunk                # trunk, left, right, crown or nightmare
 color       = #ffb020
-icon        = logs                 # a picture from src/engine/render/pixel-icons.js
+icon        = logs                 # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

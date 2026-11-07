@@ -12,6 +12,5 @@ boost       = true                 # true = used up when a run starts
 # Its fruit in the Satchel
 fruit       = orange               # apple, pear, orange, plum, lemon or berry
 color       = #4fb8ff
-icon        = magnet
+icon        = magnet-blue
 badge       = plus
-recolor     = [r>b, R>B]

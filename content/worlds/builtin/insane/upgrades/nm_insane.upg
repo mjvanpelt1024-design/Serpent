@@ -8,7 +8,7 @@
 name        = Mercy Rule
 description = A chance to survive a popsicle in No Mercy. A little mercy, smuggled in.
 slot        = nightmare            # trunk, left, right, crown or nightmare
-icon        = whiteflag            # a picture from src/engine/render/pixel-icons.js
+icon        = whiteflag            # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

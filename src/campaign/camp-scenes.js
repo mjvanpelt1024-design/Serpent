@@ -76,7 +76,7 @@ function drawNpcScene(k, g, key, kind, t) {
     wares.forEach((id, i) => {
       const x = 84 + i * 15, bob = Math.round(Math.sin(t * 2 + i) * 0.6);
       R(x, 43, 12, 1, "rgba(0,0,0,0.3)");
-      g.drawImage(objSprite(ICON_FOR["ci:" + id][0], ICON_FOR["ci:" + id][2]), x, 31 + bob);
+      g.drawImage(texCanvas("ci:" + id), x, 31 + bob);
     });
     // a lantern swinging
     const sw = Math.round(Math.sin(t * 1.4) * 2);

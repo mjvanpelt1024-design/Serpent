@@ -9,7 +9,7 @@ name        = Trophy Hunter
 description = More points from apples on the Hunting Grounds.
 slot        = trunk                  # trunk, left, right, crown or nightmare
 color       = #8aa050
-icon        = trophy                 # a picture from src/engine/render/pixel-icons.js
+icon        = trophy                 # a picture in textures/icons/ (textures/index.json)
 effect      = applePoints            # applePoints, passivePoints or orbChance on this island; otherwise game code reads the id
 
 # What each tier is worth

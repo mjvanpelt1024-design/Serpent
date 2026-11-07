@@ -1,5 +1,5 @@
 # Avatar: Gem
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Gem
-picture    = gem                  # a picture from src/engine/render/pixel-icons.js
+picture    = gem                  # a picture in textures/icons/ (textures/index.json)
 background = #5a2a9a

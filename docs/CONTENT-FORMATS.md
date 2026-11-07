@@ -202,7 +202,7 @@ Island upgrades live in `worlds/builtin/<island>/upgrades/`, Great Tree upgrades
 | `requires` | Great Tree only: `all` (the every-island branch) or `nightmare` (the dream roots) |
 | `position` | Great Tree only: `[x, y]` on the tree picture (240 × 184) |
 | `color` | its color on the tree |
-| `icon`, `badge`, `recolor` | its picture: a sprite name, a corner mark (`up`, `plus`, `x`, `star`), letter swaps |
+| `icon`, `badge` | its picture: a name in `textures/index.json` (a PNG in `textures/icons/`), and a corner mark (`up`, `plus`, `x`, `star`) shown over it |
 | `base` | the value before any tier is bought |
 | `start`, `step`, `tiers` | tier 1's value, what each tier adds, how many tiers... |
 | `values` | ...or every tier's value, listed: `[45, 44, 42, ...]` |
@@ -289,7 +289,7 @@ Prices: `[items]` in `economy.txt`. What it does: `src/game/flow/item-effects.js
 
 ## Avatars: content/avatars/*.avatar
 
-`name`, `picture` (a sprite from `src/engine/render/pixel-icons.js`), `background`, `free`.
+`name`, `picture` (a name in `textures/index.json`: a PNG in `textures/icons/`), `background`, `free`.
 Price comes from `avatarStep` and the avatar's place in `_index.dat`.
 
 ## Story: content/story/*.story

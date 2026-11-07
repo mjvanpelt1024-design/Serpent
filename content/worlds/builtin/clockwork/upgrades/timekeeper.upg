@@ -9,7 +9,7 @@ name        = Timekeeper
 description = A chance raised spikes don't hurt you, everywhere.
 slot        = left                   # trunk, left, right, crown or nightmare
 color       = #b08a4a
-icon        = clock                  # a picture from src/engine/render/pixel-icons.js
+icon        = clock                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

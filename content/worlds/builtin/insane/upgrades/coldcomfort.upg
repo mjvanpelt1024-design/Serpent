@@ -9,7 +9,7 @@ name        = Cold Comfort
 description = Every popsicle hit you survive in Insane pays out points. Misfortune, at last, with a receipt.
 slot        = left                 # trunk, left, right, crown or nightmare
 color       = #bfeaff
-icon        = snowflake            # a picture from src/engine/render/pixel-icons.js
+icon        = snowflake            # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

@@ -12,5 +12,4 @@ boost       = false                # true = used up when a run starts
 # Its fruit in the Satchel
 fruit       = lemon                # apple, pear, orange, plum, lemon or berry
 color       = #fff1b8
-icon        = heart
-recolor     = [r>y, R>Y, w>w]
+icon        = heart-gold

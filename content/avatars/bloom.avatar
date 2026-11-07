@@ -1,6 +1,6 @@
 # Avatar: Bloom
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Bloom
-picture    = flower               # a picture from src/engine/render/pixel-icons.js
+picture    = flower               # a picture in textures/icons/ (textures/index.json)
 background = #2f7d2a
 free       = true                 # every save owns it

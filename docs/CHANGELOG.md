@@ -55,6 +55,12 @@
   map shows the objective, then Start. The Play button and the Rules signpost are gone.
 - The rails beside the board are a little smaller and shrink to fit the window; the pocket is one row of four.
 - Fixed: coming back to the map from a shop left the stop's scroll open on top of the island's banner.
+- **Every small picture is a PNG you can repaint.** The 12 x 12 icons, junk, trinkets, upgrades, runes in all
+  eight conditions, foes, hazards, power-ups, goal pieces, hearts, boss faces, map pins, cursors and stickers
+  moved out of the code into `textures/` (397 files): one pixel per game pixel, edit one in any pixel editor
+  and press F5. `textures/index.json` says which file each picture is, so moving one is a one-line change.
+  They look exactly as before, checked pixel by pixel (`node tools/textures/textures.mjs check --legacy`).
+  How to: `textures/README.md`.
 
 ## v:11.06.2026_b:50: runes for keeps
 

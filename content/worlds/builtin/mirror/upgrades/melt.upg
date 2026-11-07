@@ -8,7 +8,7 @@
 name        = Quick Melt
 description = Popsicles melt away sooner in Mirror. Everything sweet is temporary, which for once is good news.
 slot        = left                 # trunk, left, right, crown or nightmare
-icon        = melt                 # a picture from src/engine/render/pixel-icons.js
+icon        = melt                 # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

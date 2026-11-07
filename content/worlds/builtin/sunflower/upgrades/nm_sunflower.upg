@@ -8,7 +8,7 @@
 name        = Sunscreen
 description = Apples take longer to rot in Wilted. Shade, at last.
 slot        = nightmare              # trunk, left, right, crown or nightmare
-icon        = potion                 # a picture from src/engine/render/pixel-icons.js
+icon        = potion                 # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

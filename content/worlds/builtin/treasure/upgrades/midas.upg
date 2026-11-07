@@ -8,7 +8,7 @@
 name        = Midas Touch
 description = Big apples are worth even more in Treasure. Be careful what you touch.
 slot        = left                 # trunk, left, right, crown or nightmare
-icon        = crown                # a picture from src/engine/render/pixel-icons.js
+icon        = crown                # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 5                    # before the first tier

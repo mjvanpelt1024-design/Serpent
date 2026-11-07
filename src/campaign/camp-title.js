@@ -48,13 +48,11 @@ function campUnpin(isl, id) {
   if (currentScreen === "main") renderTitleDeco();
 }
 
-/* ----- The stickers: an island's mark in a white die-cut border ----- */
-const STICKER_ART = { keep: ["shield", null, { s: "y", S: "Y", b: "r" }], spire: ["bigstar", null, { y: "P", Y: "V", w: "p" }], hollow: ["pie"], reef: ["shell"], crown: ["fireball"] };
+/* ----- The stickers: an island's mark (textures/icons/stickers/<island>.png) in a white die-cut border ----- */
 const stickerCache = {};
 function stickerUrl(isl) {
   if (stickerCache[isl]) return stickerCache[isl];
-  const spec = STICKER_ART[isl] || ["star"];
-  const src = objSprite(spec[0], spec[2]);
+  const src = texCanvas("sticker:" + isl);
   const c = document.createElement("canvas");
   c.width = c.height = 18;
   const g = c.getContext("2d");

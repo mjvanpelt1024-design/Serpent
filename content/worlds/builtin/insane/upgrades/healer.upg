@@ -9,7 +9,7 @@ name        = Heart Healer
 description = A chance an apple heals half a heart in Insane. An apple a day, and so on.
 slot        = crown                # trunk, left, right, crown or nightmare
 color       = #ff5d8f
-icon        = cross                # a picture from src/engine/render/pixel-icons.js
+icon        = cross                # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

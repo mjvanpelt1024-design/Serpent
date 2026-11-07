@@ -9,7 +9,7 @@ name        = Camouflage
 description = The Hunter moves more slowly, everywhere. It can't hunt what it can't quite see.
 slot        = left                   # trunk, left, right, crown or nightmare
 color       = #5a7a30
-icon        = eye                    # a picture from src/engine/render/pixel-icons.js
+icon        = eye                    # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

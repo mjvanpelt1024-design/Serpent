@@ -9,7 +9,7 @@ name        = Overtime
 description = Frenzy Clocks last longer, everywhere.
 slot        = crown                  # trunk, left, right, crown or nightmare
 color       = #8a2a2a
-icon        = clock                  # a picture from src/engine/render/pixel-icons.js
+icon        = clock                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

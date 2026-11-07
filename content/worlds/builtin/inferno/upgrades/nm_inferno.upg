@@ -8,7 +8,7 @@
 name        = Fire Brigade
 description = Fewer fires during Firestorm. Not none. Fewer.
 slot        = nightmare            # trunk, left, right, crown or nightmare
-icon        = bucket               # a picture from src/engine/render/pixel-icons.js
+icon        = bucket               # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

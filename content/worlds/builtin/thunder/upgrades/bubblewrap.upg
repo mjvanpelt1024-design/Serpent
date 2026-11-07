@@ -9,7 +9,7 @@ name        = Bubble Wrap
 description = Bubble Shields last longer before they pop on their own, everywhere.
 slot        = crown                  # trunk, left, right, crown or nightmare
 color       = #9ad8ff
-icon        = gem                    # a picture from src/engine/render/pixel-icons.js
+icon        = gem                    # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

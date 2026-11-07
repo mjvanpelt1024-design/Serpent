@@ -563,10 +563,11 @@
   <button id="touch-right" class="touch-btn" aria-label="Right">▶</button>
 </div>
 
-<!-- The boot loader reads every content file, then loads the game's scripts in the order
-     listed in src/load-order.dat. Nothing else is loaded from here. -->
+<!-- The boot loader reads every content file and every picture in textures/, then loads the
+     game's scripts in the order listed in src/load-order.dat. Nothing else is loaded from here. -->
 <script src="src/engine/content/formats.js"></script>
 <script src="src/engine/content/loader.js"></script>
+<script src="src/engine/content/textures.js"></script>
 <script src="src/engine/boot.js"></script>
 </body>
 </html>

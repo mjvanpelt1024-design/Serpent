@@ -8,7 +8,7 @@
 name        = Cruise Control
 description = Endless speeds up more slowly. The tunnel is in no hurry, and neither, now, are you.
 slot        = left                 # trunk, left, right, crown or nightmare
-icon        = car                  # a picture from src/engine/render/pixel-icons.js
+icon        = car                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

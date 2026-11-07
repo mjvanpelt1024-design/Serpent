@@ -8,7 +8,7 @@
 name        = Grandfather Clause
 description = Another chance an Echo flickers out of your way, everywhere. Mostly useful in the Time Loop.
 slot        = nightmare              # trunk, left, right, crown or nightmare
-icon        = moon                   # a picture from src/engine/render/pixel-icons.js
+icon        = moon                   # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

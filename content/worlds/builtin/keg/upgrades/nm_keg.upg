@@ -8,7 +8,7 @@
 name        = Damp Powder
 description = Bomb fuses burn longer again, everywhere. Mostly useful in the Chain Reaction.
 slot        = nightmare              # trunk, left, right, crown or nightmare
-icon        = bucket                 # a picture from src/engine/render/pixel-icons.js
+icon        = bucket                 # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

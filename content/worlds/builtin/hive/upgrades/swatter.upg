@@ -9,7 +9,7 @@ name        = Swatter
 description = A chance that eating an apple swats the nearest wasp, everywhere.
 slot        = crown                  # trunk, left, right, crown or nightmare
 color       = #ffd23f
-icon        = hand                   # a picture from src/engine/render/pixel-icons.js
+icon        = hand                   # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

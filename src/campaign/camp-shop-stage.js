@@ -200,8 +200,8 @@ function drawStage(t, ts) {
     if (!o) { R(x - 8, 27, 16, 9, "#8a6a4a"); R(x - 7, 28, 14, 7, "#a8845a"); R(x - 5, 31, 10, 1, "#5a3a20"); R(x - 1, 21, 2, 6, "#5a3a20"); continue; }
     const bob = o.sold ? 0 : Math.round(Math.sin(t * 2 + i) * 0.7);
     g.globalAlpha = o.sold ? 0.3 : 1;
-    const spec = o.recipe ? ["scroll"] : ICON_FOR[`ci:${o.id}:${CAMP.itemById[o.id].family === "rune" ? RUNE_GRADES8[rarityIdx(o.rarity) * 2] : ""}`] || ICON_FOR["ci:" + o.id] || ["gift"];
-    g.drawImage(objSprite(spec[0], spec[2]), x - 12, 16 + bob, 24, 24);
+    const id = o.recipe ? "scroll" : CAMP.itemById[o.id].family === "rune" ? `ci:${o.id}:${RUNE_GRADES8[rarityIdx(o.rarity) * 2]}` : "ci:" + o.id;
+    g.drawImage(texCanvas(id, "gift"), x - 12, 16 + bob, 24, 24);
     g.globalAlpha = 1;
     R(x - 10, 40, 20, 1, "rgba(0,0,0,0.25)");
     // a rarity ribbon, and a red sale tag on a string
@@ -283,7 +283,7 @@ function drawWorkshop(g, R, ws, t) {
     R(128, 86, 18, 6, "#4a3018"); R(136, 44, 3, 44, "#6a4628"); R(126, 54, 22, 3, "#6a4628");
     R(130, 38, 14, 10, "#8a6a4a"); R(132, 40, 10, 6, "#a8845a");
     const it = campEquipped("gear");
-    if (it) { const spec = ICON_FOR["ci:" + it.id] || ["shield"]; g.drawImage(objSprite(spec[0], spec[2]), 128, 56, 18, 18); }
+    if (it) g.drawImage(texCanvas("ci:" + it.id, "ci:shield"), 128, 56, 18, 18);
   } else if (ws === "arcana") {
     // the lectern with its book, floating motes, the press with candles
     R(12, 70, 40, 5, "#5a3a20"); R(26, 75, 12, 17, "#4a2e18"); R(8, 62, 48, 9, "#6a4628");

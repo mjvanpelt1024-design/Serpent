@@ -9,7 +9,7 @@ name        = Retro Rewards
 description = A chance a full XP orb is worth double in Classic. The old ways had their rewards.
 slot        = crown                # trunk, left, right, crown or nightmare
 color       = #38bdf8
-icon        = joystick             # a picture from src/engine/render/pixel-icons.js
+icon        = joystick             # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

@@ -9,7 +9,7 @@ name        = Flea Collar
 description = A chance a flea does nothing in Mirror. The fleas will be furious.
 slot        = crown                # trunk, left, right, crown or nightmare
 color       = #7a4a26
-icon        = collar               # a picture from src/engine/render/pixel-icons.js
+icon        = collar               # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

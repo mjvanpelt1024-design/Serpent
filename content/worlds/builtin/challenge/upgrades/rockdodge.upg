@@ -9,7 +9,7 @@ name        = Rock Dodger
 description = A chance each rock never shows up in Challenge. The best rock is an absent rock.
 slot        = crown                # trunk, left, right, crown or nightmare
 color       = #d0d0d0
-icon        = rock                 # a picture from src/engine/render/pixel-icons.js
+icon        = rock                 # a picture in textures/icons/ (textures/index.json)
 badge       = x                    # corner mark: up, plus, x or star
 
 # What each tier is worth

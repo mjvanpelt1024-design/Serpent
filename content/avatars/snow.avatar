@@ -1,5 +1,5 @@
 # Avatar: Frost
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Frost
-picture    = snowflake            # a picture from src/engine/render/pixel-icons.js
+picture    = snowflake            # a picture in textures/icons/ (textures/index.json)
 background = #3a82e0

@@ -9,7 +9,7 @@ name        = Treasure Chest
 description = Big XP is worth more in Treasure. The vault rewards those who keep looking.
 slot        = right                # trunk, left, right, crown or nightmare
 color       = #ffcf4d
-icon        = chest                # a picture from src/engine/render/pixel-icons.js
+icon        = chest                # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

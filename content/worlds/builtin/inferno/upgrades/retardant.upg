@@ -9,7 +9,7 @@ name        = Fire Retardant
 description = Fire's speed boost wears off sooner. Some excitement is best kept brief.
 slot        = right                # trunk, left, right, crown or nightmare
 color       = #ff7a3a
-icon        = extinguisher         # a picture from src/engine/render/pixel-icons.js
+icon        = extinguisher         # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

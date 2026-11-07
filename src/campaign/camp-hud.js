@@ -108,38 +108,9 @@ function pips(have, max) {
 }
 const setHtml = (el, html) => { if (el._h !== html) { el.innerHTML = html; el._h = html; } };
 
-/* ----- A boss's face for its wanted poster: a pixel snake head in its colors ----- */
-const BOSS_FACE = [
-  "....kkkkkk......",
-  "...kbbbbbbkk....",
-  "..kbBbbbbbbbk...",
-  ".kbBbbbbbbbbbk..",
-  ".kbbbbbbkkbbbbk.",
-  "kbbbbbbkeekbbbbk",
-  "kbbbbbbkekkbbbbk",
-  "kbbbbbbbkkbbbbbk",
-  "kbbbbbbbbbbbbbnk",
-  "kBbbbbbbbbbbbbbk",
-  ".kBbbbbbbbbbbkk.",
-  ".kyyyyyyyyyyk...",
-  "..kyywyywyyk....",
-  "...kyyyyyyk.....",
-  "....kkkkkk......",
-  "................"
-];
-const bossFaceCache = {};
-function bossFaceUrl(isl) {
-  if (bossFaceCache[isl]) return bossFaceCache[isl];
-  const B = CAMP.islandById[isl].boss;
-  const pal = { k: "#1a1410", b: B.body, B: campShade(B.body, -0.3), y: B.belly, e: B.eye, w: "#f4f0e8", n: "#0a0608" };
-  const c = document.createElement("canvas");
-  c.width = c.height = 16;
-  const g = c.getContext("2d");
-  BOSS_FACE.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== ".") { g.fillStyle = pal[ch]; g.fillRect(x, y, 1, 1); } }));
-  // a scar for the bad ones
-  g.fillStyle = campShade(B.body, 0.35); g.fillRect(4, 3, 1, 1); g.fillRect(5, 4, 1, 1); g.fillRect(6, 5, 1, 1);
-  return (bossFaceCache[isl] = c.toDataURL());
-}
+/* ----- A boss's face for its wanted poster: a pixel snake head in its colors, with a scar -----
+   16 x 16 PNGs in textures/bosses/<island>.png */
+const bossFaceUrl = isl => texUrl("boss:" + isl);
 
 /* Your quest: the challenger's three trials, wherever one is on. `here` marks the trial being played. */
 function campActiveQuest() {

@@ -574,8 +574,7 @@ const mapBannerEl = document.getElementById("map-banner");
 
 const LEAF_SVG = '<svg class="leaf" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c4 3 7 7 7 11a7 7 0 0 1-6 6.9V22h-2v-2.1A7 7 0 0 1 5 13c0-4 3-8 7-11z"/></svg>';
 const CROWN_SVG = '<svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v3H3zM3 7l5 4 4-7 4 7 5-4-2 10H5z"/></svg>';
-/* What each of an island's side stops is called, and its picture */
-const NODE_ICON = { home: "tree", merchant: "bag", challenger: "flag", banker: "coins", bridge: "gate" };
+/* What each of an island's side stops is called (its picture is pin:<stop>, textures/icons/map-pins/) */
 const NODE_LABEL = { home: "Home", merchant: "Merchant", challenger: "Challenger", banker: "Bank", bridge: "Bridge" };
 const NODE_PIN_LIFT = { home: 22, merchant: 24, challenger: 28, banker: 32, bridge: 24 };
 const nodeKey = (key, id) => (typeof id === "number" ? `lv-${key}-${id}` : `np-${key}-${id}`);
@@ -622,7 +621,7 @@ function renderModes(justUnlocked) {
         const npc = NPC_KINDS.includes(id) ? CAMP.islandById[key].npcs[id] : null;
         const name = npc ? npc.name : id === "home" ? "Home base" : "The bridge";
         add(`prop node ${id} ${ns}`, nodeKey(key, id), key, p.x, p.y - NODE_PIN_LIFT[id],
-          `<img class="pi" src="${iconUrl(NODE_ICON[id], 2)}" alt="">${ns === "locked" ? `<span class="nlock">${LOCK_SVG}</span>` : ""}<span class="lbl">${NODE_LABEL[id]}</span>`,
+          `<img class="pi" src="${iconUrl("pin:" + id, 2)}" alt="">${ns === "locked" ? `<span class="nlock">${LOCK_SVG}</span>` : ""}<span class="lbl">${NODE_LABEL[id]}</span>`,
           `${name}${ns === "locked" ? ", locked" : ""}`, pin => (id === "home" ? openNode(key, "home") : openLevelPop(key, id, false, pin)));
       }
     });

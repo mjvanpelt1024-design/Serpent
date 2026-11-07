@@ -8,7 +8,7 @@
 name        = Snow Chains
 description = Another chance a turn bites on ice, everywhere. Mostly useful in the Whiteout.
 slot        = nightmare              # trunk, left, right, crown or nightmare
-icon        = anchor                 # a picture from src/engine/render/pixel-icons.js
+icon        = anchor                 # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

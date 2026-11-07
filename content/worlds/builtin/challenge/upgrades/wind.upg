@@ -9,7 +9,7 @@ name        = Second Wind
 description = Challenge moves a little slower. A breath, between disasters.
 slot        = right                # trunk, left, right, crown or nightmare
 color       = #ffb870
-icon        = wind                 # a picture from src/engine/render/pixel-icons.js
+icon        = wind                 # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

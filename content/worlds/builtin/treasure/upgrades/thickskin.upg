@@ -8,7 +8,7 @@
 name        = Thick Skin
 description = A chance a mega pop costs only a heart instead of ending your run. I have never managed to grow a thick skin. I envy you.
 slot        = crown                # trunk, left, right, crown or nightmare
-icon        = shield               # a picture from src/engine/render/pixel-icons.js
+icon        = shield               # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

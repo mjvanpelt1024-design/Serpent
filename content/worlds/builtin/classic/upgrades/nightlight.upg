@@ -8,7 +8,7 @@
 name        = Night Light
 description = See further in the dark during Blackout. A small light, which is often all anyone gets.
 slot        = nightmare            # trunk, left, right, crown or nightmare
-icon        = lamp                 # a picture from src/engine/render/pixel-icons.js
+icon        = lamp                 # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

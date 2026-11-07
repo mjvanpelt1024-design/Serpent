@@ -9,7 +9,7 @@ name        = Windbreak
 description = A chance a gust passes you by, everywhere.
 slot        = left                   # trunk, left, right, crown or nightmare
 color       = #8aaaba
-icon        = flag                   # a picture from src/engine/render/pixel-icons.js
+icon        = flag                   # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

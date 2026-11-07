@@ -9,7 +9,7 @@ name        = Crumb Collector
 description = XP crumbs are worth more in Easy. Crumbs add up. So do regrets.
 slot        = crown                # trunk, left, right, crown or nightmare
 color       = #c8e03a
-icon        = crumbs               # a picture from src/engine/render/pixel-icons.js
+icon        = crumbs               # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

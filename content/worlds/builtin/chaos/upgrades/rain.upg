@@ -8,7 +8,7 @@
 name        = Apple Rain
 description = More apples on the board in Chaos, as if there were not enough already.
 slot        = left                 # trunk, left, right, crown or nightmare
-icon        = cloud                # a picture from src/engine/render/pixel-icons.js
+icon        = cloud                # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 10                   # before the first tier

@@ -1,6 +1,6 @@
 # Avatar: Glow
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Glow
-picture    = orb                  # a picture from src/engine/render/pixel-icons.js
+picture    = orb                  # a picture in textures/icons/ (textures/index.json)
 background = #3a6ad0
 free       = true                 # every save owns it

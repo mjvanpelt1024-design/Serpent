@@ -9,7 +9,7 @@ name        = Rope
 description = A chance to climb back out of a sinkhole, everywhere.
 slot        = left                   # trunk, left, right, crown or nightmare
 color       = #5a1a1a
-icon        = steps                  # a picture from src/engine/render/pixel-icons.js
+icon        = steps                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

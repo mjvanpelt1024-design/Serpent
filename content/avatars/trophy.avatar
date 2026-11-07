@@ -1,5 +1,5 @@
 # Avatar: Trophy
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Trophy
-picture    = trophy               # a picture from src/engine/render/pixel-icons.js
+picture    = trophy               # a picture in textures/icons/ (textures/index.json)
 background = #3a2a08

@@ -9,7 +9,7 @@ name        = Maze Runner
 description = XP orbs turn up more often in the Labyrinth, like breadcrumbs left by someone kind.
 slot        = crown                # trunk, left, right, crown or nightmare
 color       = #b36bff
-icon        = shoe                 # a picture from src/engine/render/pixel-icons.js
+icon        = shoe                 # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

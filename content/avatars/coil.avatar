@@ -1,6 +1,6 @@
 # Avatar: Coil
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Coil
-picture    = tail                 # a picture from src/engine/render/pixel-icons.js
+picture    = tail                 # a picture in textures/icons/ (textures/index.json)
 background = #1d2a1f
 free       = true                 # every save owns it

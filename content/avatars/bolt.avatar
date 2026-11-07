@@ -1,5 +1,5 @@
 # Avatar: Zap
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Zap
-picture    = bolt                 # a picture from src/engine/render/pixel-icons.js
+picture    = bolt                 # a picture in textures/icons/ (textures/index.json)
 background = #5a3a1e

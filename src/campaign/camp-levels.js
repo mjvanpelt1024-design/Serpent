@@ -485,53 +485,27 @@ function drawCampObjs(view, ts) {
   }
 }
 
-/* The goal pieces are the same 12 x 12 pictures as every icon in the game, drawn a square big */
-Object.assign(SPRITES, {
-  key: ["............", "..kkkk......", ".kyyyyk.....", "kyykkyyk....", "kyk..kyk....", "kyykkyykkkkk", ".kyyyyyyyyyk", "..kkkkkykyyk", ".......kykyk", ".......kk.kk", "............", "............"],
-  plate: ["............", "............", "..kkkkkkkk..", ".kWWWWWWWWk.", "kWsssssssSSk", "kWsSSSSSsSSk", "kWsSssssSsSk", "kWsssssssSSk", "kSSSSSSSSSSk", ".kkkkkkkkkk.", "............", "............"],
-  plateon: ["............", "............", "............", "..kkkkkkkk..", ".klllllllllk", "kllgggggglGk", "klgGGGGGglGk", "klggggggglGk", "kGGGGGGGGGGk", ".kkkkkkkkkk.", "............", "............"],
-  seal: ["...kkkkkk...", "..kPPPPPPk..", ".kPVpppVVPk.", "kPVpwwwpVVPk", "kPpwPPPwpVPk", "kPpwPwPwpVPk", "kPpwPPPwpVPk", "kPVpwwwpVVPk", ".kPVpppVVPk.", "..kPPPPPPk..", "...kkkkkk...", "............"],
-  grimoire: ["............", ".kkkkkkkkk..", "kmmmmmmmmyk.", "kmyyyyyymyk.", "kmymmmmymyk.", "kmymPPmymyk.", "kmymPPmymyk.", "kmymmmmymyk.", "kmyyyyyymyk.", "kmmmmmmmmyk.", "kkkkkkkkkWk.", ".kkkkkkkkk.."],
-  ladle: ["........kkk.", ".......kyyyk", "......kyywyk", "......kyyyyk", ".....kkkyyk.", "....kyk.kk..", "...kyk......", "..kyk.......", ".kyk........", "kyk.........", "kk..........", "............"],
-  pearl: ["............", "...kkkkkk...", "..kqqqqqqk..", ".kqhhhhhhqk.", ".kqh.kk.hqk.", ".kqhkwWkhqk.", ".kqhkWWkhqk.", "..kqhkkhqk..", "kkkqqqqqqkkk", "khqqhhhhqqhk", ".kkkkkkkkkk.", "............"],
-  raccoon: ["............", ".kk....kk...", "kSSk..kSSk..", "kSWSkkSWSk..", ".kSSSSSSk...", "kSkkSSkkSk..", "kSkwkkwkSk.k", ".kSSkkSSk.kS", "..kSSSSSkkSk", ".kSSSSSSSSk.", ".kSk.kk.kSk.", "..k.....k..."],
-  ring: ["............", "....kkkk....", "...kcwcck...", "...kccck....", "..kkkkkkk...", ".kyyyyyyyk..", "kyyk...kyyk.", "kyk.....kyk.", "kyk.....kyk.", ".kyk...kyk..", "..kkyyyyk...", "....kkkk...."]
-});
-const objSpriteCache = {};
-function objSprite(name, swap) {
-  const k = name + JSON.stringify(swap || {});
-  if (objSpriteCache[k]) return objSpriteCache[k];
-  const c = document.createElement("canvas");
-  c.width = c.height = 12;
-  const g = c.getContext("2d");
-  (SPRITES[name] || SPRITES.orb).forEach((row, y) => [...row].forEach((ch, x) => {
-    if (ch === "." || ch === " ") return;
-    const col = ICON_PAL[(swap && swap[ch]) || ch];
-    if (!col) return;
-    g.fillStyle = col;
-    g.fillRect(x, y, 1, 1);
-  }));
-  return (objSpriteCache[k] = c);
-}
-const RELIC_SPRITE = { crown: "crown", grimoire: "grimoire", ladle: "ladle", pearl: "pearl", eye: "eye" };
+/* The goal pieces are the same 12 x 12 pictures as every icon in the game, drawn a square big:
+   PNGs in textures/board/ (board:<piece> in textures/index.json), the relics in textures/board/relics/ */
+const BOARD_RELICS = ["crown", "grimoire", "ladle", "pearl", "eye"];
 
 function drawCampObj(g, o, x, y, w, ts) {
   const bob = Math.round(Math.sin(ts / 260 + x) * w * 0.06);
-  const put = (name, glow, swap, dy = bob, s = 1) => {
+  const put = (id, glow, dy = bob, s = 1, fallback) => {
     g.save();
     g.imageSmoothingEnabled = false;
     if (glow) { g.shadowColor = glow; g.shadowBlur = w * 0.7; }
     const size = Math.round(w * s), off = Math.round((w - size) / 2);
-    g.drawImage(objSprite(name, swap), x + off, y + off + dy, size, size);
+    g.drawImage(texCanvas(id, fallback), x + off, y + off + dy, size, size);
     g.restore();
   };
-  if (o.kind === "key") put("key", "#ffd23f");
+  if (o.kind === "key") put("board:key", "#ffd23f");
   else if (o.kind === "door") {
     const p = 0.5 + 0.5 * Math.sin(ts / 200);
     g.save(); g.fillStyle = `rgba(255, 233, 160, ${0.18 + 0.2 * p})`; g.fillRect(x - w * 0.2, y - w * 0.2, w * 1.4, w * 1.4); g.restore();
-    put("gate", "#ffd23f", null, 0, 1.15);
+    put("board:door", "#ffd23f", 0, 1.15);
   } else if (o.kind === "plate") {
-    put(o.on ? "plateon" : "plate", o.on ? "#3ddc84" : null, null, 0);
+    put(o.on ? "board:plate-on" : "board:plate", o.on ? "#3ddc84" : null, 0);
     if (campGoal && campGoal.ordered) {
       g.fillStyle = o.on ? "#0a3a1a" : "#1a1e26";
       g.font = `700 ${Math.round(w * 0.42)}px ${GAME_FONT}`;
@@ -541,19 +515,18 @@ function drawCampObj(g, o, x, y, w, ts) {
   } else if (o.kind === "seal") {
     const p = 0.5 + 0.5 * Math.sin(ts / 160);
     g.save(); g.fillStyle = `rgba(179, 107, 255, ${0.2 + 0.25 * p})`; g.beginPath(); g.arc(x + w / 2, y + w / 2, w * (0.8 + 0.2 * p), 0, Math.PI * 2); g.fill(); g.restore();
-    put("seal", "#b36bff", null, 0, 1.2);
-  } else if (o.kind === "relic") put(RELIC_SPRITE[o.item] || "crown", "#ffd23f", null, bob, 1.1);
-  else if (o.kind === "shard") put("bag", "#ffe08a");
+    put("board:seal", "#b36bff", 0, 1.2);
+  } else if (o.kind === "relic") put("relic:" + (BOARD_RELICS.includes(o.item) ? o.item : "crown"), "#ffd23f", bob, 1.1);
+  else if (o.kind === "shard") put("board:shard", "#ffe08a");
   else if (o.kind === "thief") {
     const hop = o.hopAt && ts - o.hopAt < 160 ? -Math.round(Math.sin((ts - o.hopAt) / 160 * Math.PI) * w * 0.2) : 0;
-    put("raccoon", null, null, hop);
+    put("board:thief", null, hop);
     // the loot it stole, glinting over its head
     if (Math.sin(ts / 150) > 0) { g.fillStyle = "#ffd23f"; g.fillRect(x + w * 0.4, y - w * 0.12 + hop, w * 0.2, w * 0.2); }
   } else if (o.kind === "loot") {
     g.save();
     g.globalAlpha = o.until ? Math.max(0.3, Math.min(1, (o.until - ts) / 2500)) : 1;
-    const spec = o.recipe ? ["scroll"] : ICON_FOR["ci:" + o.id] || ["gift"];
-    put(spec[0], "#ffffff", spec[2], bob, 0.9);
+    put(o.recipe ? "scroll" : "ci:" + o.id, "#ffffff", bob, 0.9, "gift");
     g.restore();
   }
 }

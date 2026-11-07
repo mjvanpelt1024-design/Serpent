@@ -9,7 +9,7 @@ name        = Beeswax
 description = More passive points in the Hive.
 slot        = right                  # trunk, left, right, crown or nightmare
 color       = #e0a820
-icon        = lamp                   # a picture from src/engine/render/pixel-icons.js
+icon        = lamp                   # a picture in textures/icons/ (textures/index.json)
 effect      = passivePoints          # applePoints, passivePoints or orbChance on this island; otherwise game code reads the id
 
 # What each tier is worth

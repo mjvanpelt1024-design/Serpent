@@ -8,7 +8,7 @@
 name        = Compass Needle
 description = A chance a wild portal still lands on screen in Sticky Maze. Lost, but not too lost.
 slot        = nightmare            # trunk, left, right, crown or nightmare
-icon        = pin                  # a picture from src/engine/render/pixel-icons.js
+icon        = pin                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

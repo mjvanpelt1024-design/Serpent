@@ -9,7 +9,7 @@ name        = Sunny Day
 description = More passive points in Easy, while the weather holds.
 slot        = left                 # trunk, left, right, crown or nightmare
 color       = #ffe066
-icon        = sun                  # a picture from src/engine/render/pixel-icons.js
+icon        = sun                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 1                    # before the first tier

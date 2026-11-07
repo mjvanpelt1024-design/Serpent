@@ -9,7 +9,7 @@ name        = Lantern
 description = Ghosts drift more slowly, everywhere. They don't care for the light.
 slot        = left                   # trunk, left, right, crown or nightmare
 color       = #3a4a3a
-icon        = lamp                   # a picture from src/engine/render/pixel-icons.js
+icon        = lamp                   # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

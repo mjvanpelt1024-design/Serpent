@@ -1,7 +1,8 @@
 /* =========================================================
    src/campaign/camp-foes.js
    Enemies, hazards and power-ups (build 51), on the old entity engine
-   (src/game/flow/entities.js), drawn as 12 x 12 pixel sprites.
+   (src/game/flow/entities.js), drawn as 12 x 12 pixel sprites
+   (textures/foes/, textures/hazards/, textures/powerups/).
 
    Enemies come in two kinds of trouble: a THIEF steals a set number of
    points when it touches your body (never half your score any more),
@@ -29,32 +30,13 @@
    ========================================================= */
 "use strict";
 
-/* ----- Sprites ----- */
-Object.assign(SPRITES, {
-  imp: ["..k......k..", ".kPk....kPk.", ".kPPkkkkPPk.", "..kPPPPPPk..", "..kPwkkwPk..", "..kPPPPPPk..", "...kPrrPk...", "..kkPPPPkk..", ".kPkPPPPkPk.", "..k.kPPk.k..", "....kVVk....", ".....kk....."],
-  mole: ["............", "...kkkkkk...", "..kSSSSSSk..", ".kSSwkkwSSk.", ".kSSSppSSSk.", ".kSSSSSSSSk.", "kpkSSSSSSkpk", "kppkSSSSkppk", ".kkkkkkkkkk.", "knNnNnNnNnNk", "kNnNnNnNnNnk", ".kkkkkkkkkk."],
-  wisp: [".....oo.....", "....oyyo....", "...oyyyyo...", "..oyywwyyo..", "..oywwwwyo..", ".oyywkkwyyo.", ".oyyywwyyyo.", "..oyyyyyyo..", "...ooyyoo...", "....o..o....", "...o....o...", "............"],
-  ember: ["............", ".....o......", "....oyo.....", "....oyo..o..", "...oyyyo.o..", "...oywyo....", "..oyywyyo...", "..rooyyoor..", "..kRrrrrRk..", "...kkkkkk...", "............", "............"],
-  acid: ["............", "............", "...gg..g....", "..glgg.lg...", ".gllllggllg.", "gllwllllllgG", "glllllllllGG", ".gGllllllGG.", "..gGGGGGGG..", "............", "............", "............"],
-  frost: [".....w......", "..w..c..w...", "...wcccw....", "..cwcwcwc...", "wcccwwwcccw.", "..cwcwcwc...", "...wcccw....", "..w..c..w...", ".....w......", "..c.....c...", "............", "............"],
-  lava: ["............", "..kkkkkkkk..", ".kroyoorork.", "kroyywooyrRk", "kroyyyooyorR", "krrooyyoorRk", "kRrrooorrRRk", ".kRRrrrrRRk.", "..kkkkkkkk..", "............", "............", "............"],
-  trap: ["............", "............", "k.k.k..k.k.k", "kWkWk..kWkWk", "ksssskksssk.", "kssSSSSSSssk", ".kkkkkkkkkk.", "....kssk....", "...kSSSSk...", "....kkkk....", "............", "............"],
-  mitten: ["............", "....kkkkk...", "...kcccccks.", "..kccwcccck.", ".kkcccccccck", "kcck.kccccck", "kccckccccck.", ".kcccccccck.", "..kWWWWWWk..", "..kWsWsWsk..", "...kkkkkk...", "............"],
-  rival: ["....kkkk....", "...kGGGGk...", "..kGgggGGk..", "..kgwkgwgk..", "..kggggggk..", "...kgrrgk...", "....kggk....", "...kgGGgk...", "..kgGggGgk..", "..kgggggGk..", "...kGGGGk...", "....kkkk...."]
-});
-const FOE_SPRITE = {
-  bee: ["bee"], wasp: ["bee", null, { y: "o" }], yellowjacket: ["bee", null, { y: "y", k: "k", c: "w" }],
-  imp: ["imp"], mole: ["mole"], crab: ["crab"], wisp: ["wisp"],
-  ember: ["ember"], acid: ["acid"], frost: ["frost"], lava: ["lava"], trap: ["trap"],
-  honeypot: ["potion", null, { g: "y", G: "Y" }], waterskin: ["bottle", null, { t: "c", n: "b", S: "B" }], mitten: ["mitten"],
-  rod: ["bolt"], rope: ["spiral", null, { P: "n" }], antidote: ["potion"], net: ["web"]
-};
+/* ----- Sprites: 12 x 12 PNGs, foe:<type> in textures/index.json -----
+   enemies in textures/foes/, hazards in textures/hazards/, power-ups in textures/powerups/ */
 const foeSprite = (type, w, g, x, y, alpha = 1) => {
-  const spec = FOE_SPRITE[type];
-  if (!spec) return;
+  if (!TextureLoader.has("foe:" + type)) return;
   g.imageSmoothingEnabled = false;
   if (alpha !== 1) g.globalAlpha *= alpha;
-  g.drawImage(objSprite(spec[0], spec[2]), x, y, w, w);
+  g.drawImage(texCanvas("foe:" + type), x, y, w, w);
 };
 
 /* What a hit is called on the result card */

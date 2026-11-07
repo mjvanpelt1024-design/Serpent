@@ -26,7 +26,7 @@ This file is the design and the map of where things live. The numbers themselves
 | Every level's challenge (its `bonus`) | `camp-bonus.js` |
 | Runes: what each stat does, their words and their four conditions | `camp-runes.js` |
 | Home base, the Satchel, Tailor and Trophy Hall | `camp-home.js`, `camp-collection.js` |
-| Item and goal pictures (12 x 12, like every icon) | `camp-art.js` (goal pieces: `camp-levels.js`) |
+| Item and goal pictures (12 x 12 PNGs, like every icon) | `textures/` (see `textures/README.md`); drawn by `src/engine/render/pixel-icons.js` |
 | The pixel frames on every panel, button and window | `src/art/ui-frames.js`, `styles/16-retro-fantasy.css` |
 | Scrolls, the cursor, coins and their card, the title screen's world | `src/art/ui-scroll.js`, `coins.js`, `title-scene.js`, `styles/17-hub-nodes.css` |
 | One save, no profiles, settings rows | `camp-menu.js` |
@@ -195,7 +195,7 @@ what this run's points paid, what you found, what just opened.
 then the gate that appears), `buttons` (press N plates, optionally `"ordered": true`, then touch the seal
 that appears in the middle of the endless mirrored field), `relic` (one hidden thing: crown, grimoire,
 ladle, pearl, eye), `shards` (gather N), `thief` (a raccoon that runs from you; corner it N times),
-`boss`. The goal pieces are 12 x 12 pixel sprites like every icon in the game.
+`boss`. The goal pieces are 12 x 12 pictures like every icon in the game (`textures/board/`).
 
 ### Bosses
 
@@ -330,6 +330,21 @@ your quest are pinned up in the corner.
 Since build 51 the board wears your theme, with your numbers, the wanted posters and island stickers
 around it (below). The drifting world of build 49 (`title-scene.js`) is still in the code, switched off.
 
+## Pictures
+
+Every small picture is a PNG in `textures/`, one pixel per game pixel (how to repaint one, and every
+folder: `textures/README.md`). `textures/index.json` maps the ids the game asks for to files:
+`ci:<item>` (items, junk, trinkets and parts), `ci:<rune>:<condition>` (eight per rune),
+`cu:<icon>` (upgrades), `foe:<type>`, `board:<piece>`, `relic:<item>`, `heart:<slot>`, `boss:<island>`,
+`pin:<stop>`, `sticker:<island>`, `cursor:<name>`, and plain names for pictures content files ask for
+(`icon =`, `picture =`). `src/engine/content/textures.js` loads them all before any script runs (a missing
+one is a pink checkerboard and a console warning); `src/engine/render/pixel-icons.js` draws them flat on
+the board and in the painted scenes (`texCanvas`, `texUrl`) and lit from the top left in menus
+(`iconUrl`). A new item needs its PNG and its line in the index, nothing in the code. Still drawn by code
+for now: the painted scenes (home base, shops, workshops, picture inventories, shopkeepers, story art),
+the pixel frames, coins, the map's islands, theme backdrops, snake skins, familiars on the board and the
+old engine's hazards.
+
 ## Build 51
 
 ### Gear, spells and the rest
@@ -359,7 +374,7 @@ blurb over the merchant's stall and a note on the map, and over the workshop sig
 
 ### Foes
 
-New entities in `ENTITY_TYPES` (camp-foes.js), all 12 x 12 sprites. Each island swaps or adds its own
+New entities in `ENTITY_TYPES` (camp-foes.js), all 12 x 12 pictures (`textures/foes/`, `hazards/`, `powerups/`). Each island swaps or adds its own
 (`ISLAND_FOES`): bees for wasps on the Keep, imps and acid on the Spire, embers for fire and moles in the
 Hollow, crabs and frost on the Reef, yellow jackets, wisps and lava on the Crown. Thieves steal
 `steal x (1 + 0.35 per island above the first)` points from your body (`campSteal`; the old share-of-score

@@ -1,5 +1,5 @@
 # Avatar: Sunny
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Sunny
-picture    = sun                  # a picture from src/engine/render/pixel-icons.js
+picture    = sun                  # a picture in textures/icons/ (textures/index.json)
 background = #ff8c1a

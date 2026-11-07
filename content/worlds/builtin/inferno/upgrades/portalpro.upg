@@ -9,7 +9,7 @@ name        = Portal Pro
 description = Points every time you hop through a portal in Inferno. The purple doors appreciate the business.
 slot        = crown                # trunk, left, right, crown or nightmare
 color       = #8f4dff
-icon        = portal               # a picture from src/engine/render/pixel-icons.js
+icon        = portal               # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

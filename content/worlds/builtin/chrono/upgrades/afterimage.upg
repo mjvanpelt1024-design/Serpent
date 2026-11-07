@@ -9,7 +9,7 @@ name        = Afterimage
 description = Points every second while an Echo is out, everywhere.
 slot        = crown                  # trunk, left, right, crown or nightmare
 color       = #9fe8ff
-icon        = eye                    # a picture from src/engine/render/pixel-icons.js
+icon        = eye                    # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

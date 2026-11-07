@@ -72,7 +72,7 @@ names it always did, so the content can change without touching the rules.
 | labyrinth `[generator]` | `src/game/world/labyrinth.js` | `MAZE` |
 | `*.upg` (islands and Great Tree) | `src/game/economy/upgrades.js` | `upgradeTracks` |
 | Great Tree `growsFrom`, `part`, `position` | `src/ui/trees.js` | `GLOBAL_GATES`, `GLOBAL_MAIN`, `GLOBAL_DREAMS`, `GLOBAL_TREE` |
-| `items/*.item` | `src/game/items/items.js`, `src/engine/render/pixel-icons.js`, `src/ui/trees.js` | `CONSUMABLES`, `ITEM_FRUIT`, `ITEM_COLOR`, `ITEM_ISLAND` |
+| `items/*.item` | `src/game/items/items.js`, `src/engine/render/pixel-icons.js` (`icon`, `badge`), `src/ui/trees.js` | `CONSUMABLES`, `ITEM_FRUIT`, `ITEM_COLOR`, `ITEM_ISLAND` |
 | `world.txt` `medal` | `src/game/items/items.js` | `MEDAL_COLORS` |
 | `skins/` | `src/game/cosmetics/skins.js` | `skins` |
 | `themes/` | `src/game/cosmetics/themes.js`, `src/engine/render/themes.js`, `src/ui/tailor.js` | `backdrops`, `THEME_STYLE`, `THEME_EMBLEM` |
@@ -123,7 +123,7 @@ and checked against a signed manifest at startup; the save goes through `SAVE_SC
 | Screens and the back button | `src/ui/navigation.js` |
 | Every button's wiring | `src/game/wiring.js` |
 | Keyboard | `src/engine/input/keyboard.js` |
-| Pixel icons (sprites) | `src/engine/render/pixel-icons.js` |
+| Pixel icons (sprites): PNGs in `textures/`, loaded before the scripts by `src/engine/content/textures.js`, drawn flat (`texCanvas`, `texUrl`) or lit for menus (`iconUrl`) | `src/engine/render/pixel-icons.js`, `textures/README.md` |
 | The menus' pixel frames (panels, windows, buttons, tabs, the parchment), drawn from the theme's colors | `src/art/ui-frames.js`, used by `styles/16-retro-fantasy.css` |
 | The fonts and the Font setting | `styles/00-fonts.css`, `FONT_OPTIONS` in `src/ui/settings.js` (canvases use `GAME_FONT`) |
 | Terminal commands | `src/dev/terminal/cmd-*.js` |

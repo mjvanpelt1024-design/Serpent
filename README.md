@@ -53,13 +53,20 @@ SnakeGame/
 │   ├── campaign/            the campaign: its save, levels, bosses, items, shops, home base, HUD
 │   ├── game/                rules: islands, economy, saves, story, runs, items, sandbox
 │   ├── ui/                  screens: map, trees, Tailor, profiles, settings, tour...
-│   ├── art/                 pixel art in code: theme patterns, Flair, story book scenes
+│   ├── art/                 pixel art still in code: theme patterns, Flair, story book scenes, frames
 │   └── dev/                 the cheat engine and the hidden terminal
+│
+├── textures/            EVERY SMALL PICTURE, as a PNG you can repaint (textures/README.md)
+│   ├── index.json           which file each picture is: move or rename a file, change one line
+│   ├── items/  junk/  crafted/  upgrades/   the campaign's things, runes in all eight conditions
+│   ├── foes/  hazards/  powerups/  board/   what's on the board
+│   └── hearts/  bosses/  icons/             the HUD, wanted posters, map pins, cursors, avatars...
 │
 ├── styles/              CSS, in the order index.html links them
 ├── assets/              the fonts (with their licenses) and icons
 ├── mods/                the example mod (copied to Documents\SnakeGame\mods on first run)
-├── tools/               check-campaign.py, sign-content.py, check-content.py, bundle-content.py, serve.py
+├── tools/               check-campaign.py, sign-content.py, check-content.py, bundle-content.py, serve.py,
+│                        textures/textures.mjs (check or export the pictures)
 ├── launcher/            the C++ launcher: Visual Studio solution and source
 └── docs/                the guides below
 ```
@@ -81,6 +88,7 @@ SnakeGame/
 | Change an island's speed, rules, Nightmare or map spot | `content/worlds/builtin/<island>/world.txt` |
 | Rename levels | `content/worlds/builtin/<island>/levels.dat` |
 | Make the Labyrinth repeat the same maze | `content/worlds/builtin/labyrinth/seed.txt` |
+| Repaint an icon, a foe, a heart or a boss face | its PNG in `textures/` (see `textures/README.md`), then F5 |
 | Add a skin, theme, Flair or avatar | copy a file in its folder, rename it, add the name to that folder's `_index.dat` |
 | Add my own music | drop `menu.ogg` (etc.) in `content/music/`, see `music.dat` |
 | Rewrite a story page | `content/story/<page>.story` |

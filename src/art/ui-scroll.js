@@ -33,16 +33,12 @@ function fxScroll() {
   return c;
 }
 
-/* The cursors: 12 x 12, shown at twice the size */
-const CURSOR_ROWS = {
-  arrow: ["k...........", "kk..........", "kyk.........", "kwyk........", "kwyyk.......", "kwyyyk......", "kwyyyyk.....", "kwyyykkk....", "kykyyk......", "kk.kyyk.....", "k...kyk.....", ".....kk....."],
-  hand: ["....kk......", "...kwtk.....", "...ktnk.....", "...ktnkkk...", "...ktnktnkk.", ".kkktnktnktk", "ktnktnnnnntk", "ktnnnnnnnntk", ".ktnnnnnnnk.", "..ktnnnnnnk.", "...ktnnnnk..", "...kkkkkkk.."]
-};
-const CURSOR_PAL = { k: "#0b0907", y: "#f2c45a", w: "#fff0b0", t: "#f6e0b8", n: "#c89a5a" };
+/* The cursors: 12 x 12 (textures/icons/cursors/), shown at twice the size */
 function cursorUrl(name) {
   const S = 2;
   const [c, g] = fxCanvasOf(12 * S, 12 * S);
-  CURSOR_ROWS[name].forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== ".") { g.fillStyle = CURSOR_PAL[ch]; g.fillRect(x * S, y * S, S, S); } }));
+  g.imageSmoothingEnabled = false;
+  g.drawImage(texCanvas("cursor:" + name), 0, 0, 12 * S, 12 * S);
   return `url("${c.toDataURL()}")`;
 }
 

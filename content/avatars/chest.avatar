@@ -1,5 +1,5 @@
 # Avatar: Loot
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Loot
-picture    = chest                # a picture from src/engine/render/pixel-icons.js
+picture    = chest                # a picture in textures/icons/ (textures/index.json)
 background = #2f6a24

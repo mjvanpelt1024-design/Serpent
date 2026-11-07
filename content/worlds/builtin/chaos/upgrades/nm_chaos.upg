@@ -8,7 +8,7 @@
 name        = Sugar Crash
 description = Each apple speeds you up less in Sugar High. A gentler crash, eventually.
 slot        = nightmare            # trunk, left, right, crown or nightmare
-icon        = lollipop             # a picture from src/engine/render/pixel-icons.js
+icon        = lollipop             # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

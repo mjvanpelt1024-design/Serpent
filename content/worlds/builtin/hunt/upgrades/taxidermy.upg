@@ -9,7 +9,7 @@ name        = Taxidermy
 description = More points and XP for beating the Hunter, everywhere.
 slot        = crown                  # trunk, left, right, crown or nightmare
 color       = #8aa050
-icon        = medal                  # a picture from src/engine/render/pixel-icons.js
+icon        = medal                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

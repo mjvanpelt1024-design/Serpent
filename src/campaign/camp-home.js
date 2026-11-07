@@ -307,7 +307,7 @@ function drawHomeRack(g, x, y, t) {
   R(x - 6, y - 29, 1, 27, "#9aa3ad"); R(x - 7, y - 31, 3, 3, "#c8ced6");
   R(x + 5, y - 26, 1, 22, "#d8dde6"); R(x + 3, y - 8, 5, 1, "#c08a10");
   const it = campEquipped("gear");
-  if (it) { const spec = ICON_FOR["ci:" + it.id] || ["shield"]; g.drawImage(objSprite(spec[0], spec[2]), x - 5, y - 22, 10, 10); }
+  if (it) g.drawImage(texCanvas("ci:" + it.id, "ci:shield"), x - 5, y - 22, 10, 10);
   else { R(x - 4, y - 21, 8, 9, "#8a6a4a"); R(x - 3, y - 20, 6, 7, "#a8845a"); }
   if (Math.sin(t * 1.7) > 0.93) R(x + 5, y - 25, 1, 1, "#ffffff");
 }
@@ -422,7 +422,7 @@ function drawHomeSatchel(g, x, y, t) {
   R(x - 1, y - 14, 1, 6, "#5a3a1e"); R(x + 13, y - 14, 1, 6, "#5a3a1e"); R(x, y - 15, 13, 1, "#5a3a1e");
   if (full) {
     const it = camp.satchel.slice(-2);
-    it.forEach((e, i) => { const spec = ICON_FOR["ci:" + e.id] || ["gift"]; g.drawImage(objSprite(spec[0], spec[2]), x + 1 + i * 6, y - 16, 7, 7); });
+    it.forEach((e, i) => { g.drawImage(texCanvas("ci:" + e.id, "gift"), x + 1 + i * 6, y - 16, 7, 7); });
   }
   R(x, y - 10, 13, 10, "#b07a42"); R(x, y - 10, 13, 1, "#d09a5a"); R(x, y - 10, 1, 10, "#c88a50"); R(x + 12, y - 10, 1, 10, "#7a5232");
   R(x, y - 10, 13, 4, "#9a6a3a"); R(x, y - 7, 13, 1, "#5a3a1e");

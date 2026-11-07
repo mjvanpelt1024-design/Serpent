@@ -9,7 +9,7 @@ name        = Easy Breezy
 description = XP orbs turn up more often in Easy, like weeds, but kinder.
 slot        = right                # trunk, left, right, crown or nightmare
 color       = #9be870
-icon        = orb                  # a picture from src/engine/render/pixel-icons.js
+icon        = orb                  # a picture in textures/icons/ (textures/index.json)
 badge       = plus                 # corner mark: up, plus, x or star
 
 # What each tier is worth

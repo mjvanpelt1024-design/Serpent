@@ -9,7 +9,7 @@ name        = Combo Meal
 description = Bonus points for apples eaten within 5 seconds of each other in Classic. Greed, but punctual.
 slot        = left                 # trunk, left, right, crown or nightmare
 color       = #8fe3ff
-icon        = burger               # a picture from src/engine/render/pixel-icons.js
+icon        = burger               # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

@@ -8,7 +8,7 @@
 name        = Netting
 description = A chance a sting misses, everywhere. Mostly useful in the Swarm.
 slot        = nightmare              # trunk, left, right, crown or nightmare
-icon        = web                    # a picture from src/engine/render/pixel-icons.js
+icon        = web                    # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

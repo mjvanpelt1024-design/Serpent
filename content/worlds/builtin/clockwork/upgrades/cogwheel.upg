@@ -9,7 +9,7 @@ name        = Cogwheel
 description = More points from apples in the Clockwork Citadel.
 slot        = trunk                  # trunk, left, right, crown or nightmare
 color       = #d8b870
-icon        = compass                # a picture from src/engine/render/pixel-icons.js
+icon        = compass                # a picture in textures/icons/ (textures/index.json)
 effect      = applePoints            # applePoints, passivePoints or orbChance on this island; otherwise game code reads the id
 
 # What each tier is worth

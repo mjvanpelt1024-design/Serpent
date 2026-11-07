@@ -1,6 +1,7 @@
 /* =========================================================
    src/engine/boot.js
-   Starts the game: reads content, then loads the scripts listed in
+   Starts the game: reads content, then the pictures in textures/
+   (src/engine/content/textures.js), then loads the scripts listed in
    src/load-order.dat one after another, in that order.
 
    If something goes wrong (a missing file, a typo in a content file,
@@ -61,6 +62,14 @@
     console.groupEnd();
   }
 
+  // every picture, before anything draws: a missing one is a checkerboard and a warning, never a stop
+  line("Loading pictures");
+  try {
+    window.TEXTURES = await TextureLoader.load();
+  } catch (e) {
+    console.error("Textures couldn't be loaded:", e);
+  }
+
   line("Loading scripts");
   const order = Formats.list(await ContentLoader.read("src/load-order.dat") || "");
   for (const path of order) {
@@ -75,7 +84,7 @@
     if (problems.length) { fail("The game couldn't start", problems); return; }
   }
   window.BOOTED = true;
-  console.info(`%cSnake ${content.version}%c  ${content.filesRead} content files (${content.source})` +
+  console.info(`%cSnake ${content.version}%c  ${content.filesRead} content files (${content.source}), ${window.TEXTURES ? window.TEXTURES.files : 0} pictures` +
     (content.mods.length ? `, mods: ${content.mods.map(m => m.name).join(", ")}` : ""), "color:#3ddc3d;font-weight:bold", "color:inherit");
   panel.remove();
 })();

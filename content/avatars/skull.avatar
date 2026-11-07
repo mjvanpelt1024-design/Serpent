@@ -1,5 +1,5 @@
 # Avatar: Skull
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Skull
-picture    = skull                # a picture from src/engine/render/pixel-icons.js
+picture    = skull                # a picture in textures/icons/ (textures/index.json)
 background = #a0305c

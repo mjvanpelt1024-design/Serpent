@@ -9,7 +9,7 @@ name        = Crampons
 description = A chance a turn bites even on ice, everywhere.
 slot        = left                   # trunk, left, right, crown or nightmare
 color       = #bfe8ff
-icon        = boot                   # a picture from src/engine/render/pixel-icons.js
+icon        = boot                   # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

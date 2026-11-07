@@ -8,7 +8,7 @@
 name        = Orb Magnet
 description = XP orbs appear more often in every mode. They are drawn to you. Few things are.
 slot        = crown                # trunk, left, right, crown or nightmare
-icon        = magnet               # a picture from src/engine/render/pixel-icons.js
+icon        = magnet               # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

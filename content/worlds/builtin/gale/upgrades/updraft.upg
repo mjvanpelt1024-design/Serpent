@@ -9,7 +9,7 @@ name        = Updraft
 description = Points for every gust you ride, as a share of an apple, everywhere.
 slot        = crown                  # trunk, left, right, crown or nightmare
 color       = #d8f0ff
-icon        = feather                # a picture from src/engine/render/pixel-icons.js
+icon        = feather                # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

@@ -12,9 +12,6 @@
    ========================================================= */
 "use strict";
 
-/* The bridge's pin: a stone arch with the Coil's light inside */
-SPRITES.gate = ["...kkkkkk...", "..kWssssSk..", ".kWskkkkSSk.", ".ksk.yy.kSk.", "kssky..ykSSk", "kssk.yy.kSSk", "kssk.yy.kSSk", "kssk.yy.kSSk", "kssk....kSSk", "kssk....kSSk", "kkkk....kkkk", "nnnnnnnnnnnn"];
-
 const ISLE_THEME = {
   keep: {
     rock: [["#7a5232", "#6c482b"], ["#5e4a3a", "#4e4038"], ["#57545c", "#4c4a50"]],

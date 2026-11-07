@@ -9,7 +9,7 @@ name        = Rampage
 description = The Rampage Star lasts longer, everywhere.
 slot        = crown                  # trunk, left, right, crown or nightmare
 color       = #b07a42
-icon        = crown                  # a picture from src/engine/render/pixel-icons.js
+icon        = crown                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

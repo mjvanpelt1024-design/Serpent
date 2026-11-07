@@ -9,7 +9,7 @@ name        = Smoke
 description = Wasps fly more slowly, everywhere. Beekeepers swear by it. Wasps swear at it.
 slot        = left                   # trunk, left, right, crown or nightmare
 color       = #e0a820
-icon        = cloud                  # a picture from src/engine/render/pixel-icons.js
+icon        = cloud                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

@@ -9,7 +9,7 @@ name        = Gold Leaf
 description = Golden Apples are worth even more, everywhere. Gilding the gilded, which is how the rich stay rich.
 slot        = left                   # trunk, left, right, crown or nightmare
 color       = #f0c030
-icon        = coins                  # a picture from src/engine/render/pixel-icons.js
+icon        = coins                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

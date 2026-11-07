@@ -1,166 +1,134 @@
 /* =========================================================
    src/engine/render/pixel-icons.js
-   12x12 pixel pictures for upgrades, items and places
+   12x12 pixel pictures for upgrades, items and places, drawn from
+   the PNG files in textures/
    ========================================================= */
 "use strict";
 
 /* =========================================================
    Pixel icons: a little 12x12 picture for every upgrade, item and place.
-   Drawn as text, one letter per pixel, so they're easy to tweak.
+   Each one is a PNG in textures/ (textures/index.json says which file),
+   loaded before any script runs (src/engine/content/textures.js).
+
+   A picture is drawn two ways:
+     flat      exactly as the file is, on the board and in the painted
+               scenes: texCanvas(id) for a canvas, texUrl(id) for an <img>
+     in menus  iconUrl(id, scale): lit from the top left. Every color
+               except the outline (#1a1410) and pure white brightens
+               along its top and left edges and darkens along its bottom
+               and right ones, so flat shapes read as little solid things.
+               An index entry can change that: "keep" lists more colors to
+               leave alone, "ink" more colors that count as outline,
+               "menu" names a file to show as it is instead, and "badge"
+               puts a corner mark (textures/icons/badges/) over it.
    ========================================================= */
-const ICON_PAL = {
-  k: "#1a1410", w: "#ffffff", W: "#d8dde6", s: "#9aa3ad", S: "#5b6470",
-  r: "#ff3b3b", R: "#a8202a", o: "#ff8c1a", y: "#ffd23f", Y: "#c08a10",
-  g: "#3ddc3d", G: "#1f8a2a", c: "#7fe3ff", b: "#3a82e0", B: "#1d4a9a",
-  p: "#ff8ac4", P: "#a855f7", V: "#5a2a9a", n: "#b07a42", N: "#5a3a1e", t: "#f2d2a0"
-};
-const SPRITES = {
-  orb: ["....kkkk....", "..kkyyyykk..", ".kyywwyyyyk.", ".kywwyyyyyk.", "kyywyyyyyyYk", "kyyyyyyyyyYk", "kyyyyyyyyyYk", "kyyyyyyyyYYk", ".kyyyyyyYYk.", ".kYyyyyYYYk.", "..kkYYYYkk..", "....kkkk...."],
-  clock: ["....kkkk....", "..kkwwwwkk..", ".kwwwwkwwwk.", ".kwwwwkwwwk.", "kwwwwwkwwwwk", "kwwwwwkwwwwk", "kwwwwwkkkkwk", "kwwwwwwwwwwk", ".kwwwwwwwwk.", ".kWwwwwwwWk.", "..kkWWWWkk..", "....kkkk...."],
-  apple: [".....kk.....", "......Nk.gg.", "......N.gGk.", "..kkkkNkkk..", ".krrrrrrrrk.", "krwrrrrrrrRk", "krwrrrrrrrRk", "krrrrrrrrrRk", "krrrrrrrrRRk", ".krrrrrrRRk.", ".kkrrrrRRkk.", "...kkkkkk..."],
-  applebite: [".....kk.....", "......Nk.gg.", "......N.gGk.", "..kkkkNkkk..", ".krrrrrrrrk.", "krwrrrrrk...", "krwrrrrk....", "krrrrrrk....", "krrrrrrrk...", ".krrrrrrRkk.", ".kkrrrrRRkk.", "...kkkkkk..."],
-  scent: ["..w...w.....", "...w...w....", "..w...w..w..", "..kkkkNkkkw.", ".krrrrrrrrk.", "krwrrrrrrrRk", "krwrrrrrrrRk", "krrrrrrrrrRk", "krrrrrrrrRRk", ".krrrrrrRRk.", ".kkrrrrRRkk.", "...kkkkkk..."],
-  heart: ["............", ".kkk....kkk.", "krrrk..krrrk", "krwrrkkrrrrk", "krwrrrrrrrRk", "krrrrrrrrrRk", ".krrrrrrrRk.", "..krrrrrRk..", "...krrrRk...", "....krRk....", ".....kk.....", "............"],
-  halfheart: ["............", ".kkk....kkk.", "krrrk..kSSSk", "krwrrkkSSSSk", "krwrrrkSSSSk", "krrrrrkSSSSk", ".krrrrkSSSk.", "..krrrkSSk..", "...krrkSk...", "....krkk....", ".....kk.....", "............"],
-  gift: ["..kk....kk..", ".kyyk..kyyk.", "..kkykkykk..", "kkkkkyykkkkk", "kppppyyppppk", "kppppyyppppk", "kkkkkyykkkkk", ".kpppyypppk.", ".kpppyypppk.", ".kpppyypppk.", ".kPPPyyPPPk.", ".kkkkkkkkkk."],
-  flower: ["....kkkk....", "..kkppppkk..", ".kppkyykppk.", ".kppyyyyppk.", ".kppkyykppk.", "..kkppppkk..", "....kgk.....", "..kk.gk.kk..", ".kggkgkkggk.", "..kkggggkk..", "....kgk.....", "...kkkkk...."],
-  coins: ["............", "...kkkkkk...", "..kyyyyyyk..", "..kYYYYYYk..", "..kkkkkkkk..", ".kyyyyyyyyk.", ".kYYYYYYYYk.", ".kkkkkkkkkk.", "kyywyyyyyyyk", "kYYYYYYYYYYk", "kkkkkkkkkkkk", "............"],
-  bag: ["....kkkk....", "...knnnnk...", "....kkkk....", "...knnnnk...", "..knnnnnnk..", ".knnnnnnnnk.", "knnnnyynnnNk", "knnnyyyynnNk", "knnnnyynnnNk", "knnnnnnnnNNk", ".kNNNNNNNNk.", "..kkkkkkkk.."],
-  popsicle: ["...kkkkkk...", "..kcccccck..", "..kcwcccck..", "..kcwcccck..", "..kcccccck..", "..kpppppPk..", "..kpppppPk..", "..kppppPPk..", "...kkttkk...", "....kttk....", "....kttk....", ".....kk....."],
-  melt: ["...kkkkkk...", "..kcccccck..", "..kcwcccck..", "..kcccccck..", "..kckcckck..", "...k.kk.k...", "....kttk.c..", "..c.kttk....", "....kttk....", ".kkkkkkkkkk.", "kcccccwccck.", ".kkkkkkkkk.."],
-  anvil: ["............", "............", "kkkkkkkkkk..", "kssssssssSkk", ".kSSSSSSSSSk", "..kkSSSSkkk.", "....kSSk....", "....kSSk....", "...kSSSSk...", "..kSSSSSSk..", "..kkkkkkkk..", "............"],
-  moon: ["....kkkk....", "..kkyyyk....", ".kyyyyk.....", ".kyyyk...w..", "kyyyyk......", "kyyyyk...w..", "kyyyyk......", "kyyyyyk.....", ".kyyyyykkk..", ".kYyyyyyyk..", "..kkYYYkk...", "....kkk....."],
-  web: ["...kkkkkk...", "..kn....nk..", ".kn.w..w.nk.", ".kn..ww..nk.", ".kn..ww..nk.", ".kn.w..w.nk.", "..kn....nk..", "...kkkkkk...", "...k..k..k..", "..kPkkpkkPk.", "..kPkkpkkPk.", "...k..k..k.."],
-  eye: ["............", "............", "....kkkk....", "..kkwwwwkk..", ".kwwwkkwwwk.", "kwwwkPPkwwwk", "kwwwkPVkwwwk", ".kwwwkkwwwk.", "..kkwwwwkk..", "....kkkk....", "............", "............"],
-  sun: [".....yy.....", ".y..kkkk..y.", "..ykyyyyky..", "..kywwyyyk..", ".kywyyyyyyk.", "ykyyyyyyyyky", "ykyyyyyyyoky", ".kyyyyyyook.", "..kyyyoook..", "..ykkkkkky..", ".y........y.", ".....yy....."],
-  crumbs: ["............", "..kk........", ".knnk...kk..", ".kntk..knnk.", "..kk...kntk.", "........kk..", "....kkk.....", "...knnnk....", "...kntnk..k.", "....kkk..kgk", "..k.......k.", ".kyk........"],
-  tail: ["..kkkkkkk...", ".kggggwggk..", "kggkkkkkggk.", "kgk.....kk..", "kggkkkkk....", ".kgggggggk..", "..kkkkkkggk.", "........kgk.", ".kk.....kgk.", "kggkkkkkggk.", ".kggggggggk.", "..kkkkkkkk.."],
-  burger: ["............", "...kkkkkk...", "..koooooook.", ".koowoowoook", ".kkkkkkkkkkk", ".kggggggggk.", ".kRRRRRRRRk.", ".kNNNNNNNNk.", ".kkkkkkkkkk.", ".koooooooook", "..kkkkkkkk..", "............"],
-  hand: ["...k.k.k....", "..ktktktk...", "..ktktktk.k.", "..ktktktkktk", "..kttttktk..", ".kkttttttk..", "ktkttttttk..", "kttttttttk..", ".ktttttttk..", "..ktttttk...", "...ktttk....", "...kkkkk...."],
-  joystick: ["....kkk.....", "...krrrk....", "...krwrk....", "...krrrk....", "....kSk.....", "....kSk.....", "....kSk.....", ".kkkkkkkkkk.", "kSSSSSSSrSSk", "kSSSSSSSSSSk", "kkkkkkkkkkkk", "............"],
-  flag: [".kk.........", ".kSkkkkk....", ".kSkrrrrkkk.", ".kSkrrwrrrrk", ".kSkrrrrrrrk", ".kSkrrrrrkk.", ".kSkkkkkk...", ".kSk........", ".kSk........", ".kSk........", "kkSkk.......", "kkkkk......."],
-  hardhat: ["............", "............", "....kkkk....", "..kkyyyykk..", ".kyywyyyyyk.", ".kywyykyyyk.", "kyyyyykyyyyk", "kyyyyykyyyyk", "kYYYYYYYYYYk", "kkkkkkkkkkkk", "............", "............"],
-  wind: ["............", "......kkk...", ".....kWWWk..", "......kkWk..", "kkkkkkkkWk..", "kWWWWWWWk...", "kkkkkkkkkk..", "kWWWWWWWWWk.", ".kkkkkkkkWk.", "......kWWk..", ".......kk...", "............"],
-  rock: ["............", "............", "....kkkk....", "...kssssk...", "..ksWsssskk.", ".ksWssssssk.", ".kssssssSSk.", "kssssssSSSSk", "kssssSSSSSSk", ".kkkkkkkkkk.", "............", "............"],
-  spiral: ["...kkkkkk...", "..kPPPPPPk..", ".kPkkkkkkPk.", "kPk.kkkk.kPk", "kPk.kPPk.kPk", "kPk.kPkk.kPk", "kPk.kPk..kPk", "kPk..kk.kPk.", ".kPk...kPk..", "..kPkkkPk...", "...kPPPk....", "....kkk....."],
-  snowflake: ["............", ".....w......", "..w..w..w...", "...w.w.w....", "....www.....", "wwwwwcwwwww.", "....www.....", "...w.w.w....", "..w..w..w...", ".....w......", "............", "............"],
-  clover: ["............", "..kkk..kkk..", ".kgggkkgggk.", ".kgwggggggk.", ".kggggggggk.", "..kkggggkk..", ".kggggggggk.", ".kggggggggk.", ".kgggkkgggk.", "..kkk.kkkk..", "......kGk...", ".......kk..."],
-  cross: ["............", "....kkkk....", "....krrk....", "....krrk....", ".kkkkrrkkkk.", ".krrrrrrrrk.", ".krrrrrrrrk.", ".kkkkrrkkkk.", "....krrk....", "....krrk....", "....kkkk....", "............"],
-  candy: ["............", "............", "............", "kk..kkkk..kk", "kpkkppwpkkpk", "kppkpwpPkppk", "kppkppPpkppk", "kpkkpPppkkpk", "kk..kkkk..kk", "............", "............", "............"],
-  cloud: ["............", "...kkk......", "..kwwwkkk...", ".kwwwwwwwk..", "kwwwwwwwwwkk", "kWWwwwwwwwwk", ".kkkkkkkkkk.", "..r...r..r..", ".rr..rr.rr..", "............", "...r....r...", "..rr...rr..."],
-  stop: ["...kkkkkk...", "..krrrrrrk..", ".krrrrrrrrk.", "krrrrrrrrrrk", "krrrrrrrrrrk", "krwwwwwwwwrk", "krwwwwwwwwrk", "krrrrrrrrrrk", "krrrrrrrrrrk", ".krrrrrrrrk.", "..krrrrrrk..", "...kkkkkk..."],
-  magnet: ["............", "..kkkkkkkk..", ".krrrrrrrrk.", "krrrkkkkrrrk", "krrk....krrk", "krrk....krrk", "krrk....krrk", "kwwk....kwwk", "kwwk....kwwk", "kkkk....kkkk", "............", "............"],
-  potion: ["....kkkk....", "....knnk....", "....kkkk....", "....kwwk....", "...kwwwwk...", "..kgwggggk..", ".kgwgggggGk.", ".kggggggGGk.", ".kgggggGGGk.", "..kgggGGGk..", "...kkkkkk...", "............"],
-  compass: ["....kkkk....", "..kkwwwwkk..", ".kwwwwrwwwk.", ".kwwwrrrwwk.", "kwwwwrrrwwwk", "kwwwwwkwwwwk", "kwwwwsssswwk", "kwwwwssswwwk", ".kwwwwswwwk.", ".kwwwwwwwwk.", "..kkwwwwkk..", "....kkkk...."],
-  collar: ["............", "............", "...kkkkkk...", "..kbbbbbbk..", ".kbkkkkkkbk.", ".kbk....kbk.", ".kbk....kbk.", ".kbkkkkkkbk.", "..kbbybbbk..", "...kkykkk...", "....kyyk....", ".....kk....."],
-  goldbar: ["............", "............", "............", "...kkkkkkk..", "..kywwyyyYk.", ".kywyyyyYYk.", "kyyyyyyyYYk.", "kYYYYYYYYYk.", "kkkkkkkkkkk.", "............", "............", "............"],
-  crown: ["............", "............", ".k....k....k", ".kk..kyk..kk", ".kyk.kyk.kyk", ".kyykyyykyyk", ".kyyyyryyyyk", ".kyyyyyyyyyk", ".kYYYYYYYYYk", ".kkkkkkkkkkk", "............", "............"],
-  chest: ["............", "............", "..kkkkkkkk..", ".knnnnnnnnk.", "knnnnnnnnnnk", "kkkkkyykkkkk", "knnnkyyknnNk", "knnnnkknnnNk", "knnnnnnnnnNk", "kNNNNNNNNNNk", "kkkkkkkkkkkk", "............"],
-  shield: ["............", ".kkkkkkkkkk.", ".kWssssssSk.", ".kssssssssk.", ".kssbbbbssk.", ".kssbwbbssk.", ".kssbbbbssk.", "..kssbbssk..", "..kssssssk..", "...kssssk...", "....kssk....", ".....kk....."],
-  sign: ["............", "..kkkkkkkk..", ".kggggggggk.", ".kgwwwwgggk.", ".kggggwwggk.", ".kggggggggk.", "..kkkkkkkk..", ".....kSk....", ".....kSk....", ".....kSk....", ".....kSk....", "....kkkkk..."],
-  car: ["............", "............", "............", "...kkkkk....", "..kbwwbbk...", "..kbwwbbbk..", "kkkbbbbbbkkk", "kbbbbbbbbbbk", "kbbbbbbbbbyk", "kkkkkkkkkkkk", ".kSk....kSk.", "..k......k.."],
-  binoc: ["............", "............", "..kk....kk..", ".kSSk..kSSk.", ".kSSkkkkSSk.", "kSSSSkkSSSSk", "kSSSSkkSSSSk", "kcccckkcccck", "kccwckkcwcck", ".kcck..kcck.", "..kk....kk..", "............"],
-  rocket: [".....kk.....", "....kwwk....", "...kwwwwk...", "...kwbbwk...", "...kwbbwk...", "...kwwwwk...", "..kkwwwwkk..", ".krkwwwwkrk.", ".krkkkkkkrk.", "..k.kook.k..", ".....oo.....", ".....yy....."],
-  logs: [".....o......", "....oyo.....", "...oyyyo....", "...oyyyo....", "....ooo.....", ".kkkkkkkkkk.", "knnnnnnnnktk", "kNNNNNNNNkkk", ".kkkkkkkkkk.", "knnnnnnnnktk", "kNNNNNNNNkkk", ".kkkkkkkkkk."],
-  mitt: ["............", "...kkkk.....", "..krrrrk....", ".krrrrrrk...", ".krrrrrrk.kk", ".krrrrrrkkrk", ".krrrrrrrrrk", ".krrrrrrrrk.", ".krrrrrrrk..", ".kwwwwwwwk..", ".kwwwwwwwk..", ".kkkkkkkkk.."],
-  extinguisher: ["...kkkk.....", "..kSSSSkkk..", "...kSSk..k..", "..krrrrk.k..", ".krwrrrrkk..", ".krwrrrrk...", ".krrrrrrk...", ".krrrrrrk...", ".krrrrrRk...", ".krrrrRRk...", ".krrrRRRk...", ".kkkkkkkk..."],
-  portal: ["............", "....kkkk....", "...kPPPPk...", "..kPVVVVPk..", "..kPVppVPk..", ".kPVpwwpVPk.", ".kPVpwwpVPk.", ".kPVppppVPk.", "..kPVVVVPk..", "..kPPPPPPk..", "...kkkkkk...", "............"],
-  steps: ["............", "......kk....", ".....kNNk...", ".....kNNk...", "......kNk...", "..kk..kk....", ".kNNk.......", ".kNNk.......", "..kNk...kk..", "...k...kNNk.", ".......kNNk.", "........kNk."],
-  bottle: ["....kkkk....", "....kSSk....", "....kkkk....", "....knnk....", "...knnnnk...", "..knwnnnnk..", "..knwnnnnk..", "..kntttnnk..", "..knttttnk..", "..knnnnnnk..", "..knnnnnnk..", "...kkkkkk..."],
-  shoe: ["............", "............", "............", "..kkkk......", ".krrrrk.....", ".krwwrk.....", ".krrrrkkkk..", ".krrrrrrrrk.", ".krrrrrrrrrk", "kwwwwwwwwwwk", "kkkkkkkkkkkk", "............"],
-  fork: ["..k.k.k.k...", "..ksksksk...", "..ksksksk...", "..ksssssk...", "...kssssk...", "....kssk....", "....kssk....", "....kssk....", "....kssk....", "....kssk....", "....kssk....", ".....kk....."],
-  lamp: [".....kk.....", "....k..k....", "....kkkk....", "...kSSSSk...", "..kyywyyyk..", "..kywyyyyk..", "..kyyyyyyk..", "..kyyyyyok..", "..kyyyyook..", "...kSSSSk...", "..kkkkkkkk..", "............"],
-  bell: [".....kk.....", "....kyyk....", "...kyyyyk...", "..kywyyyyk..", "..kywyyyyk..", "..kyyyyyyk..", ".kyyyyyyyyk.", ".kyyyyyyyYk.", "kyyyyyyyyYYk", "kkkkkkkkkkkk", ".....kk.....", ".....kk....."],
-  whiteflag: [".kk.........", ".kSkkkkkk...", ".kSkwwwwwkk.", ".kSkwwwwwwwk", ".kSkwwwwwwwk", ".kSkwwWWWkk.", ".kSkkkkkk...", ".kSk........", ".kSk........", ".kSk........", ".kSk........", "kkkkk......."],
-  lollipop: ["...kkkkkk...", "..kppwwppk..", ".kpwkkkkppk.", ".kpkppppkpk.", ".kpkpkkpkpk.", ".kpkppkkppk.", "..kpkkkppk..", "...kkkkkk...", ".....kwk....", ".....kwk....", ".....kwk....", ".....kkk...."],
-  anchor: ["....kkk.....", "....kSk.....", "....kkk.....", "..kkkSkkk...", "..kSSSSSk...", "..kkkSkkk...", "k...kSk...k.", "kk..kSk..kk.", "kSk.kSk.kSk.", ".kSkkSkkSk..", "..kSSSSSk...", "...kkkkk...."],
-  gem: ["............", "............", "..kkkkkkkk..", ".kcwccccbbk.", "kkkkkkkkkkkk", "kcwcccccbbbk", ".kcccccbbbk.", "..kcccbbbk..", "...kccbbk...", "....kcbk....", ".....kk.....", "............"],
-  boot: ["............", "...kkkkk....", "...knnnk....", "...knnnk....", "...knnnk....", "...knnnk....", "...knnnkkk..", "..knnnnnnnk.", "..knnnnnnnnk", "..kNNNNNNNNk", "..kkkkkkkkkk", "............"],
-  bucket: ["............", "..kk....kk..", ".k........k.", "kkkkkkkkkkkk", "kcwcccccccck", ".krrrrrrrrk.", ".krwrrrrrrk.", ".krrrrrrrrk.", "..krrrrrrk..", "..krrrrrRk..", "..kkkkkkkk..", "............"],
-  pin: ["............", "...kkkkk....", "..krrrrrk...", ".krrwwrrrk..", ".krwkkwrrk..", ".krwkkwrrk..", ".krrwwrrrk..", "..krrrrrk...", "...krrrk....", "....krk.....", ".....k......", "............"],
-  feather: [".........kk.", "........kcck", ".......kcwck", "......kcwcck", ".....kcwcck.", "....kcwcck..", "...kcwcck...", "..kcwcck....", "..kwcck.....", ".kwkkk......", "kwk.........", "kk.........."],
-  bolt: ["......kkkk..", ".....kyyyk..", "....kyyyk...", "...kyyyk....", "..kyyyykkkk.", ".kyyyyyyyyk.", ".kkkkyyyyk..", "....kyyyk...", "...kyyyk....", "..kyyk......", ".kyk........", ".kk........."],
-  twoapples: ["............", "..N......N..", "..N......N..", ".kkkk..kkkk.", "krwrrkkrwrrk", "kwrrrkkwrrrk", "krrrrkkrrrrk", "krrrRkkrrrRk", ".krRk..krRk.", "..kk....kk..", "............", "............"],
-  spray: ["....kk......", "...kSSk.s...", "...kkkk..s..", "..kggggk.s..", "..kgwggk....", "..kgwggk....", "..kggggk....", "..kggggk....", "..kggGGk....", "..kgGGGk....", "..kkkkkk....", "............"],
-  trophy: ["..kkkkkkkk..", "kkyywyyyyykk", "kykywyyyykyk", "kykyyyyyykyk", ".kkyyyyyykk.", "...kyyyyk...", "....kyyk....", ".....kk.....", "....kyyk....", "...kYYYYk...", "..kkkkkkkk..", "............"],
-  medal: ["..kk....kk..", "..kbk..kbk..", "...kbkkbk...", "....kbbk....", "...kkkkkk...", "..kyyyyyyk..", ".kyywkkyyyk.", ".kywkyykyyk.", ".kyykyykyYk.", ".kyyykkyyYk.", "..kYYYYYYk..", "...kkkkkk..."],
-  tree: ["....kkkk....", "..kkggggkk..", ".kggwggggGk.", "kggggggggGGk", "kgggrggggGGk", "kggggggrgGGk", ".kgggggggGk.", "..kkkkkkkk..", ".....knk....", ".....knk....", "....knnnk...", "...kkkkkkk.."],
-  tophat: ["............", "...kkkkkk...", "...kSSSSk...", "...kSSSSk...", "...kSSSSk...", "...krrrrk...", "...kSSSSk...", ".kkkkkkkkkk.", "kSSSSSSSSSSk", ".kkkkkkkkkk.", "............", "............"],
-  satchel: ["............", "...kkkkkk...", "..kn....nk..", "..kn....nk..", ".kkkkkkkkkk.", "knnnnnnnnnnk", "kNNNNkykNNNk", "knnnnkkknnnk", "knnnnnnnnnnk", "knnnnnnnnnNk", "kNNNNNNNNNNk", "kkkkkkkkkkkk"],
-  buck: ["...kkkkkk...", "..kggggggk..", ".kggwkkwggk.", "kggwkwwkggGk", "kggkwgggggGk", "kgggkkwgggGk", "kgggggkwggGk", "kggwkwwkggGk", "kgggkkwgggGk", ".kGggkgggGk.", "..kGGGGGGk..", "...kkkkkk..."],
-  skull: ["............", "...kkkkkk...", "..kwwwwwwk..", ".kwwwwwwwwk.", ".kwkkwwkkwk.", ".kwkkwwkkwk.", ".kwwwkkwwwk.", "..kwwwwwwk..", "...kwkwkk...", "...kkkkk....", "............", "............"]
-};
-/* Small marks in the corner: more, plus, never, star */
-const BADGES = {
-  up: ["..k..", ".kgk.", "kgggk", ".kgk.", ".kkk."],
-  plus: [".kkk.", "kkgkk", "kgggk", "kkgkk", ".kkk."],
-  x: ["kk.kk", "krkrk", ".krk.", "krkrk", "kk.kk"],
-  star: ["..k..", ".kyk.", "kyyyk", ".kyk.", "k.k.k"]
-};
+const ICON_INK = "#1a1410", ICON_SPARK = "#ffffff";
 
-/* What picture each thing gets: [sprite, corner mark, recolor].
-   Upgrades and items set theirs in their content files (icon, badge, recolor). */
-const ICON_FOR = {
-
-  "place:global": ["tree"], "place:cosmetics": ["tophat"], "place:inventory": ["satchel"], "place:achievements": ["trophy"], "place:exchange": ["buck"],
-  prestige: ["medal"]
-};
+/* What picture each old-style upgrade and item gets: [picture, corner mark], from its content
+   file (icon, badge). Everything else has its own entry in textures/index.json. */
+const ICON_FOR = {};
 (function iconsFromContent() {
-  const spec = rec => {
-    if (!rec.icon) return null;
-    const recolor = Array.isArray(rec.recolor) ? Object.fromEntries(rec.recolor.map(p => String(p).split(">"))) : null;
-    const out = [String(rec.icon), rec.badge ? String(rec.badge) : null, recolor];
-    while (out.length > 1 && out[out.length - 1] === null) out.pop();
-    return out;
-  };
+  const spec = rec => (rec.icon ? [String(rec.icon), rec.badge ? String(rec.badge) : null] : null);
   CONTENT.greatTree.concat(...MODE_KEYS.map(a => CONTENT.worlds[a].upgrades)).forEach(u => { const s = spec(u); if (s) ICON_FOR[u.id] = s; });
   CONTENT.items.forEach(it => { const s = spec(it); if (s) ICON_FOR["item:" + it.id] = s; });
 })();
 
 const iconCache = {};
-/* Lighter (k > 0) or darker (k < 0), for the icons' light and shade */
-function iconShade(hex, k) {
-  const n = parseInt(hex.slice(1), 16);
-  const ch = s => { const v = (n >> s) & 255; return Math.max(0, Math.min(255, Math.round(k >= 0 ? v + (255 - v) * k : v * (1 + k)))); };
-  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+const texWarned = {};
+const texOnce = (key, message) => { if (!texWarned[key]) { texWarned[key] = true; console.warn(message); } };
+/* The index entry and corner mark for a picture id, or null if there's no such picture */
+function texResolve(id) {
+  const e = TextureLoader.entry(id);
+  if (e) return { e, badge: e.badge || null };
+  const spec = ICON_FOR[id];
+  const base = spec && TextureLoader.entry(spec[0]);
+  return base ? { e: base, badge: spec[1] || null } : null;
 }
-/* A data URL for a thing's picture, drawn once */
-function iconUrl(id, scale = 1) {
-  const key = id + "@" + scale;
-  if (iconCache[key]) return iconCache[key];
-  const spec = ICON_FOR[id] || [SPRITES[id] ? id : "orb"];
-  const [name, badge, swap] = spec;
-  const rows = SPRITES[name] || SPRITES.orb;
-  const c = document.createElement("canvas");
-  c.width = 12 * scale;
-  c.height = 12 * scale;
-  const g = c.getContext("2d");
-  const put = (ch, x, y) => {
-    if (ch === "." || ch === " ") return;
-    const col = ICON_PAL[(swap && swap[ch]) || ch];
-    if (!col) return;
-    g.fillStyle = col;
-    g.fillRect(x * scale, y * scale, scale, scale);
-  };
-  rows.forEach((row, y) => [...row].forEach((ch, x) => put(ch, x, y)));
-  // light from the top left: every color brightens along its top and left edges and darkens
-  // along its bottom and right ones, so flat shapes read as little solid things
-  const edge = (x, y) => { const ch = (rows[y] || "")[x]; return ch === undefined || ch === "." || ch === " " || ch === "k"; };
-  rows.forEach((row, y) => [...row].forEach((ch, x) => {
-    if (ch === "." || ch === " " || ch === "k" || ch === "w") return;
-    const col = ICON_PAL[(swap && swap[ch]) || ch];
-    if (!col || col[0] !== "#") return;
-    const lit = edge(x, y - 1) || edge(x - 1, y), shaded = edge(x, y + 1) || edge(x + 1, y);
-    if (lit === shaded) return;
-    g.fillStyle = iconShade(col, lit ? 0.16 : -0.2);
-    g.fillRect(x * scale, y * scale, scale, scale);
-  }));
-  if (badge && BADGES[badge]) {
-    // knock out a little space, then draw the mark in the corner
-    g.clearRect(7 * scale, 7 * scale, 5 * scale, 5 * scale);
-    BADGES[badge].forEach((row, y) => [...row].forEach((ch, x) => put(ch, 7 + x, 7 + y)));
+/* A picture's file as a canvas: the checkerboard if the file is missing or broken */
+const texBroken = {};
+function texFileCanvas(file) {
+  const p = TextureLoader.pic(file);
+  if (p) return p.canvas;
+  return texBroken[file] || (texBroken[file] = TextureLoader.placeholder());
+}
+/* What to draw for an id the index doesn't know: the fallback picture, with a warning once */
+function texMissing(id, fallback) {
+  texOnce("id:" + id, `Texture "${id}": not in textures/index.json, showing "${fallback}" instead`);
+  return texResolve(fallback);
+}
+/* A picture, flat, as a canvas (draw it with imageSmoothingEnabled = false) */
+function texCanvas(id, fallback = "orb") {
+  const r = texResolve(id) || texMissing(id, fallback);
+  return r ? texFileCanvas(r.e.file) : TextureLoader.placeholder();
+}
+/* A picture, flat, as a URL for an <img>: its own file when it's served, a data URL otherwise */
+const texUrlCache = {};
+function texUrl(id, fallback = "orb") {
+  if (texUrlCache[id]) return texUrlCache[id];
+  const r = texResolve(id) || texMissing(id, fallback);
+  const p = r && TextureLoader.pic(r.e.file);
+  return (texUrlCache[id] = p && p.url ? p.url : (r ? texFileCanvas(r.e.file) : TextureLoader.placeholder()).toDataURL());
+}
+
+/* Lighter (k > 0) or darker (k < 0), for the icons' light and shade */
+const iconShade = (v, k) => Math.max(0, Math.min(255, Math.round(k >= 0 ? v + (255 - v) * k : v * (1 + k))));
+const hexRgb = hex => { const n = parseInt(String(hex).replace("#", ""), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+/* The light and shade, worked out from the picture's pixels (RGBA, w x h) */
+function iconLight(px, w, h, opts = {}) {
+  const key = (d, i) => (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+  const set = list => new Set(list.map(hex => { const [r, g, b] = hexRgb(hex); return (r << 16) | (g << 8) | b; }));
+  const ink = set([ICON_INK].concat(opts.ink || [])), keep = set([ICON_SPARK].concat(opts.keep || []));
+  const kind = new Uint8Array(w * h);                 // 0 clear, 1 outline, 2 left alone, 3 lit or shaded
+  for (let i = 0; i < w * h; i++) {
+    const a = px[i * 4 + 3], k = key(px, i * 4);
+    kind[i] = !a ? 0 : ink.has(k) ? 1 : keep.has(k) ? 2 : 3;
   }
-  return (iconCache[key] = c.toDataURL());
+  const edge = (x, y) => x < 0 || y < 0 || x >= w || y >= h || kind[y * w + x] < 2;
+  const out = new Uint8ClampedArray(px);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x;
+    if (kind[i] !== 3) continue;
+    const lit = edge(x, y - 1) || edge(x - 1, y), shaded = edge(x, y + 1) || edge(x + 1, y);
+    if (lit === shaded) continue;
+    for (let c = 0; c < 3; c++) out[i * 4 + c] = iconShade(px[i * 4 + c], lit ? 0.16 : -0.2);
+  }
+  return out;
+}
+/* A picture's pixels, read once (they never change while the game runs) */
+const texPixelCache = new WeakMap();
+const pixelsOf = c => texPixelCache.get(c) || (texPixelCache.set(c, c.getContext("2d").getImageData(0, 0, c.width, c.height).data), texPixelCache.get(c));
+
+/* A data URL for a thing's picture in a menu, lit, drawn once */
+function iconUrl(id, scale = 1) {
+  const cacheKey = id + "@" + scale;
+  if (iconCache[cacheKey]) return iconCache[cacheKey];
+  const r = texResolve(id) || texMissing(id, "orb");
+  const flat = r ? texFileCanvas(r.e.file) : TextureLoader.placeholder();
+  const w = flat.width, h = flat.height;
+  let px;
+  if (r && r.e.menu) px = new Uint8ClampedArray(pixelsOf(texFileCanvas(r.e.menu)));
+  else if (r && TextureLoader.pic(r.e.file) && r.e.light !== false) px = iconLight(pixelsOf(flat), w, h, r.e);
+  else px = new Uint8ClampedArray(pixelsOf(flat));
+  if (r && r.badge && !TextureLoader.has("badge:" + r.badge)) texOnce("badge:" + r.badge, `Texture "${id}": no corner mark called "${r.badge}" in textures/index.json`);
+  else if (r && r.badge) {
+    // knock out a little space in the corner, then draw the mark there
+    const b = texCanvas("badge:" + r.badge), bp = pixelsOf(b), bx = w - b.width, by = h - b.height;
+    for (let y = by; y < h; y++) for (let x = bx; x < w; x++) {
+      const i = (y * w + x) * 4, j = ((y - by) * b.width + (x - bx)) * 4;
+      for (let c = 0; c < 4; c++) px[i + c] = bp[j + 3] ? bp[j + c] : 0;
+    }
+  }
+  // every pixel a scale x scale square
+  const c = document.createElement("canvas");
+  c.width = w * scale; c.height = h * scale;
+  const g = c.getContext("2d");
+  const big = g.createImageData(c.width, c.height);
+  for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
+    const i = (y * c.width + x) * 4, j = ((Math.floor(y / scale)) * w + Math.floor(x / scale)) * 4;
+    for (let k = 0; k < 4; k++) big.data[i + k] = px[j + k];
+  }
+  g.putImageData(big, 0, 0);
+  return (iconCache[cacheKey] = c.toDataURL());
 }
 
 /* Fruit outlines. Upgrades are apples, one-time items are other fruit. */

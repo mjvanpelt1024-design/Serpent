@@ -8,7 +8,7 @@
 name        = Jeweler's Eye
 description = A chance a disguised boulder looks dull, so you can spot it. Not all that glitters, and so on.
 slot        = nightmare            # trunk, left, right, crown or nightmare
-icon        = gem                  # a picture from src/engine/render/pixel-icons.js
+icon        = gem                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

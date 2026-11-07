@@ -8,7 +8,7 @@
 name        = Salt Circle
 description = Ghosts drift more slowly again, everywhere. Mostly useful against the Poltergeist.
 slot        = nightmare              # trunk, left, right, crown or nightmare
-icon        = bell                   # a picture from src/engine/render/pixel-icons.js
+icon        = bell                   # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

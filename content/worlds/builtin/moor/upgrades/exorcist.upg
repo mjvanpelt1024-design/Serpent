@@ -9,7 +9,7 @@ name        = Exorcist
 description = A chance that eating an apple banishes the ghosts near you, everywhere.
 slot        = crown                  # trunk, left, right, crown or nightmare
 color       = #6a7a6a
-icon        = cross                  # a picture from src/engine/render/pixel-icons.js
+icon        = cross                  # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                      # before the first tier

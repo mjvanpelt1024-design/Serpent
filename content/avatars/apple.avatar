@@ -1,6 +1,6 @@
 # Avatar: Apple
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Apple
-picture    = apple                # a picture from src/engine/render/pixel-icons.js
+picture    = apple                # a picture in textures/icons/ (textures/index.json)
 background = #7fd36a
 free       = true                 # every save owns it

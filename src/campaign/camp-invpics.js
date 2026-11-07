@@ -42,9 +42,9 @@ let picHover = null;
 /* ----- Drawing kit ----- */
 const pR = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
 function pIcon(g, it, x, y, s = 2) {
-  const spec = it.kind === "recipe" ? ["scroll"] : CAMP.itemById[it.id] && CAMP.itemById[it.id].family === "rune" ? ICON_FOR[`ci:${it.id}:${runeGradeId(it)}`] || ICON_FOR["ci:" + it.id] : ICON_FOR["ci:" + it.id] || craftIcon(it.id) || ["gift"];
+  const id = it.kind === "recipe" ? "scroll" : CAMP.itemById[it.id] && CAMP.itemById[it.id].family === "rune" ? `ci:${it.id}:${runeGradeId(it)}` : "ci:" + it.id;
   g.imageSmoothingEnabled = false;
-  g.drawImage(objSprite(spec[0], spec[2]), Math.round(x), Math.round(y), 12 * s, 12 * s);
+  g.drawImage(texCanvas(id, "gift"), Math.round(x), Math.round(y), 12 * s, 12 * s);
 }
 const woodWall = (g, a, b) => { for (let y = 0; y < PIC_H; y += 9) { pR(g, 0, y, PIC_W, 9, (y / 9) % 2 ? a : b); pR(g, 0, y + 8, PIC_W, 1, shadeHex(a, -0.25)); } };
 

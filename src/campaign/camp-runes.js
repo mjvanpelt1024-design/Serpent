@@ -102,80 +102,13 @@ function campItemWeak(it) {
   return campItemSlot(it.id) === "rune" ? runeSentence(runeWords(it).bad) : d.weak;
 }
 
-/* ----- The pictures: a carved stone per rune, in four conditions ----- */
-/* A rune's glyph, 7 x 7, carved into the plain stone: x is the glyph's color */
-function runeStoneRows(glyph, col) {
-  return ["...kkkkkk...", "..ksssssSk.."]
-    .concat(glyph.map(r => ".k" + [...r].map(ch => (ch === "x" ? col : "s")).join("") + "Sk."))
-    .concat([".kSSSSSSSSk.", "..kkkkkkkk..", "............"]);
-}
-const RUNE_GLYPHS = {
-  haste: [["....xx.", "...xx..", "..xx...", ".xxxxx.", "...xx..", "..xx...", ".xx...."], "o"],
-  iron: [[".xxxxx.", ".x...x.", ".x.x.x.", ".x...x.", "..x.x..", "...x...", "......."], "B"],
-  vigor: [["......."  , ".xx.xx.", "xxxxxxx", "xxxxxxx", ".xxxxx.", "..xxx..", "...x..."], "r"],
-  magpie: [["..xxx..", ".x...x.", "x..x..x", "x.xxx.x", "x..x..x", ".x...x.", "..xxx.."], "Y"],
-  sage: [["...x...", ".x.x.x.", "..xxx..", "xxxxxxx", "..xxx..", ".x.x.x.", "...x..."], "m"],
-  greed: [["......." , ".xxxxx.", "x.x.x.x", ".x...x.", "..x.x..", "...x...", "......."], "p"],
-  calm: [["......." , ".x...x.", "x.x.x.x", ".......", ".x...x.", "x.x.x.x", "......."], "b"],
-  grace: [["....xx.", "...xxx.", "..xxx..", ".xxx...", ".xx....", "x.x....", "x......"], "w"]
-};
-Object.entries(RUNE_GLYPHS).forEach(([id, [glyph, col]]) => { SPRITES["rune_" + id] = runeStoneRows(glyph, col); });
-
-/* Broken: a chip knocked off the top-right corner, its raw edge pale.
-   Cracked: a split down the face. Pristine: polished glints along the top-left. */
-function runeVariant(rows, grade) {
-  const g = rows.map(r => [...r]);
-  const at = (x, y) => (g[y] && g[y][x]) || ".";
-  if (grade === "broken") {
-    const gone = (x, y) => y <= 4 && x - y > 5;
-    const was = rows.map(r => [...r]);
-    for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) if (gone(x, y)) g[y][x] = ".";
-    for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) {
-      if (g[y][x] === "." || gone(x, y)) continue;
-      const edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => gone(x + dx, y + dy) && (was[y + dy] || [])[x + dx] !== ".");
-      if (edge) { g[y][x] = "k"; if (at(x - 1, y) === "s" || at(x - 1, y) === "S") g[y][x - 1] = "W"; }
-    }
-    // a crumb of the missing corner, fallen beside it
-    g[6][11] = "k";
-  } else if (grade === "cracked") {
-    [[5, 1], [5, 2], [6, 3], [5, 4], [4, 5], [5, 6], [4, 7], [4, 8], [7, 4], [8, 5]].forEach(([x, y]) => { if (at(x, y) !== ".") g[y][x] = "k"; });
-    [[6, 2], [6, 5], [5, 7]].forEach(([x, y]) => { if (at(x, y) === "s") g[y][x] = "W"; });
-  } else if (grade === "pristine") {
-    [[3, 1], [4, 1], [2, 2], [2, 3], [9, 2]].forEach(([x, y]) => { if (at(x, y) === "s" || at(x, y) === "S") g[y][x] = "w"; });
-  }
-  return g.map(r => r.join(""));
-}
-
-/* Every rune gets a picture per condition: ci:<id>:<grade> */
-(() => {
-  CAMP.items.filter(i => i.family === "rune").forEach(r => {
-    const base = ITEM_SPRITE[r.id] ? ITEM_SPRITE[r.id][0] : "rune_" + r.id;
-    if (!SPRITES[base]) return;
-    ICON_FOR["ci:" + r.id] = [base];
-    RUNE_GRADE_IDS.forEach(grade => {
-      const name = `${base}_${grade}`;
-      SPRITES[name] = grade === "fine" ? SPRITES[base] : runeVariant(SPRITES[base], grade);
-      ICON_FOR[`ci:${r.id}:${grade}`] = [name];
-    });
-    if (typeof RUNE_COLORS === "object") RUNE_COLORS[r.id] = r.color;
-  });
-})();
+/* ----- The pictures: a carved stone per rune, in each of its eight conditions -----
+   PNGs in textures/items/runes/<condition>/<rune>.png, ci:<rune>:<condition> in the index;
+   the empty slot under the hearts is textures/items/runes/empty-slot.png. */
+CAMP.items.filter(i => i.family === "rune").forEach(r => { RUNE_COLORS[r.id] = r.color; });
 const runeIconUrl = (it, scale = 3) => iconUrl(`ci:${it.id}:${runeGradeId(it)}`, scale);
-
 /* The empty rune slot: the stone's shadow */
-let runeShadowCache = "";
-function runeShadowUrl() {
-  if (runeShadowCache) return runeShadowCache;
-  const c = document.createElement("canvas");
-  c.width = c.height = 12;
-  const g = c.getContext("2d");
-  SPRITES.rune.forEach((row, y) => [...row].forEach((ch, x) => {
-    if (ch === ".") return;
-    g.fillStyle = ch === "k" ? HEART_PALS.empty.k : HEART_PALS.empty.r;
-    g.fillRect(x, y, 1, 1);
-  }));
-  return (runeShadowCache = c.toDataURL());
-}
+const runeShadowUrl = () => texUrl("rune:empty");
 
 /* ----- Old saves: runes used to stack and burn up; now each is its own stone ----- */
 function campSplitRunes(c) {

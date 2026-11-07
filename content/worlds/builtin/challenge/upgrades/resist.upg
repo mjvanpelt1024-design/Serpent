@@ -8,7 +8,7 @@
 name        = Hard Hat
 description = Rocks and fleas take less of your score (shown for a normal rock). A hat is the first defense against an unkind world.
 slot        = left                 # trunk, left, right, crown or nightmare
-icon        = hardhat              # a picture from src/engine/render/pixel-icons.js
+icon        = hardhat              # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 50                   # before the first tier

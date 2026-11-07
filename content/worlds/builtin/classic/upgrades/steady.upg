@@ -9,7 +9,7 @@ name        = Steady Hands
 description = Classic moves a little slower. Calmer hands, fewer walls.
 slot        = right                # trunk, left, right, crown or nightmare
 color       = #b0b0b0
-icon        = hand                 # a picture from src/engine/render/pixel-icons.js
+icon        = hand                 # a picture in textures/icons/ (textures/index.json)
 
 # What each tier is worth
 base        = 0                    # before the first tier

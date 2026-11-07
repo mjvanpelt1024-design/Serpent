@@ -1,5 +1,5 @@
 # Avatar: Lunch
 # Price: avatarStep (economy.txt), by its place in _index.dat
 name       = Lunch
-picture    = burger               # a picture from src/engine/render/pixel-icons.js
+picture    = burger               # a picture in textures/icons/ (textures/index.json)
 background = #7fe3ff
