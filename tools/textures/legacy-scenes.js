@@ -564,9 +564,86 @@
     return out;
   }
 
+  /* ----- The menus' frames (ui-frames.js, ui-scroll.js): the old painters, their colors as keys ----- */
+  const UI_KEYS = { fill: "#ff00ff", fillLit: "#ff60ff", fillDark: "#a000a0", fillSpeck: "#e000e0", shine: "#00ffff", light: "#00c0c0", body: "#009090", shadow: "#005050", gemDark: "#808000", gemLit: "#ffff60",
+    face: "#ff00ff", faceTop: "#ffa0ff", faceHi: "#ff60ff", faceDark: "#a000a0", lip: "#500050" };
+  const keysOf = names => Object.fromEntries(names.map(n => [UI_KEYS[n], n]));
+  function plateT(B) {
+    const N = B * 2 + 5, c = canvasOf(N, N), g = c.getContext("2d"), K = UI_KEYS;
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const d = Math.min(x, y, N - 1 - x, N - 1 - y), lit = x + y < N - 1;
+      let col = null;
+      if (d === 0) col = FX_K; else if (d === 1) col = lit ? K.light : K.shadow; else if (d === 2) col = FX_K; else if (d === 3) col = lit ? K.fillLit : K.fillDark; else col = K.fill;
+      const cx = Math.min(x, N - 1 - x), cy = Math.min(y, N - 1 - y);
+      if (cx + cy < 1) col = null; else if (cx + cy === 1 && cx !== cy) col = FX_K;
+      if (col) { g.fillStyle = col; g.fillRect(x, y, 1, 1); }
+    }
+    g.fillStyle = K.fillSpeck; g.fillRect(B + 2, B + 2, 1, 1);
+    const stud = (x, y) => { g.fillStyle = FX_K; g.fillRect(x - 1, y - 1, 4, 4); g.fillStyle = K.body; g.fillRect(x, y, 2, 2); g.fillStyle = K.shine; g.fillRect(x, y, 1, 1); g.fillStyle = K.shadow; g.fillRect(x + 1, y + 1, 1, 1); };
+    if (B >= 5) { stud(2, 2); stud(N - 4, 2); stud(2, N - 4); stud(N - 4, N - 4); } else { g.fillStyle = K.shine; g.fillRect(1, 1, 1, 1); }
+    return c;
+  }
+  function windowT() {
+    const B = 8, N = B * 2 + 5, c = canvasOf(N, N), g = c.getContext("2d"), K = UI_KEYS;
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const d = Math.min(x, y, N - 1 - x, N - 1 - y), lit = x + y < N - 1;
+      let col;
+      if (d === 0) col = FX_K; else if (d === 1) col = lit ? K.light : K.shadow; else if (d === 2) col = lit ? K.body : K.shadow; else if (d === 3) col = FX_K;
+      else if (d === 4) col = lit ? K.body : K.shadow; else if (d === 5) col = FX_K; else if (d === 6) col = lit ? K.fillLit : K.fillDark; else col = K.fill;
+      const cx = Math.min(x, N - 1 - x), cy = Math.min(y, N - 1 - y);
+      if (cx + cy < 2) col = null;
+      if (cx + cy === 2 && cx !== cy) col = FX_K;
+      if (col) { g.fillStyle = col; g.fillRect(x, y, 1, 1); }
+    }
+    const gemAt = (x, y) => { g.fillStyle = FX_K; g.fillRect(x - 1, y - 1, 6, 6); g.fillStyle = K.body; g.fillRect(x, y, 4, 4); g.fillStyle = K.gemDark; g.fillRect(x + 1, y + 1, 2, 2); g.fillStyle = K.gemLit; g.fillRect(x + 1, y + 1, 1, 1); g.fillStyle = K.shine; g.fillRect(x, y, 1, 1); };
+    gemAt(2, 2); gemAt(N - 6, 2); gemAt(2, N - 6); gemAt(N - 6, N - 6);
+    g.fillStyle = K.shine; g.fillRect(B + 2, 2, 1, 1); g.fillRect(2, B + 2, 1, 1);
+    return c;
+  }
+  function buttonT(kind) {
+    const W = 9, H = kind === "tab" ? 9 : 11, c = canvasOf(W, H), g = c.getContext("2d"), K = UI_KEYS;
+    const y0 = kind === "down" ? 2 : 0, yEnd = kind === "tab" ? H : H - 1;
+    for (let y = y0; y < yEnd; y++) for (let x = 0; x < W; x++) {
+      const edgeX = x === 0 || x === W - 1, edgeY = y === y0 || y === yEnd - 1;
+      if (edgeX && edgeY) continue;
+      let col = K.face;
+      if (edgeX || y === y0 || (kind !== "tab" && y === yEnd - 1)) col = FX_K;
+      else if (kind === "up" && y >= yEnd - 4) col = y === yEnd - 4 ? K.faceDark : K.lip;
+      else if (kind === "down") col = y === y0 + 1 ? K.faceDark : x === 1 ? K.faceDark : x === W - 2 ? K.faceHi : K.face;
+      else if (y === y0 + 1) col = K.faceTop;
+      else if (x === 1) col = K.faceHi;
+      else if (x === W - 2) col = K.faceDark;
+      g.fillStyle = col; g.fillRect(x, y, 1, 1);
+    }
+    return c;
+  }
+  function cornerOld(flip) {
+    const c = canvasOf(12, 12), g = c.getContext("2d");
+    const [shine, light, body, shadow] = FX_METALS.brass;
+    const px = (x, y, col) => { const X = flip & 1 ? 11 - x : x, Y = flip & 2 ? 11 - y : y; g.fillStyle = col; g.fillRect(X, Y, 1, 1); };
+    for (let i = 0; i < 12; i++) for (let j = 0; j < 4; j++) { const col = j === 0 || j === 3 ? FX_K : j === 1 ? light : shadow; if (i < 12 - j) { px(i, j, col); px(j, i, col); } }
+    px(1, 1, shine); px(2, 1, shine); px(1, 2, shine);
+    px(4, 4, FX_K); px(5, 4, FX_K); px(4, 5, FX_K); px(5, 5, FX_K); px(5, 5, body); px(4, 4, shine);
+    return c;
+  }
+  function frameList() {
+    const plateKeys = keysOf(["fill", "fillLit", "fillDark", "fillSpeck", "shine", "light", "body", "shadow"]);
+    const out = [
+      { id: "ui:plate", file: "ui/plate.png", canvas: plateT(5), keys: plateKeys },
+      { id: "ui:chip", file: "ui/chip.png", canvas: plateT(3), keys: plateKeys },
+      { id: "ui:window", file: "ui/window.png", canvas: windowT(), keys: keysOf(["fill", "fillLit", "fillDark", "shine", "light", "body", "shadow", "gemDark", "gemLit"]) },
+      { id: "ui:parchment", file: "ui/parchment.png", canvas: fxParchment() },
+      { id: "ui:scroll", file: "ui/scroll.png", canvas: fxScroll() }
+    ];
+    const btnKeys = keysOf(["face", "faceTop", "faceHi", "faceDark", "lip"]);
+    [["up", "button-up"], ["down", "button-down"], ["tab", "tab"]].forEach(([kind, name]) => out.push({ id: "ui:" + name, file: `ui/${name}.png`, canvas: buttonT(kind), keys: btnKeys }));
+    ["tl", "tr", "bl", "br"].forEach((k, flip) => out.push({ id: "ui:corner-" + k, file: `ui/board-corner-${k}.png`, canvas: cornerOld(flip) }));
+    return out;
+  }
+
   window.LEGACY_SCENES = {
     sets: { rooms: { list: roomList, backdrop: roomBackdrop, times: ROOM_TIMES, rooms: () => Object.keys(PIC_ROOMS) }, shops: { list: shopList }, keepers: { list: keeperList, moments: keeperMoments, roles: KEEPER_ROLES },
-      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES } },
+      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList } },
     record, split
   };
 })();

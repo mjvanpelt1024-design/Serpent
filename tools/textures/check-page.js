@@ -220,6 +220,22 @@
         }
       }
 
+      // ----- the menus' frames: the theme's own (every --fx-* variable), and the painters with many colors
+      W.paintUiFrames(); paintUiFrames();
+      const fxNames = ["plate", "plate-2", "plate-3", "plate-blue", "plate-boss", "plate-gold", "plate-violet", "chip", "window", "parch", "corner-tl", "corner-tr", "corner-bl", "corner-br", "btn-dark", "btn-dark-down", "tab", "tab-on", "scroll"]
+        .concat(["green", "red", "blue", "gold", "orange", "purple"].flatMap(n => [`btn-${n}`, `btn-${n}-down`]));
+      const cssVar = (doc, n) => getComputedStyle(doc.documentElement).getPropertyValue("--fx-" + n);
+      for (const n of fxNames) { await compareUrls(`frame --fx-${n}`, urlIn(cssVar(W.document, n)), urlIn(cssVar(document, n))); counts.scenes++; }
+      const tints = ["#1d3a2e", "#26493a", "#11241c", "#2f9bff", "#7a2a1e", "#e8e0c8", "#000000", "#ffffff", "#3ddc84", "#a46bff", "rgb(40, 60, 90)"];
+      const metals = W.eval("FX_METALS");
+      for (const fill of tints) {
+        for (const [mn, metal] of Object.entries(metals)) for (const B of [5, 3]) { const d = diff(W.fxPlate(fill, metal, B), fxPlate(fill, metal, B)); if (d) problems.push(`fxPlate ${fill} ${mn} ${B}: ${d}`); counts.scenes++; }
+        const d1 = diff(W.fxWindow(fill, "#ff5a4d"), fxWindow(fill, "#ff5a4d")); if (d1) problems.push(`fxWindow ${fill}: ${d1}`);
+        for (const kind of ["up", "down", "tab"]) { const d2 = diff(W.fxButton(fill, null, kind), fxButton(fill, null, kind)); if (d2) problems.push(`fxButton ${fill} ${kind}: ${d2}`); }
+        counts.scenes += 4;
+      }
+      await compareUrls("island plate", urlIn(W.fxIslePlate("#ffd23f")), urlIn(fxIslePlate("#ffd23f"))); counts.scenes++;
+
       // ----- coins: every island's, both sides, every size the game asks for
       for (const I of CAMP.islands) for (const side of ["tails", "heads"]) for (const size of W.LEGACY_SCENES.sets.coins.sizes) {
         const d = diff(W.coinCanvas(I.id, side, size), coinCanvas(I.id, side, size));

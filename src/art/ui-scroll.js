@@ -10,28 +10,9 @@
    ========================================================= */
 "use strict";
 
-/* The scroll: 8 pixels of roll on each side, 4 above and below, parchment between */
-function fxScroll() {
-  const W = 23, H = 16;
-  const [c, g] = fxCanvasOf(W, H);
-  const put = (x, y, col) => { g.fillStyle = col; g.fillRect(x, y, 1, 1); };
-  const paper = "#ecd8a8", edge = "#c9a96a", line = "#3a2410";
-  // the strip of parchment
-  for (let x = 4; x < W - 4; x++) for (let y = 2; y < H - 2; y++) {
-    let col = paper;
-    if (y === 2 || y === H - 3) col = line;
-    else if (y === 3 || y === H - 4) col = edge;
-    put(x, y, col);
-  }
-  // a roll at each end: a paper cylinder, lit from the left, with a wooden knob above and below
-  const roll = ["#3a2410", "#b8955a", "#f6e6be", "#e4cc94", "#cdae72", "#a07c42", "#7a5a2a", "#3a2410"];
-  const knob = ["#2a1608", "#8a5a2a", "#c8884a", "#6a3e18", "#2a1608"];
-  [0, W - 8].forEach(x0 => {
-    for (let y = 1; y < H - 1; y++) roll.forEach((col, i) => put(x0 + i, y, y === 1 || y === H - 2 ? line : col));
-    [0, H - 1].forEach(y => knob.forEach((col, i) => put(x0 + 1 + i + 1, y, col)));
-  });
-  return c;
-}
+/* The scroll: 8 pixels of roll on each side, 4 above and below, parchment between
+   (textures/ui/scroll.png) */
+const fxScroll = () => texCanvas("ui:scroll");
 
 /* The cursors: 12 x 12 (textures/icons/cursors/), shown at twice the size */
 function cursorUrl(name) {

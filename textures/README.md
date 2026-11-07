@@ -40,6 +40,8 @@ textures/
 ├── hearts/               every heart slot the HUD shows (below)
 ├── bosses/               each island's boss face on its wanted poster
 ├── coins/                each island's coin, <island>-<tails|heads>-<12|20|32>.png (color-swap, below)
+├── ui/                   the menus' frames: plate, chip, window, buttons, tab (color-swap, below), the
+│                         wanted poster's parchment, the board's brass corners, the scroll
 ├── scenes/
 │   ├── rooms/            the picture rooms at home: rack/, shelf/, den/, stones/, satchel/, each with
 │   │                     background.png and the things that move in it; marks/ for the little marks
@@ -88,6 +90,7 @@ So to move or rename a file, move it and change its one line here. Two ids can s
 | `room:rack`, `room:shelf:flame`, `room:mark:seal` | a picture room's background, something that moves in it, a mark on a thing |
 | `shop:keep:back`, `shop:reef:hoop`, `shop:parcel` | a shop's walls (or `middle`, `front`), something in its workshop, something every shop shares |
 | `coin:keep:tails:12` | an island's coin, a side and a size |
+| `ui:plate`, `ui:button-up`, `ui:corner-tl` | a menu frame |
 | `keeper:keep:merchant` | a shopkeeper's sprite sheet (island, then merchant, challenger or banker) |
 | `home:keep:tree`, `home:trophy`, `home:cloud-3` | home base: an island's own picture, or one every home shares |
 | `gem`, `clock`, `anchor` | a picture asked for by name: by the code, or by a content file's `icon =` (old-style upgrades and items) or `picture =` (avatars) |
@@ -158,6 +161,25 @@ these keys and the game fills in that island's shades; the hats and the snake's 
 | `#a000a0` | 28% darker (the carving) |
 | `#600060` | 50% darker (the carving's shadow, the snake's eye) |
 
+**The menus' frames** (`ui/`) are tiny pictures the styles cut into nine pieces (`border-image`): the
+corners stay as they are, the edges and middle stretch. Each theme sets its colors in its theme file,
+so the plate, chip, window, buttons and tab are color-swap pictures:
+
+| Key | Becomes |
+|---|---|
+| `#ff00ff` | the panel's fill (a button's face) |
+| `#ff60ff` | the fill's lit bevel (a button's highlight down its left side) |
+| `#a000a0` | the fill's shaded bevel (a button's shadow) |
+| `#e000e0` | a worn speck in the fill |
+| `#ffa0ff` | a button's top edge, catching the light |
+| `#500050` | a button's lip underneath |
+| `#00ffff`, `#00c0c0`, `#009090`, `#005050` | the trim's metal: shine, light, body, shadow (brass, silver, blood or violet) |
+| `#ffff60`, `#808000` | a window's corner gems: lit, dark (the theme's accent) |
+
+The dark outline (`#0b0907`) and everything else show as painted. Keep each picture's size: the styles
+slice them at fixed widths (5 pixels for plates, 3 for chips, 8 for windows; 3 for buttons, 5 at a
+button's bottom).
+
 Money shows tails at 12 pixels (20 in the top bar); click the coin in the top bar and it flips to heads,
 with a 32-pixel heads on its card.
 
@@ -198,5 +220,5 @@ boots the game in a headless Chrome or Edge and makes sure every file in `index.
 `--legacy` to also compare every picture with the game from before textures/ (from git), pixel by pixel,
 the rooms at sixty moments each, every shop with and without stock and orders, and every keeper in
 every one of its looks, and home base piece by piece; that only passes for pictures that haven't been repainted.
-`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`) writes a set from that old game into this folder and its index: it's
+`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`) writes a set from that old game into this folder and its index: it's
 how the folder was made, and with `--force` it overwrites files, repaints and all.
