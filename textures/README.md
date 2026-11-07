@@ -54,6 +54,7 @@ textures/
 ├── ui/                   the menus' frames: plate, chip, window, buttons, tab (color-swap, below), the
 │                         wanted poster's parchment, the board's brass corners, the scroll
 ├── scenes/
+│   ├── arcade/           cabinet.png: the arcade machine the title screen is (below)
 │   ├── rooms/            the picture rooms at home: rack/, shelf/, den/, stones/, satchel/, each with
 │   │                     background.png and the things that move in it; marks/ for the little marks
 │   │                     on things (the away tag, a wax seal, a trinket's dot, the rarity pip)
@@ -234,6 +235,16 @@ its grass and the grass's lit edge, `#ff00ff` and `#800080` its rock and the roc
 
 Money shows tails at 12 pixels (20 in the top bar); click the coin in the top bar and it flips to heads,
 with a 32-pixel heads on its card.
+
+## The title screen's arcade
+
+On a window with a mouse, the title screen is an arcade machine, `scenes/arcade/cabinet.png`, with the
+board as its screen. The machine is scaled so its screen fits around the board, and the board sits over
+it: its entry in `index.json` says where, `"screen": [x, y, 200, 200]` (keep the screen 200 pixels
+square), and where the money lights up, `"readout": [x, y, w, h]`. Repaint it freely (taller, a
+different marquee, new controls) and move those two boxes to match. The posters taped to it, the wanted
+posters on the wall and the stickers are placed in `src/campaign/camp-title.js` (`ARCADE`), in the
+picture's own pixels from its top left corner.
 
 ## The board, 20 pixels to a square
 

@@ -354,3 +354,74 @@ body.camp-run.wide #hud::-webkit-scrollbar, body.camp-run.wide #below::-webkit-s
 .map-pin.prop .pin-hint { top: calc(100% + 2.6em); }
 .pin-hint.why { color: #fff6d8; }
 .pin-hint .lock { width: 0.9em; height: 0.9em; fill: currentColor; }
+
+/* ---------- The arcade: the title screen as a scene (src/campaign/camp-title.js) ----------
+   --s is one of the cabinet picture's pixels in screen pixels; --lx, --ly where you're looking.
+   The wall (the swirl, the wanted posters, the stickers on it) moves a third as far as the machine. */
+#title-wall, #title-machine { position: fixed; left: 0; top: 0; width: 0; height: 0; z-index: -1; display: none; pointer-events: none; }
+body.arcade #title-wall, body.arcade #title-machine { display: block; }
+body.arcade #title-wall, body.arcade #bg-swirl { will-change: transform; }
+body.arcade #title-wall { transform: translate3d(calc(var(--lx, 0px) * 0.35), calc(var(--ly, 0px) * 0.35), 0); }
+body.arcade #bg-swirl { transform: translate3d(calc(var(--lx, 0px) * 0.35), calc(var(--ly, 0px) * 0.35), 0) scale(var(--wall-zoom, 1)); }
+body.arcade #title-machine, body.arcade #title-deco { transform: translate3d(var(--lx, 0px), var(--ly, 0px), 0); will-change: transform; }
+/* the board is the machine's screen: a little smaller on a window it would fill top to bottom, so the marquee shows */
+body.arcade #stage { transform: translate3d(var(--lx, 0px), var(--ly, 0px), 0) scale(var(--arcade-k, 1)); will-change: transform; }
+/* the menu sits in the screen now, so its sides come from the screen's width, not the window's */
+body.arcade.menu-full #stage > #screen-main { --side: max(1em, calc((100% - 38em) / 2)); }
+.tm-cabinet { position: absolute; image-rendering: pixelated; filter: drop-shadow(0 calc(var(--s, 3px) * 6) calc(var(--s, 3px) * 8) rgba(0, 0, 0, 0.55)); }
+
+/* the money, lit up in the marquee's readout */
+.ta-readout {
+  position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+  gap: 0 calc(var(--s) * 3); padding: 0 calc(var(--s) * 2); pointer-events: auto;
+  font-size: calc(var(--s) * 5.2); line-height: 1.15;
+}
+.ta-readout .td-coin { background: none; box-shadow: none; padding: 0; font-size: 1em; color: #c8ffd8; text-shadow: 0 0 calc(var(--s) * 1.2) rgba(61, 220, 132, 0.8); }
+.ta-readout .td-coin.gems b { color: #bff0ff; text-shadow: 0 0 calc(var(--s) * 1.2) rgba(127, 227, 255, 0.8); }
+.ta-name {
+  position: absolute; margin: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;
+  font-family: var(--display); font-size: calc(var(--s) * 4.2); color: #ffe08a; text-shadow: 0 calc(var(--s) * 0.5) 0 #0b0907, 0 0 calc(var(--s) * 2) rgba(0, 0, 0, 0.8); transform: rotate(-4deg); white-space: nowrap;
+}
+
+/* your numbers: a poster each, taped on */
+.ta-stat {
+  position: absolute; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--s) * 1.5);
+  padding: calc(var(--s) * 4) calc(var(--s) * 1.5) calc(var(--s) * 2); text-align: center; pointer-events: auto;
+  font-size: calc(var(--s) * 3.4); line-height: 1.15; color: #2a1a10;
+  background: linear-gradient(180deg, #fff4dc, #e8d2a6);
+  box-shadow: 0 0 0 calc(var(--s) * 0.5) #6a4a2a, calc(var(--s) * 0.8) calc(var(--s) * 1.4) 0 rgba(0, 0, 0, 0.4);
+  transform: rotate(var(--tilt, 0deg));
+}
+.ta-stat::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: calc(var(--s) * 2.5); background: var(--band, #d1202a); box-shadow: inset 0 calc(var(--s) * -0.5) 0 rgba(0, 0, 0, 0.25); }
+.ta-stat::after {
+  content: ""; position: absolute; top: calc(var(--s) * -2.5); left: 50%; width: calc(var(--s) * 13); height: calc(var(--s) * 4.5);
+  transform: translateX(-50%) rotate(-5deg); background: rgba(236, 222, 170, 0.78); box-shadow: 0 0 0 calc(var(--s) * 0.3) rgba(120, 100, 60, 0.3);
+}
+.ta-label { color: #5a3a20; }
+.ta-val { font-family: var(--display); font-weight: 400; font-size: 1.45em; color: #8a1a14; }
+
+/* the stickers: big, slapped on; where one covers a number it sits a little lifted, and peels back when you point at it */
+.ta-sticker {
+  position: absolute; image-rendering: pixelated; pointer-events: auto; outline: none;
+  transform: rotate(var(--tilt, 0deg)); transform-origin: 18% 18%;
+  filter: drop-shadow(0 calc(var(--s) * 0.5) 0 rgba(0, 0, 0, 0.35));
+  transition: transform 0.28s cubic-bezier(0.3, 1.4, 0.5, 1), filter 0.28s;
+}
+.ta-sticker.covers {
+  cursor: pointer;
+  transform: perspective(calc(var(--s) * 60)) rotate(var(--tilt, 0deg)) rotateY(-14deg) rotateX(9deg);
+  filter: drop-shadow(calc(var(--s) * 0.8) calc(var(--s) * 1.4) calc(var(--s) * 0.6) rgba(0, 0, 0, 0.45));
+}
+.ta-sticker.covers:hover, .ta-sticker.covers:focus, .ta-sticker.covers.peel {
+  transform: perspective(calc(var(--s) * 60)) translate(55%, -60%) rotate(calc(var(--tilt, 0deg) + 38deg)) rotateY(-30deg) scale(0.92);
+  filter: drop-shadow(calc(var(--s) * -1) calc(var(--s) * 2) 0 rgba(0, 0, 0, 0.35));
+}
+
+/* the wanted posters, hung on the wall */
+#title-wall .td-poster {
+  position: absolute; box-sizing: border-box; justify-content: center; pointer-events: auto;
+  font-size: calc(var(--s) * 4); transform: rotate(var(--tilt, 0deg));
+  box-shadow: 0 0 0 calc(var(--s) * 0.5) #5a3a20, calc(var(--s) * 0.6) calc(var(--s) * 1.2) 0 rgba(0, 0, 0, 0.45);
+}
+#title-wall .td-poster::before { top: calc(var(--s) * -1); left: calc(50% - var(--s)); width: calc(var(--s) * 2); height: calc(var(--s) * 2); }
+#title-wall .td-face { width: 2.4em; height: 2.4em; }

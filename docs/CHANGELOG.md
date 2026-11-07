@@ -2,6 +2,13 @@
 
 ## v:11.07.2026_b:52: quests on the map, bosses you can hurt
 
+- **An arcade on the title screen.** The board is the screen of an arcade machine, its marquee lit with your
+  money. Each of your numbers is a poster taped to the machine, the bosses' wanted posters hang on the wall
+  behind it, and your island stickers are slapped about, bigger; where one covers a number, point at either
+  and it peels back. The scene is taller than the window: move the mouse toward the top, the bottom or the
+  sides to look around it (over the screen it hardly moves). The wall moves less than the machine. Narrow and
+  touch screens keep the plates and strips.
+
 - **Bosses take damage.** When a boss's head runs into your snake it hurts itself; when your head runs into it,
   you're hurt. Swords add to every blow (and strike head-on), Thorn Mail pricks a ram, fireballs burn it in every
   fight, force fields zap it and frost freezes it, unless that boss shrugs the spell off: the Cinder Wyrm is

@@ -662,6 +662,7 @@
     "foe:rod": "powerups/rod.png",
     "foe:rope": "powerups/rope.png",
     "foe:waterskin": "powerups/waterskin.png",
+    "arcade:cabinet": { "file": "scenes/arcade/cabinet.png", "screen": [22, 92, 200, 200], "readout": [52, 48, 140, 19] },
     "home:carving-cuts": { "file": "scenes/home/carving-cuts.png", "frames": 2 },
     "home:carving-glow": "scenes/home/carving-glow.png",
     "home:carving": { "file": "scenes/home/carving.png", "frames": 2, "keys": { "#ff00ff": "edge" } },
