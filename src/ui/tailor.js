@@ -34,66 +34,28 @@ function skinBubbleArt(skin, size = 56) {
   return c;
 }
 
-/* ----- Theme emblems: a little pixel symbol for each theme, in its own colors ----- */
-const EMBLEMS = {
-  sprout: ["...........", ".kkk...kkk.", "kaaak.kaaak", ".kaaakaaak.", "..kkkakkk..", ".....k.....", ".....k.....", "...kkkkk...", "..kccccck..", "..kbbbbbk..", "...kkkkk..."],
-  cloud: ["...........", "....kkk....", "...kwwwk...", ".kkwwwwwkk.", "kwwwwwwwwwk", "kwwwwwwwwwk", "kbwwwwwwwbk", ".kkkkkkkkk."],
-  heart: [".kkk...kkk.", "kaaak.kaaak", "kawaakaaaak", "kaaaaaaaaak", "kaaaaaaaaak", ".kaaaaaaak.", "..kaaaaak..", "...kaaak...", "....kak....", ".....k....."],
-  sparkle: [".....a.....", ".....a.....", "....awa....", "....awa....", "..aawwwaa..", "aawwwwwwwaa", "..aawwwaa..", "....awa....", "....awa....", ".....a.....", ".....a....."],
-  star: [".....k.....", "....kak....", "....kak....", "kkkkaaakkkk", ".kaaawaaak.", "..kaaaaak..", "..kaaaaak..", ".kaaakaaak.", ".kaak.kaak.", "kak.....kak", "kk.......kk"],
-  leaf: [".......kkkk", ".....kkaaak", "....kaaaaak", "...kaaaawak", "..kaaaawaak", "..kaaawaaak", ".kaaawaaak.", ".kaawaaak..", ".kawaakk...", "kwkkkk.....", "kk........."],
-  flame: [".....k.....", "....kak....", "....kaak...", "...kaaak...", "..kaabaak..", ".kaabbbaak.", ".kabbwbbak.", "kaabbwwbaak", "kabbwwwbbak", ".kabbbbbak.", "..kkkkkkk.."],
-  drop: [".....k.....", ".....k.....", "....kak....", "....kak....", "...kaaak...", "..kaaaaak..", ".kawaaaaak.", ".kawaaaaak.", ".kaaaaaaak.", "..kaaaaak..", "...kkkkk..."],
-  bubbles: [".......kkk.", "......kawak", "......kaaak", ".kkk...kkk.", "kawwk......", "kwaaak..kk.", "kaaaak.kwak", "kaaaak.kaak", ".kkkk...kk."],
-  sun: [".....a.....", ".a...a...a.", "..a.kkk.a..", "...kaaak...", ".akawwaaka.", "aakaaaaakaa", ".akaaaaaka.", "...kaaak...", "..a.kkk.a..", ".a...a...a.", ".....a....."],
-  flower: ["....kkk....", "...kaaak...", ".kk.kak.kk.", "kaak.k.kaak", "kaaakwkaaak", ".kkkwbwkkk.", "..kaakaak..", ".kaak.kaak.", ".kaak.kaak.", "..kk...kk.."],
-  moon: ["....kkkk...", "..kkaaak...", ".kaaak.....", ".kaak......", "kaaak......", "kaaak......", "kaaak....k.", ".kaaak..kak", ".kaaaakkaak", "..kkaaaaak.", "....kkkkk.."],
-  cup: ["..a..a.....", "...a..a....", "..a..a.....", "kkkkkkkkk..", "kwaaaaaakkk", "kaaaaaaak.k", "kaaaaaaakkk", ".kaaaaak...", "..kkkkk....", "kkkkkkkkkk."],
-  grass: ["...........", ".a...a...a.", ".a..aa..aa.", "aa.a.a.a.a.", "a.aa.aaa.aa", "aaaaaaaaaaa", "bbbbbbbbbbb", "ccccccccccc"],
-  house: [".....a.....", "....a.a....", "...a...a...", "..a.....a..", ".aaaaaaaaa.", "..a.....a..", "..a.aa..a..", "..a.aa..a..", "..a.aa..a..", "..aaaaaaa.."],
-  notebook: ["kkkkkkkkk", "kwwawwwwk", "kwcacccwk", "kwwawwwwk", "kwcacccwk", "kwwawwwwk", "kwcaccwwk", "kwwawwwwk", "kkkkkkkkk"],
-  dots: ["...........", ".aa...bb...", ".aa...bb...", "....aa...bb", "....aa...bb", ".bb...aa...", ".bb...aa...", "....bb...aa", "....bb...aa"],
-  brick: ["kkkkkkkkkkk", "kaaakaaaaak", "kcccakccccak", "kkkkkkkkkkk", "kaaaaakaaak", "kcccccakcck", "kkkkkkkkkkk", "kaaakaaaaak", "kcccakccccak", "kkkkkkkkkkk"],
-  wave: ["...........", "...kkkk....", "..kawwak...", ".kaakkwak..", "kaak..kaak.", "kak..kaaak.", "....kaaak..", "kkkkaaaakkk", "aaaaaaaaaaa", "bbbbbbbbbbb"],
-  tartan: ["cbacbbcbacb", "bbabbbbbabb", "aaaaaaaaaaa", "cbacbbcbacb", "bbabbbbbabb", "cbacbbcbacb", "bbabbbbbabb", "aaaaaaaaaaa", "cbacbbcbacb", "bbabbbbbabb"],
-  diamond: ["...kkkkk...", "..kwaaaak..", ".kwaaaaaak.", "kkkkkkkkkkk", ".kaaawaaak.", "..kaaaaak..", "...kaaak...", "....kak....", ".....k....."],
-  hex: ["...kkkkk...", "..kaaaaak..", ".kaawaaaak.", "kaawaaaaaak", "kaaaaaaaaak", ".kaaaaaaak.", "..kaaaaak..", "...kkkkk..."],
-  synth: ["...kkkkk...", "..kaaaaak..", ".kaaaaaaak.", ".kkkkkkkkk.", ".kbbbbbbbk.", ".kkkkkkkkk.", "...........", "bbbbbbbbbbb", "b.b..b..b.b", "bbbbbbbbbbb"],
-  chip: ["..a.a.a.a..", ".kkkkkkkkk.", "akbbbbbbbka", ".kbaaaaabk.", "akbawwwabka", ".kbawwwabk.", "akbaaaaabka", ".kbbbbbbbk.", ".kkkkkkkkk.", "..a.a.a.a.."],
-  pawn: ["....kkk....", "...kaaak...", "...kawak...", "....kak....", "...kaaak...", "....kak....", "...kaaak...", "..kaaaaak..", ".kaaaaaaak.", ".kkkkkkkkk."],
-  peak: ["...........", ".....k.....", "....kwk....", "...kaaak...", "..kaabaak..", "..kabbbak..", ".kaabbbaak.", ".kabbcbbak.", "kaabccbbaak", "kkkkkkkkkkk"],
-  snow: [".....a.....", "...a.a.a...", "....aaa....", ".a...a...a.", "..a..a..a..", "aaaaawaaaaa", "..a..a..a..", ".a...a...a.", "....aaa....", "...a.a.a...", ".....a....."],
-  galaxy: ["...aaaa....", ".aa....a...", "a..bbb..a..", "a.b...b.a..", "a.b.w.b.a..", ".a.b..b.a..", "..a.bb..a..", "...a...a...", "....aaa...."],
-  joystick: ["....kkk....", "...kaaak...", "...kawak...", "...kaaak...", "....kkk....", ".....k.....", ".....k.....", ".kkkkkkkkk.", "kbbbbbbbbbk", "kbccbbbbbbk", ".kkkkkkkkk."],
-  aurora: [".w.........", "...........", "aa.....aa..", "..aa..a..aa", "....aa.....", "bb.....bb..", "..bb..b..bb", "....bb.....", "...........", "ccccccccccc"],
-  chevron: [".....a.....", "....aaa....", "...aa.aa...", "..aa...aa..", ".aa..a..aa.", "aa..aaa..aa", "...aa.aa...", "..aa...aa..", ".aa.....aa.", "aa.......aa"],
-  fish: ["...........", "....kkk..k.", "..kkaaakkak", ".kawaaaaaak", "kaakaaaaak.", ".kaaaaaaaak", "..kkaaakkak", "....kkk..k."],
-  peach: ["....kk.....", "...k.kk....", "..kkkakk...", ".kaaakaaak.", "kawaakaaaak", "kaaaakaaaak", "kaaaaaaaaak", ".kaaaaaaak.", "..kkkkkkk.."]
-};
+/* ----- Theme emblems: a little pixel symbol for each theme, in its own colors -----
+   Each is a color-swap picture, textures/emblems/<name>.png (emblem:<name>): its key colors are
+   filled in with the theme's accent and its three swirl colors; white and the outline show as they are. */
 /* Which symbol each theme shows: the emblem in its file */
 const THEME_EMBLEM = Object.fromEntries(CONTENT.themes.filter(t => t.emblem).map(t => [t.id, String(t.emblem)]));
 function themeEmblem(bd, size = 56) {
   const t = themeFor(bd);
-  const rows = EMBLEMS[THEME_EMBLEM[bd.id] || "sparkle"];
-  const pal = { a: t.accent, b: t.swirl[0], c: t.swirl[1], d: t.swirl[2], w: "#ffffff", k: "#120e16" };
-  const cols = Math.max(...rows.map(r => r.length)), n = Math.max(cols, rows.length);
+  const id = "emblem:" + (THEME_EMBLEM[bd.id] || "sparkle");
+  const colors = { accent: t.accent, swirl1: t.swirl[0], swirl2: t.swirl[1], swirl3: t.swirl[2] };
+  const src = texCanvas(id), cols = src.width, rows = src.height, n = Math.max(cols, rows);
+  // every pixel of the picture, in order, with the color it's painted
+  const px = [];
+  texRuns(id).forEach(([x, y, len, r, gg, b, a, key]) => { for (let i = 0; i < len; i++) px.push([x + i, y, key ? colors[key] : `rgba(${r},${gg},${b},${a / 255})`]); });
   const c = document.createElement("canvas");
   c.width = c.height = size * 2;
   c.className = "bb-art emblem";
   const g = c.getContext("2d");
   const u = Math.floor((size * 2 * 0.86) / n);
-  const ox = Math.floor((size * 2 - cols * u) / 2), oy = Math.floor((size * 2 - rows.length * u) / 2);
+  const ox = Math.floor((size * 2 - cols * u) / 2), oy = Math.floor((size * 2 - rows * u) / 2);
   // a soft shadow first, then the symbol
-  rows.forEach((row, y) => [...row].forEach((ch, x) => {
-    if (!pal[ch]) return;
-    g.fillStyle = "rgba(0, 0, 0, 0.35)";
-    g.fillRect(ox + x * u + Math.max(1, u / 4), oy + y * u + Math.max(1, u / 3), u, u);
-  }));
-  rows.forEach((row, y) => [...row].forEach((ch, x) => {
-    if (!pal[ch]) return;
-    g.fillStyle = pal[ch];
-    g.fillRect(ox + x * u, oy + y * u, u, u);
-  }));
+  px.forEach(([x, y]) => { g.fillStyle = "rgba(0, 0, 0, 0.35)"; g.fillRect(ox + x * u + Math.max(1, u / 4), oy + y * u + Math.max(1, u / 3), u, u); });
+  px.forEach(([x, y, col]) => { g.fillStyle = col; g.fillRect(ox + x * u, oy + y * u, u, u); });
   return c;
 }
 

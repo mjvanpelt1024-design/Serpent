@@ -40,6 +40,7 @@ textures/
 ├── hearts/               every heart slot the HUD shows (below)
 ├── bosses/               each island's boss face on its wanted poster
 ├── coins/                each island's coin, <island>-<tails|heads>-<12|20|32>.png (color-swap, below)
+├── emblems/             each theme's little symbol in the Tailor (color-swap, below)
 ├── map/                  each island on the map: <island>/under.png (its rock and ground, under the
 │                         paths), over.png (trees, houses, props over them), fog.png (the silhouette
 │                         you see before you reach it)
@@ -95,6 +96,7 @@ So to move or rename a file, move it and change its one line here. Two ids can s
 | `coin:keep:tails:12` | an island's coin, a side and a size |
 | `ui:plate`, `ui:button-up`, `ui:corner-tl` | a menu frame |
 | `map:keep:under`, `map:keep:over`, `map:keep:fog` | an island on the map |
+| `emblem:sparkle` | a theme's emblem in the Tailor |
 | `keeper:keep:merchant` | a shopkeeper's sprite sheet (island, then merchant, challenger or banker) |
 | `home:keep:tree`, `home:trophy`, `home:cloud-3` | home base: an island's own picture, or one every home shares |
 | `gem`, `clock`, `anchor` | a picture asked for by name: by the code, or by a content file's `icon =` (old-style upgrades and items) or `picture =` (avatars) |
@@ -184,6 +186,10 @@ The dark outline (`#0b0907`) and everything else show as painted. Keep each pict
 slice them at fixed widths (5 pixels for plates, 3 for chips, 8 for windows; 3 for buttons, 5 at a
 button's bottom).
 
+**Theme emblems** (`emblems/`) are color-swap too, filled in with the theme's colors from its theme
+file: `#ff00ff` its accent, `#ff40ff`, `#c000c0` and `#800080` its three swirl colors (white and the
+outline `#120e16` show as painted). A theme names its emblem in its file (`emblem = sparkle`).
+
 Money shows tails at 12 pixels (20 in the top bar); click the coin in the top bar and it flips to heads,
 with a 32-pixel heads on its card.
 
@@ -233,5 +239,5 @@ boots the game in a headless Chrome or Edge and makes sure every file in `index.
 `--legacy` to also compare every picture with the game from before textures/ (from git), pixel by pixel,
 the rooms at sixty moments each, every shop with and without stock and orders, and every keeper in
 every one of its looks, and home base piece by piece; that only passes for pictures that haven't been repainted.
-`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`, `map`) writes a set from that old game into this folder and its index: it's
+`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`, `map`, `emblems`) writes a set from that old game into this folder and its index: it's
 how the folder was made, and with `--force` it overwrites files, repaints and all.

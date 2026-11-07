@@ -664,9 +664,21 @@
     return out;
   }
 
+  /* ----- The Tailor's theme emblems (tailor.js): the letter arrays, the theme's colors as keys ----- */
+  const EMBLEM_KEYS = { a: ["#ff00ff", "accent"], b: ["#ff40ff", "swirl1"], c: ["#c000c0", "swirl2"], d: ["#800080", "swirl3"] };
+  function emblemList() {
+    const keys = Object.fromEntries(Object.values(EMBLEM_KEYS).map(([hex, name]) => [hex, name]));
+    return Object.entries(EMBLEMS).map(([name, rows]) => {
+      const c = canvasOf(Math.max(...rows.map(r => r.length)), rows.length), g = c.getContext("2d");
+      const pal = { a: EMBLEM_KEYS.a[0], b: EMBLEM_KEYS.b[0], c: EMBLEM_KEYS.c[0], d: EMBLEM_KEYS.d[0], w: "#ffffff", k: "#120e16" };
+      rows.forEach((row, y) => [...row].forEach((ch, x) => { if (pal[ch]) { g.fillStyle = pal[ch]; g.fillRect(x, y, 1, 1); } }));
+      return { id: "emblem:" + name, file: `emblems/${name}.png`, canvas: c, keys };
+    });
+  }
+
   window.LEGACY_SCENES = {
     sets: { rooms: { list: roomList, backdrop: roomBackdrop, times: ROOM_TIMES, rooms: () => Object.keys(PIC_ROOMS) }, shops: { list: shopList }, keepers: { list: keeperList, moments: keeperMoments, roles: KEEPER_ROLES },
-      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList } },
+      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList } },
     record, split
   };
 })();

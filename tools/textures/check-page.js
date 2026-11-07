@@ -253,6 +253,15 @@
       }
       W.eval(`camp = ${campNow}`); gEval(`camp = ${campNow}`);
 
+      // ----- the Tailor's theme emblems: every theme's, at the sizes the Tailor shows
+      for (const bd of gEval("backdrops")) for (const size of [56, 40, 28]) {
+        const old = W.eval("backdrops").find(x => x.id === bd.id);
+        if (!old) continue;
+        const d = diff(W.themeEmblem(old, size), themeEmblem(bd, size));
+        if (d) problems.push(`emblem ${bd.id} ${size}: ${d}`);
+        counts.scenes++;
+      }
+
       // ----- coins: every island's, both sides, every size the game asks for
       for (const I of CAMP.islands) for (const side of ["tails", "heads"]) for (const size of W.LEGACY_SCENES.sets.coins.sizes) {
         const d = diff(W.coinCanvas(I.id, side, size), coinCanvas(I.id, side, size));
