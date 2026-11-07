@@ -83,22 +83,21 @@ storyEl.addEventListener("keydown", e => {
   if (e.key === "Escape" || e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); nextStoryPage(); }
 });
 
-/* The left page: a little picture of the beat in the island's colors (the boss's face, or the island) */
+/* The left page: a little picture of the beat in the island's colors (the boss's face, or the island).
+   Its parts are color-swap pictures in textures/scenes/story/beat/ (the colors are the island's) */
 function drawStoryArt(c, isl, beat) {
   const g = c.getContext("2d");
   g.imageSmoothingEnabled = false;
   const I = CAMP.islandById[isl];
-  const R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
   // a sky in the island's own light, a floating island, a frame of ink
   const sky = skyAt(ISLANDS[isl].y - 60);
-  R(0, 0, 96, 72, `rgb(${sky.join(",")})`);
-  for (let y = 0; y < 72; y += 2) R(0, y, 96, 1, "rgba(255,255,255,0.04)");
-  for (let x = 14; x < 82; x++) { const d = Math.round(10 * Math.sin((x - 14) / 68 * Math.PI)); R(x, 50, 1, 3, I.colors.grass); R(x, 53, 1, d, x % 3 ? I.colors.rock : shadeHex(I.colors.rock, -0.2)); }
-  R(14, 50, 68, 1, shadeHex(I.colors.grass, 0.3));
+  texPaint(g, "story:beat:sky", 0, 0, { colors: { sky: `rgb(${sky.join(",")})` } });
+  texPaint(g, "story:beat:lines", 0, 0);
+  texPaint(g, "story:beat:island", 0, 0, { colors: { grass: I.colors.grass, grassLit: shadeHex(I.colors.grass, 0.3), rock: I.colors.rock, rockDark: shadeHex(I.colors.rock, -0.2) } });
   if (beat === "arrive") {
-    // the Coil rising out of the clouds toward the island
-    for (let i = 0; i < 40; i++) { const x = 6 + i * 1.6, y = 70 - i * 0.6 + Math.sin(i * 0.5) * 3; R(Math.round(x), Math.round(y), 3, 3, i % 4 ? "#3a8a3a" : "#ffd23f"); }
-    for (let i = 0; i < 5; i++) R(20 + i * 12, 40 + (i % 2) * 3, 2, 10, I.colors.accent);
+    // the Coil rising out of the clouds toward the island, and the island's pennants
+    texDraw(g, "story:beat:coil", 0, 0);
+    texPaint(g, "story:beat:pennants", 0, 0, { colors: { accent: I.colors.accent } });
   } else {
     const face = new Image();
     face.onload = () => {
@@ -107,7 +106,7 @@ function drawStoryArt(c, isl, beat) {
     };
     face.src = bossFaceUrl(isl);
   }
-  g.strokeStyle = "#2a1a0e"; g.lineWidth = 2; g.strokeRect(1, 1, 94, 70);
+  texDraw(g, "story:beat:frame", 0, 0);
 }
 
 /* ----- Where the beats come from ----- */

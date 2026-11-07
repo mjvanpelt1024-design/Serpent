@@ -1166,6 +1166,20 @@
       o.getContext("2d").drawImage(c, x0, y0, w, h, 0, 0, w, h);
       out.push({ id: `story:relic:${id}`, file: `${D}relic/${id}.png`, canvas: o, anchor: [32 - x0, 32 - y0] });
     });
+    // the story's placeholder pages (camp-story.js drawStoryArt), 96 x 72: the sky, its faint lines, the
+    // floating island, the Coil and the pennants, the ink frame; the island's colors are keys
+    const BK = { sky: "#00ffff", grass: "#00ff00", grassLit: "#80ff80", rock: "#ff00ff", rockDark: "#800080", accent: "#ffff00" };
+    const bkeys = names => Object.fromEntries(names.map(n => [BK[n], n]));
+    const beat = draw => { const c = canvasOf(96, 72), g = c.getContext("2d"); draw((x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); }, g); return c; };
+    out.push({ id: "story:beat:sky", file: `${D}beat/sky.png`, canvas: beat(R => R(0, 0, 96, 72, BK.sky)), keys: bkeys(["sky"]) });
+    out.push({ id: "story:beat:lines", file: `${D}beat/lines.png`, canvas: beat(R => { for (let y = 0; y < 72; y += 2) R(0, y, 96, 1, "rgba(255,255,255,0.04)"); }) });
+    out.push({ id: "story:beat:island", file: `${D}beat/island.png`, keys: bkeys(["grass", "grassLit", "rock", "rockDark"]), canvas: beat(R => {
+      for (let x = 14; x < 82; x++) { const d = Math.round(10 * Math.sin((x - 14) / 68 * Math.PI)); R(x, 50, 1, 3, BK.grass); R(x, 53, 1, d, x % 3 ? BK.rock : BK.rockDark); }
+      R(14, 50, 68, 1, BK.grassLit);
+    }) });
+    out.push({ id: "story:beat:coil", file: `${D}beat/coil.png`, canvas: beat(R => { for (let i = 0; i < 40; i++) { const x = 6 + i * 1.6, y = 70 - i * 0.6 + Math.sin(i * 0.5) * 3; R(Math.round(x), Math.round(y), 3, 3, i % 4 ? "#3a8a3a" : "#ffd23f"); } }) });
+    out.push({ id: "story:beat:pennants", file: `${D}beat/pennants.png`, keys: bkeys(["accent"]), canvas: beat(R => { for (let i = 0; i < 5; i++) R(20 + i * 12, 40 + (i % 2) * 3, 2, 10, BK.accent); }) });
+    out.push({ id: "story:beat:frame", file: `${D}beat/frame.png`, canvas: beat((R, g) => { g.strokeStyle = "#2a1a0e"; g.lineWidth = 2; g.strokeRect(1, 1, 94, 70); }) });
     // night falling over a nightmare's page
     out.push({ id: "story:night", file: `${D}night.png`, canvas: solidOf(ART_W, ART_H, "rgba(24, 6, 48, 0.58)") });
     return out;

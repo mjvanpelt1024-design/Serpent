@@ -198,6 +198,15 @@
           if (d) problems.push(`story page ${id} at ${t} s: ${d}`);
           counts.scenes++;
         }
+        // the story's placeholder pages: every island's arrival and its boss fights (drawn before the face loads)
+        for (const I of CAMP.islands) for (const b of ["arrive", "boss1", "boss2", "boss3"]) {
+          const a = canvasOf(96, 72), b2 = canvasOf(96, 72);
+          W.drawStoryArt(a, I.id, b);
+          drawStoryArt(b2, I.id, b);
+          const d = diff(a, b2);
+          if (d) problems.push(`story beat ${I.id} ${b}: ${d}`);
+          counts.scenes++;
+        }
       }
 
       // ----- the shops and workshops: the whole stage, old drawStage() against new, with the same

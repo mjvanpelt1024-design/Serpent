@@ -63,7 +63,9 @@ textures/
 │   │                     looks (clouds, birds, the lamp, the mirror's eye, the bomb, ghosts, bees...);
 │   │                     kit/ for the cast every page shares (apples, orbs, popsicles, the tortoise,
 │   │                     the raccoon, the beetle, as sprite sheets); relic/ for the relics under
-│   │                     their spotlight; night.png, laid over a nightmare's page
+│   │                     their spotlight; night.png, laid over a nightmare's page; beat/ for the
+│   │                     placeholder story page's picture (color-swap: the island's sky, grass, rock,
+│   │                     accent)
 │   ├── keepers/          the fifteen shopkeepers, <island>-<role>.png, as sprite sheets (below)
 │   └── shops/            each island's shop and workshop: <island>/back.png (the walls),
 │                         middle.png (the workshop and the shop's shelf), the things that move in that
@@ -112,6 +114,7 @@ So to move or rename a file, move it and change its one line here. Two ids can s
 | `emblem:sparkle` | a theme's emblem in the Tailor |
 | `keeper:keep:merchant` | a shopkeeper's sprite sheet (island, then merchant, challenger or banker) |
 | `home:keep:tree`, `home:trophy`, `home:cloud-3` | home base: an island's own picture, or one every home shares |
+| `story:garden:sky`, `story:shop:2`, `story:raccoon`, `story:relic:brick` | the story book: a page's sky or layer, a moving bit, the cast, a relic |
 | `gem`, `clock`, `anchor` | a picture asked for by name: by the code, or by a content file's `icon =` (old-style upgrades and items) or `picture =` (avatars) |
 
 To give an old-style upgrade, item or avatar a new picture: put the PNG in `icons/`, add a line
@@ -215,6 +218,12 @@ button's bottom).
 **Theme emblems** (`emblems/`) are color-swap too, filled in with the theme's colors from its theme
 file: `#ff00ff` its accent, `#ff40ff`, `#c000c0` and `#800080` its three swirl colors (white and the
 outline `#120e16` show as painted). A theme names its emblem in its file (`emblem = sparkle`).
+
+**The story book** has two color-swap pictures too. The popsicle (`scenes/story/kit/popsicle.png`) is
+`#ff00ff` where its flavor goes. The placeholder story page's picture (`scenes/story/beat/`) takes the
+island's colors from its content file: `#00ffff` the sky in the island's light, `#00ff00` and `#80ff80`
+its grass and the grass's lit edge, `#ff00ff` and `#800080` its rock and the rock's darker stripes,
+`#ffff00` its accent (the pennants).
 
 Money shows tails at 12 pixels (20 in the top bar); click the coin in the top bar and it flips to heads,
 with a 32-pixel heads on its card.
