@@ -233,26 +233,24 @@ function isleLanterns(key) {
   });
   return out;
 }
-function paintIsleWays(g, key, P, free, R) {
+function paintIsleWays(g, key, P, free) {
   const accent = CAMP.islandById[key].colors.accent;
-  // a signpost by each branch, its board in the island's color once the shop is open
+  // a signpost by each branch (map:signpost, pointing right or left), its board in the island's color once
+  // the shop is open, weathered grey till then
+  const open = { board: accent, boardLit: shadeHex(accent, 0.35), writing: shadeHex(accent, -0.45) };
+  const shut = { board: "#7a6a5a", boardLit: "#9a8a7a", writing: "#4a3a2a" };
   ISLE_SIGNS.forEach(([n, shop]) => {
     const [fa, da] = NODE_SPOTS[n], [fb, db] = NODE_SPOTS[shop];
     const f = fa + (fb - fa) * 0.4, dy = da + (db - da) * 0.4 - 6;
     if (!free(f, dy, 1, 0.55)) return;
-    const [x, y] = P(f, dy), open = nodeState(key, shop) !== "locked", d = ISLANDS[key].dir * Math.sign(fb - fa || 1);
-    R(x, y - 8, 1, 9, "#5a3a20"); R(x + 1, y - 8, 1, 9, "#3a2410");
-    const bx = d > 0 ? x - 1 : x - 5;
-    R(bx, y - 8, 7, 3, open ? accent : "#7a6a5a"); R(bx, y - 8, 7, 1, open ? shadeHex(accent, 0.35) : "#9a8a7a");
-    R(d > 0 ? bx + 7 : bx - 1, y - 7, 1, 1, open ? accent : "#7a6a5a");          // the arrow's point
-    R(bx + 2, y - 7, 3, 1, open ? shadeHex(accent, -0.45) : "#4a3a2a");          // the writing
+    const [x, y] = P(f, dy), d = ISLANDS[key].dir * Math.sign(fb - fa || 1), a = texAnchor("map:signpost");
+    texPaint(g, "map:signpost", x - a[0], y - a[1], { frame: d > 0 ? 0 : 1, colors: nodeState(key, shop) !== "locked" ? open : shut });
   });
-  // lantern posts (their glow is drawn live)
+  // lantern posts (map:lantern-post; their glow is drawn live)
   isleLanterns(key).forEach(([f, dy]) => {
     if (!free(f, dy, 1, 0.5)) return;
     const [x, y] = P(f, dy);
-    R(x, y - 7, 1, 7, "#2a2018"); R(x - 1, y, 3, 1, "#2a2018");
-    R(x - 1, y - 10, 3, 3, "#1a1410"); R(x, y - 9, 1, 1, "#ffd27a"); R(x - 1, y - 11, 3, 1, "#3a2a1a");
+    texDrawAt(g, "map:lantern-post", x, y);
   });
 }
 

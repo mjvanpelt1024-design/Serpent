@@ -773,6 +773,19 @@
     add("map:lair-pole", D + "lair-pole.png", solidOf(1, 9, "#5a3a20"));
     add("map:banner-strip", D + "banner-strip.png", sheet([solidOf(1, 3, SK.flag), solidOf(1, 3, "#ffd23f")]), { frames: 2, keys: skeys(["flag"]) });
     add("map:glint", D + "glint.png", solidOf(1, 1, "#ffffff"));
+    // the signposts where the shops branch off (pointing right, left; the board's colors are keys) and the lantern posts
+    const SG = { board: "#ff00ff", boardLit: "#ff60ff", writing: "#a000a0" };
+    A("map:signpost", D + "signpost.png", anchoredSheet([1, -1].map(d => (g, R, x, y) => {
+      R(x, y - 8, 1, 9, "#5a3a20"); R(x + 1, y - 8, 1, 9, "#3a2410");
+      const bx = d > 0 ? x - 1 : x - 5;
+      R(bx, y - 8, 7, 3, SG.board); R(bx, y - 8, 7, 1, SG.boardLit);
+      R(d > 0 ? bx + 7 : bx - 1, y - 7, 1, 1, SG.board);
+      R(bx + 2, y - 7, 3, 1, SG.writing);
+    })), Object.fromEntries(Object.entries(SG).map(([n, c]) => [c, n])));
+    A("map:lantern-post", D + "lantern-post.png", anchoredSheet([(g, R, x, y) => {
+      R(x, y - 7, 1, 7, "#2a2018"); R(x - 1, y, 3, 1, "#2a2018");
+      R(x - 1, y - 10, 3, 3, "#1a1410"); R(x, y - 9, 1, 1, "#ffd27a"); R(x - 1, y - 11, 3, 1, "#3a2a1a");
+    }]));
     // the bridge's gate, locked and open, its glow and its torches' flames
     A("map:gate", D + "gate.png", anchoredSheet([false, true].map(open => (g, R, x, y) => {
       R(x - 6, y - 10, 3, 11, "#b8b2a4"); R(x + 4, y - 10, 3, 11, "#8f8a7e"); R(x - 6, y - 10, 1, 11, "#d8d2c4");

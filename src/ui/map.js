@@ -119,13 +119,6 @@ function placeTitle(key) {
 
 function mapRect(g, x, y, w, h, c) { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); }
 
-function mapTree(g, x, y, canopy, fruit) {
-  mapRect(g, x, y + 3, 1, 3, "#5a3a22");
-  mapRect(g, x - 2, y - 1, 5, 4, canopy);
-  mapRect(g, x - 1, y - 2, 3, 1, canopy);
-  if (fruit) { mapRect(g, x - 1, y, 1, 1, fruit); mapRect(g, x + 1, y + 1, 1, 1, fruit); }
-}
-
 /* ----- One island, painted once into its own canvas (again when its paths change) -----
    Its outline, the rock under it and the grass on top come from src/ui/map-isles.js:
    every island has its own shape there. */
@@ -147,7 +140,7 @@ function paintIsland(key, fog) {
   if (!fog) {
     paintIslePaths(g, key, cx, cy, isl);
     texLayer(g, `map:${key}:over`, 0, 0);
-    paintIsleWays(g, key, isleAt(key, cx, cy), isleFree(key), (x, y, w, h, c) => mapRect(g, x, y, w, h, c));
+    paintIsleWays(g, key, isleAt(key, cx, cy), isleFree(key));
   }
   // where drips fall from the spikes under it: listed with its picture ("tips"), so a repainted island can move them
   const e = TextureLoader.entry(base);

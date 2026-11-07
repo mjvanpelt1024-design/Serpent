@@ -231,8 +231,10 @@ with a 32-pixel heads on its card.
 ## The map's islands
 
 Each island on the map is three pictures in `map/<island>/`. The game lays `under.png`, then the paths
-you've opened, then `over.png`, then the signposts and lanterns (they change as you open shops and
-paths, so they're still drawn by the game). An island you haven't reached shows `fog.png` instead.
+you've opened, then `over.png`, then the signposts and lantern posts where they fit
+(`map/stops/signpost.png`, pointing right and left, its board color-swapped: `#ff00ff`, `#ff60ff` and
+`#a000a0` become the island's accent, its lit edge and the writing once the shop opens, weathered grey
+before; `map/stops/lantern-post.png`). An island you haven't reached shows `fog.png` instead.
 The small islets floating near each one are `islet-<n>.png`, each with an `"anchor"` (the point that
 sits on its spot); they bob on their own. Under each island hang spikes that drip water, sparkles, sand or lava: the drips fall from the points
 listed in the picture's entry, `"tips": [[x, y], ...]`, so if you repaint the spikes, move the points.
