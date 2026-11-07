@@ -264,7 +264,7 @@ const ENTITY_TYPES = {
     tick(e, ts) {
       if (e.blown || ts < e.blowAt) return;
       e.blown = true;
-      blowSnake(e.dx, e.dy);
+      blowSnake(e.dx, e.dy, ts);
     },
     touch() { return false; },
     draw(g, x, y, w, ts, e) {
@@ -617,24 +617,39 @@ function haunt(e) {
   takeHit(0.5, "ghost");
 }
 
-/* Pushes every segment one square, if the head has somewhere to land */
-function blowSnake(dx, dy) {
+/* Where one cell goes when the board's edge rules move it, or null when the board stops it.
+   Wall stops it; the Endless road stops at its walls and never wraps (its x runs on forever);
+   the Labyrinth wraps on its own grid; wrap and mirror boards are loops. */
+function landingCell(x, y) {
+  if (edgeMode === "maze") return [wrapW(x), wrapW(y)];
+  if (edgeMode === "endless") {
+    const [top, bottom] = endlessRows(x);
+    const row = y / cell;
+    return y < 0 || y >= boardSize || row < top || row >= bottom ? null : [x, y];
+  }
+  if (edgeMode === "wall") return inBoard(x, y) ? [x, y] : null;
+  return [wrapBoard(x), wrapBoard(y)];
+}
+
+/* A gust pushes the whole snake one square. Every segment moves together, so the blow is refused
+   if any segment would land off the board, in a wall or on a rock (not only the head). If it goes
+   through, the head meets whatever is on its new square, the same as after a normal step. */
+function blowSnake(dx, dy, ts = tnow()) {
   if (roll(getTrackValue("windbreak") + getTrackValue("nm_gale"))) { showToast("Windbreak! The gust passed you by."); return; }
   const mx = dx * cell, my = dy * cell;
-  let hx = snake.x + mx, hy = snake.y + my;
-  if (edgeMode !== "wall") { hx = wrapBoard(hx); hy = wrapBoard(hy); }
-  if (!inBoard(hx, hy) || walls.has(cellKey(hx, hy)) || rocks.some(r => covers(r, hx, hy))) {
-    sfx("rock");
-    return;
-  }
-  snake.cells.forEach(c => {
-    c.x += mx; c.y += my;
-    if (edgeMode !== "wall") { c.x = wrapBoard(c.x); c.y = wrapBoard(c.y); }
-  });
-  snake.x = hx; snake.y = hy;
+  const dest = snake.cells.map(c => landingCell(c.x + mx, c.y + my));
+  const blocked = dest.some(d => !d || walls.has(cellKey(d[0], d[1])) || rocks.some(r => covers(r, d[0], d[1])));
+  if (blocked) { sfx("rock"); return; }
+  // Endless and the Labyrinth glide each segment from where it was (see stepSnake)
+  if (endless) endless.prev = snake.cells.map(c => ({ x: c.x, y: c.y }));
+  if (maze) maze.prev = snake.cells.map(c => ({ x: c.x, y: c.y }));
+  snake.cells.forEach((c, i) => { c.x = dest[i][0]; c.y = dest[i][1]; });
+  snake.x = dest[0][0];
+  snake.y = dest[0][1];
   sfx("molasses");
   if (getTrackValue("updraft") > 0) addScore(getTrackValue("updraft") / 100 * 100 * scoreMultiplier);
   runCount("gusts");
+  resolveContact(snake.x, snake.y, ts, ts < graceUntil);
 }
 
 /* Hourglass: every hazard waits, and its clocks wait with it */

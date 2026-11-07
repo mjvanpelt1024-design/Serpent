@@ -407,6 +407,18 @@ function stepSnake(ts = performance.now()) {
   snake.cells.unshift({ x: nx, y: ny });
   if (snake.cells.length > snake.maxCells) snake.cells.pop();
 
+  if (resolveContact(nx, ny, ts, grace)) return;
+  if (stepEchoes(grace)) return;
+  if (gameState !== "PLAYING") return;
+
+  if (edgeMode === "endless") spawnEndlessItems();
+  else maintainApples();
+}
+
+/* Everything a head can land on, in order: fruit, rocks, pickups, popsicles, hazards, enemies, its own body.
+   Returns true when the step ends here (the game is over, or the snake was sent elsewhere). Normal steps
+   and gusts both land the head through this, so a blown snake meets the same things a walking one does. */
+function resolveContact(nx, ny, ts, grace) {
   const appleIndex = apples.findIndex(a => covers(a, nx, ny));
   if (appleIndex !== -1 && apples[appleIndex].fake) {
     apples.splice(appleIndex, 1);
@@ -447,34 +459,30 @@ function stepSnake(ts = performance.now()) {
   if (hitIndex !== -1) {
     const hit = popsicles.splice(hitIndex, 1)[0];
     if (hit.isBonusApple) eatApple(hit.size || 1, hit.small);
-    else if (!grace && hitPopsicle(hit)) return;
+    else if (!grace && hitPopsicle(hit)) return true;
   }
 
   const hazardIndex = hazards.findIndex(h => covers(h, nx, ny));
   if (hazardIndex !== -1) {
     const h = hazards.splice(hazardIndex, 1)[0];
-    if (!grace && hitHazard(h, ts)) return;
+    if (!grace && hitHazard(h, ts)) return true;
   }
 
   // build 46: hazards and power-ups, the Hunter, Echoes
-  if (touchEntities(nx, ny, ts, grace) || gameState !== "PLAYING") return;
-  if (!grace && hunterTouchedBy(nx, ny)) return;
-  if (gameState !== "PLAYING") return;
+  if (touchEntities(nx, ny, ts, grace) || gameState !== "PLAYING") return true;
+  if (!grace && hunterTouchedBy(nx, ny)) return true;
+  if (gameState !== "PLAYING") return true;
 
   // A Phantom slides through its own body
   for (let i = 1; i < snake.cells.length && !save.dev.invincible && !grace && !phantomOn(ts); i++) {
     if (snake.cells[i].x === nx && snake.cells[i].y === ny) {
       if (guardCrash("self")) break;
       endGame("self");
-      return;
+      return true;
     }
   }
 
-  if (stepEchoes(grace)) return;
-  if (gameState !== "PLAYING") return;
-
-  if (edgeMode === "endless") spawnEndlessItems();
-  else maintainApples();
+  return false;
 }
 
 function setDirection(dx, dy) {
