@@ -106,6 +106,8 @@ def check_island(isl, rel, families_used, currencies):
     check(num(b.get("stamina"), 5, 300), rel, "boss.stamina must be 5-300 seconds")
     check(isinstance(b.get("drain"), list) and len(b.get("drain", [])) == 3 and all(num(x, 0.1, 10) for x in b.get("drain", [])), rel, "boss.drain must be three numbers (one per fight)")
     check(num(b.get("exhaustMs"), 500, 20000), rel, "boss.exhaustMs must be 500-20000")
+    check(isinstance(b.get("resist", []), list) and all(r in ("fireball", "frost", "forcefield") for r in b.get("resist", [])), rel,
+          "boss.resist lists the spells it shrugs off: fireball, frost or forcefield")
 
     levels = isl.get("levels", [])
     check(len(levels) == LEVELS_PER_ISLAND, rel, f"has {len(levels)} levels, needs {LEVELS_PER_ISLAND}")

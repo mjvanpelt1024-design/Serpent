@@ -91,6 +91,9 @@ card over the map (`openMapGoal`) with Start and Back. The stop's record (object
 reward) and your last run's numbers sit in a plate at the side (`renderNodeSide`). Big arrows on either
 side step to the stops around it (also the arrow keys, or WASD), and say where they go:
 Home before level 1, Boss before a lair, the shopkeeper's name before a shop, Next island at the bridge.
+The shops go by their own names everywhere (The Coiled Anvil, The Tourney Tent, The Counting House...), and
+an island's banner has a button for each: the map flies to that shop's stop, then walks you in
+(`mapFlyTo`). Home base has arrows like a stop's: on to level 1, and down to the bridge of the island below.
 Esc, a click on the grass or scrolling out flies back up. Home doesn't stop to ask: it dives straight
 into home base.
 
@@ -185,7 +188,8 @@ per tier, up to five. The engine's rule stays: at zero hearts you're still alive
   **silver** a plate where you have no heart. Bosses use the same pictures (silver while armored).
 
 There's no result card: the game goes straight back to the map, up close on the next stop (after a boss,
-its shop, the challenger or the bank; after a quest trial, the challenger; after a loss, the same level),
+its shop, the challenger or the bank; after a quest trial, the next trial, or the challenger once all three
+are done; after a loss, the same level),
 with the run's numbers at the side: the money won (a first win pays more, a flawless one a quarter extra),
 what this run's points paid, what you found, what just opened.
 
@@ -203,11 +207,26 @@ A big rival snake, drawn the way your snake is, in its own colors, with its isla
 a wizard's hat, a bib and fork, a crown of fins, burning horns). Its hearts, stamina and mood are in a
 plate beside the board; silver hearts are armor.
 
-1. **Level 5: outlast it.** It hunts you, charges now and then, and its stamina drains the whole time. At
-   zero it gives up. You can't hurt it yet; a bite costs you a heart.
-2. **Level 10: break its armor.** Stamina drains faster. At zero it's exhausted: slow, sleepy, open, and
-   recovering. Bite its body to knock off a silver heart. A sword or a fireball cracks armor too.
-3. **Level 15: finish it.** No armor, full stamina. Exhaust it and bite its red hearts to zero.
+**Hurting it** (`camp-boss.js`): when the boss's head runs into your snake it hurts itself (and bounces off);
+when your head runs into it, you're hurt (a heart, a breaker). So dodge its head and let it crash. Every blow
+is one, plus one with a sword worn (two for a legendary one), plus the Rune of Fury's bite and the Coral Fig's
+bite chance; Thorn Mail adds one when it rams your body. A sword also lets you strike it head-on (one of the
+sword's hits for the level), a shield shoves it back, a fireball burns it, a force field zaps it when you
+touch it, and Frost Nova freezes it, unless that boss shrugs the spell off (`boss.resist` in its island's file:
+the Cinder Wyrm is fireproof, the Archmage counters frost). While it's worn out (fights 2 and 3), a bite on
+its body hurts it too.
+
+1. **Level 5: wear it out.** Each blow knocks the wind out of it (a fifth of its stamina), and its stamina
+   drains as it hunts you anyway. At zero it gives up.
+2. **Level 10: break its armor.** Each blow knocks off a silver heart. At zero stamina it's exhausted:
+   slow, sleepy and open to bites.
+3. **Level 15: finish it.** No armor: each blow takes a red heart.
+
+**How sharp it is** (`boss.smart`, 0 to 1, from `bossSmartFor`): every fight a little sharper than the one
+before, island by island, from 0.12 (the first island's first fight: slow, mostly wandering, blundering
+into you) to 1 (the last island's last fight, as hard as bosses have ever hunted). A dull boss wanders off
+your trail and runs into you; a sharp one heads for the squares in front of your head to get in your way,
+swerves rather than ram you, and charges more often. Its speed and charges scale with it too.
 
 ## Items
 
@@ -282,6 +301,12 @@ animated scene of their shop in the story book's style.
   rockslides), different twists on each trial. Once accepted it stays until it's done or its week runs out
   (`challenge.days`). Finishing pays the island's money plus one weighted roll from `challenge.pool`
   (gems, a rare or legendary item, a heart canister, an exclusive skin or theme); the odds are shown.
+  Accepting it flies the map straight to the first trial. The three trials' pins are ringed in violet and
+  numbered (gold with a tick once done), a dashed violet trail runs from the tent through them, over the
+  island's own path, and a purple **Quest** arrow at every trial points on to the next one. A trial's
+  objective card lists its twists, with **Start trial** (or a normal run); after a trial the map flies to
+  the next one, and after the last, back to the challenger to claim (`questFor`, `questNextFrom` and
+  `drawQuestTrail` in `map.js`).
 - **Banker** (after boss 3): trades this island's money down to the previous island's (10 to 1, less a
   flat 5 of the previous money per trade) or into gems, with the old Exchange's slider. Trades only go
   down. *Cash out* walks everything down to Snaycoins, one fee per step, then into gems.

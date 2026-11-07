@@ -1,0 +1,66 @@
+/* styles/19-quests-bosses.css */
+
+/* =========================================================
+   Quests on the map (the trial stops ringed and numbered, the purple
+   arrow along the quest's trail, the trial's objective card), the three
+   shops by name on an island's banner, home base's arrows, and the boss
+   plate's resist note. The trail itself is painted on the map canvas
+   (drawQuestTrail in src/ui/map.js).
+   ========================================================= */
+
+/* ---------- A quest trial's stop: a violet ring that pulses, and its number on a tag ---------- */
+.map-pin.level.quest { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #c070ff, 0 2px 0 4px rgba(0, 0, 0, 0.45); animation: quest-ring 1.6s ease-in-out infinite; }
+.map-pin.level.quest.quest-done { animation: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #ffd23f, 0 2px 0 4px rgba(0, 0, 0, 0.45); }
+@keyframes quest-ring {
+  0%, 100% { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #c070ff, 0 2px 0 4px rgba(0, 0, 0, 0.45); }
+  50% { box-shadow: 0 0 0 2px #fff, 0 0 0 6px #c070ff, 0 0 12px 6px rgba(192, 112, 255, 0.55); }
+}
+.qbadge {
+  position: absolute;
+  top: -9px;
+  right: -11px;
+  min-width: 11px;
+  height: 11px;
+  padding: 0 2px;
+  display: grid;
+  place-items: center;
+  font-family: var(--display);
+  font-size: 7px;
+  line-height: 1;
+  color: #fff;
+  background: #7a2ad0;
+  box-shadow: 0 0 0 1px #1a0a2a;
+  pointer-events: none;
+}
+.qbadge.done { background: #c08a10; }
+@media (prefers-reduced-motion: reduce) { .map-pin.level.quest { animation: none; } }
+
+/* the arrow that follows the quest's trail */
+.node-arrow.quest { --fxb: var(--fx-btn-purple); --fxbd: var(--fx-btn-purple-down); color: #fff; }
+
+/* a trial's objective card: violet, with its twists */
+.map-goal.quest .mg-card { border-image-source: var(--fx-plate-violet); }
+.mg-quest { margin: 0.4em 0; padding: 0.35em 0.5em; background: rgba(122, 42, 208, 0.22); box-shadow: inset 0 0 0 var(--px) rgba(192, 112, 255, 0.55); text-align: left; }
+.mg-quest .mg-label { color: #e2b4ff; margin: 0 0 0.2em; }
+.mg-twist { margin: 0.15em 0; font-size: 0.78em; line-height: 1.3; }
+.mg-twist b { color: #e2b4ff; }
+
+/* ---------- An island's banner: its three shops, by name ---------- */
+.mbn-act { flex-wrap: wrap; gap: 0.35em; }
+.mbn-shops { flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3em; margin-top: 0.15em; }
+.mbn-shop { display: inline-flex; align-items: center; gap: 0.35em; font-size: 0.78em; }
+.mbn-shop img { width: 1.4em; height: 1.4em; image-rendering: pixelated; }
+.mbn-shop svg { width: 0.9em; height: 0.9em; fill: currentColor; }
+.mbn-shop.merchant { --fxb: var(--fx-btn-blue); --fxbd: var(--fx-btn-blue-down); color: #fff; }
+.mbn-shop.challenger { --fxb: var(--fx-btn-purple); --fxbd: var(--fx-btn-purple-down); color: #fff; }
+.mbn-shop.banker { --fxb: var(--fx-btn-gold); --fxbd: var(--fx-btn-gold-down); color: #fff; }
+
+/* ---------- Home base: arrows at the sides, like a stop up close ---------- */
+/* low on the sides, where the dirt path leaves the picture, clear of the notes at the top */
+#screen-camphome .node-arrow { z-index: 6; top: 76%; }
+
+/* ---------- The boss plate: what it shrugs off ---------- */
+.cp-resist { font-size: 0.7em; color: #ffb0a8; }
+
+/* ---------- The shops' names on their pins: long ones wrap to two lines instead of running into the next ---------- */
+.map-pin.prop .lbl { white-space: normal; width: max-content; max-width: 64px; text-align: center; line-height: 1.1; }

@@ -1,13 +1,25 @@
 /* =========================================================
    src/campaign/camp-boss.js
    The island boss: a big rival snake with hearts, armor and stamina.
-   Every island has one boss, fought three times (levels 5, 10, 15):
-     fight 1  Outlast it. Its stamina drains as it hunts you; at zero it
-              gives up and you win. You can't hurt it yet.
-     fight 2  Its stamina drains faster. At zero it's exhausted: slow, and
-              open to bites. Each bite on its body knocks off a silver
-              armor heart. No armor left = you win.
-     fight 3  The armor is gone. Exhaust it and bite its red hearts to zero.
+   Every island has one boss, fought three times (levels 5, 10, 15).
+
+   Hurting it: when ITS head runs into YOUR snake, it hurts itself, so
+   dodge, coil and let it crash. When YOUR head runs into IT, you get hurt
+   (unless it's exhausted: then a bite on its body hurts it). A sword adds
+   to every blow (and lets you strike it head-on), Thorn Mail pricks it
+   when it rams your body, a fireball burns it, a force field zaps it, and
+   frost freezes it, unless that boss shrugs the spell off ("resist" in
+   its island's file).
+     fight 1  Each blow knocks the wind out of it; its stamina drains as
+              it hunts you too. At zero it gives up and you win.
+     fight 2  Each blow knocks off a silver armor heart. No armor = a win.
+              At zero stamina it's exhausted: slow, and open to bites.
+     fight 3  No armor: each blow takes a red heart. None left = a win.
+
+   How sharp it is (boss.smart) grows with every fight: the first island's
+   first fight is a pushover that mostly wanders, and the last island's
+   last fight hunts as hard as bosses ever did. A sharp boss cuts in front
+   of your head and swerves rather than ram you; a dull one blunders in.
    Its numbers (hearts, armor, speed, stamina) come from the island's file.
    ========================================================= */
 "use strict";
@@ -27,6 +39,7 @@ function spawnBoss(def, fight) {
     .sort((a, b) => (Math.abs(b.x - snake.x) + Math.abs(b.y - snake.y)) - (Math.abs(a.x - snake.x) + Math.abs(a.y - snake.y)));
   const at = corners[0] || { x: (N20 - 3) * cell, y: (N20 - 3) * cell };
   const now = performance.now();
+  const smart = bossSmartFor(CAMP.islandById[campRun.isl].n, fight);
   boss = {
     def: B, fight, name: B.name,
     cells: [{ x: at.x, y: at.y }], prev: null, maxCells: B.length,
@@ -34,18 +47,27 @@ function spawnBoss(def, fight) {
     hearts: B.hearts, maxHearts: B.hearts,
     armor: fight === 3 ? 0 : B.armor, maxArmor: B.armor,
     stamina: 1, exhaustedUntil: 0, exhaustStart: 0,
-    nextCharge: now + BOSS_DELAY + 4000 + Math.random() * 2000, chargeUntil: 0,
-    dmg: 0, beaten: false
+    nextCharge: now + BOSS_DELAY + (4000 + Math.random() * 2000) / (0.35 + 0.65 * smart), chargeUntil: 0,
+    dmg: 0, beaten: false, smart, resist: B.resist || []
   };
   // no taunt: the story stays in the book (build 51)
   sfx("bad");
 }
 
+/* How sharp a boss is, 0 to 1: island n's fight f. The first is a pushover; the last is as sharp as bosses
+   have ever been (1 = the old hunt). Fifteen fights in all, each a little sharper than the one before. */
+function bossSmartFor(n, fight) {
+  const i = (n - 1) * 3 + (fight - 1);
+  return Math.min(1, 0.12 + 0.88 * i / 14);
+}
+/* Does this boss shrug off a spell? ("resist" in its island's file) */
+const bossResists = id => !!boss && boss.resist.includes(id);
+
 const bossExhausted = (ts = performance.now()) => !!boss && ts < boss.exhaustedUntil;
 const bossCharging = (ts = performance.now()) => !!boss && ts < boss.chargeUntil;
 
 function bossInterval(ts) {
-  let rel = boss.def.speed * (1 + 0.07 * boss.dmg);
+  let rel = boss.def.speed * (1 + 0.07 * boss.dmg) * (0.62 + 0.38 * boss.smart);
   if (bossCharging(ts)) rel *= 1.9;
   if (bossExhausted(ts)) rel *= 0.38;
   return moveInterval / Math.max(0.15, rel);
@@ -78,7 +100,7 @@ function tickBoss(ts, delta) {
   }
   if (!bossExhausted(ts) && !bossCharging(ts) && ts >= boss.nextCharge && ts > boss.retreatUntil) {
     boss.chargeUntil = ts + BOSS_CHARGE_MS;
-    boss.nextCharge = ts + BOSS_CHARGE_MS + 4500 + Math.random() * 3000;
+    boss.nextCharge = ts + BOSS_CHARGE_MS + (4500 + Math.random() * 3000) / (0.35 + 0.65 * boss.smart);
     sfx("whoosh");
   }
   if (frozen || ts < boss.stunnedUntil || ts < boss.moveAt) return;
@@ -134,20 +156,44 @@ function bossPath(target) {
   return { x, y };
 }
 
+/* Which squares are your snake's: your head, or the rest of you */
+const onSnake = p => snake.cells.findIndex(c => c.x === p.x && c.y === p.y);
+
+/* A step that just carries on: straight ahead if it can, otherwise a turn (never doubling back) */
+function bossWander() {
+  const head = boss.cells[0], neck = boss.cells[1] || head;
+  let dx = Math.sign(head.x - neck.x) * cell, dy = Math.sign(head.y - neck.y) * cell;
+  if (Math.abs(head.x - neck.x) > cell * 2) dx = -dx;
+  if (Math.abs(head.y - neck.y) > cell * 2) dy = -dy;
+  const opts = [[cell, 0], [-cell, 0], [0, cell], [0, -cell]]
+    .filter(([x, y]) => !(x === -dx && y === -dy && (dx || dy)))
+    .map(([x, y]) => ({ x: bossWrap(head.x + x), y: bossWrap(head.y + y), straight: x === dx && y === dy }))
+    .filter(p => !bossBlocked(p.x, p.y));
+  if (!opts.length) return null;
+  const ahead = opts.find(p => p.straight);
+  if (ahead && Math.random() < 0.75) return ahead;
+  return opts[Math.floor(Math.random() * opts.length)];
+}
+
 function stepBoss(ts) {
   const head = boss.cells[0];
   const retreating = ts < boss.retreatUntil;
+  const charging = bossCharging(ts);
+  const sm = boss.smart;
   let target;
   if (retreating) {
     // the far side of the board from your head
     target = { x: snake.x < boardSize / 2 ? (N20 - 2) * cell : cell, y: snake.y < boardSize / 2 ? (N20 - 2) * cell : cell };
   } else {
-    // aims a couple of squares ahead of your head when charging
-    const lead = bossCharging(ts) ? 2 : 0;
+    // a sharp boss heads for the squares in front of your head, to get in your way; charging, it lunges
+    const lead = charging ? 2 : Math.round(3 * sm);
     target = { x: bossWrap(snake.x + Math.sign(snake.dx) * cell * lead), y: bossWrap(snake.y + Math.sign(snake.dy) * cell * lead) };
     if (bossBlocked(target.x, target.y)) target = { x: snake.x, y: snake.y };
   }
-  let next = bossPath(target);
+  // a dull boss loses track of you: much of the time it just wanders on
+  const chase = retreating || charging || Math.random() < 0.3 + 0.7 * sm;
+  let next = chase ? bossPath(target) : bossWander();
+  if (!next) next = bossWander();
   if (!next) {
     const opts = [[cell, 0], [-cell, 0], [0, cell], [0, -cell]]
       .map(([dx, dy]) => ({ x: bossWrap(head.x + dx), y: bossWrap(head.y + dy) }))
@@ -156,12 +202,20 @@ function stepBoss(ts) {
     next = opts[0];
   }
   if (!next) { boss.stunnedUntil = ts + 500; return; }
+  // running into you hurts it, so a sharp boss swerves at the last moment (unless it's charging)
+  if (onSnake(next) >= 0 && !charging && Math.random() < 0.85 * sm) {
+    const alt = [[cell, 0], [-cell, 0], [0, cell], [0, -cell]]
+      .map(([dx, dy]) => ({ x: bossWrap(head.x + dx), y: bossWrap(head.y + dy) }))
+      .filter(p => !bossBlocked(p.x, p.y) && onSnake(p) < 0)
+      .sort((a, b) => (Math.abs(a.x - target.x) + Math.abs(a.y - target.y)) - (Math.abs(b.x - target.x) + Math.abs(b.y - target.y)));
+    if (alt.length) next = alt[0];
+  }
+  // it rammed you: it hurts itself, and bounces off instead of moving in
+  const hit = onSnake(next);
+  if (hit >= 0) { bossRams(ts, hit === 0); return; }
   boss.prev = boss.cells.map(c => ({ x: c.x, y: c.y }));
   boss.cells.unshift({ x: next.x, y: next.y });
   if (boss.cells.length > boss.maxCells) boss.cells.pop();
-
-  if (next.x === snake.x && next.y === snake.y) { bossBitesHead(ts); return; }
-  if (snake.cells.some((c, i) => i > 0 && c.x === next.x && c.y === next.y)) bossBitesBody(ts);
 }
 
 function bossRetreat(ts, ms = BOSS_RETREAT) {
@@ -169,30 +223,26 @@ function bossRetreat(ts, ms = BOSS_RETREAT) {
   boss.chargeUntil = 0;
 }
 
-function bossBitesHead(ts) {
-  bossRetreat(ts);
-  if (ts < graceUntil) return;
-  if (campGearBlocks("boss")) return;
-  sfx("bad");
-  buzz([60, 40, 60]);
-  takeHit(1, "boss");
-  graceUntil = Math.max(graceUntil, ts + 900);
+/* How hard a blow on the boss lands: one, more with a sword, a Rune of Fury or the Coral Fig's bites */
+function bossBlow() {
+  let n = 1;
+  if (campEquippedId("gear") === "sword") n += campEquippedRarity("gear") === "legendary" ? 2 : 1;
+  n += runeVal("bite");
+  if (roll(upVal("bite"))) n++;
+  return n;
 }
 
-function bossBitesBody(ts) {
+/* The boss ran its head into your snake: it hurts itself. Thorn Mail on your body pricks it harder. */
+function bossRams(ts, onHead) {
   bossRetreat(ts);
-  if (ts < graceUntil) return;
-  if (campEquippedId("gear") === "thorns" && campUseGear("thorns")) {
-    boss.stunnedUntil = ts + 1200;
-    showToast("Thorn Mail! It pricked itself on your scales.");
-    sfx("rock");
-    if (campEquippedRarity("gear") === "legendary" && boss.armor > 0 && boss.fight === 2) damageBoss(1, "thorns");
-    return;
-  }
-  if (campPetBlocks()) return;
-  sfx("bad");
-  takeHit(0.5, "boss");
-  graceUntil = Math.max(graceUntil, ts + 700);
+  boss.stunnedUntil = ts + 700;
+  if (ts < boss.hitCdUntil) return;
+  boss.hitCdUntil = ts + BOSS_HIT_CD;
+  let n = bossBlow();
+  if (!onHead && campEquippedId("gear") === "thorns") { n++; campUseGear("thorns", true); }
+  sfx("rock");
+  buzz([40, 30, 40]);
+  damageBoss(n, onHead ? "head" : "ram");
 }
 
 /* Your head moved into the boss. Returns true if the run ended. */
@@ -201,20 +251,25 @@ function bossTouchedBy(nx, ny, ts) {
   if (!boss.cells.some(c => c.x === nx && c.y === ny)) return false;
   if (ts < boss.hitCdUntil) return false;
   boss.hitCdUntil = ts + BOSS_HIT_CD;
+  // worn out, it's open: a bite on it hurts it, not you
   if (bossExhausted(ts) && boss.fight > 1) {
-    let n = 1;
-    n += runeVal("bite");
-    if (roll(upVal("bite"))) n++;
-    damageBoss(n, "bite");
+    damageBoss(bossBlow(), "bite");
     graceUntil = Math.max(graceUntil, ts + 500);
     return gameState !== "PLAYING";
   }
-  // a sword cracks armor even while it's fresh; a shield just shoves it back
+  // a force field zaps it instead of you
+  if (fieldOn(ts) && !bossResists("forcefield")) {
+    sfx("pop");
+    bossRetreat(ts);
+    damageBoss(1, "field");
+    graceUntil = Math.max(graceUntil, ts + 700);
+    return gameState !== "PLAYING";
+  }
+  // a sword strikes it head-on (one of the sword's hits for this level); a shield shoves it back
   const gear = campEquippedId("gear");
   if (gear === "sword" && campUseGear("sword")) {
-    if (boss.fight === 2 && boss.armor > 0) damageBoss(1, "sword");
-    else { boss.stamina = Math.max(0.02, boss.stamina - 0.15); showToast("Your sword knocked the wind out of it!"); }
     bossRetreat(ts);
+    damageBoss(bossBlow(), "sword");
     graceUntil = Math.max(graceUntil, ts + 700);
     return gameState !== "PLAYING";
   }
@@ -224,19 +279,31 @@ function bossTouchedBy(nx, ny, ts) {
     graceUntil = Math.max(graceUntil, ts + 700);
     return false;
   }
+  // otherwise you ran into it: that hurts you
   bossRetreat(ts);
   if (ts < graceUntil) return false;
   if (campGuardHit("boss")) return false;
   sfx("bad");
+  buzz([60, 40, 60]);
   const dead = takeHit(1, "boss");
   graceUntil = Math.max(graceUntil, ts + 900);
   return dead;
 }
 
-/* Knocks off armor first (fight 2), then hearts (fight 3) */
+/* A blow of n on the boss: fight 1 knocks the wind out of it, fight 2 its armor, fight 3 its hearts */
 function damageBoss(n, how) {
   if (!boss || boss.beaten) return;
   const ts = performance.now();
+  if (boss.fight === 1) {
+    boss.stamina = Math.max(0, boss.stamina - 0.22 * n);
+    boss.dmg++;
+    boss.stunnedUntil = Math.max(boss.stunnedUntil, ts + 500);
+    campBossFlash = ts;
+    sfx("rock");
+    if (boss.stamina <= 0) { bossGivesUp(); return; }
+    showToast(`${BOSS_HOW[how] || "A hit!"} ${boss.def.name.split(" ")[0]} is winded.`);
+    return;
+  }
   for (let i = 0; i < n; i++) {
     if (boss.fight === 2) { if (boss.armor > 0) boss.armor--; }
     else if (boss.fight === 3) { if (boss.hearts > 0) boss.hearts--; }
@@ -259,9 +326,10 @@ function damageBoss(n, how) {
     campWinLevel();
     return;
   }
-  const left = boss.fight === 2 ? `${boss.armor} armor left` : `${boss.hearts} hearts left`;
-  showToast(how === "fireball" ? `Fireball hit! ${left}.` : `Bite! ${left}.`);
+  const left = boss.fight === 2 ? `${boss.armor} armor left` : `${boss.hearts} ${boss.hearts === 1 ? "heart" : "hearts"} left`;
+  showToast(`${BOSS_HOW[how] || "A hit!"} ${left}.`);
 }
+const BOSS_HOW = { ram: "It crashed into you!", head: "It rammed your head and hurt itself!", bite: "Bite!", sword: "Your sword struck it!", fireball: "Fireball hit!", field: "Your force field zapped it!", thorns: "Your thorns pricked it!" };
 let campBossFlash = 0;
 
 /* ----- Drawing -----

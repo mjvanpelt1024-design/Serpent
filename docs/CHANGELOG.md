@@ -1,5 +1,21 @@
 # Changelog
 
+## v:11.07.2026_b:52: quests on the map, bosses you can hurt
+
+- **Bosses take damage.** When a boss's head runs into your snake it hurts itself; when your head runs into it,
+  you're hurt. Swords add to every blow (and strike head-on), Thorn Mail pricks a ram, fireballs burn it in every
+  fight, force fields zap it and frost freezes it, unless that boss shrugs the spell off: the Cinder Wyrm is
+  fireproof and the Archmage counters frost. The first fight's blows knock the wind out of it, the second's its
+  armor, the third's its hearts.
+- **Gentler bosses that sharpen.** Every boss fight is a little sharper than the last, from a first fight that
+  mostly wanders and blunders into you, up to the last island's last fight, never harder than bosses were.
+- **Quests live on the map.** Accepting one flies you to the first trial; the three trials are ringed and
+  numbered, joined by their own violet trail over the path, with a Quest arrow on to the next. Each trial's card
+  lists its twists. After a trial the map flies to the next one, and after the last, back to the challenger.
+- **Shops by name.** The Coiled Anvil, The Tourney Tent, The Counting House and the rest, on their pins, arrows
+  and scrolls, with a button for each on the island's banner that flies to the shop and walks you in.
+- **Home base arrows** on to level 1 (and down to the island below), to match level 1's arrow home.
+
 ## v:11.06.2026_b:51: workshops, pictures, foes, and a title screen of your own
 
 - **Gear and spells are yours for good.** Gear absorbs one hit a level, plus one for each part fitted and one

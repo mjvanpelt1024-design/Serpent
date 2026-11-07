@@ -111,7 +111,7 @@ const GOAL_LABEL = {
   relic: () => "Find the relic",
   shards: n => `Gather ${n} pouches`,
   thief: n => `Catch the thief ${n} times`,
-  boss: (n, g) => ["", "Outlast the boss", "Break the boss's armor", "Defeat the boss"][g.fight] || "Beat the boss"
+  boss: (n, g) => ["", "Wear the boss out", "Break the boss's armor", "Defeat the boss"][g.fight] || "Beat the boss"
 };
 const goalText = g => (GOAL_LABEL[g.type] ? GOAL_LABEL[g.type](g.need, g) : "Win");
 

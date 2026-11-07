@@ -386,8 +386,9 @@ function shopAct(a, d) {
     const C = challengeState(shopIsl);
     C.active = true; C.startedAt = Date.now(); C.endsAt = Date.now() + CAMP.rules.challenge.days * 86400000; C.claimed = false;
     saveCamp(); sfx("unlock");
-    showToast("Quest accepted. Play the trials from here, or right from the map.");
-    renderShop();
+    // straight out to the first trial: all three are ringed on the map, joined by the quest's trail
+    showToast("Quest accepted! Your three trials are ringed on the map.");
+    mapFlyTo(shopIsl, C.levels[C.done.findIndex(d => !d)]);
     return;
   }
   if (a === "newch") {

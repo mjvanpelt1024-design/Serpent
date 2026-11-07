@@ -201,7 +201,10 @@ function campCast() {
   else if (it.id === "blink") ok = castBlink(p, leg);
   else if (it.id === "frost") {
     freezeHazards(p * 1000);
-    if (boss) boss.frozenUntil = ts + p * 500;
+    if (boss && !boss.beaten) {
+      if (bossResists("frost")) showToast(`${boss.def.name.split(" ")[0]} shakes off the frost!`);
+      else boss.frozenUntil = ts + p * 500;
+    }
     if (hunter && hunter.alive) hunter.stunnedUntil = ts + p * 1000;
     campObjs.forEach(o => { if (o.kind === "thief") o.moveAt = ts + p * 1000; });
     sfx("molasses");
@@ -261,8 +264,9 @@ function tickShots(ts, delta) {
 function fireballHits(t) {
   sfx("rock");
   if (t.kind === "boss" && boss && !boss.beaten) {
-    if (boss.fight === 2 && boss.armor > 0) damageBoss(1, "fireball");
-    else { boss.stamina = Math.max(0.02, boss.stamina - 0.2); showToast("Fireball! It's winded."); }
+    // a fireball hurts a boss in every fight, unless it's fireproof
+    if (bossResists("fireball")) showToast(`${boss.def.name.split(" ")[0]} shrugs off the flames!`);
+    else damageBoss(1, "fireball");
   } else if (t.kind === "hunter" && hunter && hunter.alive) stunHunter("star");
   else if (t.kind === "entity") { if (["wasp", "ghost"].includes(t.ref.type)) campBonusEvent("kill"); removeEntity(t.ref); }
   else if (t.kind === "hazard") { const i = hazards.indexOf(t.ref); if (i >= 0) { if (t.ref.type === "flea") campBonusEvent("kill"); hazards.splice(i, 1); } }

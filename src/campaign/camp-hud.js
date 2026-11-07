@@ -274,7 +274,9 @@ function campHudUpdate() {
     const tired = bossExhausted(ts), charging = bossCharging(ts);
     st.classList.toggle("tired", tired);
     st.classList.toggle("charge", charging);
-    $(".cp-boss-state").textContent = boss.beaten ? "Beaten!" : tired ? "Exhausted: bite it!" : charging ? "Charging!" : ts < boss.frozenUntil ? "Frozen" : boss.fight === 1 ? "Keep away until it tires" : "Wear it out";
+    const st2 = boss.beaten ? "Beaten!" : tired ? "Exhausted: bite it!" : charging ? "Charging! Let it crash into you" : ts < boss.frozenUntil ? "Frozen" : "Dodge its head, let it ram you";
+    const res = boss.resist.length ? `<span class="cp-resist">Shrugs off ${boss.resist.map(id => escapeAttr((campItemDef(id) || { name: id }).name)).join(", ")}</span>` : "";
+    setHtml($(".cp-boss-state"), `${escapeAttr(st2)}${res ? "<br>" + res : ""}`);
   }
 
   // the pointer to whatever the quest wants you to find

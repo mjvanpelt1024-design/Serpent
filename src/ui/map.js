@@ -260,6 +260,7 @@ function paintMapWorld(g, t) {
     if (placeFogged(key)) return;
     drawIsleLiving(g, key, t, by);
     NODE_ORDER.forEach(id => drawNodeArt(g, key, id, nodeState(key, id), t, by));
+    drawQuestTrail(g, key, t, by);
   });
 
   // your snake, waiting by the next thing to do
@@ -574,8 +575,10 @@ const mapBannerEl = document.getElementById("map-banner");
 
 const LEAF_SVG = '<svg class="leaf" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c4 3 7 7 7 11a7 7 0 0 1-6 6.9V22h-2v-2.1A7 7 0 0 1 5 13c0-4 3-8 7-11z"/></svg>';
 const CROWN_SVG = '<svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v3H3zM3 7l5 4 4-7 4 7 5-4-2 10H5z"/></svg>';
-/* What each of an island's side stops is called (its picture is pin:<stop>, textures/icons/map-pins/) */
+/* What each of an island's side stops is called (its picture is pin:<stop>, textures/icons/map-pins/).
+   The three shops go by their own names: The Coiled Anvil, The Tourney Tent, The Counting House... */
 const NODE_LABEL = { home: "Home", merchant: "Merchant", challenger: "Challenger", banker: "Bank", bridge: "Bridge" };
+const nodeLabel = (key, id) => (NPC_KINDS.includes(id) ? CAMP.islandById[key].npcs[id].shop : NODE_LABEL[id]);
 const NODE_PIN_LIFT = { home: 22, merchant: 24, challenger: 28, banker: 32, bridge: 24 };
 const nodeKey = (key, id) => (typeof id === "number" ? `lv-${key}-${id}` : `np-${key}-${id}`);
 
@@ -615,13 +618,15 @@ function renderModes(justUnlocked) {
         const boss = isBossLevel(id);
         const html = boss ? (ns === "done" ? CROWN_SVG : SKULL_SVG) : `<span class="n">${id}</span>`;
         const rec = camp.levels[campLevelId(key, id)];
-        add(`level ${ns === "locked" ? "locked" : "open"} ${ns}${boss ? " boss" : ""}${rec && rec.flawless ? " flawless" : ""}`, nodeKey(key, id), key, p.x, p.y - (boss ? 19 : 5), html,
+        const Q = questFor(key), qi = Q ? Q.levels.indexOf(id) : -1;
+        const qhtml = qi >= 0 ? `<span class="qbadge${Q.done[qi] ? " done" : ""}" title="Quest trial ${qi + 1} of 3">${Q.done[qi] ? "&#10003;" : qi + 1}</span>` : "";
+        add(`level ${ns === "locked" ? "locked" : "open"} ${ns}${boss ? " boss" : ""}${rec && rec.flawless ? " flawless" : ""}${qi >= 0 ? " quest" + (Q.done[qi] ? " quest-done" : "") : ""}`, nodeKey(key, id), key, p.x, p.y - (boss ? 19 : 5), html + qhtml,
           `${id}. ${def.name}${ns === "locked" ? ", locked" : ns === "done" ? ", won" : ""}`, pin => openLevelPop(key, id, false, pin));
       } else {
         const npc = NPC_KINDS.includes(id) ? CAMP.islandById[key].npcs[id] : null;
         const name = npc ? npc.name : id === "home" ? "Home base" : "The bridge";
         add(`prop node ${id} ${ns}`, nodeKey(key, id), key, p.x, p.y - NODE_PIN_LIFT[id],
-          `<img class="pi" src="${iconUrl("pin:" + id, 2)}" alt="">${ns === "locked" ? `<span class="nlock">${LOCK_SVG}</span>` : ""}<span class="lbl">${NODE_LABEL[id]}</span>`,
+          `<img class="pi" src="${iconUrl("pin:" + id, 2)}" alt="">${ns === "locked" ? `<span class="nlock">${LOCK_SVG}</span>` : ""}<span class="lbl">${escapeAttr(nodeLabel(key, id))}</span>`,
           `${name}${ns === "locked" ? ", locked" : ""}`, pin => (id === "home" ? openNode(key, "home") : openLevelPop(key, id, false, pin)));
       }
     });
@@ -719,6 +724,12 @@ function renderBanner() {
       `<button class="btn btn-small btn-green" data-home>${LEAF_SVG} Home base</button>`;
     const nx = campNextLevel(key);
     if (nx) action += `<button class="btn btn-small btn-primary" data-next>Level ${nx}</button>`;
+    // the three shops, by name: the map flies to each one, then you walk in
+    action += `<div class="mbn-shops">` + NPC_KINDS.map(k => {
+      const open = nodeState(key, k) !== "locked";
+      return `<button class="btn btn-small mbn-shop ${k}" data-shop="${k}" ${open ? "" : "disabled"} title="${escapeAttr(open ? I.npcs[k].name : `Beat the boss at level ${SHOP_AFTER[k]} first`)}">` +
+        `<img src="${iconUrl("pin:" + k, 2)}" alt="">${open ? "" : LOCK_SVG}<span>${escapeAttr(I.npcs[k].shop)}</span></button>`;
+    }).join("") + `</div>`;
   }
   b.innerHTML = `<div class="mbn-row">
       <button class="btn btn-small mb-nav" data-step="-1" aria-label="The island below" ${i === 0 ? "disabled" : ""}>&#9660;</button>
@@ -730,6 +741,7 @@ function renderBanner() {
   b.querySelectorAll("[data-step]").forEach(el => el.addEventListener("click", () => stepPlace(+el.dataset.step)));
   const home = b.querySelector("[data-home]");
   if (home) home.addEventListener("click", () => openNode(key, "home"));
+  b.querySelectorAll("[data-shop]").forEach(el => el.addEventListener("click", () => { const k = el.dataset.shop; mapFlyTo(key, k, () => openNode(key, k)); }));
   const nx = b.querySelector("[data-next]");
   if (nx) nx.addEventListener("click", () => {
     const n = campNextLevel(key);
@@ -796,6 +808,15 @@ function nodeLinks(key, id) {
     if (BOSS_SHOP[id]) add({ key, id: BOSS_SHOP[id] }, "shop");
   } else if (NPC_KINDS.includes(id)) add({ key, id: SHOP_AFTER[id] }, "back");
   else if (id === "bridge") { add({ key, id: LEVEL_COUNT }, "back"); const k = other(1); if (k) add({ key: k, id: "home" }, "next"); }
+  // on a quest: from the challenger or any trial, straight on to the next trial (or back to claim)
+  const Q = questFor(key);
+  if (Q && (id === "challenger" || Q.levels.includes(id))) {
+    const nq = questNextFrom(key, id);
+    if (nq && nq.id !== id) {
+      const same = out.find(l => l.to.key === nq.key && l.to.id === nq.id);
+      if (same) same.role = "quest"; else add(nq, "quest");
+    }
+  }
   // which side of the screen each lies on: the way it really is from here
   const from = nodeAt(key, id), dir = ISLANDS[key].dir;
   out.forEach(l => {
@@ -817,7 +838,7 @@ function goNode(to) {
 function nodeTitle(key, id) {
   if (typeof id === "number") return `${id}. ${campLevelDef(key, id).name}`;
   const I = CAMP.islandById[key];
-  if (NPC_KINDS.includes(id)) return I.npcs[id].name;
+  if (NPC_KINDS.includes(id)) return I.npcs[id].shop;
   if (id === "home") return "Home base";
   const next = CAMP.islands[campIslandIdx(key) + 1];
   return next ? `Bridge to ${next.name}` : "The Coil's head";
@@ -830,7 +851,11 @@ function arrowLabel(from, to, d, role) {
   if (to.key !== from.key) return { word: d > 0 ? "Next island" : "Island below", sub: CAMP.islandById[to.key].name, cls: "island" };
   if (to.id === "home") return { word: "Home", sub: "", cls: "home" };
   if (typeof to.id === "number" && isBossLevel(to.id)) return { word: "Boss", sub, cls: "boss" };
-  if (NPC_KINDS.includes(to.id)) return { word: NODE_LABEL[to.id], sub, cls: "shop" };
+  if (role === "quest") {
+    const Q = questFor(to.key), qi = Q ? Q.levels.indexOf(to.id) : -1;
+    return qi >= 0 ? { word: `Quest: trial ${qi + 1}`, sub, cls: "quest" } : { word: "Quest done!", sub: "Claim your reward", cls: "quest" };
+  }
+  if (NPC_KINDS.includes(to.id)) return { word: nodeLabel(to.key, to.id), sub: CAMP.islandById[to.key].npcs[to.id].name, cls: "shop" };
   if (to.id === "bridge") return { word: "Bridge", sub: "", cls: "island" };
   return { word: role === "back" || d < 0 ? "Back" : "Next", sub, cls: "" };
 }
@@ -839,7 +864,7 @@ function arrowLabel(from, to, d, role) {
    back, the way back before a shop); up and down take whichever goes up or down the island */
 function stepNode(d, vertical = false) {
   if (!mapPop || !mapPop.focus || !nodeLinksNow.length) return;
-  const rank = { next: 0, back: 1, shop: 2 };
+  const rank = { quest: 0, next: 1, back: 2, shop: 3 };
   let pick = null;
   if (vertical) pick = nodeLinksNow.filter(l => Math.sign(l.dy) === d && Math.abs(l.dy) > 3).sort((a, b) => d * (b.dy - a.dy) || rank[a.role] - rank[b.role])[0];
   else pick = nodeLinksNow.filter(l => l.side === d).sort((a, b) => rank[a.role] - rank[b.role])[0];
@@ -883,10 +908,17 @@ function renderNodeFocus() {
     else if (st === "locked") why = `Win ${j - 1}. ${campLevelDef(key, j - 1).name} first`;
     go = st === "done" ? "Play again" : "Play";
     if (rec && rec.wins) tag = `Best ${fmtInt(rec.best)}${rec.flawless ? " · flawless" : ""}`;
+    const qi = questTrialAt(key, j);
+    if (qi >= 0) {
+      const Q = questFor(key);
+      sub = `Quest trial ${qi + 1} of 3 · ${goalText(def.goal)}`;
+      line = `Twists: ${Q.mods[qi].map(m => (CAMP.rules.challenge.mods.find(x => x.id === m) || { name: m }).name).join(", ")}`;
+      go = "Play trial";
+    }
   } else {
     const next = CAMP.islands[campIslandIdx(key) + 1];
     if (NPC_KINDS.includes(j)) {
-      sub = I.npcs[j].shop;
+      sub = `${I.npcs[j].name}, ${{ merchant: "the merchant", challenger: "the challenger", banker: "the banker" }[j]}`;
       line = `"${I.npcs[j].line}"`;
       if (st === "locked") why = `Beat the boss at level ${SHOP_AFTER[j]} first`;
       go = "Visit";
@@ -923,6 +955,7 @@ function renderNodeFocus() {
       a._to = l.to;
       a.disabled = false;
       a.className = `btn node-arrow ${side < 0 ? "prev" : "next"} open ${L.cls}${l.role === "shop" ? " fork" : ""}`;
+      a.dataset.role = l.role;
       a.style.top = `calc(50% + ${((k - (here.length - 1) / 2) * 5.6).toFixed(2)}em)`;
       a.innerHTML = `<span class="na-chev" aria-hidden="true">${side < 0 ? "&#9664;" : "&#9654;"}</span><span class="na-word">${L.cls === "boss" ? SKULL_SVG : ""}${escapeAttr(L.word)}</span>${L.sub ? `<span class="na-sub">${escapeAttr(L.sub)}</span>` : ""}`;
       a.setAttribute("aria-label", `${L.word}${L.sub ? ": " + L.sub : ""}`);
@@ -990,14 +1023,81 @@ function actOnNode(key, j) {
   else openNode(key, j);
 }
 
-function playLevel(key, j) {
+function playLevel(key, j, trial = -1) {
   if (!campLevelOpen(key, j)) return;
   camp.at = key;
   saveCamp();
   lastPlayed = { key, j, nm: false };
   mapReturnTo = key;
   closeMapGoal();
-  campBeginLevel(key, j);
+  campBeginLevel(key, j, trial);
+}
+
+/* ----- Quests on the map: the challenger's three trials, ringed and joined by their own trail ----- */
+function questFor(key) {
+  const C = camp && camp.challenges && camp.challenges[key];
+  return C && C.active && !C.claimed && C.levels.length && Date.now() < C.endsAt ? C : null;
+}
+/* Which trial this level is, if it's one you still have to play (-1 if not) */
+function questTrialAt(key, n) {
+  const C = questFor(key);
+  return C ? C.levels.findIndex((l, i) => l === n && !C.done[i]) : -1;
+}
+/* Where the quest goes next: the first trial not done yet, or back to the challenger to claim */
+function questNextStop(key) {
+  const C = questFor(key);
+  if (!C) return null;
+  const i = C.done.findIndex(d => !d);
+  return i >= 0 ? { key, id: C.levels[i] } : { key, id: "challenger" };
+}
+/* The quest arrow from a stop: on to the next trial still to do (round to the first), from the
+   challenger to the first one, and back to the challenger to claim once all three are done */
+function questNextFrom(key, id) {
+  const C = questFor(key);
+  if (!C) return null;
+  const todo = C.levels.map((l, i) => ({ l, i })).filter(x => !C.done[x.i]);
+  if (!todo.length) return id === "challenger" ? null : { key, id: "challenger" };
+  if (id === "challenger") return { key, id: todo[0].l };
+  const at = C.levels.indexOf(id);
+  const after = todo.find(x => x.i > at && x.l !== id) || todo.find(x => x.l !== id);
+  return after ? { key, id: after.l } : null;
+}
+/* The trail: from the challenger's tent through the three trials, arcing over the island's own
+   path in a dashed violet line that marches along; the legs you've walked are gold */
+function drawQuestTrail(g, key, t, by) {
+  const C = questFor(key);
+  if (!C) return;
+  const stops = ["challenger"].concat(C.levels).map(id => { const p = nodeAt(key, id); return { x: p.x, y: p.y + by - 2 }; });
+  let run = 0;
+  for (let leg = 0; leg < stops.length - 1; leg++) {
+    const a = stops[leg], b = stops[leg + 1];
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+    const bend = Math.min(26, 8 + len * 0.18) * (leg % 2 ? 1 : -1);
+    const cx = mx - dy / len * bend, cy = my + dx / len * bend - 6;
+    const walked = C.done[leg];
+    const n = Math.ceil(len * 1.6);
+    for (let i = 0; i <= n; i++) {
+      const f = i / n, u = 1 - f;
+      const x = u * u * a.x + 2 * u * f * cx + f * f * b.x, y = u * u * a.y + 2 * u * f * cy + f * f * b.y;
+      run++;
+      if ((run + Math.floor(t * 12)) % 8 > 4) continue;
+      mapRect(g, x - 1, y, 3, 2, "#1a0a2a");
+      mapRect(g, x - 1, y - 1, 2, 2, walked ? "#ffd23f" : "#c070ff");
+    }
+  }
+}
+
+/* Fly the map to a stop, up close; `then` runs once the camera has arrived (to walk into a shop) */
+function mapFlyTo(key, id, then) {
+  const go = () => {
+    if (currentScreen !== "modes") return;
+    if (mapSel !== key) selectPlace(key);
+    const here = mapPop && mapPop.focus && mapPop.key === key && mapPop.j === id;
+    if (!here) openLevelPop(key, id, false, mapPinsEl.querySelector(`[data-key="${nodeKey(key, id)}"]`));
+    if (then) setTimeout(() => { if (currentScreen === "modes" && mapPop && mapPop.key === key && mapPop.j === id) then(); }, here ? 0 : 700);
+  };
+  if (currentScreen !== "modes") { mapReturnTo = key; openScreen("modes"); setTimeout(go, 120); }
+  else go();
 }
 
 /* ----- The objective, on a card over the map, before a level begins ----- */
@@ -1015,20 +1115,31 @@ function openMapGoal(key, j) {
   const first = !campWon(key, j);
   mapGoalFor = { key, j };
   const bonus = def.bonus ? `<div class="mg-row"><span class="mg-k">Challenge</span><span>${escapeAttr(bonusText(def.bonus))} <em>(${escapeAttr(bonusOnce(def.bonus) && bonusEarned(key, j) ? "earned" : bonusRewardText(key, def.bonus))})</em></span></div>` : "";
+  const qi = questTrialAt(key, j), Q = questFor(key);
+  const modOf = m => CAMP.rules.challenge.mods.find(x => x.id === m) || { name: m, text: "" };
+  // a boss: how to hurt it, and any spell it shrugs off
+  const bossRes = def.goal.type === "boss" && I.boss.resist && I.boss.resist.length ? I.boss.resist.map(id => (campItemDef(id) || { name: id }).name).join(", ") : "";
+  const bossTip = def.goal.type === "boss" ? `<div class="mg-row"><span class="mg-k">How</span><span>Let its head crash into your body; don't run into it yourself.${def.goal.fight > 1 ? " Bite it while it's worn out." : ""} Swords, fireballs and force fields hurt it too.</span></div>` +
+    (bossRes ? `<div class="mg-row"><span class="mg-k">Shrugs off</span><span>${escapeAttr(bossRes)}</span></div>` : "") : "";
+  const quest = qi >= 0 ? `<div class="mg-quest"><p class="mg-label">Quest trial ${qi + 1} of 3 · ${escapeAttr(I.npcs.challenger.name)}</p>` +
+    Q.mods[qi].map(m => `<p class="mg-twist"><b>${escapeAttr(modOf(m).name)}</b> ${escapeAttr(modOf(m).text)}</p>`).join("") + `</div>` : "";
   mapGoalEl.innerHTML = `<div class="mg-card">
       <p class="mg-kicker">${escapeAttr(I.name)} · level ${j} · ${escapeAttr(levelKindText(def))}</p>
       <h3 class="mg-title">${isBossLevel(j) ? SKULL_SVG : ""}${escapeAttr(def.name)}</h3>
       <p class="mg-label">Objective</p>
       <p class="mg-goal">${escapeAttr(goalText(def.goal))}</p>
       <p class="mg-text">${escapeAttr(def.text || "")}</p>
-      ${bonus}
+      ${quest}${bossTip}${bonus}
       <div class="mg-row"><span class="mg-k">Reward</span><span>${coinHtml(key)} ${fmtInt(campRewardPreview(key, j, first))}${first ? " (first win)" : ""}, plus your points</span></div>
       ${rec && rec.wins ? `<div class="mg-row"><span class="mg-k">Best</span><span>${fmtInt(rec.best)}${rec.flawless ? " · flawless" : ""}</span></div>` : ""}
-      <div class="mg-acts"><button class="btn" data-mg="back">Back</button><button class="btn btn-primary" data-mg="go">Start</button></div>
+      <div class="mg-acts"><button class="btn" data-mg="back">Back</button>${qi >= 0 ? `<button class="btn btn-small" data-mg="plain">Normal run</button><button class="btn btn-purple" data-mg="go">Start trial</button>` : `<button class="btn btn-primary" data-mg="go">Start</button>`}</div>
     </div>`;
   mapGoalEl.classList.add("open");
+  mapGoalEl.classList.toggle("quest", qi >= 0);
   sfx("tab");
-  mapGoalEl.querySelector('[data-mg="go"]').addEventListener("click", e => { e.stopPropagation(); playLevel(key, j); });
+  mapGoalEl.querySelector('[data-mg="go"]').addEventListener("click", e => { e.stopPropagation(); playLevel(key, j, qi); });
+  const plain = mapGoalEl.querySelector('[data-mg="plain"]');
+  if (plain) plain.addEventListener("click", e => { e.stopPropagation(); playLevel(key, j); });
   mapGoalEl.querySelector('[data-mg="back"]').addEventListener("click", e => { e.stopPropagation(); closeMapGoal(); });
   mapGoalEl.onclick = e => { if (e.target === mapGoalEl) closeMapGoal(); };
   setTimeout(() => { const b = mapGoalEl.querySelector('[data-mg="go"]'); if (b) b.focus({ preventScroll: true }); }, 40);
@@ -1164,6 +1275,8 @@ function campLevelFacts(key, j) {
   out.push(["Board", edge[0], edge[1]]);
   const sp = Object.keys(def.spawns || {}).map(k => SPAWN_NAMES[k] || k);
   if (def.goal.type === "boss") sp.unshift(CAMP.islandById[key].boss.name);
+  const res = def.goal.type === "boss" ? (CAMP.islandById[key].boss.resist || []) : [];
+  if (res.length) out.push(["Shrugs off", escapeAttr(res.map(id => (campItemDef(id) || { name: id }).name).join(", "))]);
   if (sp.length) out.push(["Watch for", escapeAttr(sp.join(", "))]);
   if (def.bonus) out.push(["Challenge", `${escapeAttr(bonusText(def.bonus))} (${bonusOnce(def.bonus) && bonusEarned(key, j) ? "earned" : escapeAttr(bonusRewardText(key, def.bonus))})`]);
   const first = !campWon(key, j);
