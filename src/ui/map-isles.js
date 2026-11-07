@@ -644,6 +644,14 @@ function paintIsleScenery(g, key, cx, cy, isl, pass) {
   paintIsleWays(g, key, P, free, R);
 }
 
+/* Whether a spot on an island is free for a signpost or a lantern: on the grass clear of the rim,
+   away from every stop and the landmark (the same test the scenery was placed by) */
+function isleFree(key) {
+  const onGrass = (f, dy, m) => [f - 4, f, f + 4].every(ff => { const s = isleSpan(key, ff); return s && dy > s[0] + m && dy < s[1] - m; });
+  return (f, dy, m = 3, gap = 1) => NODE_ORDER.every(id => { const [nf, ndy] = NODE_SPOTS[id]; return Math.abs(nf - f) > 9 * gap || Math.abs(ndy - dy) > 7 * gap; })
+    && onGrass(f, dy, m) && !(Math.abs(f - LANDMARK_SPOT[0]) < 26 && dy < LANDMARK_SPOT[1] + 8);
+}
+
 /* ----- Signposts where the shops branch off, and lanterns along the open paths ----- */
 const ISLE_SIGNS = [[5, "merchant"], [10, "challenger"], [15, "banker"]];
 function isleLanterns(key) {

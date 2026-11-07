@@ -139,25 +139,19 @@ function paintIsland(key, fog) {
   c.height = H;
   const g = c.getContext("2d");
   const cx = Math.floor(W / 2), cy = ISLE_ROOM + form.back;
-  // an island you haven't reached is a silhouette against the sky around it
-  const haze = k => { const [r, gg, bb] = skyAt(isl.y); return "#" + [r, gg, bb].map(v => Math.round(v * k).toString(16).padStart(2, "0")).join(""); };
-  const body = paintIsleBody(g, key, cx, cy, fog, haze);
-  if (fog) {
-    // only the outline of its landmark shows through the haze
-    const sil = document.createElement("canvas");
-    sil.width = W; sil.height = H;
-    const sg = sil.getContext("2d");
-    paintLandmark2(sg, key, isleAt(key, cx, cy), isl);
-    sg.globalCompositeOperation = "source-in";
-    sg.fillStyle = haze(0.74);
-    sg.fillRect(0, 0, W, H);
-    g.drawImage(sil, 0, 0);
-  } else {
-    paintIsleScenery(g, key, cx, cy, isl, "under");
+  // pictures in textures/map/<island>/: an island you haven't reached is a silhouette in the haze
+  // (fog.png); one you have is its rock and ground (under.png), the paths you've opened, then its
+  // trees, houses and props (over.png), then the signposts and lanterns, which change as you go
+  const base = `map:${key}:${fog ? "fog" : "under"}`;
+  g.drawImage(texCanvas(base), 0, 0);
+  if (!fog) {
     paintIslePaths(g, key, cx, cy, isl);
-    paintIsleScenery(g, key, cx, cy, isl, "over");
+    texLayer(g, `map:${key}:over`, 0, 0);
+    paintIsleWays(g, key, isleAt(key, cx, cy), isleFree(key), (x, y, w, h, c) => mapRect(g, x, y, w, h, c));
   }
-  return { c, ox: cx, oy: cy, tips: body.tips };
+  // where drips fall from the spikes under it: listed with its picture ("tips"), so a repainted island can move them
+  const e = TextureLoader.entry(base);
+  return { c, ox: cx, oy: cy, tips: (e && e.tips) || [] };
 }
 
 function shadeHex(hex, k) {

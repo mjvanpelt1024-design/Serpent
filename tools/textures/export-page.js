@@ -34,6 +34,7 @@
         if (e.keys) entry.keys = e.keys;
         if (e.columns) entry.columns = e.columns;
         if (e.anchor) entry.anchor = e.anchor;
+        if (e.extra) Object.assign(entry, e.extra);
         index[e.id] = Object.keys(entry).length === 1 ? entry.file : entry;
         notes.push(`${e.id}: ${e.canvas.width}x${e.canvas.height}${e.frames > 1 ? ` (${e.frames} frames)` : ""}${e.at ? ` at ${e.at.join(", ")}` : ""}`);
       }

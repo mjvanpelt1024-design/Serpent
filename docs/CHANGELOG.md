@@ -21,7 +21,8 @@
   the candle's flame, a keeper's sway, blink and tongue; the home tree, a row for every tier bought). Home
   base's sky and ground are one 320-wide painting per island, centered in narrower windows. Every
   island's coin is a color-swap picture, its shades filled in from the island's money color, and so
-  are the menus' frames (plates, windows, buttons, tabs), filled in from the theme's colors. Lights and glows pulse over their PNGs; the rarity
+  are the menus' frames (plates, windows, buttons, tabs), filled in from the theme's colors. The map's
+  islands are pictures too: under the paths, over them, and in the haze. Lights and glows pulse over their PNGs; the rarity
   pip and ribbon are color-swap pictures. They look exactly as before, checked pixel by pixel at many moments
   (`node tools/textures/textures.mjs check --legacy`). How to: `textures/README.md`.
 

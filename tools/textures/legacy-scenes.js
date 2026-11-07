@@ -641,9 +641,32 @@
     return out;
   }
 
+  /* ----- The map's islands (map.js paintIsland, map-isles.js): the old painters, layer by layer ----- */
+  function mapList() {
+    const out = [];
+    Object.keys(ISLANDS).forEach(key => {
+      const isl = ISLANDS[key], form = isleForm(key);
+      const W = form.reach * 2 + 24, H = ISLE_ROOM + form.back + form.front + form.drop + 16;
+      const cx = Math.floor(W / 2), cy = ISLE_ROOM + form.back;
+      const haze = k => { const [r, gg, bb] = skyAt(isl.y); return "#" + [r, gg, bb].map(v => Math.round(v * k).toString(16).padStart(2, "0")).join(""); };
+      const under = canvasOf(W, H), ug = under.getContext("2d");
+      const body = paintIsleBody(ug, key, cx, cy, false, haze);
+      paintIsleScenery(ug, key, cx, cy, isl, "under");
+      // the scenery over the paths, without the signposts and lanterns (they change as you go)
+      const over = canvasOf(W, H), ways = window.paintIsleWays;
+      window.paintIsleWays = () => {};
+      try { paintIsleScenery(over.getContext("2d"), key, cx, cy, isl, "over"); } finally { window.paintIsleWays = ways; }
+      const fog = paintIsland(key, true);
+      out.push({ id: `map:${key}:under`, file: `map/${key}/under.png`, canvas: under, extra: { tips: body.tips } });
+      out.push({ id: `map:${key}:over`, file: `map/${key}/over.png`, canvas: over });
+      out.push({ id: `map:${key}:fog`, file: `map/${key}/fog.png`, canvas: fog.c, extra: { tips: fog.tips } });
+    });
+    return out;
+  }
+
   window.LEGACY_SCENES = {
     sets: { rooms: { list: roomList, backdrop: roomBackdrop, times: ROOM_TIMES, rooms: () => Object.keys(PIC_ROOMS) }, shops: { list: shopList }, keepers: { list: keeperList, moments: keeperMoments, roles: KEEPER_ROLES },
-      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList } },
+      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList } },
     record, split
   };
 })();

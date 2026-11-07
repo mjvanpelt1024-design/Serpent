@@ -236,6 +236,23 @@
       }
       await compareUrls("island plate", urlIn(W.fxIslePlate("#ffd23f")), urlIn(fxIslePlate("#ffd23f"))); counts.scenes++;
 
+      // ----- the map's islands: in the haze, and reached, with nothing opened and with everything
+      // (the same save in both games), and where their drips fall from
+      const campNow = JSON.stringify(gEval("camp"));
+      for (const [sname, setup] of [["everything", `camp = ${campNow}`], ["fresh", "camp = freshCamp()"]]) {
+        W.eval(setup); gEval(setup);
+        if (sname === "fresh") W.eval(`camp = ${JSON.stringify(gEval("camp"))}`);
+        for (const key of Object.keys(gEval("ISLANDS"))) for (const fog of [true, false]) {
+          if (fog && sname === "fresh") continue;
+          const a = W.paintIsland(key, fog), b = paintIsland(key, fog);
+          const d = diff(a.c, b.c);
+          if (d) problems.push(`map island ${key} (${fog ? "in the haze" : sname}): ${d}`);
+          if (JSON.stringify(a.tips) !== JSON.stringify(b.tips)) problems.push(`map island ${key} (${fog ? "haze" : sname}): drip points differ`);
+          counts.scenes++;
+        }
+      }
+      W.eval(`camp = ${campNow}`); gEval(`camp = ${campNow}`);
+
       // ----- coins: every island's, both sides, every size the game asks for
       for (const I of CAMP.islands) for (const side of ["tails", "heads"]) for (const size of W.LEGACY_SCENES.sets.coins.sizes) {
         const d = diff(W.coinCanvas(I.id, side, size), coinCanvas(I.id, side, size));

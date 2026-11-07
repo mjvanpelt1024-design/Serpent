@@ -40,6 +40,9 @@ textures/
 ├── hearts/               every heart slot the HUD shows (below)
 ├── bosses/               each island's boss face on its wanted poster
 ├── coins/                each island's coin, <island>-<tails|heads>-<12|20|32>.png (color-swap, below)
+├── map/                  each island on the map: <island>/under.png (its rock and ground, under the
+│                         paths), over.png (trees, houses, props over them), fog.png (the silhouette
+│                         you see before you reach it)
 ├── ui/                   the menus' frames: plate, chip, window, buttons, tab (color-swap, below), the
 │                         wanted poster's parchment, the board's brass corners, the scroll
 ├── scenes/
@@ -91,6 +94,7 @@ So to move or rename a file, move it and change its one line here. Two ids can s
 | `shop:keep:back`, `shop:reef:hoop`, `shop:parcel` | a shop's walls (or `middle`, `front`), something in its workshop, something every shop shares |
 | `coin:keep:tails:12` | an island's coin, a side and a size |
 | `ui:plate`, `ui:button-up`, `ui:corner-tl` | a menu frame |
+| `map:keep:under`, `map:keep:over`, `map:keep:fog` | an island on the map |
 | `keeper:keep:merchant` | a shopkeeper's sprite sheet (island, then merchant, challenger or banker) |
 | `home:keep:tree`, `home:trophy`, `home:cloud-3` | home base: an island's own picture, or one every home shares |
 | `gem`, `clock`, `anchor` | a picture asked for by name: by the code, or by a content file's `icon =` (old-style upgrades and items) or `picture =` (avatars) |
@@ -183,6 +187,15 @@ button's bottom).
 Money shows tails at 12 pixels (20 in the top bar); click the coin in the top bar and it flips to heads,
 with a 32-pixel heads on its card.
 
+## The map's islands
+
+Each island on the map is three pictures in `map/<island>/`. The game lays `under.png`, then the paths
+you've opened, then `over.png`, then the signposts and lanterns (they change as you open shops and
+paths, so they're still drawn by the game). An island you haven't reached shows `fog.png` instead.
+Under each island hang spikes that drip water, sparkles, sand or lava: the drips fall from the points
+listed in the picture's entry, `"tips": [[x, y], ...]`, so if you repaint the spikes, move the points.
+The stops (stones, lairs, the home tree, stalls), the water, birds and smoke are still drawn live.
+
 ## How menus light a picture
 
 The board and the painted scenes (shops, the rack, the den...) draw a picture exactly as the file is.
@@ -220,5 +233,5 @@ boots the game in a headless Chrome or Edge and makes sure every file in `index.
 `--legacy` to also compare every picture with the game from before textures/ (from git), pixel by pixel,
 the rooms at sixty moments each, every shop with and without stock and orders, and every keeper in
 every one of its looks, and home base piece by piece; that only passes for pictures that haven't been repainted.
-`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`) writes a set from that old game into this folder and its index: it's
+`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`, `map`) writes a set from that old game into this folder and its index: it's
 how the folder was made, and with `--force` it overwrites files, repaints and all.

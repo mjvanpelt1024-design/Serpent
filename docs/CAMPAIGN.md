@@ -368,7 +368,8 @@ the board and in the painted scenes (`texCanvas`, `texUrl`) and lit from the top
 (`iconUrl`). A new item needs its PNG and its line in the index, nothing in the code. The picture rooms,
 the shops and workshops, the shopkeepers and home base are scenes in `textures/scenes/`, and the coins and
 the menus' frames are color-swap pictures in `textures/coins/` and `textures/ui/` (`src/engine/render/scene-art.js`
-draws their layers, sprite sheets, lights and color-swap pictures). Still drawn by code for now: story art, the map's islands, theme backdrops, snake skins, familiars on the board and
+draws their layers, sprite sheets, lights and color-swap pictures). The map's islands are pictures
+in `textures/map/` (the paths, signposts and stops are drawn live). Still drawn by code for now: story art, theme backdrops, snake skins, familiars on the board and
 the old engine's hazards.
 
 ## Build 51
