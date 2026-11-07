@@ -1223,6 +1223,22 @@
     const CREST_TS = { keep: [600, 0, 200, 60 * Math.PI], spire: [700, 100], hollow: [0], reef: [0], crown: [600, 100] };
     Object.entries(CREST_TS).forEach(([isl, times]) => add(`crest:${isl}`, `board/crests/${isl}.png`,
       fromBoard(times.map(ts => (g, x, y) => { campRun = { isl }; drawBossCrest(x, y, 1, 0, ts); }))));
+    // the boss's head, a size bigger than a square: in a key color (its color goes there), its shine (the
+    // light top and the dark rim) by itself; its belly stripe (key: the belly color); the armor plate
+    const grow = 20 * 0.14;
+    const headPath = (g, x, y) => roundedPath(g, x - grow, y - grow, 19 + grow * 2, 19 + grow * 2, 20 * 0.34);
+    add("boss:head", "board/bosses/head.png", fromBoard([(g, x, y) => { headPath(g, x, y); g.fillStyle = "#ff00ff"; g.fill(); }]), { keys: { "#ff00ff": "body" } });
+    add("boss:head-shine", "board/bosses/head-shine.png", fromBoard([(g, x, y) => {
+      g.save(); headPath(g, x, y); g.fillStyle = "rgba(255, 255, 255, 0.22)"; g.clip(); g.fillRect(x - grow, y - grow, 20 + grow * 2, (20 + grow * 2) * 0.26); g.restore();
+      g.save(); headPath(g, x, y); g.strokeStyle = "rgba(0, 0, 0, 0.45)"; g.lineWidth = 2; g.stroke(); g.restore();
+    }]));
+    add("boss:belly", "board/bosses/belly.png", fromBoard([(g, x, y) => { g.fillStyle = "#ff00ff"; g.fillRect(x + 20 * 0.32, y + 20 * 0.32, 20 * 0.34, 20 * 0.34); }]), { keys: { "#ff00ff": "belly" } });
+    add("boss:plate", "board/bosses/plate.png", fromBoard([(g, x, y) => {
+      g.fillStyle = "#5a6470"; g.fillRect(x + 4, y + 3, 11, 9);
+      g.fillStyle = "#dfe6ee"; g.fillRect(x + 5, y + 3, 9, 7);
+      g.fillStyle = "#ffffff"; g.fillRect(x + 5, y + 3, 3, 2);
+      g.fillStyle = "#9aa3ad"; g.fillRect(x + 7, y + 10, 5, 2);
+    }]));
     campRun = runWas;
     // the familiars, at each size the game draws them (the firefly without its glowing body, drawn live)
     const fireflyRest = up => (g, x, y, w) => {

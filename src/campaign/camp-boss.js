@@ -365,43 +365,18 @@ function drawBoss(view, ts) {
     if (frozen) col = i % 2 ? "#9fd8ff" : "#7ab8e8";
     if (tired && !frozen) col = shade(col, -0.25);
     if (flash) col = "#ffffff";
+    const k = cell / 20;
     if (i === 0) {
-      // a head a size bigger than the body
-      const grow = cell * 0.14;
-      ctx.save();
-      roundedPath(ctx, x - grow, y - grow, cell - 1 + grow * 2, cell - 1 + grow * 2, cell * 0.34);
-      ctx.fillStyle = col;
-      ctx.fill();
-      ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
-      ctx.clip();
-      ctx.fillRect(x - grow, y - grow, cell + grow * 2, (cell + grow * 2) * 0.26);
-      ctx.restore();
-      ctx.save();
-      roundedPath(ctx, x - grow, y - grow, cell - 1 + grow * 2, cell - 1 + grow * 2, cell * 0.34);
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.45)";
-      ctx.lineWidth = Math.max(1, cell * 0.1);
-      ctx.stroke();
-      ctx.restore();
+      // a head a size bigger than the body (boss:head in its color, boss:head-shine over it)
+      texBoardPaint(ctx, "boss:head", x, y, k, { colors: { body: col } });
+      texBoard(ctx, "boss:head-shine", x, y, k);
       continue;
     }
     drawSnakeCell(x, y, col);
-    // the belly stripe
-    ctx.fillStyle = flash ? "#ffffff" : B.belly;
-    ctx.globalAlpha = 0.55;
-    ctx.fillRect(x + cell * 0.32, y + cell * 0.32, cell * 0.34, cell * 0.34);
-    ctx.globalAlpha = 1;
+    // the belly stripe (boss:belly in its belly color, see-through)
+    texBoardPaint(ctx, "boss:belly", x, y, k, { colors: { belly: flash ? "#ffffff" : B.belly }, alpha: 0.55 });
     // silver plates on its back while it's armored
-    if (boss.armor > 0 && i > 0 && i % 2 === 1) {
-      const k = cell / 20;
-      ctx.fillStyle = "#5a6470";
-      ctx.fillRect(x + 4 * k, y + 3 * k, 11 * k, 9 * k);
-      ctx.fillStyle = "#dfe6ee";
-      ctx.fillRect(x + 5 * k, y + 3 * k, 9 * k, 7 * k);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(x + 5 * k, y + 3 * k, 3 * k, 2 * k);
-      ctx.fillStyle = "#9aa3ad";
-      ctx.fillRect(x + 7 * k, y + 10 * k, 5 * k, 2 * k);
-    }
+    if (boss.armor > 0 && i > 0 && i % 2 === 1) texBoard(ctx, "boss:plate", x, y, k);
   }
   // the head: which way it looks, its crest, its eyes
   const [hx, hy] = pts[0];

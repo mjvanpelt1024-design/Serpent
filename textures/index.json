@@ -5,6 +5,10 @@
     "An entry can also be an object: { \"file\": ..., \"keep\": [colors menus don't light], \"ink\": [colors that count as outline], \"menu\": a file shown in menus instead, \"badge\": a corner mark, \"light\": false, \"frames\": frames side by side in a sprite sheet, \"keys\": { \"#ff00ff\": \"name\" } colors the game swaps }."
   ],
   "textures": {
+    "boss:belly": { "file": "board/bosses/belly.png", "keys": { "#ff00ff": "belly" }, "anchor": [-6, -6] },
+    "boss:head-shine": { "file": "board/bosses/head-shine.png", "anchor": [4, 4] },
+    "boss:head": { "file": "board/bosses/head.png", "keys": { "#ff00ff": "body" }, "anchor": [3, 3] },
+    "boss:plate": { "file": "board/bosses/plate.png", "anchor": [-4, -3] },
     "crest:crown": { "file": "board/crests/crown.png", "frames": 2, "anchor": [2, 10] },
     "crest:hollow": { "file": "board/crests/hollow.png", "anchor": [-2, 13] },
     "crest:keep": { "file": "board/crests/keep.png", "frames": 4, "anchor": [-1, 10] },

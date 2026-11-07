@@ -37,7 +37,8 @@ textures/
 ├── upgrades/             the campaign's upgrade trees, by icon name
 ├── foes/  hazards/  powerups/
 ├── board/                the goal pieces: key, door, plates, seal, shard, thief; relics/ for the relics;
-│                         crests/ for what each boss wears on its head, entities/ for the old engine's
+│                         crests/ for what each boss wears on its head, bosses/ for a boss's bigger
+│                         head, belly stripe and armor plate, entities/ for the old engine's
 │                         hazards and power-ups, items/ for apples, XP, rocks and the rest, snake/ for
 │                         the snake's squares, flair/ for hats, faces, capes, patterns and tails (20
 │                         pixels to a square, below)
@@ -242,7 +243,11 @@ head it sits on). The game scales them up to the screen with hard edges, like ev
 
 - **The bosses' crests** (`board/crests/<island>.png`): each one's anchor is the boss's head's top
   left corner. The Keep's knight is a sheet of four frames, its plume at four heights; the Spire's hat
-  has its tip dull and twinkling, the Crown's horns dark and glowing.
+  has its tip dull and twinkling, the Crown's horns dark and glowing. A boss's body squares are the
+  snake's (below); its head is `board/bosses/head.png` (a size bigger: `#ff00ff` becomes its color,
+  pale when frozen, dark when worn out, white when hit) under `head-shine.png`; `belly.png` (`#ff00ff`:
+  its belly color) is laid see-through on each body square, and `plate.png` on every other one while
+  it has armor. Its glowing eyes, tongue and sleepy z's are drawn by the game.
 - **The familiars** (`familiars/<id>-<size>.png`) come in the sizes the game shows them at, since pixel
   art is drawn for its size: 16 beside your snake on the board, 12 at home and in the shop, 20 and 32 in
   the den. Repaint each one you want changed. Their frames: the crab's claw up and down, the firefly's

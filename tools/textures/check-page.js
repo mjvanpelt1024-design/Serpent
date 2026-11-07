@@ -422,6 +422,11 @@
       for (const I of CAMP.islands) for (const ts of [0, 100, 200, 300, 600, 700, 1000, 1700, 60 * Math.PI]) {
         boardCheck(`crest ${I.id} at ${ts.toFixed(1)}`, `campRun = { isl: "${I.id}" }; drawBossCrest(100, 100, 1, 0, ${ts})`);
       }
+      // whole bosses (drawBoss), every island, armored and bare, worn out, frozen, charging and just hit
+      for (const I of CAMP.islands) for (const [state, extra] of [["armored", "armor: 2"], ["bare", "armor: 0"], ["tired", "armor: 2, exhaustedUntil: 9e9"], ["frozen", "armor: 0, frozenUntil: 9e9"], ["charging", "armor: 2, chargeUntil: 9e9"], ["hit", "armor: 0"]]) {
+        const setup = `campRun = { isl: "${I.id}" }; campBossFlash = ${state === "hit" ? 1900 : -9999}; boss = { def: CAMP.islandById["${I.id}"].boss, cells: [200, 220, 240, 260, 280].map(x => ({ x, y: 200 })), prev: null, moveAt: 2000, frozenUntil: 0, exhaustedUntil: 0, chargeUntil: 0, dmg: 0, smart: 1, beaten: false, ${extra} }`;
+        boardCheck(`boss ${I.id} ${state}`, `${setup}; drawBoss({ toScreen: (x, y) => [x, y] }, 2000); boss = null`, [170, 170, 140, 60], [1]);
+      }
       games.forEach((ev, i) => { window.__was = runWas[i]; W.__was = runWas[i]; ev("campRun = __was"); });
       // the familiars at each size, at moments that show every frame (1x: their sizes aren't whole squares,
       // so bigger, the old smooth drawing and the pictures differ by design)
