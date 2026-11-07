@@ -8,6 +8,7 @@ engine/core/storage.js
 engine/core/board.js
 engine/core/format.js
 engine/core/random.js
+game/damage/damage.js
 engine/render/color.js
 game/sandbox/sandbox-tools.js
 game/world/islands.js
