@@ -509,7 +509,7 @@ The style is unchanged; what changed is where things are and how many words they
 - **The legend** (`renderLegend` in `map.js`): symbols down the left side for home, the three shops,
   the next level (a flag, or a skull before a boss) and, while a quest is on, the quest (a glowing scroll).
   Words only on hover. Each one flies the map there; home and the shops walk straight in. On the whole
-  map it shows the island you're on (`camp.at`).
+  map it shows the island in the middle of the screen (`mapIslandInView`), its coin at the top.
 - **Home and the shops don't ask.** A click on their pin, an edge zone or a legend symbol walks in.
   A locked one still flies close and says why.
 - **Up close, the sides of the screen walk the path.** The arrow buttons became zones a fifth of the
@@ -518,8 +518,7 @@ The style is unchanged; what changed is where things are and how many words they
   same: drag left to walk to the stop on the right. Arrow keys and WASD still work.
 - **Your snake is a button.** The little coil by the stop you're at opens your loadout (`openCampLoadout`
   in `camp-kit.js`, the old kit box with a Done button). No box before a level.
-- **Every island's money in the top bar** (`campWalletUpdate` in `camp-hud.js`), each only once you hold at
-  least 1 and gone again at 0; the island you're on is lit. Gems too. Click a coin for its card.
+- **Every island's money in the top bar** (`campWalletUpdate` in `camp-hud.js`), always, at 0 too (build 53); the island you're on is lit. Gems too. Click a coin for its card.
 - **The terminal closes back where you were**: the map on the same island and stop, the shop or home
   you were in, anything else as it was (`leaveConsole` in `cmd-camp.js`). A paused level still goes
   back to its pause menu.

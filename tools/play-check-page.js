@@ -172,6 +172,18 @@
     closeNmTunnels(true);
     await log("nightmare: first tunnel played end to end");
 
+    // ----- 3a. the top bar: every island's money, always; the legend: the island in the middle of the map
+    openScreen("modes");
+    campWalletUpdate();
+    check(document.querySelectorAll("#camp-wallet .cw-chip").length === CAMP.islands.length + 1, "top bar: all five coins and the gems, always");
+    for (const k of ["reef", "spire"]) {
+      stopGlide(); mapSel = null;
+      mapCam = camOn(ISLANDS[k].x, ISLANDS[k].y, mapNear()); applyCam(mapCam);
+      check(mapLegendEl.classList.contains("open") && mapLegendEl.dataset.key === k, `map legend: follows the island in view (${k}, got ${mapLegendEl.dataset.key})`);
+    }
+    selectPlace("hollow");
+    check(mapLegendEl.dataset.key === "hollow", "map legend: the picked island's when one is picked");
+
     // ----- 3b. the sandbox is on the title screen, under Play
     openScreen("main");
     const sbBtn = document.getElementById("menu-sandbox");

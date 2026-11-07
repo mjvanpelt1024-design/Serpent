@@ -129,3 +129,6 @@ body.nm-open #map-legend { display: none; }
 .sb-kit-pick { display: flex; gap: 0.4em; flex-wrap: wrap; justify-content: flex-end; }
 .sb-kit-pick select { max-width: 11em; font: inherit; font-size: 0.85em; padding: 0.2em 0.3em; background: var(--panel); color: var(--ink); border: 2px solid var(--edge); }
 .sb-kit-help { margin: 0 0 0.4em; }
+
+/* ---------- The map's legend: which island it's for, at its top (build 53) ---------- */
+.map-legend .lg-isl { display: grid; place-items: center; height: 1.6em; filter: drop-shadow(0 0 3px var(--isl, #fff)); cursor: help; }

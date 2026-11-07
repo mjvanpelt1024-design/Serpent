@@ -18,8 +18,9 @@
 - **Home base walks like the map**: its sides are zones with a chevron, not buttons. The merchant's notes and
   each offer's facts show on hover. The sandbox's level select has its name on a scroll.
 - **Sandbox is on the title screen, under Play** (it had no way in since Play stopped going through the
-  save list), and Back from its level select returns there. The map's legend of symbols shows on the whole
-  map too, for the island you're on, not only when you've zoomed into one.
+  save list), and Back from its level select returns there. The map's legend of symbols is each island's own:
+  the one you've picked, or on the whole map the one in the middle of the screen. Every island's money is
+  always in the top bar, in a line beside the gems.
 - **The sandbox's kit.** Its Loadout panel can put any weapon, armor piece, spell, familiar or rune in the game
   on you, at any rarity. A level with a kit plays like a campaign level wearing it, and never touches your save.
   The kit goes in the `.level` file and the share code.

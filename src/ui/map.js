@@ -360,6 +360,21 @@ function applyCam(c) {
   mapEl.classList.toggle("tight", c.s * 2 < 1.6);
   const deep = !mapSel && c.s >= mapNear() * 0.92;
   if (deep !== mapDeep) { mapDeep = deep; updatePins(); }
+  // build 53: the island nearest the middle of the screen: the legend shows its home and shops
+  const view = mapIslandInView(c);
+  if (view !== mapViewIsl) { mapViewIsl = view; renderLegend(); }
+}
+let mapViewIsl = null;
+function mapIslandInView(c) {
+  const vw = mapEl.clientWidth, vh = mapEl.clientHeight;
+  const x = (vw / 2 - c.tx) / (2 * c.s), y = (vh / 2 - c.ty) / (2 * c.s);
+  let best = null, bestD = Infinity;
+  MAP_ORDER.forEach(k => {
+    if (typeof placeState === "function" && placeState(k) !== "open") return;
+    const I = ISLANDS[k], d = Math.hypot(I.x - x, I.y - y);
+    if (d < bestD) { best = k; bestD = d; }
+  });
+  return best;
 }
 
 function layoutMap() {
@@ -751,8 +766,9 @@ mapEl.appendChild(mapLegendEl);
 mapLegendEl.addEventListener("click", e => e.stopPropagation());
 mapLegendEl.addEventListener("pointerdown", e => e.stopPropagation());
 function renderLegend() {
-  // the island you're looking at, or (on the whole map, build 53) the one you're on: the legend is always there
-  const key = mapSel || (camp && placeState(camp.at) === "open" ? camp.at : null);
+  // each island has its own: the one you've picked, or on the whole map the one in the middle of the screen
+  // (build 53), so it changes as you pan from island to island
+  const key = mapSel || mapViewIsl || (camp && placeState(camp.at) === "open" ? camp.at : null);
   if (!key || currentScreen !== "modes" || placeState(key) !== "open" || !camp) { mapLegendEl.classList.remove("open"); mapLegendEl._h = ""; return; }
   mapLegendEl.dataset.key = key;
   const I = CAMP.islandById[key];
@@ -767,7 +783,9 @@ function renderLegend() {
   if (Q && qs) items.push({ k: "quest", icon: iconUrl("scroll", 2), tip: qs.id === "challenger" ? "Quest done: claim your reward" : `Quest: trial ${Q.done.filter(Boolean).length + 1} of ${Q.levels.length}`, cls: "quest" });
   // build 53: nightmare mode, once the last island is won (camp-nightmare.js)
   if (typeof nmUnlocked === "function" && nmUnlocked()) items.push({ k: "nightmare", icon: iconUrl("moon", 2), tip: `Nightmare: ${CAMP.nightmare.tunnels[nmCurrentTunnel()].name}`, cls: "nightmare" });
-  const html = items.map(it => `<button class="lg-btn ${it.cls}" data-lg="${it.k}" aria-label="${escapeAttr(it.tip)}" ${it.off ? "disabled" : ""}>` +
+  mapLegendEl.style.setProperty("--isl", I.colors.accent);
+  mapLegendEl.setAttribute("aria-label", `Places on ${I.name}`);
+  const html = `<span class="lg-isl" title="${escapeAttr(I.name)}">${coinHtml(key)}</span>` + items.map(it => `<button class="lg-btn ${it.cls}" data-lg="${it.k}" aria-label="${escapeAttr(it.tip)}" ${it.off ? "disabled" : ""}>` +
     `<img src="${it.icon}" alt="">${it.off ? `<span class="lg-lock">${LOCK_SVG}</span>` : ""}<span class="lg-tip">${escapeAttr(it.tip)}</span></button>`).join("");
   if (mapLegendEl._h !== html) {
     mapLegendEl.innerHTML = html;

@@ -48,7 +48,7 @@ cpLeft.hidden = cpRight.hidden = true;
 cpLeft.addEventListener("click", e => { const b = e.target.closest("[data-pocket]"); if (b) campEatSnack(+b.dataset.pocket); });
 
 /* The top bar in the menus: every island's money and your gems, instead of XP and Snakebucks.
-   A money only shows once you have at least one of it, and goes again at 0. The island you're on
+   Every island's money is always there (build 53), at 0 too, in a line beside the gems. The island you're on
    (or the shop you're in) is lit. Click a coin for its card (coins.js). */
 const campWalletEl = document.createElement("div");
 campWalletEl.id = "camp-wallet";
@@ -59,11 +59,11 @@ function campWalletUpdate() {
   const key = campRun ? campRun.isl : currentScreen === "campshop" ? shopIsl : currentScreen === "tree" && treeArea === "camp" ? campTreeIsl : campIslandOpen(camp.at) ? camp.at : CAMP.islands[0].id;
   if (typeof coinCard !== "undefined" && coinCard) return;
   // no plates: the coin itself, big enough to show its carving, and the gem, each with its count in the corner
-  const html = CAMP.islands.filter(I => campWallet(I.id) > 0).map(I =>
+  // build 53 (the user's call): every island's money is always there, in a line beside the gems, even at 0
+  const html = CAMP.islands.map(I =>
     `<span class="cw-chip${I.id === key ? " here" : ""}" title="${escapeAttr(I.currency.plural)}, the money of ${escapeAttr(I.name)}">${coinHtml(I.id, 20)}<b>${fmtInt(campWallet(I.id))}</b></span>`).join("") +
-    // gems: also shown at 0 while the gem shop's daily gift waits, so the shop can be found (camp-gemshop.js)
-    (camp.gems > 0 || (typeof gemDailyReady === "function" && gemDailyReady() && !campRun)
-      ? `<span class="cw-chip gems${typeof gemDailyReady === "function" && gemDailyReady() ? " gift" : ""}" role="button" tabindex="0" title="Gems: the gem shop"><img class="gem-ico" src="${iconUrl("gem", 3)}" alt=""><b>${fmtInt(camp.gems)}</b></span>` : "");
+    // the gems open the gem shop (camp-gemshop.js); they glint while its daily gift waits
+    `<span class="cw-chip gems${typeof gemDailyReady === "function" && gemDailyReady() ? " gift" : ""}" role="button" tabindex="0" title="Gems: the gem shop"><img class="gem-ico" src="${iconUrl("gem", 3)}" alt=""><b>${fmtInt(camp.gems)}</b></span>`;
   if (campWalletEl._h !== html) { campWalletEl.innerHTML = html; campWalletEl._h = html; }
 }
 
