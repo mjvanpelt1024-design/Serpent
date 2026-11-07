@@ -15,6 +15,12 @@
 - **Shops by name.** The Coiled Anvil, The Tourney Tent, The Counting House and the rest, on their pins, arrows
   and scrolls, with a button for each on the island's banner that flies to the shop and walks you in.
 - **Home base arrows** on to level 1 (and down to the island below), to match level 1's arrow home.
+- **More pictures you can repaint.** The picture rooms at home, every shop and its workshop, and the fifteen
+  shopkeepers moved out of the code into `textures/scenes/`: a background per room, three layers per shop
+  (walls, middle, counter), and every moving thing as its own picture or sprite sheet (the forge's flicker,
+  the candle's flame, a keeper's sway, blink and tongue). Lights and glows pulse over their PNGs; the rarity
+  pip and ribbon are color-swap pictures. They look exactly as before, checked pixel by pixel at many moments
+  (`node tools/textures/textures.mjs check --legacy`). How to: `textures/README.md`.
 
 ## v:11.06.2026_b:51: workshops, pictures, foes, and a title screen of your own
 

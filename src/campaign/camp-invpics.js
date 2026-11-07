@@ -46,94 +46,42 @@ function pIcon(g, it, x, y, s = 2) {
   g.imageSmoothingEnabled = false;
   g.drawImage(texCanvas(id, "gift"), Math.round(x), Math.round(y), 12 * s, 12 * s);
 }
-const woodWall = (g, a, b) => { for (let y = 0; y < PIC_H; y += 9) { pR(g, 0, y, PIC_W, 9, (y / 9) % 2 ? a : b); pR(g, 0, y + 8, PIC_W, 1, shadeHex(a, -0.25)); } };
 
-/* ----- The rooms: what's in each, where each thing sits, how the room is painted ----- */
+/* ----- The rooms: what's in each, where each thing sits, and what moves -----
+   Each room is a picture, textures/scenes/rooms/<room>/background.png (room:<room> in the index), with
+   its hooks, cushions, sockets and pouches; fx(g, t) draws the few things that move over it. */
 const picGrid = (cols, rows, x0, y0, dx, dy) => { const out = []; for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) out.push({ x: x0 + c * dx, y: y0 + r * dy }); return out; };
 const PIC_ROOMS = {
   rack: {
     title: "The Armory Rack", slot: "gear", spots: picGrid(5, 2, 22, 46, 30, 50), hero: { x: 196, y: 70, label: "On you" },
     empty: "No gear yet. Sir Hissington sells it at The Coiled Anvil, past Brightscale Keep's first boss.",
-    paint(g, t) {
-      woodWall(g, "#7a5232", "#6a4628");
-      // a pegboard, two rails of hooks, a window of morning light
-      pR(g, 6, 18, 156, 108, "#b08a5a"); pR(g, 6, 18, 156, 2, "#d0aa7a"); pR(g, 6, 124, 156, 2, "#5a3a20");
-      for (let y = 24; y < 122; y += 6) for (let x = 10; x < 160; x += 6) pR(g, x, y, 1, 1, "#7a5a3a");
-      [30, 80].forEach(y => pR(g, 8, y, 152, 3, "#5a3a20"));
-      // the stand: a wooden dummy wearing your gear
-      pR(g, 172, 112, 48, 6, "#4a3018"); pR(g, 194, 40, 4, 74, "#6a4628"); pR(g, 182, 52, 28, 4, "#6a4628");
-      for (let i = 0; i < 3; i++) pR(g, 174 + i * 15, 124, 12, 2, "rgba(0,0,0,0.25)");
-      pR(g, 176, 8, 40, 28, "#3a2410"); pR(g, 178, 10, 36, 24, "#9fd4f4"); pR(g, 178, 26, 36, 8, "#8ac46a"); pR(g, 195, 10, 2, 24, "#3a2410");
-      g.fillStyle = `rgba(255,240,200,${0.08 + 0.04 * Math.sin(t)})`; g.fillRect(160, 34, 60, 80);
-    },
-    hook(g, s) { pR(g, s.x - 1, s.y - 18, 3, 5, "#2a1a0e"); pR(g, s.x, s.y - 14, 1, 2, "#c8c0b0"); }
+    // the window's morning light, coming and going
+    fx(g, t) { texPaint(g, "room:rack:light", 160, 34, { alpha: 0.08 + 0.04 * Math.sin(t) }); }
   },
   shelf: {
     title: "The Spell Shelf", slot: "spell", spots: picGrid(5, 3, 20, 34, 26, 36), hero: { x: 196, y: 64, label: "Carrying" },
     empty: "No spells yet. The Arcanum Spire's merchant sells them, past its first boss.",
-    paint(g, t) {
-      pR(g, 0, 0, PIC_W, PIC_H, "#2a1e3e");
-      for (let i = 0; i < 40; i++) pR(g, (i * 53) % PIC_W, (i * 37) % 60, 1, 1, i % 3 ? "#5a4a7e" : "#a898d8");
-      // the bookcase
-      pR(g, 4, 6, 142, 124, "#4a2e18"); pR(g, 8, 10, 134, 116, "#2a1a0e");
-      [44, 80, 116].forEach(y => { pR(g, 8, y, 134, 4, "#6a4628"); pR(g, 8, y, 134, 1, "#8a6238"); });
-      for (let sh = 0; sh < 3; sh++) for (let b = 0; b < 3; b++) pR(g, 120 + b * 6, 18 + sh * 36, 5, 26 - (b % 2) * 6, ["#7a2a3a", "#2a4a7a", "#3a6a3a"][(b + sh) % 3]);
-      // the lectern, with a candle
-      pR(g, 176, 90, 40, 6, "#5a3a20"); pR(g, 190, 96, 12, 30, "#4a2e18"); pR(g, 182, 126, 28, 4, "#3a2410");
-      pR(g, 172, 82, 48, 10, "#6a4628");
-      const fl = Math.sin(t * 9) > 0 ? 1 : 0;
-      pR(g, 224, 70, 4, 12, "#e8dcc0"); pR(g, 225, 66 - fl, 2, 4, "#ffb020"); pR(g, 225, 64 - fl, 2, 2, "#fff0a0");
-      g.fillStyle = "rgba(255,200,120,0.08)"; g.fillRect(196, 40, 44, 60);
-    },
-    hook(g, s) { pR(g, s.x - 10, s.y + 9, 20, 2, "rgba(0,0,0,0.3)"); }
+    // the candle on the lectern flickers
+    fx(g, t) { texDraw(g, "room:shelf:flame", 225, 63, Math.sin(t * 9) > 0 ? 1 : 0); }
   },
   den: {
     title: "The Familiar Den", slot: "pet", spots: picGrid(3, 2, 34, 66, 48, 40), hero: { x: 196, y: 92, label: "With you" },
     empty: "No familiars yet. Tidecoil Reef's merchant has them, past its first boss.",
-    paint(g, t) {
-      pR(g, 0, 0, PIC_W, PIC_H, "#3a5a6a");
-      for (let y = 0; y < 60; y += 10) pR(g, 0, y, PIC_W, 1, "rgba(255,255,255,0.05)");
-      // a round window onto the sea, a rug, shells on the sill
-      for (let yy = -16; yy <= 16; yy++) { const w = Math.round(Math.sqrt(256 - yy * yy)); pR(g, 120 - w, 26 + yy, w * 2, 1, yy < 4 ? "#7fc8e8" : "#2a7aa8"); }
-      pR(g, 0, 80, PIC_W, 55, "#6a4a3a"); pR(g, 0, 80, PIC_W, 2, "#8a6a5a");
-      pR(g, 14, 96, 140, 34, "#a84a3a"); pR(g, 18, 100, 132, 26, "#c86a4a"); for (let x = 22; x < 148; x += 8) pR(g, x, 112, 4, 2, "#e8c070");
-      // the big basket
-      pR(g, 170, 96, 52, 20, "#b08040"); for (let x = 172; x < 220; x += 4) pR(g, x, 98, 2, 16, "#8a6030"); pR(g, 174, 92, 44, 6, "#e8d8b0");
-      const w = Math.sin(t * 2) * 0.5;
-      g.fillStyle = `rgba(160,220,255,${0.06 + w * 0.03})`; g.fillRect(104, 10, 32, 32);
-    },
-    hook(g, s) { pR(g, s.x - 14, s.y + 4, 28, 8, "#7a6aa8"); pR(g, s.x - 12, s.y + 4, 24, 2, "#9a8ac8"); }
+    // the sea light through the round window
+    fx(g, t) { const w = Math.sin(t * 2) * 0.5; texPaint(g, "room:den:light", 104, 10, { alpha: 0.06 + w * 0.03 }); }
   },
   stones: {
     title: "The Rune Stones", slot: "rune", spots: picGrid(6, 3, 18, 34, 24, 34), hero: { x: 196, y: 62, label: "Active" },
     empty: "No runes yet. Cinder Crown's merchant sells them, and they turn up in levels on every island.",
-    paint(g, t) {
-      pR(g, 0, 0, PIC_W, PIC_H, "#1e1418");
-      for (let i = 0; i < 6; i++) pR(g, i * 40 + 10, 0, 2, PIC_H, "#140c10");
-      // the slab
-      pR(g, 4, 10, 152, 116, "#5a5250"); pR(g, 4, 10, 152, 2, "#7a7270"); pR(g, 4, 124, 152, 2, "#3a3230");
-      for (let i = 0; i < 30; i++) pR(g, 8 + (i * 47) % 144, 14 + (i * 29) % 108, 2, 1, "#4a4240");
-      // the altar, glowing from inside
-      pR(g, 174, 100, 44, 26, "#4a4240"); pR(g, 170, 94, 52, 8, "#6a6260"); pR(g, 170, 94, 52, 1, "#8a8280");
-      const glow = 0.15 + 0.08 * Math.sin(t * 2);
-      g.fillStyle = `rgba(255,120,40,${glow})`; g.fillRect(176, 40, 40, 56);
-      for (let i = 0; i < 4; i++) { const ph = (t * 0.6 + i / 4) % 1; pR(g, 186 + i * 6, 92 - ph * 40, 1, 1, `rgba(255,170,80,${1 - ph})`); }
-    },
-    hook(g, s) { pR(g, s.x - 10, s.y - 10, 20, 20, "#3a3230"); pR(g, s.x - 10, s.y - 10, 20, 1, "#2a2220"); pR(g, s.x - 10, s.y + 9, 20, 1, "#6a6260"); }
+    // the altar glows from inside, and embers rise from it and fade
+    fx(g, t) {
+      texPaint(g, "room:stones:glow", 176, 40, { alpha: 0.15 + 0.08 * Math.sin(t * 2) });
+      for (let i = 0; i < 4; i++) { const ph = (t * 0.6 + i / 4) % 1; texPaint(g, "room:stones:ember", Math.round(186 + i * 6), Math.round(92 - ph * 40), { alpha: 1 - ph }); }
+    }
   },
   satchel: {
     title: "The Satchel", slots: ["food", "canister", "loot", "craft"], spots: picGrid(8, 3, 24, 66, 26, 26), pocket: [44, 86, 128, 170].map(x => ({ x, y: 28 })),
-    empty: "Your satchel holds snacks, heart canisters, junk you find in levels, trinkets and parts you craft, and recipes. It's empty for now.",
-    paint(g) {
-      pR(g, 0, 0, PIC_W, PIC_H, "#3a2414");
-      // the open flap with its strap of four pouches (your pocket), then the inside
-      pR(g, 6, 4, 228, 44, "#9a6a3a"); pR(g, 6, 4, 228, 2, "#c08a50"); pR(g, 6, 46, 228, 2, "#5a3a1e");
-      pR(g, 6, 22, 228, 8, "#6a4628"); for (let x = 10; x < 230; x += 8) pR(g, x, 25, 4, 1, "#8a6238");
-      pR(g, 12, 52, 216, 80, "#7a5232"); pR(g, 12, 52, 216, 2, "#5a3a1e");
-      for (let y = 56; y < 130; y += 3) pR(g, 14, y, 212, 1, "rgba(0,0,0,0.06)");
-      pR(g, 116, 8, 8, 10, "#ffd23f"); pR(g, 118, 10, 4, 6, "#a8860b");
-    },
-    hook(g, s) { pR(g, s.x - 11, s.y - 11, 22, 22, "#6a4628"); pR(g, s.x - 11, s.y - 11, 22, 1, "#4a2e18"); pR(g, s.x - 11, s.y + 10, 22, 1, "#8a6238"); }
+    empty: "Your satchel holds snacks, heart canisters, junk you find in levels, trinkets and parts you craft, and recipes. It's empty for now."
   }
 };
 
@@ -204,17 +152,21 @@ function renderPicRoom() {
 }
 
 /* ----- The picture ----- */
+/* The room itself, with whatever moves in it, at time t (seconds) */
+function picBackdrop(g, room, t) {
+  g.drawImage(texCanvas("room:" + room), 0, 0);
+  if (PIC_ROOMS[room].fx) PIC_ROOMS[room].fx(g, t);
+}
 function drawPicRoom(t) {
   const g = picCanvas.getContext("2d");
   g.imageSmoothingEnabled = false;
   const R = PIC_ROOMS[picRoom];
-  R.paint(g, t);
+  picBackdrop(g, picRoom, t);
   const items = picItems(picRoom);
   const per = R.spots.length;
   const shown = items.slice(picPage * per, picPage * per + per);
   const on = R.slot ? camp.equip[R.slot] : 0;
   R.spots.forEach((s, i) => {
-    R.hook(g, s);
     const it = shown[i];
     if (!it) return;
     const bob = picRoom === "den" ? Math.round(Math.sin(t * 2 + i) * 1) : 0;
@@ -223,7 +175,7 @@ function drawPicRoom(t) {
     if (picRoom === "den" && !away) drawPetSprite(g, it.id, s.x - 10, s.y - 12 + bob, 20, t * 1000, { shells: 1 });
     else if (!away) pIcon(g, it, s.x - 12, s.y - 12 + bob);
     g.globalAlpha = 1;
-    if (away) { pR(g, s.x - 8, s.y - 6, 16, 12, "#e8dcc0"); pR(g, s.x - 8, s.y - 6, 16, 1, "#fff6d8"); pR(g, s.x - 1, s.y - 10, 2, 4, "#5a3a20"); }
+    if (away) texDraw(g, "room:mark:away", s.x - 8, s.y - 10);
     picBadges(g, it, s.x, s.y);
     if (it.uid === picSel || it.uid === picHover) picFrame(g, s.x - 13, s.y - 13, 26, 26, t, it.uid === picSel);
   });
@@ -238,7 +190,6 @@ function drawPicRoom(t) {
     if (it && (it.uid === picSel || it.uid === picHover)) picFrame(g, h.x - 21, h.y - 21, 42, 42, t, it.uid === picSel);
   }
   if (R.pocket) R.pocket.forEach((s, i) => {
-    pR(g, s.x - 12, s.y - 10, 24, 22, "#5a3a1e"); pR(g, s.x - 11, s.y - 9, 22, 20, "#8a5a30"); pR(g, s.x - 11, s.y - 9, 22, 4, "#9a6a3a");
     const it = pocketItem(i);
     if (it) { pIcon(g, it, s.x - 12, s.y - 12); picBadges(g, it, s.x, s.y); }
     if (it && (it.uid === picSel || it.uid === picHover)) picFrame(g, s.x - 13, s.y - 13, 26, 26, t, it.uid === picSel);
@@ -249,14 +200,15 @@ function picFrame(g, x, y, w, h, t, sel) {
   g.fillStyle = sel ? `rgba(255,230,120,${a})` : `rgba(255,255,255,${a})`;
   g.fillRect(x, y, w, 1); g.fillRect(x, y + h - 1, w, 1); g.fillRect(x, y, 1, h); g.fillRect(x + w - 1, y, 1, h);
 }
-/* Little marks on a thing: how many, its level, a seal, training stars, fresh, a rarity pip */
+/* Little marks on a thing (textures/scenes/rooms/marks/): a rarity pip in its rarity's color (a
+   color-swap picture), a wax seal, a trinket's gold dot */
 function picBadges(g, it, x, y) {
   if (it.kind === "recipe") return;
   const d = campItemDef(it.id);
-  if (d) pR(g, x - 12, y + 10, 3, 3, rarityColor(it.rarity));
-  else if (CAMP.lootById[it.id]) pR(g, x - 12, y + 10, 3, 3, LOOT_GRADE_COLOR()[lootGrade(it.id)] || "#ccc");
-  if (it.seal) { pR(g, x + 6, y + 4, 5, 5, "#c0201a"); pR(g, x + 7, y + 5, 2, 2, "#ff6a5a"); }
-  if (d && d.family === "gear" && it.trinket) pR(g, x + 7, y - 10, 4, 4, "#ffd23f");
+  if (d) texPaint(g, "room:mark:pip", x - 12, y + 10, { colors: { pip: rarityColor(it.rarity) } });
+  else if (CAMP.lootById[it.id]) texPaint(g, "room:mark:pip", x - 12, y + 10, { colors: { pip: LOOT_GRADE_COLOR()[lootGrade(it.id)] || "#ccc" } });
+  if (it.seal) texDraw(g, "room:mark:seal", x + 6, y + 4);
+  if (d && d.family === "gear" && it.trinket) texDraw(g, "room:mark:trinket", x + 7, y - 10);
 }
 /* The words on a thing, crisp over the picture: how many, its level, training, fresh, away */
 function picBadgeHtml(it) {

@@ -60,7 +60,8 @@ SnakeGame/
 │   ├── index.json           which file each picture is: move or rename a file, change one line
 │   ├── items/  junk/  crafted/  upgrades/   the campaign's things, runes in all eight conditions
 │   ├── foes/  hazards/  powerups/  board/   what's on the board
-│   └── hearts/  bosses/  icons/             the HUD, wanted posters, map pins, cursors, avatars...
+│   ├── hearts/  bosses/  icons/             the HUD, wanted posters, map pins, cursors, avatars...
+│   └── scenes/              painted scenes: backgrounds, sprite sheets, lights (rooms, shops, keepers so far)
 │
 ├── styles/              CSS, in the order index.html links them
 ├── assets/              the fonts (with their licenses) and icons

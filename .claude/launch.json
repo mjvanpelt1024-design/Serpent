@@ -4,14 +4,30 @@
     {
       "name": "snake",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["tools/serve.py", "8766"],
+      "runtimeArgs": [
+        "tools/serve.py",
+        "8766"
+      ],
       "port": 8766
     },
     {
       "name": "snake-8767",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["tools/serve.py", "8767"],
+      "runtimeArgs": [
+        "tools/serve.py",
+        "8767"
+      ],
       "port": 8767
+    },
+    {
+      "name": "snake-8769",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "tools/serve.py",
+        "8769"
+      ],
+      "port": 8769,
+      "autoPort": false
     }
   ]
 }

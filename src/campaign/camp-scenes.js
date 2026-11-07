@@ -53,22 +53,21 @@ function npcBackdrop(k, g, key, t) {
 }
 
 /* The keeper: the same snake that stands by the stall on the map, three times the size */
-function npcKeeper(g, look, x, y, t, kind) {
+function npcKeeper(g, key, kind, x, y, t) {
   g.save();
   g.scale(3, 3);
-  drawKeeper(g, look, Math.round(x / 3), Math.round(y / 3), t, kind);
+  drawKeeper(g, key, kind, Math.round(x / 3), Math.round(y / 3), t);
   g.restore();
 }
 
 function drawNpcScene(k, g, key, kind, t) {
   const I = npcBackdrop(k, g, key, t);
   const R = k.R, accent = I.colors.accent;
-  const look = I.npcs[kind].look;
   if (kind === "merchant") {
     // an awning, a counter and the island's wares
     for (let x = 0; x < ART_W; x += 8) { R(x, 0, 8, 7, (x / 8) % 2 ? accent : "#f4f0e8"); R(x + 2, 7, 4, 2, (x / 8) % 2 ? accent : "#f4f0e8"); }
     R(0, 9, ART_W, 1, "rgba(0,0,0,0.25)");
-    npcKeeper(g, look, 54, 52, t, kind);
+    npcKeeper(g, key, kind, 54, 52, t);
     R(0, 44, ART_W, 16, "#6a4a2a"); R(0, 44, ART_W, 2, "#9a6a3a"); R(0, 46, ART_W, 1, "#4a3018");
     for (let i = 0; i < 4; i++) R(10 + i * 40, 48, 30, 10, "#5a3a20");
     const fam = I.merchantFamily;
@@ -95,7 +94,7 @@ function drawNpcScene(k, g, key, kind, t) {
     R(tx - 1, ty + 9, 3, 9, "#5a3a20");
     if (Math.sin(t * 0.8) > 0.2) { R(tx - 12, ty - 1, 11, 1, "#8a6a4a"); R(tx - 13, ty - 2, 2, 3, "#e8e8e8"); }
     [20, 152].forEach((x, i) => { R(x, 30, 2, 18, "#5a3a20"); k.flame(x + 1, 30, 7, i * 2); k.glow(x + 1, 26, 12, "rgba(255,170,60,ALPHA)", 0.3); });
-    npcKeeper(g, look, 72, 57, t, kind);
+    npcKeeper(g, key, kind, 72, 57, t);
   } else {
     // a vault: columns, a round door that turns, shelves of the island's coin
     R(0, 0, ART_W, 48, "rgba(0,0,0,0.25)");
@@ -110,7 +109,7 @@ function drawNpcScene(k, g, key, kind, t) {
     R(20, 30, 70, 2, "#5a3a20");
     for (let i = 0; i < 8; i++) { const h = 2 + (i * 3) % 7; for (let j = 0; j < h; j++) R(24 + i * 8, 29 - j, 5, 1, j % 2 ? c : shadeHex(c, -0.25)); if (Math.sin(t * 3 + i) > 0.9) R(25 + i * 8, 29 - h, 1, 1, "#ffffff"); }
     R(0, 44, ART_W, 16, "#4a3a2a"); R(0, 44, ART_W, 2, "#7a6a4a");
-    npcKeeper(g, look, 54, 52, t, kind);
+    npcKeeper(g, key, kind, 54, 52, t);
   }
   k.vignette(0.4);
 }

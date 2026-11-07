@@ -21,6 +21,26 @@
     for (let i = 0; !window.BOOTED && i < 1200; i++) await new Promise(r => setTimeout(r, 100));
     if (!window.BOOTED) throw new Error("the old game didn't finish booting");
     await log("old game booted, drawing its pictures");
+    const set = new URLSearchParams(location.search).get("set") || "icons";
+    // ----- a scene set (rooms, ...): its pictures as the recorder cut them
+    if (set !== "icons") {
+      const S = window.LEGACY_SCENES.sets[set];
+      if (!S) throw new Error(`no scene set called "${set}"`);
+      const files = {}, index = {}, notes = [];
+      for (const e of S.list()) {
+        files[e.file] = e.canvas.toDataURL();
+        const entry = { file: e.file };
+        if (e.frames > 1) entry.frames = e.frames;
+        if (e.keys) entry.keys = e.keys;
+        if (e.columns) entry.columns = e.columns;
+        if (e.anchor) entry.anchor = e.anchor;
+        index[e.id] = Object.keys(entry).length === 1 ? entry.file : entry;
+        notes.push(`${e.id}: ${e.canvas.width}x${e.canvas.height}${e.frames > 1 ? ` (${e.frames} frames)` : ""}${e.at ? ` at ${e.at.join(", ")}` : ""}`);
+      }
+      await log(`${Object.keys(files).length} pictures`);
+      await post("/__tool/result", { ok: true, set, files, index, notes, unused: [] });
+      return;
+    }
     const R = window.LEGACY_REF;
     const list = R.list();
 
@@ -96,7 +116,7 @@
     const used = new Set(list.filter(e => e.spec).map(e => e.spec[0]));
     const unused = Object.keys(SPRITES).filter(n => !used.has(n) && !/_(broken|refurbished|cracked|repaired|fine|polished|pristine|legendary)$/.test(n));
     await log(`${list.length} pictures, ${Object.keys(files).length} files`);
-    await post("/__tool/result", { ok: true, files, index, notes, unused, contentIds: R.contentIds().map(c => c.id) });
+    await post("/__tool/result", { ok: true, set, files, index, notes, unused, contentIds: R.contentIds().map(c => c.id) });
   } catch (err) {
     await post("/__tool/result", { ok: false, error: String(err && err.stack || err) });
   }

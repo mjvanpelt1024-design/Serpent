@@ -1059,7 +1059,7 @@ function drawNodeArt(g, key, id, st, t, by) {
   if (id === "home") { drawHomeTree(g, key, x, y, t); return; }
   if (id === "bridge") { drawGate(g, key, x, y, st, t); return; }
   drawStall(g, key, id, x, y, st, t);
-  if (st !== "locked") drawKeeper(g, I.npcs[id].look, x + ISLANDS[key].dir * (id === "banker" ? -9 : 9), y + 1, t, id);
+  if (st !== "locked") drawKeeper(g, key, id, x + ISLANDS[key].dir * (id === "banker" ? -9 : 9), y + 1, t);
 }
 
 /* A boss's lair: a heap of rock with a black mouth, and eyes that watch you */
@@ -1172,37 +1172,14 @@ function drawStall(g, key, id, x, y, st, t) {
   }
 }
 
-/* A shopkeeper: a little snake standing tall, in its hat */
-function drawKeeper(g, look, x, y, t, kind) {
-  const R = (a, b, w, h, c) => mapRect(g, a, b, w, h, c);
-  const sway = Math.round(Math.sin(t * 1.4 + kind.length) * 0.6);
-  const body = look.body, belly = look.belly;
-  // a coil on the ground, then up to the head
-  R(x - 2, y - 1, 5, 2, body); R(x - 1, y - 1, 3, 1, shadeHex(body, 0.2));
-  R(x + sway, y - 6, 2, 5, body); R(x + sway + 1, y - 5, 1, 4, belly);
-  R(x - 1 + sway, y - 8, 4, 3, body); R(x - 1 + sway, y - 8, 1, 1, shadeHex(body, 0.3));
-  const blink = (t * 0.7 + kind.length) % 5 < 0.12;
-  R(x + sway + 1, y - 7, 1, 1, blink ? body : (look.eye || "#ffd23f"));
-  if (Math.sin(t * 2 + kind.length) > 0.85) R(x + sway + 3, y - 6, 1, 1, "#ff3b6b");
-  const s = sway;
-  const hats = {
-    helm: () => { R(x - 1 + s, y - 9, 4, 1, "#9aa3ad"); R(x + s, y - 10, 2, 1, "#c8ced6"); R(x + 1 + s, y - 11, 1, 1, "#c8323a"); },
-    hennin: () => { R(x - 1 + s, y - 9, 4, 1, "#ffd23f"); R(x + s, y - 10, 2, 1, "#c8508a"); R(x + 1 + s, y - 12, 1, 2, "#c8508a"); },
-    tophat: () => { R(x - 2 + s, y - 9, 6, 1, "#1a1a20"); R(x - 1 + s, y - 12, 4, 3, "#1a1a20"); R(x - 1 + s, y - 10, 4, 1, "#c8323a"); },
-    wizard: () => { R(x - 2 + s, y - 9, 6, 1, "#3a3aa8"); R(x - 1 + s, y - 10, 4, 1, "#3a3aa8"); R(x + s, y - 11, 2, 1, "#3a3aa8"); R(x + 1 + s, y - 13, 1, 2, "#3a3aa8"); R(x + s, y - 10, 1, 1, "#ffd23f"); },
-    hood: () => { R(x - 2 + s, y - 9, 6, 2, shadeHex(body, -0.4)); R(x - 1 + s, y - 10, 4, 1, shadeHex(body, -0.4)); R(x - 2 + s, y - 7, 1, 3, shadeHex(body, -0.4)); },
-    fez: () => { R(x - 1 + s, y - 10, 3, 2, "#c8323a"); R(x + 2 + s, y - 10, 1, 2, "#ffd23f"); },
-    chef: () => { R(x - 1 + s, y - 9, 4, 1, "#ffffff"); R(x - 2 + s, y - 11, 6, 2, "#f0f0f0"); },
-    beret: () => { R(x - 2 + s, y - 9, 5, 1, "#3a5a2a"); R(x - 1 + s, y - 10, 4, 1, "#3a5a2a"); },
-    straw: () => { R(x - 3 + s, y - 9, 8, 1, "#e8c870"); R(x - 1 + s, y - 10, 4, 1, "#e8c870"); R(x - 1 + s, y - 9, 4, 1, "#c8323a"); },
-    shell: () => { R(x - 1 + s, y - 10, 4, 2, "#ffc8b8"); R(x + s, y - 10, 1, 2, "#c87a6a"); R(x + 2 + s, y - 10, 1, 2, "#c87a6a"); },
-    tricorn: () => { R(x - 3 + s, y - 9, 8, 1, "#1a1a20"); R(x - 1 + s, y - 10, 4, 1, "#1a1a20"); R(x + 1 + s, y - 10, 1, 1, "#ffd23f"); },
-    horns: () => { R(x - 2 + s, y - 10, 1, 2, "#2a2028"); R(x + 3 + s, y - 10, 1, 2, "#2a2028"); R(x - 3 + s, y - 11, 1, 1, "#2a2028"); R(x + 4 + s, y - 11, 1, 1, "#2a2028"); },
-    crown: () => { R(x - 1 + s, y - 9, 4, 1, "#ffd23f"); R(x - 1 + s, y - 10, 1, 1, "#ffd23f"); R(x + 1 + s, y - 11, 1, 2, "#ffd23f"); R(x + 2 + s, y - 10, 1, 1, "#ffd23f"); R(x + s, y - 9, 1, 1, "#ff3b3b"); }
-  };
-  (hats[look.hat] || (() => {}))();
-  if (look.extra === "beard") R(x + s, y - 5, 3, 2, "#e8e0d0");
-  if (look.extra === "monocle") R(x + 2 + s, y - 7, 1, 1, "#ffd23f");
-  if (look.extra === "mustache") R(x + s, y - 6, 3, 1, "#3a2a1a");
-  if (look.extra === "eyepatch") R(x + 1 + s, y - 7, 1, 1, "#1a1a20");
+/* A shopkeeper: a little snake standing tall, in its hat. Each one is a sprite sheet,
+   textures/scenes/keepers/<island>-<role>.png (keeper:<island>:<role>): three columns as it sways
+   (left, upright, right), four rows (eyes open, blinking, tongue out, blinking with its tongue out),
+   its anchor on the bottom of its coil. x, y is that spot; the map draws them small, the shops and
+   their scenes three and four times the size. */
+function drawKeeper(g, isl, role, x, y, t) {
+  const sway = Math.round(Math.sin(t * 1.4 + role.length) * 0.6);
+  const blink = (t * 0.7 + role.length) % 5 < 0.12;
+  const tongue = Math.sin(t * 2 + role.length) > 0.85;
+  texDrawAt(g, `keeper:${isl}:${role}`, Math.round(x), Math.round(y), sway + 1 + 3 * ((blink ? 1 : 0) + (tongue ? 2 : 0)));
 }

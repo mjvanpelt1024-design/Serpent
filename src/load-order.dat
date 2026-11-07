@@ -29,6 +29,7 @@ ui/elements.js
 engine/audio/synth.js
 game/economy/experience.js
 engine/render/pixel-icons.js
+engine/render/scene-art.js
 ui/trees.js
 ui/cosmetics-preview.js
 engine/render/themes.js

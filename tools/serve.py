@@ -30,7 +30,13 @@ class NoCache(http.server.SimpleHTTPRequestHandler):
             super().log_message(fmt, *args)
 
 
+class Server(http.server.ThreadingHTTPServer):
+    # the game asks for hundreds of files at once (content, then every picture in textures/);
+    # the default queue of 5 waiting connections drops some of them on Windows
+    request_queue_size = 128
+
+
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
     print(f"Serving {ROOT} at http://localhost:{port}  (Ctrl+C to stop)")
-    http.server.ThreadingHTTPServer(("", port), NoCache).serve_forever()
+    Server(("", port), NoCache).serve_forever()

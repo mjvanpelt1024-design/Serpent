@@ -176,37 +176,91 @@ function updateSsBlurbs() {
   if (ord) ord.classList.toggle("ready", ready > 0);
 }
 
-/* ----- The picture ----- */
+/* ----- The picture -----
+   Each island's shop and workshop is three pictures in textures/scenes/shops/<island>/:
+     back.png    the walls, under everything that moves on them
+     middle.png  the workshop's things and the shop's shelf and awning, over the walls' stars,
+                 bubbles or glow (its see-through pixels, like the shadows, shade what's under them;
+                 the awning's shadow line is shared/awning-shadow.png, drawn just after it)
+     front.png   the counter, bell and crate, in front of the keeper
+   and the things that move or change: each a picture of its own, placed and timed here. */
+const SS_WALL_FX = {
+  // stars twinkling on the Spire's walls, bubbles rising on the Reef's, the Crown's lava light
+  spire(g, t) { [0, SS_ROOM].forEach(ox => { for (let i = 0; i < 26; i++) if (Math.sin(t * 2 + i) > 0.2) texDraw(g, "shop:spire:star", ox + (i * 37) % SS_ROOM, (i * 23) % 70); }); },
+  reef(g, t) { [0, SS_ROOM].forEach(ox => { for (let i = 0; i < 6; i++) { const ph = (t * 0.3 + i / 6) % 1; texPaint(g, "shop:reef:bubble", Math.round(ox + 10 + i * 26 + Math.sin(t + i) * 2), Math.round(70 - ph * 64), { alpha: 0.7 }); } }); },
+  crown(g, t) { [0, SS_ROOM].forEach(ox => texPaint(g, "shop:crown:wall-glow", ox, 50, { alpha: 0.12 + Math.sin(t * 1.3) * 0.04 })); }
+};
+/* The order shelf's parcels: busy or ready (a glint blinking over a ready one) */
+function ssParcels(g, ws, x, y, w, t) {
+  const orders = ordersAt(ws);
+  for (let i = 0; i < ORDER_SLOTS; i++) {
+    const o = orders[i], sx = x + 4 + i * Math.floor((w - 8) / 3);
+    if (!o) continue;
+    const done = orderReady(o);
+    texDraw(g, "shop:parcel", sx, y + 8, done ? 1 : 0);
+    if (done && Math.sin(t * 4 + i) > 0) texDraw(g, "shop:glint", sx + 3, y + 4);
+  }
+}
+const SS_WORK_FX = {
+  // the forge's mouth flickers; the gear you wear stands on the dummy
+  armory(g, t, fl) {
+    texDraw(g, "shop:keep:forge", 16, 62, fl(1) + 1);
+    ssParcels(g, "armory", 64, 18, 40, t);
+    const it = campEquipped("gear");
+    if (it) g.drawImage(texCanvas("ci:" + it.id, "ci:shield"), 128, 56, 18, 18);
+  },
+  // motes drift up off the book, the candles by the press flicker
+  arcana(g, t, fl) {
+    for (let i = 0; i < 6; i++) { const ph = (t * 0.5 + i / 6) % 1; texPaint(g, "shop:spire:mote", 18 + i * 5, Math.round(52 - ph * 20), { alpha: 1 - ph }); }
+    ssParcels(g, "arcana", 64, 18, 40, t);
+    [118, 148].forEach((x, i) => texDraw(g, "shop:spire:flame", x, 37 + fl(i)));
+  },
+  // the oven's fire flickers, steam rises from the chimney, a dot per batch in the oven
+  kitchen(g, t, fl) {
+    texDraw(g, "shop:hollow:oven", 118, 64, fl(2) + 1);
+    for (let i = 0; i < 3; i++) { const ph = (t * 0.4 + i / 3) % 1; texPaint(g, "shop:hollow:steam", Math.round(126 + Math.sin(t + i) * 2), Math.round(20 - ph * 18), { alpha: 0.6 - ph * 0.6 }); }
+    ordersAt("kitchen").forEach((o, i) => texDraw(g, "shop:hollow:batch", 120 + i * 8, 58, orderReady(o) ? 1 : 0));
+  },
+  // ripples on the lagoon, hoops bobbing, the familiars away training, and the board of who's away
+  kennel(g, t) {
+    for (let x = 6; x < 74; x += 6) texDraw(g, "shop:reef:wave", x + Math.round(Math.sin(t * 2 + x) * 1), 70);
+    [[18, 60], [40, 56], [62, 62]].forEach(([x, y], i) => texDraw(g, "shop:reef:hoop", x - 6, y + Math.round(Math.sin(t * 2 + i) * 1), i));
+    const away = ordersAt("kennel");
+    away.forEach((o, i) => { const it = satchelItem(o.uid); if (it && !orderReady(o)) drawPetSprite(g, it.id, 10 + i * 22, 70 + Math.round(Math.sin(t * 3 + i) * 2), 12, t * 1000, { shells: 1 }); });
+    away.forEach((o, i) => texDraw(g, "shop:reef:board-row", 119, 24 + i * 10, orderReady(o) ? 1 : 0));
+  },
+  // the lava river ripples, the anvil glows, the rune on it sits in the glow
+  forge(g, t) {
+    for (let x = 4; x < 74; x += 5) texDraw(g, "shop:crown:ripple", x, 84 + (Math.sin(t * 3 + x) > 0 ? 0 : 1));
+    texPaint(g, "shop:crown:anvil-glow", 12, 40, { alpha: 0.25 + Math.sin(t * 2) * 0.1 });
+    texDraw(g, "shop:crown:anvil-rune", 30, 52);
+    ssParcels(g, "forge", 110, 22, 42, t);
+  }
+};
 function drawStage(t, ts) {
   const g = ssCanvas.getContext("2d");
   g.imageSmoothingEnabled = false;
-  const I = CAMP.islandById[shopIsl];
-  const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
-  // both rooms share the island's walls
-  ssWall(g, R, shopIsl, 0, t);
-  ssWall(g, R, shopIsl, SS_ROOM, t);
-  R(SS_ROOM - 2, 0, 4, SS_H, "rgba(0,0,0,0.35)");
-  drawWorkshop(g, R, workshopOf(shopIsl), t);
-  // the shop: awning, shelf with its five spots, counter, bell, crate
-  const ox = SS_ROOM, acc = I.colors.accent;
-  for (let x = 0; x < SS_ROOM; x += 8) { R(ox + x, 0, 8, 8, (x / 8) % 2 ? acc : "#f4f0e8"); R(ox + x + 2, 8, 4, 2, (x / 8) % 2 ? acc : "#f4f0e8"); }
-  R(ox, 10, SS_ROOM, 1, "rgba(0,0,0,0.25)");
-  R(ox + 4, 44, SS_ROOM - 8, 3, "#7a5232"); R(ox + 4, 44, SS_ROOM - 8, 1, "#a8784a"); R(ox + 4, 47, SS_ROOM - 8, 1, "#3a2414");
-  [10, 80, 150].forEach(x => { R(ox + x, 47, 2, 6, "#5a3a20"); });
+  const ws = workshopOf(shopIsl);
+  const fl = n => Math.round(Math.sin(t * 9 + n) * 1);
+  texDraw(g, `shop:${shopIsl}:back`, 0, 0);
+  if (SS_WALL_FX[shopIsl]) SS_WALL_FX[shopIsl](g, t);
+  texLayer(g, `shop:${shopIsl}:middle`, 0, 0);
+  texPaint(g, "shop:awning-shadow", SS_ROOM, 10);
+  SS_WORK_FX[ws](g, t, fl);
+  // the shop's five spots: a thing on each stocked one (a shadow, a rarity ribbon, maybe a sale
+  // tag), an "out of stock" box on the rest
   const m = camp.merchants[shopIsl];
   for (let i = 0; i < 5; i++) {
     const x = SPOT_X(i), o = m && m.stock.find(s => s.spot === i);
-    R(x - 11, 41, 22, 3, "#c8b090"); R(x - 11, 41, 22, 1, "#e8d8b8");
-    if (!o) { R(x - 8, 27, 16, 9, "#8a6a4a"); R(x - 7, 28, 14, 7, "#a8845a"); R(x - 5, 31, 10, 1, "#5a3a20"); R(x - 1, 21, 2, 6, "#5a3a20"); continue; }
+    if (!o) { texDraw(g, "shop:sold-out", x - 8, 21); continue; }
     const bob = o.sold ? 0 : Math.round(Math.sin(t * 2 + i) * 0.7);
     g.globalAlpha = o.sold ? 0.3 : 1;
     const id = o.recipe ? "scroll" : CAMP.itemById[o.id].family === "rune" ? `ci:${o.id}:${RUNE_GRADES8[rarityIdx(o.rarity) * 2]}` : "ci:" + o.id;
     g.drawImage(texCanvas(id, "gift"), x - 12, 16 + bob, 24, 24);
     g.globalAlpha = 1;
-    R(x - 10, 40, 20, 1, "rgba(0,0,0,0.25)");
-    // a rarity ribbon, and a red sale tag on a string
-    R(x - 11, 43, 22, 1, rarityColor(o.rarity));
-    if (o.deal && !o.sold) { R(x + 8, 13, 1, 5, "#3a2410"); R(x + 6, 18, 7, 8, "#d1202a"); R(x + 7, 19, 5, 6, "#ff4a3a"); R(x + 9, 20, 1, 1, "#3a2410"); }
+    texPaint(g, "shop:item-shadow", x - 10, 40, { alpha: 0.25 });
+    texPaint(g, "shop:ribbon", x - 11, 43, { colors: { ribbon: rarityColor(o.rarity) } });
+    if (o.deal && !o.sold) texDraw(g, "shop:sale-tag", x + 6, 13);
   }
   // the keeper: slithers between the rooms, a wiggle as it goes
   const k = ssKeeper;
@@ -220,106 +274,11 @@ function drawStage(t, ts) {
   if (moving && k.to < k.from) { g.translate(kx * 2, 0); g.scale(-1, 1); }
   // the keeper, four times the size of the one on the map
   g.scale(4, 4);
-  drawKeeper(g, I.npcs.merchant.look, Math.round(kx / 4), Math.round(ky / 4), t, "merchant");
+  drawKeeper(g, shopIsl, "merchant", Math.round(kx / 4), Math.round(ky / 4), t);
   g.restore();
-  // the counter in front of the keeper
-  R(ox, 72, SS_ROOM, 28, "#6a4a2a"); R(ox, 72, SS_ROOM, 2, "#9a6a3a"); R(ox, 74, SS_ROOM, 1, "#4a3018");
-  for (let i = 0; i < 4; i++) R(ox + 10 + i * 38, 78, 30, 18, "#5a3a20");
-  // the bell and the crate
-  R(ox + 34, 70, 10, 2, "#5a3a20"); R(ox + 35, 64, 8, 6, "#ffd23f"); R(ox + 36, 64, 2, 5, "#fff6c4"); R(ox + 38, 62, 2, 2, "#c08a10");
-  R(ox + 60, 62, 26, 10, "#a8784a"); R(ox + 60, 62, 26, 1, "#c8945a"); R(ox + 60, 66, 26, 1, "#7a5232"); R(ox + 72, 62, 1, 10, "#7a5232");
-  // a lantern swinging
-  const sw = Math.round(Math.sin(t * 1.4) * 2);
-  R(ox + 150 + sw, 11, 1, 8, "#3a2a1a"); R(ox + 148 + sw, 19, 5, 6, "#3a2a1a"); R(ox + 149 + sw, 20, 3, 4, "#ffd27a");
-}
-
-/* The walls behind both rooms, island by island */
-function ssWall(g, R, isl, ox, t) {
-  if (isl === "keep") {
-    R(ox, 0, SS_ROOM, SS_H, "#8a8680");
-    for (let y = 0; y < 72; y += 6) for (let x = (y / 6) % 2 ? -6 : 0; x < SS_ROOM; x += 12) { R(ox + x, y, 11, 5, (x + y) % 3 ? "#9a968e" : "#8e8a82"); R(ox + x, y, 11, 1, "#aaa69e"); }
-  } else if (isl === "spire") {
-    R(ox, 0, SS_ROOM, SS_H, "#241a4a");
-    for (let i = 0; i < 26; i++) { const tw = Math.sin(t * 2 + i) > 0.2; if (tw) R(ox + (i * 37) % SS_ROOM, (i * 23) % 70, 1, 1, "#d8c8ff"); }
-    for (let x = 0; x < SS_ROOM; x += 20) R(ox + x, 0, 1, 72, "#32245e");
-  } else if (isl === "hollow") {
-    for (let x = 0; x < SS_ROOM; x += 8) { R(ox + x, 0, 7, SS_H, (x / 8) % 2 ? "#8a5a30" : "#9a6a3a"); R(ox + x + 7, 0, 1, SS_H, "#5a3a1e"); }
-  } else if (isl === "reef") {
-    R(ox, 0, SS_ROOM, SS_H, "#1a5a7a");
-    for (let y = 0; y < 72; y += 4) R(ox, y, SS_ROOM, 1, y % 8 ? "#1e6282" : "#165272");
-    for (let i = 0; i < 6; i++) { const ph = (t * 0.3 + i / 6) % 1; R(ox + 10 + i * 26 + Math.sin(t + i) * 2, 70 - ph * 64, 1, 1, "rgba(200,240,255,0.7)"); }
-  } else {
-    R(ox, 0, SS_ROOM, SS_H, "#2a1a1e");
-    for (let i = 0; i < 6; i++) R(ox + i * 28 + 8, 0, 2, 72, "#1a1216");
-    g.fillStyle = `rgba(255,110,30,${0.12 + Math.sin(t * 1.3) * 0.04})`; g.fillRect(ox, 50, SS_ROOM, 50);
-  }
-}
-
-/* Each workshop's room: its things, where WS_THINGS says they are */
-function drawWorkshop(g, R, ws, t) {
-  const fl = n => Math.round(Math.sin(t * 9 + n) * 1);
-  R(0, 92, SS_ROOM, 8, "#3a2a1e"); R(0, 92, SS_ROOM, 1, "#5a4a3a");
-  // the order shelf (or oven, or rack): three slots, a parcel in each busy one
-  const shelf = (x, y, w) => {
-    R(x, y, w, 3, "#6a4628"); R(x, y + 18, w, 3, "#6a4628"); R(x + 1, y + 3, 1, 15, "#4a2e18"); R(x + w - 2, y + 3, 1, 15, "#4a2e18");
-    const orders = ordersAt(ws);
-    for (let i = 0; i < ORDER_SLOTS; i++) {
-      const o = orders[i], sx = x + 4 + i * Math.floor((w - 8) / 3);
-      if (!o) continue;
-      const done = orderReady(o);
-      R(sx, y + 8, 9, 10, done ? "#e8c070" : "#b08a5a"); R(sx, y + 12, 9, 1, "#7a5232"); R(sx + 4, y + 8, 1, 10, "#7a5232");
-      if (done && Math.sin(t * 4 + i) > 0) R(sx + 3, y + 4, 3, 3, "#fff6a8");
-    }
-  };
-  if (ws === "armory") {
-    // the forge's mouth glowing, the anvil, tools on the wall
-    R(8, 40, 40, 52, "#5a5250"); R(14, 54, 28, 22, "#1a0e0a");
-    g.fillStyle = `rgba(255,${120 + fl(1) * 20},40,0.9)`; g.fillRect(16, 62, 24, 14);
-    R(18, 66, 20, 10, "#ffd23f");
-    R(30, 82, 30, 4, "#3a3a44"); R(36, 86, 16, 6, "#2a2a34"); R(26, 78, 38, 4, "#5a5a64"); R(26, 78, 38, 1, "#8a8a94");
-    R(52, 24, 2, 16, "#5a3a20"); R(50, 22, 6, 4, "#9aa3ad");
-    shelf(64, 18, 40);
-    // the fitting stand: a wooden dummy
-    R(128, 86, 18, 6, "#4a3018"); R(136, 44, 3, 44, "#6a4628"); R(126, 54, 22, 3, "#6a4628");
-    R(130, 38, 14, 10, "#8a6a4a"); R(132, 40, 10, 6, "#a8845a");
-    const it = campEquipped("gear");
-    if (it) g.drawImage(texCanvas("ci:" + it.id, "ci:shield"), 128, 56, 18, 18);
-  } else if (ws === "arcana") {
-    // the lectern with its book, floating motes, the press with candles
-    R(12, 70, 40, 5, "#5a3a20"); R(26, 75, 12, 17, "#4a2e18"); R(8, 62, 48, 9, "#6a4628");
-    R(14, 54, 36, 9, "#f4ead0"); R(31, 54, 2, 9, "#b89a68");
-    for (let i = 0; i < 6; i++) { const ph = (t * 0.5 + i / 6) % 1; R(18 + i * 5, 52 - ph * 20, 1, 1, `rgba(180,240,255,${1 - ph})`); }
-    shelf(64, 18, 40);
-    R(116, 78, 36, 14, "#5a3a20"); R(122, 56, 6, 22, "#7a7a84"); R(140, 56, 6, 22, "#7a7a84"); R(118, 50, 32, 7, "#9a9aa4");
-    R(126, 70, 16, 6, "#c0201a"); R(130, 72, 8, 2, "#ff6a5a");
-    [118, 148].forEach((x, i) => { R(x, 40, 3, 10, "#e8dcc0"); R(x, 37 + fl(i), 3, 3, "#ffb020"); });
-  } else if (ws === "kitchen") {
-    // the recipe book on a stand, a pantry shelf of jars, a big round oven
-    R(10, 78, 40, 14, "#5a3a20"); R(12, 64, 36, 14, "#f4ead0"); R(29, 64, 2, 14, "#b89a68"); R(14, 68, 12, 1, "#8a6a40"); R(33, 68, 12, 1, "#8a6a40");
-    R(62, 14, 42, 3, "#6a4628"); R(62, 32, 42, 3, "#6a4628"); R(62, 50, 42, 3, "#6a4628");
-    ["#ffd23f", "#ff8c1a", "#d1202a", "#3ddc84", "#e8dcc0", "#a855f7"].forEach((c, i) => { R(65 + (i % 3) * 13, 22 + Math.floor(i / 3) * 18, 8, 10, "#e8f0f0"); R(66 + (i % 3) * 13, 25 + Math.floor(i / 3) * 18, 6, 7, c); });
-    R(110, 36, 42, 56, "#8a5a3a"); R(116, 50, 30, 26, "#1a0e0a");
-    g.fillStyle = `rgba(255,150,50,${0.7 + fl(2) * 0.1})`; g.fillRect(118, 64, 26, 12);
-    R(124, 22, 8, 14, "#5a4a3a");
-    for (let i = 0; i < 3; i++) { const ph = (t * 0.4 + i / 3) % 1; R(126 + Math.sin(t + i) * 2, 20 - ph * 18, 2, 2, `rgba(220,220,220,${0.6 - ph * 0.6})`); }
-    const orders = ordersAt(ws);
-    orders.forEach((o, i) => { R(120 + i * 8, 58, 6, 4, orderReady(o) ? "#e8c070" : "#8a6a4a"); });
-  } else if (ws === "kennel") {
-    // a lagoon with floating hoops, a little board of who's away
-    R(4, 66, 72, 26, "#2a7aa8"); for (let x = 6; x < 74; x += 6) R(x + Math.round(Math.sin(t * 2 + x) * 1), 70, 3, 1, "#7fc8e8");
-    [[18, 60], [40, 56], [62, 62]].forEach(([x, y], i) => { const b = Math.round(Math.sin(t * 2 + i) * 1); R(x - 5, y + b, 10, 2, i % 2 ? "#d1202a" : "#f4f0e8"); R(x - 5, y + b + 6, 10, 2, i % 2 ? "#d1202a" : "#f4f0e8"); R(x - 6, y + b + 2, 2, 4, i % 2 ? "#d1202a" : "#f4f0e8"); R(x + 4, y + b + 2, 2, 4, i % 2 ? "#d1202a" : "#f4f0e8"); });
-    const away = ordersAt(ws);
-    away.forEach((o, i) => { const it = satchelItem(o.uid); if (it && !orderReady(o)) drawPetSprite(g, it.id, 10 + i * 22, 70 + Math.round(Math.sin(t * 3 + i) * 2), 12, t * 1000, { shells: 1 }); });
-    R(114, 18, 38, 40, "#8a6a4a"); R(116, 20, 34, 36, "#c8a878");
-    away.forEach((o, i) => { R(119, 24 + i * 10, 28, 7, orderReady(o) ? "#9bf0a8" : "#f4ead0"); });
-  } else {
-    // the rune anvil over a river of lava, a rack of cooling stones
-    R(4, 84, 70, 8, "#ff6a1a"); for (let x = 4; x < 74; x += 5) R(x, 84 + (Math.sin(t * 3 + x) > 0 ? 0 : 1), 3, 1, "#ffd23f");
-    R(16, 70, 40, 6, "#4a4250"); R(24, 76, 24, 8, "#3a3240"); R(12, 64, 48, 6, "#6a6270"); R(12, 64, 48, 1, "#8a8290");
-    g.fillStyle = `rgba(255,110,30,${0.25 + Math.sin(t * 2) * 0.1})`; g.fillRect(12, 40, 48, 30);
-    R(30, 52, 12, 12, "#8a8280"); R(32, 55, 8, 1, "#ff8a3a"); R(35, 54, 2, 6, "#ff8a3a");
-    shelf(110, 22, 42);
-  }
+  // the counter in front of the keeper, and a lantern swinging over it
+  texDraw(g, `shop:${shopIsl}:front`, 0, 0);
+  texDraw(g, "shop:lantern", SS_ROOM + 148 + Math.round(Math.sin(t * 1.4) * 2), 11);
 }
 
 /* ----- The panels: a card or a workshop page laid over the picture ----- */

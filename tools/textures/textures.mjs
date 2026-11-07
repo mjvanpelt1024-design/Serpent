@@ -15,11 +15,14 @@
          stickers. It only passes for pictures you haven't repainted, so
          it's for proving a conversion, not for everyday edits.
 
-     node tools/textures/textures.mjs export [--force]
-         Writes textures/ from the old game's letter-array pictures
-         (src/engine/render/pixel-icons.js and friends, from git). This is
-         how textures/ was made; with --force it overwrites the files there,
-         repainted ones included.
+     node tools/textures/textures.mjs export [set] [--force]
+         Writes a set of pictures into textures/ from the old game (from
+         git) and adds them to textures/index.json, keeping every other
+         entry. Sets: icons (the letter-array pictures: items, foes,
+         hearts...), rooms (the picture rooms: their backgrounds, lights,
+         flames and marks). This is how textures/ was made; it won't
+         overwrite a file that's there unless you add --force, and then
+         repainted ones are lost too.
 
    Options:
      --legacy-ref <commit>   which commit is "the old game" (default: the
@@ -47,7 +50,7 @@ const flag = name => args.includes(name);
 const opt = name => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : null; };
 
 if (!["export", "check"].includes(cmd)) {
-  console.log("usage: node tools/textures/textures.mjs export [--force] | check [--legacy]   (see the top of this file)");
+  console.log("usage: node tools/textures/textures.mjs export [icons|rooms|shops|keepers] [--force] | check [--legacy]   (see the top of this file)");
   process.exit(2);
 }
 
@@ -152,39 +155,50 @@ async function run(legacyDir, pagePath, pageScripts, timeoutSec = 300) {
 }
 
 /* ----- export ----- */
+const SETS = ["icons", "rooms", "shops", "keepers"];
+const fileOf = v => (typeof v === "string" ? v : v.file);
+/* index.json, one entry a line, grouped by folder */
+function writeIndex(textures) {
+  const ids = Object.keys(textures).sort((a, b) => { const fa = fileOf(textures[a]), fb = fileOf(textures[b]); return fa < fb ? -1 : fa > fb ? 1 : a < b ? -1 : 1; });
+  const line = v => (typeof v === "string" ? JSON.stringify(v) : JSON.stringify(v, null, 1).replace(/\s*\n\s*/g, " ").replace(/\[ /g, "[").replace(/ \]/g, "]"));
+  const about = [
+    "Which picture file each thing in the game uses: \"id\": \"path under textures/\".",
+    "Move or rename a file, then change its line here. See textures/README.md.",
+    "An entry can also be an object: { \"file\": ..., \"keep\": [colors menus don't light], \"ink\": [colors that count as outline], \"menu\": a file shown in menus instead, \"badge\": a corner mark, \"light\": false, \"frames\": frames side by side in a sprite sheet, \"keys\": { \"#ff00ff\": \"name\" } colors the game swaps }."
+  ];
+  const text = "{\n  \"_about\": [\n" + about.map(a => "    " + JSON.stringify(a)).join(",\n") + "\n  ],\n  \"textures\": {\n" +
+    ids.map(id => `    ${JSON.stringify(id)}: ${line(textures[id])}`).join(",\n") + "\n  }\n}\n";
+  fs.writeFileSync(path.join(TEXTURES, "index.json"), text);
+  return ids.length;
+}
 async function exportTextures() {
-  if (fs.existsSync(path.join(TEXTURES, "index.json")) && !flag("--force")) {
-    console.log("textures/index.json is already there. Exporting again overwrites every picture, repainted ones too: add --force if you mean it.");
+  const set = SETS.includes(args[1]) ? args[1] : "icons";
+  const indexPath = path.join(TEXTURES, "index.json");
+  const existing = fs.existsSync(indexPath) ? JSON.parse(fs.readFileSync(indexPath, "utf8")).textures || {} : {};
+  if (set === "icons" && Object.keys(existing).length && !flag("--force")) {
+    console.log("textures/ already has the icons. Exporting them again overwrites every one, repainted ones too: add --force if you mean it.");
     process.exit(1);
   }
   const ref = legacyRef();
-  console.log(`Exporting the pictures of ${ref.slice(0, 7)} (${git("log", "-1", "--format=%s", ref)})`);
+  console.log(`Exporting the ${set} of ${ref.slice(0, 7)} (${git("log", "-1", "--format=%s", ref)})`);
   const legacyDir = unpackLegacy(ref);
-  const answer = await run(legacyDir, "/legacy/index.html?tool=export", ["/tools/textures/legacy-ref.js", "/tools/textures/export-page.js"]);
+  const answer = await run(legacyDir, `/legacy/index.html?tool=export&set=${set}`, ["/tools/textures/legacy-ref.js", "/tools/textures/legacy-scenes.js", "/tools/textures/export-page.js"]);
   if (!answer.ok) { console.error("Export failed:\n" + answer.error); process.exit(1); }
+  const there = Object.keys(answer.files).filter(rel => fs.existsSync(path.join(TEXTURES, rel)));
+  if (set !== "icons" && there.length && !flag("--force")) {
+    console.log(`${there.length} of these files are already in textures/ (${there.slice(0, 3).join(", ")}...). Add --force to overwrite them, repainted ones too.`);
+    process.exit(1);
+  }
   for (const [rel, url] of Object.entries(answer.files)) {
     const out = path.join(TEXTURES, rel);
     fs.mkdirSync(path.dirname(out), { recursive: true });
     fs.writeFileSync(out, Buffer.from(url.slice(url.indexOf(",") + 1), "base64"));
   }
-  // the index, grouped by folder
-  const ids = Object.keys(answer.index).sort((a, b) => {
-    const fa = typeof answer.index[a] === "string" ? answer.index[a] : answer.index[a].file, fb = typeof answer.index[b] === "string" ? answer.index[b] : answer.index[b].file;
-    return fa < fb ? -1 : fa > fb ? 1 : a < b ? -1 : 1;
-  });
-  const index = {
-    _about: [
-      "Which picture file each thing in the game uses: \"id\": \"path under textures/\".",
-      "Move or rename a file, then change its line here. See textures/README.md.",
-      "An entry can also be { \"file\": ..., \"keep\": [colors menus don't light], \"ink\": [colors that count as outline], \"menu\": a file shown in menus instead, \"badge\": a corner mark, \"light\": false }."
-    ],
-    textures: Object.fromEntries(ids.map(id => [id, answer.index[id]]))
-  };
-  const json = JSON.stringify(index, null, 2).replace(/\[\n\s+("[^"\n]+")\n\s+\]/g, "[$1]").replace(/\{\n\s+"file": ("[^"]+"),\n\s+("keep"|"menu"|"badge"): ([^\n]+)\n\s+\}/g, "{ \"file\": $1, $2: $3 }");
-  fs.writeFileSync(path.join(TEXTURES, "index.json"), json + "\n");
-  console.log(`textures/: ${Object.keys(answer.files).length} files, ${ids.length} ids in index.json`);
-  answer.notes.forEach(n => console.log("  note: " + n));
-  if (answer.unused.length) console.log(`  not exported (no picture used them): ${answer.unused.join(", ")}`);
+  // the icons replace the whole index; any other set is added to it
+  const n = writeIndex(set === "icons" ? Object.assign({}, Object.fromEntries(Object.entries(existing).filter(([, v]) => /^scenes\//.test(fileOf(v)))), answer.index) : Object.assign({}, existing, answer.index));
+  console.log(`textures/: wrote ${Object.keys(answer.files).length} files; index.json has ${n} ids`);
+  answer.notes.forEach(note => console.log("  note: " + note));
+  if (answer.unused && answer.unused.length) console.log(`  not exported (no picture used them): ${answer.unused.join(", ")}`);
 }
 
 /* ----- check ----- */
@@ -199,7 +213,7 @@ async function check() {
   const answer = await run(legacyDir, `/index.html?tool=check${legacy ? "&legacy=1" : ""}`, ["/tools/textures/check-page.js"]);
   if (answer.error) { console.error("Check failed:\n" + answer.error); process.exit(1); }
   const c = answer.counts;
-  console.log(`  ${c.files} files loaded` + (answer.legacy ? `; compared ${c.flat} flat pictures, ${c.menu} menu pictures, ${c.html} hearts, faces, cursors, stickers and rune stones` : ""));
+  console.log(`  ${c.files} files loaded` + (answer.legacy ? `; compared ${c.flat} flat pictures, ${c.menu} menu pictures, ${c.html} hearts, faces, cursors, stickers and rune stones, ${c.scenes || 0} scene pictures (rooms at many moments, marks)` : ""));
   if (answer.ok) { console.log("All pictures OK" + (answer.legacy ? ": every one matches the old game pixel for pixel." : ".")); return; }
   console.log(`${answer.problems.length} problem(s):`);
   answer.problems.forEach(p => console.log("  " + p));

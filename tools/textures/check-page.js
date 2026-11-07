@@ -46,10 +46,10 @@
       document.body.appendChild(frame);
       await wait(() => frame.contentWindow && frame.contentWindow.BOOTED, "the old game didn't finish booting in its frame");
       const W = frame.contentWindow;
-      await new Promise((resolve, reject) => {
+      for (const file of ["legacy-ref.js", "legacy-scenes.js"]) await new Promise((resolve, reject) => {
         const s = W.document.createElement("script");
-        s.src = "/tools/textures/legacy-ref.js";
-        s.onload = resolve; s.onerror = () => reject(new Error("legacy-ref.js didn't load"));
+        s.src = "/tools/textures/" + file;
+        s.onload = resolve; s.onerror = () => reject(new Error(file + " didn't load"));
         W.document.body.appendChild(s);
       });
       await log("old game booted in its frame, comparing");
@@ -114,6 +114,107 @@
         const it = { id: r.id, rarity, grade: -1 };
         await compareUrls(`rune ${r.id} ${rarity} (HUD)`, W.eval("runeIconUrl")(it, 2), runeIconUrl(it, 2));
         counts.html++;
+      }
+
+      // ----- the picture rooms: each room at many moments (both flame frames, embers at every height)
+      const canvasOf = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+      const RS = W.LEGACY_SCENES.sets.rooms;
+      const moments = Array.from({ length: 60 }, (_, i) => i * 0.217 + (i % 7) * 0.031);
+      counts.scenes = 0;
+      for (const room of RS.rooms()) for (const t of moments) {
+        const a = canvasOf(PIC_W, PIC_H), b = canvasOf(PIC_W, PIC_H);
+        RS.backdrop(a.getContext("2d"), room, t);
+        b.getContext("2d").imageSmoothingEnabled = false;
+        picBackdrop(b.getContext("2d"), room, t);
+        const d = diff(a, b);
+        if (d) problems.push(`room ${room} at ${t.toFixed(3)} s: ${d}`);
+        counts.scenes++;
+      }
+      // the marks on things, through picBadges() itself, and the away tag, over a room
+      const lootOf = grade => CAMP.loot.find(l => l.grade === grade);
+      const marked = CAMP.rarities.map(r => ({ id: "sword", rarity: r.id, seal: true, trinket: "t_star" }))
+        .concat(CAMP.rarities.map(r => ({ id: "stew", rarity: r.id })))
+        .concat((CAMP.lootGrades || []).map(g => lootOf(g.id)).filter(Boolean).map(l => ({ id: l.id, rarity: "common" })))
+        .concat([{ kind: "recipe", id: "r_stew" }]);
+      for (const it of marked) {
+        const a = canvasOf(PIC_W, PIC_H), b = canvasOf(PIC_W, PIC_H);
+        RS.backdrop(a.getContext("2d"), "rack", 0); picBackdrop(b.getContext("2d"), "rack", 0);
+        W.picBadges(a.getContext("2d"), it, 60, 60); picBadges(b.getContext("2d"), it, 60, 60);
+        const d = diff(a, b);
+        if (d) problems.push(`marks on ${it.id} ${it.rarity || ""}: ${d}`);
+        counts.scenes++;
+      }
+      {
+        const a = canvasOf(PIC_W, PIC_H), b = canvasOf(PIC_W, PIC_H), s = { x: 52, y: 46 }, pR = W.eval("pR");
+        RS.backdrop(a.getContext("2d"), "rack", 0); picBackdrop(b.getContext("2d"), "rack", 0);
+        const g = a.getContext("2d");
+        pR(g, s.x - 8, s.y - 6, 16, 12, "#e8dcc0"); pR(g, s.x - 8, s.y - 6, 16, 1, "#fff6d8"); pR(g, s.x - 1, s.y - 10, 2, 4, "#5a3a20");
+        texDraw(b.getContext("2d"), "room:mark:away", s.x - 8, s.y - 10);
+        const d = diff(a, b);
+        if (d) problems.push(`away tag: ${d}`);
+        counts.scenes++;
+      }
+
+      // ----- the shopkeepers: every keeper at every one of its looks, small (the map) and in its scene
+      const KS = W.LEGACY_SCENES.sets.keepers;
+      for (const I of CAMP.islands) for (const role of KS.roles) {
+        const look = W.eval("CAMP").islandById[I.id].npcs[role].look;
+        const moments = KS.moments(role).concat(Array.from({ length: 12 }, (_, i) => 0.37 + i * 0.611));
+        for (const t of moments) {
+          const a = canvasOf(40, 40), b = canvasOf(40, 40);
+          [a, b].forEach(c => { const g = c.getContext("2d"); g.fillStyle = "#3a6a3a"; g.fillRect(0, 0, 40, 40); });
+          W.drawKeeper(a.getContext("2d"), look, 20, 28, t, role);
+          drawKeeper(b.getContext("2d"), I.id, role, 20, 28, t);
+          const d = diff(a, b);
+          if (d) problems.push(`keeper ${I.id} ${role} at ${t.toFixed(3)} s: ${d}`);
+          counts.scenes++;
+        }
+        // the keeper's own scene at the top of its shop, three times the size
+        for (const t of moments.slice(0, 16)) {
+          const a = canvasOf(160, 60), b = canvasOf(160, 60);
+          W.drawPageArt(a, `npc:${I.id}:${role}`, t);
+          drawPageArt(b, `npc:${I.id}:${role}`, t);
+          const d = diff(a, b);
+          if (d) problems.push(`keeper scene ${I.id} ${role} at ${t.toFixed(3)} s: ${d}`);
+          counts.scenes++;
+        }
+      }
+
+      // ----- the shops and workshops: the whole stage, old drawStage() against new, with the same
+      // stock, orders, gear on the dummy and keeper, every island, at many moments
+      const gEval = code => (0, eval)(code);
+      for (const run of [code => gEval(code), code => W.eval(code)]) {
+        run(`if (!camp) runConsole("dev everything.unlock");`);
+      }
+      const now = Date.now();
+      const kinds = ["craft", "seal", "cook", "train", "forge"];
+      const item = (uid, id, rarity) => ({ uid, id, rarity, qty: 1, uses: 1, parts: [], trinket: "", lv: 0, train: 0, grade: -1 });
+      const states = {
+        empty: { satchel: [], equip: {}, orders: [], stock: [] },
+        busy: {
+          satchel: [item(101, "sword", "rare"), item(102, "crab", "common"), item(103, "turtle", "rare"), item(104, "fireball", "uncommon")],
+          equip: { gear: 101 },
+          orders: kinds.flatMap((kind, k) => [0, 1, 2].map(i => ({ n: k * 3 + i + 1, kind, isl: "keep", what: "", uid: kind === "train" ? [102, 103, 102][i] : kind === "seal" ? 104 : 0, rarity: "common", grade: -1, at: 0, readyAt: i === 1 ? 0 : now + 36e5 }))),
+          stock: [{ spot: 0, id: "sword", rarity: "rare" }, { spot: 1, id: "fireball", rarity: "legendary", deal: true }, { spot: 2, id: "r_stew", recipe: true, rarity: "common" },
+            { spot: 3, id: "plenty", rarity: "uncommon" }, { spot: 4, id: "shield", rarity: "common", sold: true, deal: true }]
+        }
+      };
+      const keepers = [{ x: 288, from: 288, to: 288, at: 0 }, { x: 288, from: 288, to: 60, at: "MOVE" }, { x: 60, from: 60, to: 288, at: "MOVE" }];
+      const stageMoments = Array.from({ length: 16 }, (_, i) => 3 + i * 0.173 + (i % 5) * 0.047);
+      const ssOld = W.eval("ssCanvas"), ssNew = gEval("ssCanvas");
+      for (const I of CAMP.islands) for (const [sname, st] of Object.entries(states)) for (const [ki, kp] of keepers.entries()) {
+        for (const run of [gEval, code => W.eval(code)]) {
+          run(`shopIsl = ${JSON.stringify(I.id)}; camp.satchel = ${JSON.stringify(st.satchel)}; camp.equip = ${JSON.stringify(st.equip)}; camp.orders = ${JSON.stringify(st.orders)}; camp.merchants[${JSON.stringify(I.id)}] = Object.assign({}, camp.merchants[${JSON.stringify(I.id)}] || {}, { stock: ${JSON.stringify(st.stock)} });`);
+        }
+        for (const t of stageMoments) {
+          const ts = t * 1000;
+          const k = JSON.stringify(Object.assign({}, kp, { at: kp.at === "MOVE" ? ts - 600 : kp.at }));
+          W.eval(`ssKeeper = ${k}`); W.drawStage(t, ts);
+          gEval(`ssKeeper = ${k}`); drawStage(t, ts);
+          const d = diff(ssOld, ssNew);
+          if (d) problems.push(`shop ${I.id} (${sname}, keeper ${ki}) at ${t.toFixed(3)} s: ${d}`);
+          counts.scenes++;
+        }
       }
     }
     // ----- nothing fell back to the checkerboard while all that was drawn
