@@ -442,7 +442,9 @@ def check_rules(rules):
     check(num(m.get("restockMinutes"), 10, 10080), rel, "merchant.restockMinutes must be 10-10080")
     c = rules.get("challenge", {})
     check(num(c.get("days"), 1, 60), rel, "challenge.days must be 1-60")
-    check(num(c.get("levels"), 1, 3), rel, "challenge.levels must be 1-3")
+    check(num(c.get("levels"), 1, 5), rel, "challenge.levels must be 1-5")
+    check(num(c.get("levelsMax", c.get("levels")), c.get("levels", 1), 5), rel, "challenge.levelsMax must be from challenge.levels to 5")
+    check(all(isinstance(p, str) and p.strip() for p in c.get("plots", [])), rel, "challenge.plots must be lines of text")
     check(sum(p.get("weight", 0) for p in c.get("pool", [])) > 0, rel, "the challenge pool needs weights")
     for p in c.get("pool", []):
         check(p.get("kind") in ("gems", "item", "canister", "skin", "theme", "spellpts", "recipe"), rel, f"challenge pool kind \"{p.get('kind')}\" unknown")

@@ -224,18 +224,19 @@ const ContentLoader = (() => {
   }
   async function campaign() {
     const ids = Formats.list(await need("content/campaign/islands/_index.dat"));
-    const [islands, items, upgrades, rules, crafting, foes, manifest] = await Promise.all([
+    const [islands, items, upgrades, rules, crafting, foes, nightmare, manifest] = await Promise.all([
       Promise.all(ids.map(id => json(`content/campaign/islands/${id}.json`))),
       json("content/campaign/items.json"),
       json("content/campaign/upgrades.json"),
       json("content/campaign/rules.json"),
       json("content/campaign/crafting.json"),
       json("content/campaign/foes.json"),
+      json("content/campaign/nightmare.json"),          // build 53: nightmare mode
       read("content/campaign/manifest.dat")
     ]);
-    const texts = { "items.json": items.text, "upgrades.json": upgrades.text, "rules.json": rules.text, "crafting.json": crafting.text, "foes.json": foes.text };
+    const texts = { "items.json": items.text, "upgrades.json": upgrades.text, "rules.json": rules.text, "crafting.json": crafting.text, "foes.json": foes.text, "nightmare.json": nightmare.text };
     ids.forEach((id, i) => { texts[`islands/${id}.json`] = islands[i].text; });
-    return { islands: islands.map(x => x.data), items: items.data, upgrades: upgrades.data, rules: rules.data, crafting: crafting.data, foes: foes.data, texts, manifest: manifest || "" };
+    return { islands: islands.map(x => x.data), items: items.data, upgrades: upgrades.data, rules: rules.data, crafting: crafting.data, foes: foes.data, nightmare: nightmare.data, texts, manifest: manifest || "" };
   }
 
   async function load() {

@@ -118,16 +118,43 @@ const goalText = g => (GOAL_LABEL[g.type] ? GOAL_LABEL[g.type](g.need, g) : "Win
 
 const RELIC_NAMES = { crown: "the Lost Crown", grimoire: "the Forbidden Grimoire", ladle: "the Golden Ladle", pearl: "the Pearl of Tides", eye: "the Dragon's Eye" };
 
-/* ----- Building the board ----- */
+/* ----- Building the board -----
+   Every campaign board is a .level file: content/levels/campaign/<island>-<level>.level, listed in
+   content/levels/index.dat (build 53). LAYOUTS above is kept only for tools/bake-campaign-levels.js,
+   which wrote the files; a level with no file falls back to it with a warning. */
+function campBoardFile(key) {
+  const L = CONTENT.gameLevels && CONTENT.gameLevels[key];
+  if (!L) console.warn(`No .level file for ${key}: check content/levels/index.dat`);
+  return L || null;
+}
+
+/* A .level board -> { cells, purple, start, pulse: [setA, setB] }. Sandbox files (Play > Sandbox) read
+   the same way: their walls, portal walls and start; their food and hazard squares count as open. */
+function campBoardFromFile(F) {
+  const out = { cells: [], purple: [], start: [3, 10], pulse: [[], []] };
+  F.board.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === "#") out.cells.push([x, y]);
+    else if (ch === "P") out.purple.push([x, y]);
+    else if (ch === "S") out.start = [x, y];
+    else if (ch === "1" || ch === "3") out.pulse[0].push([x, y]);
+    if (ch === "2" || ch === "3") out.pulse[1].push([x, y]);
+  }));
+  return out;
+}
+
 function campBuildStatic(def) {
-  const L = (LAYOUTS[def.layout] || LAYOUTS.open)();
+  const F = campRun ? campBoardFile(campRun.board || `${campRun.isl}-${campRun.n}`) : null;
+  const L = F ? campBoardFromFile(F) : (LAYOUTS[def.layout] || LAYOUTS.open)();
   walls = new Map();
-  if (def.layout === "pulse") {
-    const [a, b] = pulseSets();
+  const isPulse = F ? (L.pulse[0].length + L.pulse[1].length > 0) : def.layout === "pulse";
+  if (isPulse) {
+    const [a, b] = F ? L.pulse : pulseSets();
     pulse = { sets: [a, b], on: 0, next: performance.now() + 5000 };
     a.forEach(([x, y]) => walls.set(cellKey(x * cell, y * cell), "red"));
   } else pulse = null;
   L.cells.forEach(([x, y]) => { if (x >= 0 && y >= 0 && x < N20 && y < N20) walls.set(cellKey(x * cell, y * cell), "red"); });
+  // portal walls only lead somewhere in a maze; on a 20 x 20 board they stand as red walls
+  (L.purple || []).forEach(([x, y]) => { if (x >= 0 && y >= 0 && x < N20 && y < N20) walls.set(cellKey(x * cell, y * cell), "red"); });
   const [sx, sy] = L.start;
   walls.delete(cellKey(sx * cell, sy * cell));
   snake.x = sx * cell;
@@ -141,6 +168,22 @@ function campBuildStatic(def) {
 /* The endless field: a torus of mirrored walls, rings cascading out from a clearing */
 const FIELD_T = 48;
 function campBuildField(seedText) {
+  // build 53: the board comes from its .level file (seedText is "island-level"); the seeded build below
+  // is what tools/bake-campaign-levels.js ran to write those files, and the fallback when one is missing
+  const F = typeof CONTENT !== "undefined" && CONTENT.gameLevels ? CONTENT.gameLevels[seedText] : null;
+  if (F) {
+    const T = F.head.size || F.board.length;
+    maze = { N: 1, S: T, T, W: T * cell, east: [[]], south: [[]], groups: [], prev: [], field: true };
+    walls = new Map();
+    let start = { x: (T / 2) * cell, y: (T / 2) * cell };
+    F.board.forEach((row, y) => [...row].forEach((ch, x) => {
+      if (ch === "#" || ch === "P") walls.set(cellKey(x * cell, y * cell), "red");
+      else if (ch === "S") start = { x: x * cell, y: y * cell };
+    }));
+    snake.x = start.x; snake.y = start.y; snake.dx = cell; snake.dy = 0;
+    return start;
+  }
+  if (typeof CONTENT !== "undefined") console.warn(`No .level file for ${seedText}: check content/levels/index.dat`);
   const rng = seededRandom(seedFromText(seedText || "field"));
   const T = FIELD_T, C = T / 2;
   maze = { N: 1, S: T, T, W: T * cell, east: [[]], south: [[]], groups: [], prev: [], field: true };
@@ -410,7 +453,7 @@ function maybeLoot(ts) {
   if (ts < campRun.lootAt) return;
   campRun.lootAt = ts + CAMP.rules.rewards.lootEveryMs;
   if (campObjs.some(o => o.kind === "loot")) return;
-  if (Math.random() > CAMP.rules.rewards.lootChance * (1 + upPct("lucky")) * (1 + runeVal("loot") / 100)) return;
+  if (Math.random() > CAMP.rules.rewards.lootChance * (1 + upPct("lucky")) * (1 + runeVal("loot") / 100) * ((campRun && campRun.lucky) || 1)) return;
   const s = endless ? null : campSpot(0);
   if (!s) return;
   // now and then it's a heart canister instead of a trinket

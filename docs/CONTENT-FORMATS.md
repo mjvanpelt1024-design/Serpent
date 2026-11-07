@@ -184,16 +184,30 @@ placed with `count`; the rest are timed with `max` and `delay`. What each one do
 
 ### Game levels: `content/levels/*.level`
 
-A level whose board comes from a file. Nothing is generated: the Labyrinth's three mazes and the
-campaign's Caldera Maze are all files now. `content/levels/index.dat` maps each level's name to its file:
+A level whose board comes from a file. Nothing is generated: the Labyrinth's three mazes and every
+campaign board (build 53: all 75, in `content/levels/campaign/`) are files. `content/levels/index.dat`
+maps each level's name to its file:
 
 ```text
 Hedgerow | labyrinth-1.level
+reef-3   | campaign/reef-3.level
 ```
 
-The name is the level's name in its world (`levels.dat`), or the campaign level's name. A file listed
-here replaces the level with that name. To use a level from the custom-levels folder, copy its file here,
-give it the name you want, and list it.
+The name is the level's name in its world (`levels.dat`), or `island-level` for the campaign
+(`reef-3` is Tidecoil Reef's third level). A file listed here replaces the level with that name.
+
+**Putting a sandbox level into the game:** save it in Play > Sandbox, take `<name>.level` from your
+downloads, and copy it over the board you want to replace, for example `content/levels/campaign/reef-3.level`
+(keep the file name, or change the line in `index.dat`). Run `tools/check-content.py`. The campaign reads a
+20 x 20 board's walls (`#`), portal walls (`P`, red walls outside a maze) and start (`S`); the sandbox's food
+and hazard squares, panels and spawner chips are kept in the file but the campaign doesn't use them yet: its
+goal, speed and spawns still come from the island's file in `content/campaign/islands/`. A board keeps
+three open squares in front of the start, so the snake never starts against a wall.
+
+Board sizes: 20 for the campaign's boards (and every sandbox level; `size` may be left out), 48 for a
+field (`edge = wrap`), 80 for a maze (`edge = maze`, with `span` and `[portals]`). A pulse level's walls
+are `1` (up first), `2` (up second) and `3` (always up). `tools/bake-campaign-levels.js` wrote the
+campaign files once from the old builders; it keeps files that already exist (`--force` rewrites them).
 
 ```text
 # Comments start with #
@@ -210,7 +224,7 @@ p01 = "3,20-22 > 4,20-22"     # a square x,y, or a line x,y1-y2 (a column) or x1
 ....#####........
 ```
 
-Below the `---`, one row per line: `.` open · `#` red wall · `P` portal wall · `S` snake start (exactly one).
+Below the `---`, one row per line: `.` open · `#` red wall · `P` portal wall · `S` snake start (exactly one) · `1 2 3` pulse walls.
 A portal wall lets you through to its exit; a red wall in a dead end can be turned into one.
 
 **Not in a `.level` file yet:** the island's spawns, speed, theme, skin and loadout. Those still come from

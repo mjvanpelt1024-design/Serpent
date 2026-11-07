@@ -1,7 +1,8 @@
 /* =========================================================
    src/campaign/camp-kit.js
-   Choosing what to carry, between levels. The old "Bring anything?"
-   box asks before every level once you own something to carry:
+   Choosing what to carry, between levels. Nothing asks before a level
+   any more: click your snake on the map (it follows you from stop to
+   stop) and this box opens as your loadout:
      your kit     one gear (a weapon, or a tool), a helmet and body
                   armor (build 52), and one spell, picked with arrows
      a familiar   to come along beside you
@@ -13,22 +14,24 @@
    ========================================================= */
 "use strict";
 
-let kitFor = null;            // { isl, n, challenge } while the box is open
+let kitFor = null;            // { loadout: true } while the box is open
 const KIT_SLOTS = ["gear", "helmet", "body", "spell"];
 const KIT_EXTRAS = ["pet", "rune", "canister"];
 const CARRIED = KIT_SLOTS.concat(KIT_EXTRAS, ["food"]);
 
-/* Opens the box if there's anything to choose; false means just play */
-function openCampKit(isl, n, challengeIdx) {
+/* Your loadout, from the snake on the map: weapons, armor, spells, runes, familiars and the pocket.
+   With nothing to carry yet it says so in a toast instead. */
+function openCampLoadout() {
+  if (!camp || loadoutOpen) return false;
   const owned = camp.satchel.filter(it => CARRIED.includes(campItemSlot(it.id)));
-  if (!owned.length) return false;
-  kitFor = { isl, n, challenge: challengeIdx };
+  if (!owned.length) { showToast("Nothing to carry yet: the shops sell gear, spells, snacks, familiars and runes."); return false; }
+  kitFor = { loadout: true };
   loadoutOpen = true;
-  const def = campLevelDef(isl, n);
-  document.getElementById("loadout-title").textContent = "What will you carry?";
-  document.querySelector("#loadout .loadout-sub").textContent = `${n}. ${def.name}: ${goalText(def.goal)}. Nothing can be swapped once the level starts.`;
-  document.getElementById("loadout-none").textContent = "Back";
-  document.getElementById("loadout-go").textContent = "Start";
+  sfx("tab");
+  document.getElementById("loadout").classList.add("kit-loadout");
+  document.getElementById("loadout-title").textContent = camp.name || "Your loadout";
+  document.querySelector("#loadout .loadout-sub").textContent = "";
+  document.getElementById("loadout-go").textContent = "Done";
   renderCampKit();
   document.getElementById("loadout").classList.add("active");
   document.getElementById("loadout-go").focus({ preventScroll: true });
@@ -117,21 +120,19 @@ function renderCampKit() {
 function closeCampKit() {
   kitFor = null;
   loadoutOpen = false;
-  document.getElementById("loadout").classList.remove("active");
+  document.getElementById("loadout").classList.remove("active", "kit-loadout");
   document.getElementById("loadout-title").textContent = "Bring anything?";
   document.getElementById("loadout-none").textContent = "Just play";
   updatePauseButton();
 }
 
-/* The box's buttons and keys: Start plays, Back (or Esc) closes */
+/* The box's buttons and keys: Done (or Esc) closes it */
 (() => {
   const go = loadoutGo;
-  window.loadoutGo = function (useNothing) {
+  window.loadoutGo = function () {
     if (!kitFor) return go.apply(this, arguments);
-    const { isl, n, challenge } = kitFor;
     closeCampKit();
-    if (useNothing) return;
-    campStart(isl, n, challenge);
+    sfx("click");
   };
   const close = closeLoadout;
   window.closeLoadout = function () { if (kitFor) { closeCampKit(); return; } return close.apply(this, arguments); };

@@ -86,6 +86,19 @@ function titleStats() {
 }
 const islandDone = isl => campWon(isl, LEVEL_COUNT);
 
+/* Build 53: nightmare mode's wanted poster for the Maw, once the deep is open; crossed out after the fifth Maw */
+const mawDone = () => !!(camp.nm && camp.nm.maw.length >= CAMP.islands.length);
+function mawPoster() {
+  if (!(camp.nm && camp.nm.open)) return "";
+  const n = camp.nm.maw.length, dead = mawDone(), all = CAMP.islands.length;
+  return `<div class="td-poster maw${dead ? " dead" : ""}" title="${escapeAttr(dead ? "The Maw: beaten in every tunnel" : `The Maw: ${n} of ${all} beaten`)}">
+    <span class="td-wanted">${dead ? "Defeated" : "Wanted"}</span>
+    <img class="td-face td-maw" src="${iconUrl("sticker:maw", 3)}" alt="">
+    <span class="td-bname">The Maw</span>
+    ${dead ? `<span class="td-x" aria-hidden="true"></span>` : `<span class="td-fights">${"●".repeat(n)}${"○".repeat(all - n)}</span>`}
+  </div>`;
+}
+
 function renderTitleDeco() {
   if (!camp) return;
   // the top: money from every island you've reached, and gems
@@ -111,7 +124,9 @@ function renderTitleDeco() {
       ${seen && !dead ? `<span class="td-fights">${"●".repeat(fights)}${"○".repeat(3 - fights)}</span>` : ""}
       ${dead ? `<span class="td-x" aria-hidden="true"></span>` : ""}${pins}
     </div>`;
-  }).join("");
+  }).join("") + mawPoster();
+  // build 53: the Maw's sticker, once it's beaten in every tunnel (it goes in the first of nightmare.json's sticker slots)
+  if (mawDone()) done.push({ id: "maw", name: "The Maw" });
   if (arcadeFits()) { renderArcade(coins, gems, titleStats(), done, posters); placeTitleDeco(); return; }
   arcadeOff();
   titleDeco.innerHTML = `<div class="td-top">${coins}${gems}</div>
@@ -163,9 +178,12 @@ const ARCADE = {
   // your numbers' posters (30 x 40): x, y, tilt, the color of the band across the top
   stats: [[-14, 80, -5, "#d1202a"], [-20, 126, 4, "#2f7dff"], [-12, 174, -3, "#ffd23f"], [-18, 222, 5, "#3ddc84"], [214, 0, 6, "#b36bff"]],
   // the wanted posters on the wall (34 x 46): x, y, tilt
-  bounties: [[-46, 4, -3], [244, 22, 4], [250, 78, -2], [242, 134, 3], [248, 192, -4]],
-  // the stickers (18 x 18): x, y, tilt, on the machine or the wall, the poster whose number it covers
+  // (the sixth: the Maw's, build 53)
+  bounties: [[-46, 4, -3], [244, 22, 4], [250, 78, -2], [242, 134, 3], [248, 192, -4], [-86, 196, 3]],
+  // the stickers (18 x 18): x, y, tilt, on the machine or the wall, the poster whose number it covers.
+  // The five islands', then (build 53) nightmare.json's stickerSlots: the Maw's first, the rest kept for the quest bosses to come.
   stickers: [[2, 142, -12, "machine", 1], [36, 8, 10, "machine"], [-40, 58, 8, "wall"], [250, 16, 14, "machine", 4], [-34, 300, -8, "wall"]]
+    .concat(((CAMP.nightmare || {}).stickerSlots || []))
 };
 const titleWall = document.createElement("div");
 titleWall.id = "title-wall";

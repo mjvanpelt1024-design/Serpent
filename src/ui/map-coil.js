@@ -100,13 +100,16 @@ function coilWidth(s) {
 const COIL_LIT = ["#0f3b22", "#1f6e3a", "#2fa85a", "#7fe08a", "#ffe08a"];      // edge ... belly highlight
 const COIL_STONE = ["#2a2e38", "#454b58", "#5d6474", "#7a8294", "#8f97a8"];
 const COIL_WAKE = ["#3a2a18", "#6a4a24", "#9a7a3a", "#d0aa50", "#ffd23f"];       // the stretch just ahead of you
+const COIL_BONE = ["#3a3530", "#6a6058", "#9a9080", "#c8bfa8", "#efe8d4"];       // build 53: under an island whose Maw is beaten
+/* Has the Maw been beaten in the tunnel under island i (nightmare mode, camp-nightmare.js)? */
+const coilMawSlain = i => !!(camp && camp.nm && CAMP.islands[i] && camp.nm.maw.includes(CAMP.islands[i].id));
 
 /* The body is painted once into its own canvas, and again only when you unlock something */
 let coilCache = null;
 function coilArt() {
   const { litSegs, frontier } = coilProgress();
   const fogFrom = frontier === -1 ? 99 : 2 * frontier + 1;                    // past the next island, it's in the clouds
-  const tag = litSegs + ":" + fogFrom;
+  const tag = litSegs + ":" + fogFrom + ":" + (camp && camp.nm ? camp.nm.maw.join(",") : "");
   if (coilCache && coilCache.tag === tag) return coilCache.c;
   const c = document.createElement("canvas");
   c.width = MAP_W;
@@ -120,7 +123,7 @@ function coilArt() {
     const lit = p.seg < litSegs - 1;
     const wake = !lit && p.seg === litSegs - 1 && frontier !== -1;
     const fog = !lit && !wake && p.seg >= fogFrom;
-    const pal = lit ? COIL_LIT : wake ? COIL_WAKE : COIL_STONE;
+    const pal = lit ? (coilMawSlain(Math.floor(p.seg / 2)) ? COIL_BONE : COIL_LIT) : wake ? COIL_WAKE : COIL_STONE;
     const w = coilWidth(p.s), half = w / 2;
     for (let o = -half; o <= half; o += 0.5) {
       const edge = Math.abs(o) / (half || 1);                     // 0 in the middle, 1 at the edge
@@ -211,7 +214,9 @@ function drawCoilHead(g, t) {
   const x = Math.round(p.x), y = Math.round(p.y);
   const lastIsl = CAMP.islands[CAMP.islands.length - 1].id;
   const awake = campIslandOpen(lastIsl), realm = campWon(lastIsl, LEVEL_COUNT);
-  const pal = awake ? COIL_LIT : COIL_STONE;
+  // the Maw beaten in every tunnel: the head is bone, its eye shut for good
+  const beaten = CAMP.islands.every((I, i) => coilMawSlain(i));
+  const pal = beaten ? COIL_BONE : awake ? COIL_LIT : COIL_STONE;
   const flip = p.tx > 0;
   const R = (dx, dy, w, h, c) => mapRect(g, flip ? x - dx - w + 1 : x + dx, y + dy, w, h, c);
   const jaw = awake ? Math.max(0, Math.round(Math.sin(t * 0.9) * 2)) : 0;
@@ -223,7 +228,8 @@ function drawCoilHead(g, t) {
   R(-15, -2, 1, 1, "#0a0a12"); R(-15, 0, 1, 1, "#0a0a12");                          // nostrils
   // the eye
   const blink = (t % 6) < 0.15;
-  if (!awake || blink) R(-7, -3, 3, 1, "#0a0a12");
+  if (beaten) { R(-8, -4, 1, 1, "#0a0a12"); R(-6, -4, 1, 1, "#0a0a12"); R(-7, -3, 1, 1, "#0a0a12"); R(-8, -2, 1, 1, "#0a0a12"); R(-6, -2, 1, 1, "#0a0a12"); }
+  else if (!awake || blink) R(-7, -3, 3, 1, "#0a0a12");
   else {
     const c = realm ? "#d06bff" : "#ffd23f";
     g.fillStyle = realm ? `rgba(208, 107, 255, ${0.25 + 0.2 * Math.sin(t * 3)})` : `rgba(255, 210, 63, ${0.25 + 0.2 * Math.sin(t * 3)})`;
@@ -231,7 +237,7 @@ function drawCoilHead(g, t) {
     R(-8, -4, 3, 3, c); R(-7, -4, 1, 3, "#0a0a12");
   }
   // a forked tongue, flicking, when it's awake
-  if (awake && Math.sin(t * 2.2) > 0.6) { R(-19, 1, 5, 1, "#ff3b6b"); R(-21, 0, 2, 1, "#ff3b6b"); R(-21, 2, 2, 1, "#ff3b6b"); }
+  if (awake && !beaten && Math.sin(t * 2.2) > 0.6) { R(-19, 1, 5, 1, "#ff3b6b"); R(-21, 0, 2, 1, "#ff3b6b"); R(-21, 2, 2, 1, "#ff3b6b"); }
 }
 
 /* ----- The sky: its own canvas behind the world, at a low resolution, with parallax ----- */

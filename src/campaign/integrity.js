@@ -120,7 +120,7 @@ function checkValue(v, rule, path, issues) {
 /* Filled in lazily, so the schema can name ids from the campaign data */
 const islandIds = () => CAMP.islands.map(i => i.id);
 const currencyIds = () => CAMP.islands.map(i => i.currency.id);
-const itemIds = () => CAMP.items.map(i => i.id);
+const itemIds = () => CAMP.items.concat(CAMP.nmItems || []).map(i => i.id);
 const rarityIds = () => CAMP.rarities.map(r => r.id);
 const slotIds = () => CAMP.slots.map(s => s.id);
 const lootIds = () => CAMP.loot.map(l => l.id);
@@ -187,9 +187,9 @@ const SAVE_SCHEMA = S.obj({
   nextUid: S.int(1, 1e9, 1),
   merchants: S.map(islandIds, S.obj({ stock: S.list(STOCK_RULE, 6), restockAt: S.int(0, 9e15, 0) })),
   challenges: S.map(islandIds, S.obj({
-    levels: S.list(S.int(1, 15, 1), 3),
-    mods: S.list(S.list(S.oneOf(() => CAMP.rules.challenge.mods.map(m => m.id), "swift"), 3), 3),
-    done: S.list(S.bool(false), 3),
+    levels: S.list(S.int(1, 15, 1), 5),
+    mods: S.list(S.list(S.oneOf(() => CAMP.rules.challenge.mods.map(m => m.id), "swift"), 3), 5),
+    done: S.list(S.bool(false), 5),
     startedAt: S.int(0, 9e15, 0),
     endsAt: S.int(0, 9e15, 0),
     claimed: S.bool(false),
@@ -213,6 +213,19 @@ const SAVE_SCHEMA = S.obj({
   daily: S.int(0, 1e7, 0),
   recipes: S.list(S.oneOf(() => Object.keys(CAMP.recipeById || {}), "r_stew"), 100),
   pins: S.map(islandIds, S.list(S.str(24), 6)),
+  // build 53: the gem shop (camp-gemshop.js): the day its daily gift was last taken, what was bought,
+  // and the boosters' levels left (surge: power-ups more often; lucky: more loot)
+  gemDaily: S.int(0, 1e7, 0),
+  gemBought: S.map(/^[a-z0-9]+$/, S.int(0, 1e6, 0), 40),
+  boosts: S.obj({ surge: S.int(0, 9999, 0), lucky: S.int(0, 9999, 0) }),
+  // build 53: nightmare mode (camp-nightmare.js): open once seen, wins per tunnel level ("crown:3", 11 = the Maw),
+  // the tunnels whose Maw is beaten, and the roots' upgrade tiers
+  nm: S.obj({
+    open: S.bool(false),
+    levels: S.map(/^[a-z]+:(1[01]|[1-9])$/, S.int(0, 1e7, 0), 60),
+    maw: S.list(S.oneOf(islandIds, "crown"), 5),
+    roots: S.map(() => Object.values((CAMP.nightmare || {}).roots || {}).flatMap(r => r.upgrades.map(u => u.id)), S.int(0, 5, 0), 40)
+  }),
   flags: S.obj({ modded: S.bool(false), cheats: S.bool(false), restored: S.int(0, 1e6, 0) })
 });
 

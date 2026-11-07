@@ -15,9 +15,9 @@ function wrapDelta(d) {
   return d > W / 2 ? d - W : d;
 }
 
-/* The name of the level being played: the campaign's maze, or the island's level */
+/* The name of the level being played: the campaign's board (island-level, e.g. reef-12), or the world's level */
 function mazeLevelName() {
-  if (campRun) return campRun.def.name;
+  if (campRun) return `${campRun.isl}-${campRun.n}`;
   return levelName(currentModeKey, currentLevel);
 }
 

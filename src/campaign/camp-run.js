@@ -115,15 +115,16 @@ function campDamage(hearts, cause) {
 }
 const vesselHoldsArmor = it => { const d = campItemDef(it.id); return !!(d && d.armor && d.armor[rarityIdx(it.rarity)] > 0); };
 
-/* From the map or a challenge: choose what to carry, then play */
+/* From the map or a challenge: straight in. What you carry is changed on the map, by clicking
+   your snake (openCampLoadout in camp-kit.js), never in a box before the level. */
 function campBeginLevel(isl, n, challengeIdx = -1) {
-  if (typeof openCampKit === "function" && openCampKit(isl, n, challengeIdx)) return;
   campStart(isl, n, challengeIdx);
 }
 
-function campStart(isl, n, challengeIdx = -1) {
-  const def = campLevelDef(isl, n);
-  if (!def || !campLevelOpen(isl, n)) return;
+/* nmDef: a nightmare level (camp-nightmare.js nmLevelDef), played under island isl as its tunnel's level n */
+function campStart(isl, n, challengeIdx = -1, nmDef = null) {
+  const def = nmDef || campLevelDef(isl, n);
+  if (!def || (!nmDef && !campLevelOpen(isl, n))) return;
   const C = camp.challenges[isl];
   const mods = challengeIdx >= 0 && C && C.active ? (C.mods[challengeIdx] || []).slice() : [];
 
@@ -132,6 +133,8 @@ function campStart(isl, n, challengeIdx = -1) {
   const rune = rIt && !mods.includes("bare") && !itemAway(rIt.uid) ? runeForRun(rIt) : null;
   // the worn gear's trinket adds to the same table (build 51)
   const extra = mods.includes("bare") ? {} : gearExtras();
+  // nightmare: the roots' upgrades work in every level down there (camp-nightmare.js)
+  if (nmDef && typeof nmRootStats === "function") Object.entries(nmRootStats()).forEach(([k, v]) => { extra[k] = (extra[k] || 0) + v; });
   const rv = stat => ((rune && rune.vals[stat]) || 0) + (extra[stat] || 0);
   // gear and spells last for good: whole again for every level
   campRefillKit();
@@ -158,6 +161,14 @@ function campStart(isl, n, challengeIdx = -1) {
     if (s.count) s.count = Math.max(1, Math.round(s.count * hz));
     if (s.rate) s.rate *= hz;
   });
+  // build 53: the gem shop's boosters, each used up one level at a time (camp-gemshop.js)
+  const boostFx = typeof gemBoostsForLevel === "function" ? gemBoostsForLevel() : { surge: 1, lucky: 1 };
+  if (boostFx.surge !== 1) Object.entries(spawns).forEach(([k, s]) => {
+    if (HAZARD_SPAWNS.includes(k) || k === "apple") return;
+    if (s.delay) s.delay = s.delay.map(d => Math.round(d / boostFx.surge));
+    if (s.rate) s.rate *= boostFx.surge;
+    if (s.max) s.max = Math.ceil(s.max * boostFx.surge);
+  });
   MODE_ITEMS.campaign = spawns;
 
   const mult = (1 + upPct("scoremult")) * (1 + rv("points") / 100);
@@ -171,8 +182,10 @@ function campStart(isl, n, challengeIdx = -1) {
     isl, islandN: island.n, n, def, mods, challenge: challengeIdx, rune, extra,
     apples: 0, lostHeart: false, loot: [], canisters: [], lootAt: performance.now() + 6000,
     castReadyAt: 0, fieldUntil: 0, pet: null, gearFx: 0, blinkFx: 0,
-    secondWind: upVal("secondwind") > 0, echoReady: rv("echo") > 0, echoUsed: false, freeCasts: rv("freeCasts"), dmgCarry: 0,
-    over: false, speed, prevBest: (camp.levels[campLevelId(isl, n)] || { best: 0 }).best
+    lucky: boostFx.lucky, secondWind: upVal("secondwind") > 0, echoReady: rv("echo") > 0, echoUsed: false, freeCasts: rv("freeCasts"), dmgCarry: 0,
+    over: false, speed, prevBest: nmDef ? 0 : (camp.levels[campLevelId(isl, n)] || { best: 0 }).best,
+    // which .level board it plays on (content/levels/index.dat), and whether it's a nightmare level
+    board: nmDef ? nmDef.board : `${isl}-${n}`, nmRun: !!nmDef
   };
   campShots = [];
   boss = null;
@@ -321,7 +334,7 @@ function campWinLevel() {
   const C = camp.challenges[isl];
   if (campRun.challenge >= 0 && C && C.active) {
     C.done[campRun.challenge] = true;
-    lines.push(C.done.every(Boolean) ? "Quest complete! Claim your reward from the challenger." : `Quest trial ${C.done.filter(Boolean).length} of 3 done`);
+    lines.push(C.done.every(Boolean) ? "Quest complete! Claim your reward from the challenger." : `Quest trial ${C.done.filter(Boolean).length} of ${C.levels.length} done`);
   }
   // what just opened
   const notes = [];

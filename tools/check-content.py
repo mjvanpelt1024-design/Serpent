@@ -165,14 +165,16 @@ def check_game_levels():
             text = f.read()
         head, _, body = text.partition("\n---\n")
         size = value_of(path, "size")
-        if size is None or not str(size).isdigit():
-            problems.append(f"{rel(path)}  needs 'size = <squares across>'")
+        if size is None:
+            size = 20   # a sandbox level (Play > Sandbox) has no size line: it is always 20 x 20
+        if not str(size).isdigit():
+            problems.append(f"{rel(path)}  'size' should be the squares across, a whole number")
             continue
         size = int(size)
-        board = [l for l in body.split("\n") if l.strip()]
+        board = [l.split("  #")[0].rstrip() for l in body.replace("\r", "").split("\n") if l.strip()]
         if len(board) != size or any(len(l) != size for l in board):
             problems.append(f"{rel(path)}  its board should be {size} rows of {size} squares (it has {len(board)} rows)")
-        bad = sorted({c for l in board for c in l} - set(".#PSAaXxRrOoFfHhMm@*%&!^~"))
+        bad = sorted({c for l in board for c in l} - set(".#PSAaXxRrOoFfHhMm@*%&!^~123"))
         if bad:
             problems.append(f"{rel(path)}  unknown board characters: {' '.join(bad)}")
         if sum(l.count("S") for l in board) != 1:

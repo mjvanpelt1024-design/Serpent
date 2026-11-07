@@ -58,38 +58,40 @@ function campEatSnack(i) {
   if (campBare()) { showToast("Bare Scales: no snacks in this quest."); return; }
   if (!it) { showToast(`Pocket slot ${i + 1} is empty.`); sfx("bad"); return; }
   const d = campItemDef(it.id), p = campItemPower(it), leg = it.rarity === "legendary";
+  // a snack can eat like another ("acts", build 53: nightmare snacks)
+  const act = campItemActs(it.id);
   const P = ARMOR_PIECES();
   let said = "";
-  if (it.id === "stew") {
+  if (act === "stew") {
     const max = campRun.startHearts || 0;
     if (currentHearts >= max) { showToast(max ? "Your hearts are already full." : "You have no hearts to heal yet."); sfx("bad"); return; }
     currentHearts = Math.min(max, currentHearts + p);
     said = "Hearty Stew! You feel better already.";
-  } else if (it.id === "bread") {
+  } else if (act === "bread") {
     if (campRun.armor >= campRun.armorMax) { showToast(campRun.armorMax ? "Your armor is whole." : "You have no armor for it to grow back."); sfx("bad"); return; }
     campRun.armor = Math.min(campRun.armorMax, (Math.floor(campRun.armor / P) + p) * P);
     campSyncArmor();
     said = "Honey Bread! Your armor grows back.";
-  } else if (it.id === "pie") {
+  } else if (act === "pie") {
     const g = campEquipped("gear");
     const full = g ? freshUses(g.id, g.rarity, g) : 0;
     if (!g || g.uses >= full) { showToast(g ? "Your gear is good as new." : "You have no gear to patch."); sfx("bad"); return; }
     g.uses = Math.min(full, g.uses + p);
     campRun.gearFx = performance.now();
     said = `Tinker's Pie patched your ${d && campItemDef(g.id).name}!`;
-  } else if (it.id === "jerky") {
+  } else if (act === "jerky") {
     const s = campEquipped("spell");
     const full = s ? freshUses(s.id, s.rarity, s) : 0;
     if (!s || s.uses >= full) { showToast(s ? "Your spell is fully charged." : "You have no spell to recharge."); sfx("bad"); return; }
     s.uses = Math.min(full, s.uses + p);
     said = "Spice Jerky! Your spell gets its spark back.";
-  } else if (it.id === "tart") {
+  } else if (act === "tart") {
     if (campRun.phoenix) { showToast("The tart's warmth is already with you."); sfx("bad"); return; }
     campRun.phoenix = p;
     said = "Phoenix Tart! The next blow that would end you won't.";
   } else {
     // the six snacks of build 51: each a few seconds of something (camp-foes.js reads them)
-    const r = campSnackEffect(it.id, p, leg);
+    const r = campSnackEffect(act, p, leg);
     if (!r) return;
     said = r;
   }

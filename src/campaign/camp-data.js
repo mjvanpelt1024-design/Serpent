@@ -15,6 +15,12 @@ const CAMP = (() => {
     tree.upgrades.forEach(u => { upgradeById[u.id] = u; treeOf[u.id] = isl.id; });
   });
   const items = C.items.items || [];
+  // build 53: nightmare mode's things (content/campaign/nightmare.json). They aren't in `items` (the merchants'
+  // and finds' pools): only the deep sells them. itemById knows them, so a satchel can hold them.
+  const NM = C.nightmare || {};
+  const nmItems = (NM.items || []).map(it => Object.assign({ nightmare: true }, it));
+  // its snakes' bites carry damage tags like any other hit
+  if (C.foes) { C.foes.hits = C.foes.hits || {}; (NM.snakes || []).forEach(s => { if (s.hit && !C.foes.hits[s.id]) C.foes.hits[s.id] = s.hit; }); }
   // build 52: a trinket's major line also answers to .stat and .v (the workshop's code asks for those),
   // and armor pieces cost what their set's tier says
   ((C.crafting || {}).trinkets || []).forEach(t => { if (t.major && t.stat === undefined) { t.stat = t.major.stat; t.v = t.major.v; } });
@@ -28,7 +34,9 @@ const CAMP = (() => {
     islands,
     islandById: Object.fromEntries(islands.map(i => [i.id, i])),
     items,
-    itemById: Object.fromEntries(items.map(i => [i.id, i])),
+    itemById: Object.fromEntries(items.concat(nmItems).map(i => [i.id, i])),
+    nightmare: NM,
+    nmItems,
     families: C.items.families || {},
     rarities: C.items.rarities || [],
     rarityById: Object.fromEntries((C.items.rarities || []).map((r, i) => [r.id, Object.assign({ idx: i }, r)])),

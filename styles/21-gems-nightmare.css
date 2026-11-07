@@ -1,0 +1,126 @@
+/* =========================================================
+   styles/21-gems-nightmare.css
+   Build 53: the gem shop (camp-gemshop.js) and nightmare mode (camp-nightmare.js)
+   ========================================================= */
+
+/* ---------- The gems in the top bar are a button ---------- */
+#camp-wallet .cw-chip.gems { cursor: pointer; }
+#camp-wallet .cw-chip.gems:hover,
+#camp-wallet .cw-chip.gems:focus-visible { filter: brightness(1.2); outline: none; }
+/* the daily gift is waiting: the gem glints */
+#camp-wallet .cw-chip.gems.gift .gem-ico { animation: gs-glint 1.6s steps(4) infinite; }
+@keyframes gs-glint { 50% { filter: brightness(1.6) drop-shadow(0 0 3px var(--xp)); } }
+
+/* ---------- The gem shop ---------- */
+#gemshop { position: fixed; z-index: 60; }
+#gemshop .gs-box { width: min(40em, 94vw); max-height: 88vh; overflow: auto; padding: 0.9em; }
+.gs-head { display: flex; align-items: center; gap: 0.5em; margin-bottom: 0.7em; }
+.gs-head .gs-count { font-size: 1.3em; color: var(--xp); }
+.gs-head .gs-boosts { display: flex; gap: 0.6em; margin-left: 0.4em; color: var(--ink-dim); }
+.gs-head .gs-boosts span { display: inline-flex; align-items: center; gap: 0.2em; }
+.gs-head .gs-x { margin-left: auto; }
+.gs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5em, 1fr)); gap: 0.6em; }
+.gs-offer {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.35em;
+  padding: 0.7em 0.5em 0.6em; text-align: center;
+  background: rgba(0, 0, 0, 0.25); border: 2px solid var(--edge);
+}
+.gs-offer.daily { border-color: var(--xp); }
+.gs-offer.spent { opacity: 0.55; }
+.gs-offer .gs-pic { display: flex; gap: 0.2em; align-items: center; justify-content: center; min-height: 40px; }
+.gs-offer .gs-name { font-weight: bold; color: var(--ink); }
+.gs-offer .gs-what { font-size: 0.8em; color: var(--ink-dim); flex: 1; }
+.gs-offer .gs-tag {
+  position: absolute; top: -0.6em; right: 0.4em; padding: 0.1em 0.4em; font-size: 0.7em;
+  background: var(--gold); color: #1a1000; border: 1px solid var(--gold-lip);
+}
+.gs-ico { image-rendering: pixelated; vertical-align: middle; }
+.gs-note { margin: 0.8em 0 0; font-size: 0.75em; color: var(--ink-dim); text-align: center; }
+
+@media (max-width: 480px) {
+  .gs-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---------- Nightmare: the tunnel screen (camp-nightmare.js) ---------- */
+#nightmare {
+  position: fixed; inset: 0; z-index: 55; display: none;
+  background: radial-gradient(ellipse at 50% 0%, #2a0f2e 0%, #12060f 55%, #070306 100%);
+  color: var(--ink); overflow: hidden;
+}
+#nightmare.active { display: block; }
+body.nm-open #map-legend { display: none; }
+#nightmare .nm-scroll {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  padding: 6px 22px; font-family: "Press Start 2P", monospace; font-size: 12px; color: #2a1408;
+  background: #e8d4a8; border: 3px solid #6a4a24; box-shadow: 0 3px 0 #3a2410, inset 0 0 0 2px #f8ecc8;
+  white-space: nowrap; cursor: help;
+}
+#nightmare .nm-x { position: absolute; top: 12px; right: 14px; }
+#nightmare .nm-rail { position: absolute; left: 14px; top: 60px; display: flex; flex-direction: column; gap: 8px; }
+#nightmare .nm-tun {
+  width: 40px; height: 40px; display: grid; place-items: center; cursor: pointer;
+  background: #2a1426; border: 2px solid #5a2a50; box-shadow: 0 2px 0 #12060f;
+}
+#nightmare .nm-tun.here { border-color: #e88aa0; background: #4a1a40; }
+#nightmare .nm-tun.slain img { filter: grayscale(1) brightness(1.3); }
+#nightmare .nm-tun:disabled { opacity: 0.3; cursor: default; }
+#nightmare .nm-shaft { position: absolute; left: 50%; top: 56px; bottom: 16px; width: min(420px, 70vw); transform: translateX(-50%); }
+#nightmare .nm-path { position: absolute; inset: 0; width: 100%; height: 100%; }
+#nightmare .nm-line { fill: none; stroke: #3a1a34; stroke-width: 2.4; vector-effect: non-scaling-stroke; stroke-dasharray: 6 4; }
+#nightmare .nm-line.lit { stroke: #c03e5c; stroke-dasharray: none; }
+#nightmare .nm-shaft.slain .nm-line.lit { stroke: #c8bfa8; }
+#nightmare .nm-node {
+  position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%);
+  width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer;
+  font-family: "Press Start 2P", monospace; font-size: 11px; color: #f6e0dc;
+  background: #5a1450; border: 3px solid #1a0818; box-shadow: 0 3px 0 #0a0408;
+}
+#nightmare .nm-node:hover:not(:disabled), #nightmare .nm-node:focus-visible { background: #8a2060; outline: none; }
+#nightmare .nm-node.won { background: #8a2046; }
+#nightmare .nm-node.locked { background: #2a1426; color: #5a3a50; cursor: default; }
+#nightmare .nm-node.maw { width: 52px; height: 52px; background: #3a1030; border-color: #c03e5c; }
+#nightmare .nm-shaft.slain .nm-node.maw { background: #6a6058; border-color: #efe8d4; }
+#nightmare .nm-node.roots { background: #1f4a2a; border-color: #0a1a0e; }
+#nightmare .nm-node.shop { background: #6a4a24; }
+#nightmare .nm-node.shop.locked { background: #2a1426; }
+#nightmare .nm-ico { image-rendering: pixelated; }
+#nightmare .nm-panel {
+  position: absolute; right: 14px; top: 60px; width: min(320px, 92vw); max-height: calc(100% - 80px); overflow: auto;
+  padding: 10px; background: #1e0c1c; border: 3px solid #5a2a50;
+}
+#nightmare .nm-ph { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+#nightmare .nm-ph b { flex: 1; }
+#nightmare .nm-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid #3a1a34; }
+#nightmare .nm-rname { flex: 1; }
+#nightmare .nm-pips { display: flex; gap: 2px; }
+#nightmare .nm-pips i { width: 7px; height: 7px; background: #3a1a34; border: 1px solid #1a0818; }
+#nightmare .nm-pips i.on { background: #e88aa0; }
+#nightmare .nm-report {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(360px, 92vw);
+  padding: 14px; text-align: center; background: #1e0c1c; border: 3px solid #c03e5c; z-index: 2;
+}
+#nightmare .nm-report.won { border-color: #ffd23f; }
+#nightmare .nm-report h3 { margin: 0 0 6px; }
+#nightmare .nm-rk { color: var(--ink-dim); margin: 0 0 8px; }
+#nightmare .nm-rl { margin: 3px 0; font-size: 0.9em; }
+#nightmare .nm-rl.new { color: var(--xp); }
+#nightmare .nm-report .row-buttons { margin-top: 12px; justify-content: center; }
+.map-legend .lg-btn.nightmare img { filter: hue-rotate(260deg) saturate(1.6); }
+
+@media (max-width: 560px) {
+  #nightmare .nm-rail { top: auto; bottom: 12px; left: 50%; transform: translateX(-50%); flex-direction: row; }
+  #nightmare .nm-shaft { bottom: 70px; width: 86vw; }
+  #nightmare .nm-scroll { font-size: 9px; }
+}
+
+/* ---------- Home base: its sides walk on, like a stop up close (build 53) ---------- */
+#screen-camphome .node-arrow.zone { z-index: 6; top: 3.2em; height: calc(100% - 3.2em); width: 14%; }
+#screen-camphome .node-arrow.zone .na-tip { display: none; }
+#screen-camphome .node-arrow.zone:hover .na-tip, #screen-camphome .node-arrow.zone:focus-visible .na-tip { display: flex; }
+
+/* ---------- The merchant: an offer's facts show when the mouse is on it (build 53) ---------- */
+.cs-offer .cs-facts { display: none; }
+.cs-offer:hover .cs-facts, .cs-offer:focus-within .cs-facts { display: block; }
+
+/* ---------- The sandbox's level select: its name on a scroll, like the map (build 53) ---------- */
+#screen-shelf .shelf-scroll { margin: 0 auto; padding: 0.15em 1.2em; font-size: 1em; }

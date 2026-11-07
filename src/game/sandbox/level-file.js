@@ -20,6 +20,7 @@ function levelFileText(L) {
   const out = [
     "# Sandbox level. Format: docs/CONTENT-FORMATS.md (Sandbox levels)",
     `name     = ${name}`,
+    `size     = ${LEVEL_FILE_SIZE}          # build 53: the same files the campaign reads (content/levels/)`,
     `edge     = ${edgeName}`,
     `speed    = ${L.s}`,
     `hearts   = ${L.r.h}`,

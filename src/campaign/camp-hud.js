@@ -47,7 +47,9 @@ cpRight.innerHTML = `
 cpLeft.hidden = cpRight.hidden = true;
 cpLeft.addEventListener("click", e => { const b = e.target.closest("[data-pocket]"); if (b) campEatSnack(+b.dataset.pocket); });
 
-/* The top bar in the menus: this island's money and your gems, instead of XP and Snakebucks */
+/* The top bar in the menus: every island's money and your gems, instead of XP and Snakebucks.
+   A money only shows once you have at least one of it, and goes again at 0. The island you're on
+   (or the shop you're in) is lit. Click a coin for its card (coins.js). */
 const campWalletEl = document.createElement("div");
 campWalletEl.id = "camp-wallet";
 document.getElementById("hud-right").insertBefore(campWalletEl, document.getElementById("hud-right").firstChild);
@@ -55,11 +57,13 @@ document.getElementById("hud-right").insertBefore(campWalletEl, document.getElem
 function campWalletUpdate() {
   if (!camp) return;
   const key = campRun ? campRun.isl : currentScreen === "campshop" ? shopIsl : currentScreen === "tree" && treeArea === "camp" ? campTreeIsl : campIslandOpen(camp.at) ? camp.at : CAMP.islands[0].id;
-  const cur = campCurrency(key);
   if (typeof coinCard !== "undefined" && coinCard) return;
   // no plates: the coin itself, big enough to show its carving, and the gem, each with its count in the corner
-  const html = `<span class="cw-chip" title="${escapeAttr(cur.plural)}, the money of ${escapeAttr(CAMP.islandById[key].name)}">${coinHtml(key, 20)}<b>${fmtInt(campWallet(key))}</b></span>` +
-    `<span class="cw-chip gems" title="Gems: shared by every island, for skins and themes"><img class="gem-ico" src="${iconUrl("gem", 3)}" alt=""><b>${fmtInt(camp.gems)}</b></span>`;
+  const html = CAMP.islands.filter(I => campWallet(I.id) > 0).map(I =>
+    `<span class="cw-chip${I.id === key ? " here" : ""}" title="${escapeAttr(I.currency.plural)}, the money of ${escapeAttr(I.name)}">${coinHtml(I.id, 20)}<b>${fmtInt(campWallet(I.id))}</b></span>`).join("") +
+    // gems: also shown at 0 while the gem shop's daily gift waits, so the shop can be found (camp-gemshop.js)
+    (camp.gems > 0 || (typeof gemDailyReady === "function" && gemDailyReady() && !campRun)
+      ? `<span class="cw-chip gems${typeof gemDailyReady === "function" && gemDailyReady() ? " gift" : ""}" role="button" tabindex="0" title="Gems: the gem shop"><img class="gem-ico" src="${iconUrl("gem", 3)}" alt=""><b>${fmtInt(camp.gems)}</b></span>` : "");
   if (campWalletEl._h !== html) { campWalletEl.innerHTML = html; campWalletEl._h = html; }
 }
 
@@ -112,7 +116,7 @@ const setHtml = (el, html) => { if (el._h !== html) { el.innerHTML = html; el._h
    16 x 16 PNGs in textures/bosses/<island>.png */
 const bossFaceUrl = isl => texUrl("boss:" + isl);
 
-/* Your quest: the challenger's three trials, wherever one is on. `here` marks the trial being played. */
+/* Your quest: the challenger's trials (3 to 5), wherever one is on. `here` marks the trial being played. */
 function campActiveQuest() {
   const isl = CAMP.islands.map(i => i.id).find(id => { const C = camp.challenges[id]; return C && C.active && !C.claimed && C.levels.length && Date.now() < C.endsAt; });
   return isl ? { isl, C: camp.challenges[isl] } : null;

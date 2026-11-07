@@ -13,7 +13,14 @@
   },
   "merchant": {"stockSize": 3, "restockMinutes": 120, "rerollGems": 5, "dealDiscount": 30, "sellShare": 0.35},
   "challenge": {
-    "days": 7, "levels": 3, "modsPerLevel": 2, "rerollGems": 10,
+    "days": 7, "levels": 3, "levelsMax": 5, "modsPerLevel": 2, "rerollGems": 10,
+    "plots": [
+      "{npc} has money riding on you. {n} trials across {island}, one after another. Don't embarrass either of us.",
+      "The crowd wants a show, and {npc} means to give them one: {n} trials, in order, each with a twist.",
+      "Word on {island} is you've gone soft. {npc} wants {n} wins in a row to prove otherwise.",
+      "{npc} found an old tourney ledger with your name in it. Finish its {n} trials before the week is out.",
+      "A rival challenger is watching. {npc} needs {n} trials walked, start to finish, to save face."
+    ],
     "rewardBase": 260, "rewardPerIsland": 0,
     "mods": [
       {"id": "swift", "name": "Swift", "text": "Everything moves 20% faster."},
@@ -38,7 +45,21 @@
     ]
   },
   "bank": {"rateToPrev": 10, "feePrev": 5, "snaycoinPerGem": 500, "gemFee": 1},
-  "gems": {"startGems": 0, "storeSoon": "Gem packs arrive when the game launches. Until then gems come from achievements, quests, level challenges and the bank."},
+  "gems": {"startGems": 0, "storeSoon": "Gem packs arrive when the game launches. Until then gems come from achievements, quests, level challenges and the bank.",
+    "_store": "Build 53: the gem shop (click your gems in the top bar). price is what a real store will charge, in cents; in development every offer is free and only adds to the save. gems: gems added. boosts: levels of each booster (surge = power-ups turn up more often, lucky = more loot). daily: once a day, free.",
+    "store": [
+      {"id": "daily", "name": "Daily gift", "daily": true, "gems": 5, "price": 0, "tag": "Free today"},
+      {"id": "g10", "name": "Pouch of gems", "gems": 10, "price": 0},
+      {"id": "g50", "name": "Sack of gems", "gems": 50, "price": 0},
+      {"id": "g100", "name": "Chest of gems", "gems": 100, "price": 0},
+      {"id": "g500", "name": "Hoard of gems", "gems": 500, "price": 0, "tag": "Popular"},
+      {"id": "g1000", "name": "Vault of gems", "gems": 1000, "price": 0},
+      {"id": "g2500", "name": "Dragon's hoard", "gems": 2500, "price": 0, "tag": "Best value"},
+      {"id": "surge5", "name": "Power-up surge", "boosts": {"surge": 5}, "price": 0, "text": "Power-ups turn up twice as often for your next 5 levels."},
+      {"id": "lucky5", "name": "Lucky finds", "boosts": {"lucky": 5}, "price": 0, "text": "Loot drops half again as often for your next 5 levels."},
+      {"id": "bundle", "name": "Power-up bundle", "gems": 50, "boosts": {"surge": 10, "lucky": 10}, "price": 0, "tag": "Bundle", "text": "50 gems, and both boosters for your next 10 levels."}
+    ],
+    "surgeRate": 2, "luckyRate": 1.5},
   "cosmetics": {
     "freeSkins": ["classic"],
     "freeThemes": ["black"],

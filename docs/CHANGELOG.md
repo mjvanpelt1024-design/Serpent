@@ -2,6 +2,36 @@
 
 ## Unreleased: an arsenal, damage types on the board, champions
 
+- **Nightmare mode.** Win the Cinder Crown's last level and the Maw opens up: under each island, from the
+  top down, a tunnel of ten harder levels and the Maw's lair. The deep's snakes cut you off, bite (venom,
+  frost, shock) and run off with your keys; more of them, and nastier, the deeper you go. The Great Tree's
+  roots hang into every tunnel with upgrades that only work down there, and after level 5 a shop sells
+  things only the deep has (they work in the normal shops and workshops too). Beat the Maw five times: each
+  one turns its stretch of the Coil to bone, and the last crosses out its new wanted poster and earns its
+  sticker. Open it from the moon in the map's legend. All numbers are placeholders for playtesting.
+- **The gem shop.** Click your gems in the top bar: gem packs (10 to 2,500), two boosters that last a number
+  of levels (power-up surge, lucky finds), a bundle, and a free daily gift. A placeholder for real purchases:
+  in development everything is free and only adds to your save.
+- **Every campaign board is a .level file** (`content/levels/campaign/`), and a sandbox level can replace one
+  as it is. This also fixes the maze level (12) on four islands, which had no board since the mazes became
+  files.
+- **Home base walks like the map**: its sides are zones with a chevron, not buttons. The merchant's notes and
+  each offer's facts show on hover. The sandbox's level select has its name on a scroll.
+- **`node tools/play-check.mjs`** boots the game headless and plays it: every campaign board, the gem shop,
+  and the first nightmare tunnel end to end.
+
+- **The UI pass: fewer words, more symbols.** The map has no labels until you hover: the only words are
+  the scroll with the island's or the stop's name. A legend of symbols down the side flies to home, the
+  shops, the next level and your quest. Home and the shops walk straight in. Up close, a fifth of the screen
+  on each side (or a drag) walks the path. Click your snake for your loadout; nothing asks what to carry
+  before a level any more. Every island's money sits in the top bar once you have some. The terminal
+  closes back onto the screen you were on.
+- **Quests** have 3 to 5 trials, a bit of plot, and go in order: Start flies to the first, each win draws
+  the trail on to the next, and the last brings you back to the tent to collect.
+- **Banks trade straight down to any island below**, at the same rate as walking it down bank by bank.
+- **Delete a save from the saves window.** Select it and press Delete; a dialog names the save and asks
+  again. The file goes to the Recycle Bin. A save that's open in a game can't be deleted.
+
 - **Weapons.** Eight new weapons beside the Arming Sword (Barbed Dagger, Boar Spear, Woodsman's Axe, Flamebrand,
   Rimefang, Storm Maul, Viper's Kiss, Moon Glaive). Each has damage tags, a damage level per rarity that adds to
   every blow on a boss, and a trait from its tag: burn, chill, shock, toxin, pierce or cleave. Enemies take a

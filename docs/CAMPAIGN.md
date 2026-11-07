@@ -129,11 +129,12 @@ tree, which grows as you buy that island's upgrades. The shopkeepers stand by th
 
 ## Playing a level
 
-Play (on the stop, or on the rules card) opens the old "Bring anything?" box, now "What will you carry?",
-when you own something to carry: **your kit** (one gear, one spell, picked with arrows), your familiar,
-your active rune and heart canister ("with your hearts"), and **the pocket**, four snack slots you click to fill (never the same
-snack twice). The Satchel's Kit tab changes the same things between levels. Then the old 3-2-1
-countdown, and the cursor hides until the run ends or you pause.
+Start (on the objective card) goes straight into the level: nothing asks what to carry any more (build 53).
+What you carry is your **loadout**, opened by clicking your snake on the map: **your kit** (gear, helmet,
+body armor and spell, picked with arrows), your familiar, your active rune and heart canister ("with your
+hearts"), and **the pocket**, four snack slots you click to fill (never the same snack twice). The Satchel's
+Kit tab changes the same things. Then the old 3-2-1 countdown, and the cursor hides until the run ends or
+you pause.
 
 **Nothing is drawn on the board but the game.** The hub around it, in pixel-framed plates:
 
@@ -497,8 +498,100 @@ it in halves.
 and the level's rules pick a **Boss** (any island's boss at fight 1, 2 or 3, or a champion). Pictures:
 `python tools/textures/arsenal-art.py` drew the first ones and never overwrites a repainted file.
 
+## Build 53: the UI pass (fewer words, more symbols)
+
+The style is unchanged; what changed is where things are and how many words they use.
+
+- **The map has no labels.** A stop's name, a shop's name and "Last played" show only when the mouse is
+  on the pin. The only words on screen are the scroll at the top: the island's name (its blurb and
+  progress on hover), or up close, the stop's name (its goal, challenge or shopkeeper's line on hover).
+  The whole-map button is just its magnifier; "Drag to explore" is gone.
+- **The legend** (`renderLegend` in `map.js`): symbols down the left side for home, the three shops,
+  the next level (a flag, or a skull before a boss) and, while a quest is on, the quest (a glowing scroll).
+  Words only on hover. Each one flies the map there; home and the shops walk straight in.
+- **Home and the shops don't ask.** A click on their pin, an edge zone or a legend symbol walks in.
+  A locked one still flies close and says why.
+- **Up close, the sides of the screen walk the path.** The arrow buttons became zones a fifth of the
+  screen wide on each side (`.node-arrow.zone`), split top and bottom when two ways lie on one side (a
+  boss and its shop). A chevron shows; where it goes shows on hover. A sideways drag (or swipe) does the
+  same: drag left to walk to the stop on the right. Arrow keys and WASD still work.
+- **Your snake is a button.** The little coil by the stop you're at opens your loadout (`openCampLoadout`
+  in `camp-kit.js`, the old kit box with a Done button). No box before a level.
+- **Every island's money in the top bar** (`campWalletUpdate` in `camp-hud.js`), each only once you hold at
+  least 1 and gone again at 0; the island you're on is lit. Gems too. Click a coin for its card.
+- **The terminal closes back where you were**: the map on the same island and stop, the shop or home
+  you were in, anything else as it was (`leaveConsole` in `cmd-camp.js`). A paused level still goes
+  back to its pause menu.
+- **Quests** have **3 to 5 trials** (`challenge.levels` to `challenge.levelsMax` in `rules.json`) and a bit
+  of plot (`challenge.plots`, with `{npc}`, `{island}` and `{n}`). The challenger shows the plot, the
+  trials as numbered stones (each one's level and twists on hover), the pay (it grows with the number of
+  trials) and the prize roll (odds on hover), and one button: **Start**, then **Trial N**, then **Collect**.
+  The trials go **in order**. Start flies to the first; the map's trail only shows the legs you've walked
+  and the one to the next trial, which draws itself out; after each win the map flies to the next trial,
+  and after the last it walks you into the tent to collect.
+- **The bank trades straight down to any island below**: pick its coin. It works out the same as walking
+  it down one bank at a time (each step 10 to 1, less 5), in one trade. The cards are coins and arrows;
+  the rates are on hover.
+- The shops' quote line moved to a hover on the shop's name.
+- Later in build 53: home base's sides are edge zones too (`renderHomeArrows` in `camp-home.js`), the
+  merchant's notes are on its tabs' hover and each offer's facts on the offer's hover (`merchantHtml`), and
+  the sandbox's level select has its name on a scroll.
+
+## Build 53: the gem shop
+
+Click your gems in the top bar (`camp-gemshop.js`). The gems show there whenever you have one, and also at
+0 while the daily gift waits, so the shop can always be found. The offers are data (`rules.json`
+`gems.store`): gem packs of 10, 50, 100, 500, 1,000 and 2,500; **power-up surge** (power-ups turn up
+`gems.surgeRate` times as often) and **lucky finds** (loot drops `gems.luckyRate` times as often), each for
+a number of levels; a bundle of both with gems; and a free **daily gift** of 5 gems. A booster level is used
+up when a level starts (`gemBoostsForLevel`, called by `campStart`).
+
+It is a **placeholder for real purchases**. In development every offer is free and only adds to the save.
+Every purchase goes through `gemStorePay(offer)`: the one place a real store gets wired in (resolve true only
+once the payment has cleared). Each offer's `price` is there for that store, in cents. The save keeps
+`gemDaily` (the day the gift was taken), `gemBought` (a count per offer) and `boosts` (levels left).
+
+## Build 53: nightmare mode
+
+Unlocked by winning the last island's last level (`nightmare.json` `unlock`). The **moon** in the map's
+legend opens the tunnels (`openNmTunnels` in `camp-nightmare.js`). The Maw's body is the Coil; under each
+island, from the top down (`order`: the Cinder Crown first, Grimscale's Keep last), a tunnel:
+
+- **The roots** (the tree at the top of the shaft): upgrades that work in every nightmare level and never
+  above ground, one set of three per island (`roots`), paid in that island's money. Each is a stat the
+  level reads: the rune stats, the damage stats, and `nmSnakeSlow`. Costs are times the tunnel's depth.
+- **Levels 1 to 10**: the island's own levels (`base`: 1-4, 6-9, 11 and 14), on their boards turned a
+  quarter turn (`content/levels/nightmare/`, written by `tools/bake-campaign-levels.js`), faster, needing
+  more and with more hazards (`harder`, more again for each tunnel down), with the tunnel's twist (the old
+  nightmare twists: dark, starve, avalanche, sugar, noMercy) and no bonus challenge.
+- **The shop** (the chest, after level 5): every nightmare thing (`items`) in the rarities the deep sells
+  (`sold`), at the merchants' price times `priceMult` (more for each tunnel down). They work like the item in
+  their `acts` (snacks can borrow too now), go in the normal slots, and the normal workshops take them. No
+  merchant ever stocks them (`CAMP.nmItems`, kept out of `CAMP.items`).
+- **The Maw** (level 11): its last stand, from `maw`, a little bigger in each tunnel (`perTunnel`). Beating
+  it opens the next tunnel down, and its stretch of the Coil on the map turns to bone (`COIL_BONE` in
+  `map-coil.js`). After the fifth the Coil's head is bone with its eye crossed out.
+
+Wins pay like a level 15 + n, times `payMult`; that is where the last of the upper islands' upgrades get paid
+for. **The deep's snakes** (`snakes`): each level brings the newest three kinds it can (by `from`, counting
+every tunnel's levels in a row, 1 to 50) and more at once the deeper you go. `go`: `head` chases you,
+`cut` heads for the square in front of you, `loot` takes keys, pouches, relics, trinkets and apples and drops
+them again six seconds later. Their bites carry damage tags (`foes.hits` gets them). Their head into your
+body: they fall apart. Your head into them: you're bitten.
+
+The title screen gets the Maw's wanted poster once the tunnels have been opened (its five fights as dots),
+crossed out after the fifth, and then its sticker (`textures/icons/stickers/maw.png`) in the first of
+`stickerSlots`; the rest of those slots are kept for the quest bosses' stickers to come. The save keeps
+`nm`: `open`, `levels` ("crown:3" wins; 11 is the Maw), `maw` (the tunnels whose Maw is beaten), `roots`.
+Pictures: `tools/textures/nightmare-art.py` recolors each item's `look` into the deep's colors. **All the
+numbers are placeholders for playtesting.**
+
 ## Decided, and not done yet
 
 - From the earlier plan, kept as a checklist: one commit per task; satchel roles (carried, cast, passive,
   loot to sell); the bank's cash-out to gems.
-- Not done yet, on purpose: a seeded RNG in bug reports, save versioning beyond `v: 1`, headless tests, real-money gems.
+- Not done yet, on purpose: a seeded RNG in bug reports, save versioning beyond `v: 1`, real-money gems.
+- The sandbox's loadout can't wear campaign kit yet (weapons, armor, spells, runes, familiars): a sandbox run
+  is "bare" (`campBare`). The campaign reads a sandbox board's walls and start, not its food, hazards or chips.
+- Headless tests: `node --test tools/tests/*.test.js` (data and formats) and `node tools/play-check.mjs` (the game
+  itself, in headless Chrome or Edge).

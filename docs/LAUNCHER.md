@@ -43,7 +43,7 @@ Either way the `.exe` has everything built in: it's the only file the launcher n
 | Links | anything outside the game opens in the player's browser |
 | One at a time | starting it again brings the open window forward |
 | Missing WebView2 | on an old PC without it, offers the Microsoft download page |
-| Saves window | `SnakeGame.exe` with no arguments: the list of saves, **New** and **Play** |
+| Saves window | `SnakeGame.exe` with no arguments: the list of saves, **Delete**, **New** and **Play** |
 | Game window | `SnakeGame.exe --world <key>`: the game on one save; closing it saves first |
 
 The game can also talk to the launcher with `window.chrome.webview.postMessage(...)`:

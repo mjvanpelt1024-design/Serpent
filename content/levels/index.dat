@@ -1,11 +1,145 @@
 # ==================================================================
 #  GAME LEVELS: the levels that are built from a .level file
 #  One line per level: its name | its file (in this folder).
-#  The name is the level's name in its world (levels.dat), or in the campaign.
+#  The name is the level's name in its world (levels.dat), or island-level for the campaign (reef-3).
 #  A file that isn't listed here is never loaded.
 # ==================================================================
 
 Hedgerow | labyrinth-1.level
 Catacombs | labyrinth-2.level
 The Coil | labyrinth-3.level
-Caldera Maze | crown-12.level
+
+# The campaign: one board per level, named island-level (content/campaign/islands/*.json).
+# A sandbox level (Play > Sandbox, saved as <name>.level) can replace any 20 x 20 one here.
+keep-1 | campaign/keep-1.level
+keep-2 | campaign/keep-2.level
+keep-3 | campaign/keep-3.level
+keep-4 | campaign/keep-4.level
+keep-5 | campaign/keep-5.level
+keep-6 | campaign/keep-6.level
+keep-7 | campaign/keep-7.level
+keep-8 | campaign/keep-8.level
+keep-9 | campaign/keep-9.level
+keep-10 | campaign/keep-10.level
+keep-11 | campaign/keep-11.level
+keep-12 | campaign/keep-12.level
+keep-13 | campaign/keep-13.level
+keep-14 | campaign/keep-14.level
+keep-15 | campaign/keep-15.level
+spire-1 | campaign/spire-1.level
+spire-2 | campaign/spire-2.level
+spire-3 | campaign/spire-3.level
+spire-4 | campaign/spire-4.level
+spire-5 | campaign/spire-5.level
+spire-6 | campaign/spire-6.level
+spire-7 | campaign/spire-7.level
+spire-8 | campaign/spire-8.level
+spire-9 | campaign/spire-9.level
+spire-10 | campaign/spire-10.level
+spire-11 | campaign/spire-11.level
+spire-12 | campaign/spire-12.level
+spire-13 | campaign/spire-13.level
+spire-14 | campaign/spire-14.level
+spire-15 | campaign/spire-15.level
+hollow-1 | campaign/hollow-1.level
+hollow-2 | campaign/hollow-2.level
+hollow-3 | campaign/hollow-3.level
+hollow-4 | campaign/hollow-4.level
+hollow-5 | campaign/hollow-5.level
+hollow-6 | campaign/hollow-6.level
+hollow-7 | campaign/hollow-7.level
+hollow-8 | campaign/hollow-8.level
+hollow-9 | campaign/hollow-9.level
+hollow-10 | campaign/hollow-10.level
+hollow-11 | campaign/hollow-11.level
+hollow-12 | campaign/hollow-12.level
+hollow-13 | campaign/hollow-13.level
+hollow-14 | campaign/hollow-14.level
+hollow-15 | campaign/hollow-15.level
+reef-1 | campaign/reef-1.level
+reef-2 | campaign/reef-2.level
+reef-3 | campaign/reef-3.level
+reef-4 | campaign/reef-4.level
+reef-5 | campaign/reef-5.level
+reef-6 | campaign/reef-6.level
+reef-7 | campaign/reef-7.level
+reef-8 | campaign/reef-8.level
+reef-9 | campaign/reef-9.level
+reef-10 | campaign/reef-10.level
+reef-11 | campaign/reef-11.level
+reef-12 | campaign/reef-12.level
+reef-13 | campaign/reef-13.level
+reef-14 | campaign/reef-14.level
+reef-15 | campaign/reef-15.level
+crown-1 | campaign/crown-1.level
+crown-2 | campaign/crown-2.level
+crown-3 | campaign/crown-3.level
+crown-4 | campaign/crown-4.level
+crown-5 | campaign/crown-5.level
+crown-6 | campaign/crown-6.level
+crown-7 | campaign/crown-7.level
+crown-8 | campaign/crown-8.level
+crown-9 | campaign/crown-9.level
+crown-10 | campaign/crown-10.level
+crown-11 | campaign/crown-11.level
+crown-12 | campaign/crown-12.level
+crown-13 | campaign/crown-13.level
+crown-14 | campaign/crown-14.level
+crown-15 | campaign/crown-15.level
+
+# Nightmare mode (build 53): each tunnel's 10 levels and the Maw's lair (11), named nm-island-level.
+nm-crown-1 | nightmare/crown-1.level
+nm-crown-2 | nightmare/crown-2.level
+nm-crown-3 | nightmare/crown-3.level
+nm-crown-4 | nightmare/crown-4.level
+nm-crown-5 | nightmare/crown-5.level
+nm-crown-6 | nightmare/crown-6.level
+nm-crown-7 | nightmare/crown-7.level
+nm-crown-8 | nightmare/crown-8.level
+nm-crown-9 | nightmare/crown-9.level
+nm-crown-10 | nightmare/crown-10.level
+nm-crown-11 | nightmare/crown-11.level
+nm-spire-1 | nightmare/spire-1.level
+nm-spire-2 | nightmare/spire-2.level
+nm-spire-3 | nightmare/spire-3.level
+nm-spire-4 | nightmare/spire-4.level
+nm-spire-5 | nightmare/spire-5.level
+nm-spire-6 | nightmare/spire-6.level
+nm-spire-7 | nightmare/spire-7.level
+nm-spire-8 | nightmare/spire-8.level
+nm-spire-9 | nightmare/spire-9.level
+nm-spire-10 | nightmare/spire-10.level
+nm-spire-11 | nightmare/spire-11.level
+nm-reef-1 | nightmare/reef-1.level
+nm-reef-2 | nightmare/reef-2.level
+nm-reef-3 | nightmare/reef-3.level
+nm-reef-4 | nightmare/reef-4.level
+nm-reef-5 | nightmare/reef-5.level
+nm-reef-6 | nightmare/reef-6.level
+nm-reef-7 | nightmare/reef-7.level
+nm-reef-8 | nightmare/reef-8.level
+nm-reef-9 | nightmare/reef-9.level
+nm-reef-10 | nightmare/reef-10.level
+nm-reef-11 | nightmare/reef-11.level
+nm-hollow-1 | nightmare/hollow-1.level
+nm-hollow-2 | nightmare/hollow-2.level
+nm-hollow-3 | nightmare/hollow-3.level
+nm-hollow-4 | nightmare/hollow-4.level
+nm-hollow-5 | nightmare/hollow-5.level
+nm-hollow-6 | nightmare/hollow-6.level
+nm-hollow-7 | nightmare/hollow-7.level
+nm-hollow-8 | nightmare/hollow-8.level
+nm-hollow-9 | nightmare/hollow-9.level
+nm-hollow-10 | nightmare/hollow-10.level
+nm-hollow-11 | nightmare/hollow-11.level
+nm-keep-1 | nightmare/keep-1.level
+nm-keep-2 | nightmare/keep-2.level
+nm-keep-3 | nightmare/keep-3.level
+nm-keep-4 | nightmare/keep-4.level
+nm-keep-5 | nightmare/keep-5.level
+nm-keep-6 | nightmare/keep-6.level
+nm-keep-7 | nightmare/keep-7.level
+nm-keep-8 | nightmare/keep-8.level
+nm-keep-9 | nightmare/keep-9.level
+nm-keep-10 | nightmare/keep-10.level
+nm-keep-11 | nightmare/keep-11.level

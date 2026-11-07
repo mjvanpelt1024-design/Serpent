@@ -78,24 +78,26 @@ function openCampHome(isl) {
   showHome();
 }
 
-/* Arrows at the sides, like a stop up close on the map: on to level 1 (right), and down to the
-   island below's bridge (left) when there is one. Each flies the map straight to that stop. */
+/* The sides of the screen, like a stop up close on the map (build 53: zones, not buttons): a fifth of the
+   screen on the right walks on to level 1, on the left down to the island below's bridge when there is one.
+   Only a chevron shows; where it goes shows on hover. Each flies the map straight to that stop. */
 const homeArrows = [-1, 1].map(side => {
   const b = document.createElement("button");
-  b.className = "btn node-arrow " + (side < 0 ? "prev" : "next");
+  b.className = "node-arrow zone " + (side < 0 ? "prev" : "next");
   b.addEventListener("click", e => { e.stopPropagation(); if (b._to) mapFlyTo(b._to.key, b._to.id); });
   screenEls.camphome.appendChild(b);
   return b;
 });
 function renderHomeArrows() {
-  homeArrows.forEach(a => { a.className = "btn node-arrow " + (a === homeArrows[0] ? "prev" : "next"); a._to = null; });
+  homeArrows.forEach(a => { a.className = "node-arrow zone " + (a === homeArrows[0] ? "prev" : "next"); a._to = null; });
   nodeLinks(homeIsl, "home").forEach(l => {
     const a = homeArrows[l.role === "back" ? 0 : 1];
     const L = arrowLabel({ key: homeIsl }, l.to, l.role === "back" ? -1 : 1, l.role);
     const word = typeof l.to.id === "number" && l.to.key === homeIsl ? `Level ${l.to.id}` : L.word;
     a._to = l.to;
     a.className += ` open ${L.cls}`;
-    a.innerHTML = `<span class="na-chev" aria-hidden="true">${l.role === "back" ? "&#9664;" : "&#9654;"}</span><span class="na-word">${escapeAttr(word)}</span>${L.sub ? `<span class="na-sub">${escapeAttr(L.sub)}</span>` : ""}`;
+    a.innerHTML = `<span class="na-chev" aria-hidden="true">${l.role === "back" ? "&#9664;" : "&#9654;"}</span>` +
+      `<span class="na-tip"><span class="na-word">${escapeAttr(word)}</span>${L.sub ? `<span class="na-sub">${escapeAttr(L.sub)}</span>` : ""}</span>`;
     a.setAttribute("aria-label", `${word}${L.sub ? ": " + L.sub : ""}`);
   });
 }
