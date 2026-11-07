@@ -9,7 +9,7 @@ the file back.
 
 | Run as | Window |
 |---|---|
-| `SnakeGame.exe` | **Snake Saves**: the list of worlds, with **New** and **Play** at the bottom |
+| `SnakeGame.exe` | **Snake Saves**: the list of worlds, with **Delete**, **New** and **Play** at the bottom |
 | `SnakeGame.exe --world <key>` | the game, on that world. **Play** starts it, in a window of its own |
 
 Several games can be open at once, one per world. Two windows never share a world (a second open of
@@ -64,6 +64,13 @@ doesn't list it, and the game never writes to a file it couldn't read.
 **Your saved game**. It does this once (the flag `snakeWorldsImported_v1`). The old keys stay where they
 were, untouched, as a backup.
 
+## Deleting a save
+
+Select it in the saves window and press **Delete** (or the Delete key). A dialog names the save, its
+Snakebucks and when it was last played, and asks again; **Cancel** has the focus, so Enter alone never
+deletes. The file goes to the Windows Recycle Bin, so it can be restored from there (put it back in the
+`worlds` folder). A save that is open in a game window can't be deleted: close that game first.
+
 ## When the game saves
 
 - **On a timer**: once a minute, if anything changed since the last write.
@@ -82,10 +89,13 @@ Pages talk to the launcher with `window.chrome.webview.postMessage`:
 | saves window | `worlds:list` | asks for every readable world |
 | saves window | `world:write:<key>:<json>` | writes a world's file |
 | saves window | `world:play:<key>` | starts `SnakeGame.exe --world <key>` |
+| saves window | `world:delete:<key>` | moves the world's file to the Recycle Bin, unless a game has it open |
 | game | `world:write:<key>:<json>` | writes its own world's file (other keys are ignored) |
 | game | `world:flushed` | the save is written; the window may close |
 
-The launcher answers `worlds:list` with one `world|<key>|<json>` message per file and then `end|`.
+The launcher answers `worlds:list` with one `world|<key>|<json>` message per file and then `end|`, and
+`world:delete:<key>` with `deleted|<key>|ok`, `deleted|<key>|open` (a game window has that save open, so
+nothing was deleted) or `deleted|<key>|failed`.
 The launcher only moves the file's text; the saves window and the game read and build the JSON.
 
 The game's first script gets its save as `window.SNAKE_WORLD` (the parsed file). If that can't be

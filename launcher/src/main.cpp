@@ -423,6 +423,35 @@ static void HandleWorldPlay(const std::wstring& id) {
     }
 }
 
+// Page -> launcher: "world:delete:<id>". Only the saves window may delete, and never a save that
+// is open in a game window (its mutex exists). The file goes to the Recycle Bin, so a save deleted
+// by mistake can still be restored from there. Answers "deleted|<id>|ok", "|open" or "|failed".
+static void HandleWorldDelete(const std::wstring& id) {
+    if (g_mode != Mode::Launcher || !g_webview || !ValidWorldId(id)) return;
+    std::wstring answer = L"failed";
+    fs::path file = WorldFile(id);
+    HANDLE open = OpenMutexW(SYNCHRONIZE, FALSE, (L"SnakeGame.World." + id).c_str());
+    if (open) {
+        CloseHandle(open);
+        answer = L"open";
+    } else if (fs::exists(file)) {
+        // SHFileOperation wants a list ending in two nulls
+        std::wstring from = file.wstring();
+        from.push_back(L'\0');
+        from.push_back(L'\0');
+        SHFILEOPSTRUCTW op = {};
+        op.hwnd = g_window;
+        op.wFunc = FO_DELETE;
+        op.pFrom = from.c_str();
+        op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
+        if (SHFileOperationW(&op) == 0 && !op.fAnyOperationsAborted && !fs::exists(file)) answer = L"ok";
+    } else {
+        answer = L"ok";   // already gone
+    }
+    std::wstring message = L"deleted|" + id + L"|" + answer;
+    g_webview->PostWebMessageAsString(message.c_str());
+}
+
 // Closing the game window: the game writes its save first (see world-save.js), then the
 // window goes. The two-second timer goes anyway, so a game that can't answer never blocks it.
 static void FinishQuit() {
@@ -440,6 +469,7 @@ static void FinishQuit() {
 //    "worlds:list"                 the saves window asks for the saves
 //    "world:write:<id>:<json>"     a save is written to its file
 //    "world:play:<id>"             the saves window starts the game on a save
+//    "world:delete:<id>"           the saves window deletes a save (to the Recycle Bin)
 //    "world:flushed"               the game has written its save (see FinishQuit)
 // ---------------------------------------------------------------------
 static void OnGameMessage(const std::wstring& message) {
@@ -451,6 +481,7 @@ static void OnGameMessage(const std::wstring& message) {
     else if (message == L"world:flushed") { if (g_flushing) PostMessageW(g_window, WM_CLOSE, 0, 0); }
     else if (message.rfind(L"world:write:", 0) == 0) HandleWorldWrite(message.substr(12));
     else if (message.rfind(L"world:play:", 0) == 0) HandleWorldPlay(message.substr(11));
+    else if (message.rfind(L"world:delete:", 0) == 0) HandleWorldDelete(message.substr(13));
 }
 
 static bool IsGameUrl(const std::wstring& url) {

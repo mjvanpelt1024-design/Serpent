@@ -2,6 +2,9 @@
 
 ## Unreleased: an arsenal, damage types on the board, champions
 
+- **Delete a save from the saves window.** Select it and press Delete; a dialog names the save and asks
+  again. The file goes to the Recycle Bin. A save that's open in a game can't be deleted.
+
 - **Weapons.** Eight new weapons beside the Arming Sword (Barbed Dagger, Boar Spear, Woodsman's Axe, Flamebrand,
   Rimefang, Storm Maul, Viper's Kiss, Moon Glaive). Each has damage tags, a damage level per rarity that adds to
   every blow on a boss, and a trait from its tag: burn, chill, shock, toxin, pierce or cleave. Enemies take a

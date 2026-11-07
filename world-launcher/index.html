@@ -125,6 +125,13 @@
   button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   button.primary:hover { filter: brightness(1.08); }
   button:disabled { opacity: 0.45; cursor: default; filter: none; }
+  button.danger { color: var(--danger); border-color: transparent; min-width: 0; padding: 8px 14px; }
+  button.danger:hover:not(:disabled) { border-color: var(--danger); }
+  button.danger-fill { background: var(--danger); border-color: var(--danger); color: #1b0805; }
+  button.danger-fill:hover { filter: brightness(1.08); }
+  .doomed { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); }
+  .doomed b { display: block; font-size: 15px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doomed span { color: var(--muted); font-size: 12px; }
 
   dialog {
     background: var(--panel);
@@ -174,6 +181,7 @@
 </main>
 
 <footer>
+  <button id="delete" type="button" class="danger" disabled title="Delete the selected save (Del)">Delete</button>
   <div id="status" role="status" aria-live="polite"></div>
   <button id="new" type="button">New</button>
   <button id="play" type="button" class="primary" disabled>Play</button>
@@ -192,6 +200,18 @@
   </form>
 </dialog>
 
+<dialog id="delete-dialog" aria-labelledby="delete-title">
+  <form method="dialog" id="delete-form">
+    <h2 id="delete-title">DELETE SAVE?</h2>
+    <div class="doomed"><b id="delete-name"></b><span id="delete-meta"></span></div>
+    <p>Its snake, bucks and progress go with it. The file goes to the Recycle Bin, so it can still be restored from there.</p>
+    <div class="dialog-actions">
+      <button type="button" id="delete-cancel">Cancel</button>
+      <button type="submit" class="danger-fill" id="delete-confirm">Delete</button>
+    </div>
+  </form>
+</dialog>
+
 <script>
 "use strict";
 
@@ -200,8 +220,9 @@
    (SnakeGame.exe) reads and writes the .world files for it,
    and this page talks to it through the WebView2 message bridge.
    Protocol (docs/WORLDS.md):
-     page -> launcher   "worlds:list"   "world:write:<id>:<json>"   "world:play:<id>"
+     page -> launcher   "worlds:list"   "world:write:<id>:<json>"   "world:play:<id>"   "world:delete:<id>"
      launcher -> page   "world|<id>|<json>" (one per file), then "end|"
+                        "deleted|<id>|ok" (or "|open": a game has it open, "|failed")
    ========================================================= */
 
 const bridge = window.chrome && window.chrome.webview;
@@ -219,13 +240,20 @@ const els = {
   form: document.getElementById("new-form"),
   name: document.getElementById("new-name"),
   error: document.getElementById("new-error"),
-  cancel: document.getElementById("new-cancel")
+  cancel: document.getElementById("new-cancel"),
+  del: document.getElementById("delete"),
+  delDialog: document.getElementById("delete-dialog"),
+  delForm: document.getElementById("delete-form"),
+  delName: document.getElementById("delete-name"),
+  delMeta: document.getElementById("delete-meta"),
+  delCancel: document.getElementById("delete-cancel")
 };
 
 let worlds = [];            // { id, title, created, saved, bucks }
 let selectedId = null;
 let loading = null;         // the worlds collected for the list being read
 let playTimer = 0;
+let deletingId = null;      // the save the confirmation dialog is asking about
 
 /* ---------- helpers ---------- */
 
@@ -363,6 +391,7 @@ function render() {
   els.empty.hidden = any;
   els.count.textContent = any ? worlds.length + (worlds.length === 1 ? " save" : " saves") : "";
   els.play.disabled = !selectedId;
+  els.del.disabled = !selectedId;
 }
 
 function select(id) {
@@ -371,6 +400,7 @@ function select(id) {
   const li = document.getElementById("w-" + id);
   if (li) li.scrollIntoView({ block: "nearest" });
   els.play.disabled = !id;
+  els.del.disabled = !id;
 }
 
 /* ---------- actions ---------- */
@@ -410,6 +440,45 @@ function createFromDialog() {
   refresh();
 }
 
+/* Deleting asks first, naming the save; Cancel has the focus, so Enter alone never deletes. */
+function openDelete(id) {
+  const world = worlds.find(w => w.id === id);
+  if (!world || !bridge) return;
+  deletingId = id;
+  els.delName.textContent = world.title;
+  els.delMeta.textContent = world.bucks.toLocaleString() + " SB · Last played " + timeAgo(world.saved);
+  els.delDialog.showModal();
+  els.delCancel.focus();
+}
+
+function confirmDelete() {
+  const id = deletingId;
+  deletingId = null;
+  els.delDialog.close();
+  if (!id || !bridge) return;
+  const world = worlds.find(w => w.id === id);
+  setStatus("Deleting " + (world ? "“" + world.title + "”" : "save") + "…");
+  bridge.postMessage("world:delete:" + id);
+}
+
+function onDeleted(id, answer) {
+  const world = worlds.find(w => w.id === id);
+  const name = world ? "“" + world.title + "”" : "The save";
+  if (answer === "ok") {
+    // The next save down (or up, at the end of the list) is selected in its place
+    const i = worlds.findIndex(w => w.id === id);
+    worlds = worlds.filter(w => w.id !== id);
+    if (selectedId === id) selectedId = worlds.length ? worlds[Math.min(i, worlds.length - 1)].id : null;
+    render();
+    setStatus(name + " was moved to the Recycle Bin.");
+    refresh();
+  } else if (answer === "open") {
+    setStatus(name + " is open in a game. Close that game first.", true);
+  } else {
+    setStatus(name + " couldn't be deleted.", true);
+  }
+}
+
 /* ---------- wiring ---------- */
 
 els.list.addEventListener("click", e => {
@@ -422,12 +491,16 @@ els.list.addEventListener("dblclick", e => {
 });
 els.play.addEventListener("click", () => play(selectedId));
 els.new.addEventListener("click", openNew);
+els.del.addEventListener("click", () => openDelete(selectedId));
+els.delCancel.addEventListener("click", () => { deletingId = null; els.delDialog.close(); });
+els.delForm.addEventListener("submit", e => { e.preventDefault(); confirmDelete(); });
+els.delDialog.addEventListener("close", () => { deletingId = null; });
 els.cancel.addEventListener("click", () => els.dialog.close());
 els.form.addEventListener("submit", e => { e.preventDefault(); createFromDialog(); });
 els.name.addEventListener("input", () => { els.error.textContent = ""; });
 
 document.addEventListener("keydown", e => {
-  if (els.dialog.open) return;
+  if (els.dialog.open || els.delDialog.open) return;
   if (e.key === "ArrowDown" || e.key === "ArrowUp") {
     if (!worlds.length) return;
     const i = worlds.findIndex(w => w.id === selectedId);
@@ -438,6 +511,9 @@ document.addEventListener("keydown", e => {
     play(selectedId);
   } else if (e.key === "n" || e.key === "N") {
     openNew();
+  } else if (e.key === "Delete" && selectedId) {
+    openDelete(selectedId);
+    e.preventDefault();
   }
 });
 
@@ -453,6 +529,11 @@ if (bridge) {
       finishList(list);
       return;
     }
+    if (msg.startsWith("deleted|")) {
+      const parts = msg.split("|");
+      onDeleted(parts[1], parts[2]);
+      return;
+    }
     if (msg.startsWith("world|") && loading) {
       const first = msg.indexOf("|");
       const second = msg.indexOf("|", first + 1);
@@ -466,6 +547,7 @@ if (bridge) {
   els.empty.hidden = true;
   els.new.disabled = true;
   els.play.disabled = true;
+  els.del.disabled = true;
 }
 </script>
 </body>
