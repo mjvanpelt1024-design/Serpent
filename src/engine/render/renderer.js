@@ -190,31 +190,15 @@ function drawItem(g, type, x, y, span, small, alpha = 1, ts = 0, unit = cell) {
   g.restore();
 }
 
+/* One square of the snake (or of a boss): snake:body in its color (a color-swap picture: its #ff00ff
+   becomes the skin's color at that square), then snake:shine over it (the light top, the dark bottom
+   and the darker rim that keeps it crisp on busy themes); rounded with Extras on, square with it off
+   ("-square"), 19 pixels or 9 on Treasure's half-size squares. Pictures in textures/board/snake/. */
+const snakeLook = () => [cell === 10 ? 9 : 19, save.settings.extras ? "" : "-square"];
 function drawSnakeCell(x, y, color) {
-  const s = cell - 1;
-  if (save.settings.extras) {
-    ctx.save();
-    roundedPath(ctx, x, y, s, s, cell * 0.28);
-    ctx.clip();
-  }
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, s, s);
-  if (save.settings.details) {
-    ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
-    ctx.fillRect(x, y, s, s * 0.26);
-    ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
-    ctx.fillRect(x, y + s * 0.74, s, s * 0.26);
-    // a darker rim keeps every segment crisp against busy themes
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.3)";
-    ctx.lineWidth = Math.max(1, cell * 0.1);
-    if (save.settings.extras) {
-      roundedPath(ctx, x, y, s, s, cell * 0.28);
-      ctx.stroke();
-    } else {
-      ctx.strokeRect(x + ctx.lineWidth / 2, y + ctx.lineWidth / 2, s - ctx.lineWidth, s - ctx.lineWidth);
-    }
-  }
-  if (save.settings.extras) ctx.restore();
+  const [size, sq] = snakeLook(), k = (cell - 1) / size;
+  texBoardPaint(ctx, `snake:body${sq}:${size}`, x, y, k, { colors: { skin: color } });
+  if (save.settings.details) texBoard(ctx, `snake:shine${sq}:${size}`, x, y, k);
 }
 
 function drawGooglyEyes(ts, hx, hy) {
@@ -490,14 +474,9 @@ function render(ts) {
     segs[i] = { x, y };
   }
   if (save.settings.details && segs.length) {
-    // One shadow under the whole body, drawn first so segments never shade each other
-    ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-    const o = cell * 0.16;
-    segs.forEach(sg => {
-      if (!onScreen(sg.x, sg.y, cell)) return;
-      if (save.settings.extras) { roundedPath(ctx, sg.x, sg.y + o, cell - 1, cell - 1, cell * 0.28); ctx.fill(); }
-      else ctx.fillRect(sg.x, sg.y + o, cell - 1, cell - 1);
-    });
+    // One shadow under the whole body (snake:shadow), drawn first so segments never shade each other
+    const [size, sq] = snakeLook(), k = (cell - 1) / size;
+    segs.forEach(sg => { if (onScreen(sg.x, sg.y, cell)) texBoard(ctx, `snake:shadow${sq}:${size}`, sg.x, sg.y, k); });
   }
   const ghostly = gameState === "PLAYING" && phantomOn(now);
   if (ghostly) { ctx.save(); ctx.globalAlpha = 0.5 + 0.15 * Math.sin(now / 90); }

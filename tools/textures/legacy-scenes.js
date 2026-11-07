@@ -1299,6 +1299,27 @@
         const draw = () => drawItem(g, type, x, y, span, small, 1, 0, 20);
         if (type === "xp" || type === "fire") glowless(g, draw); else draw();
       }]))));
+    // the snake's squares (renderer.js drawSnakeCell), rounded (Extras on) and square, at 20 and 10 units a
+    // square: its body in a key color (the skin's color goes there), its shine (light top, dark bottom, rim)
+    // by itself, and the shadow under it
+    const cellWas = cell;
+    [[20, 19], [10, 9]].forEach(([c, size]) => {
+      cell = c;
+      [[true, ""], [false, "-square"]].forEach(([extras, sq]) => {
+        S.extras = extras;
+        S.details = false;
+        add(`snake:body${sq}:${size}`, `board/snake/body${sq}-${size}.png`, fromBoard([(g, x, y) => drawSnakeCell(x, y, "#ff00ff")]), { keys: { "#ff00ff": "skin" } });
+        S.details = true;
+        add(`snake:shine${sq}:${size}`, `board/snake/shine${sq}-${size}.png`, fromBoard([(g, x, y) => drawSnakeCell(x, y, "rgba(0, 0, 0, 0)")]));
+        add(`snake:shadow${sq}:${size}`, `board/snake/shadow${sq}-${size}.png`, fromBoard([(g, x, y) => {
+          g.fillStyle = "rgba(0, 0, 0, 0.3)";
+          const o = cell * 0.16;
+          if (extras) { roundedPath(g, x, y + o, cell - 1, cell - 1, cell * 0.28); g.fill(); }
+          else g.fillRect(x, y + o, cell - 1, cell - 1);
+        }]));
+      });
+    });
+    cell = cellWas;
     S.details = was.details; S.extras = was.extras; window.visibleColor = vis;
     return out;
   }

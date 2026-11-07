@@ -45,12 +45,8 @@ function entityPic(g, type, x, y, w, frame = 0) {
 /* ...the same painted pixel by pixel (texPaint), with an alpha over it or its key color in a color the game
    picks (the phantom fading, the star's cycling hue) */
 function entityPaint(g, type, x, y, w, opts) {
-  const size = w === 9 ? 9 : 19, id = `entity:${type}:${size}`, r = texResolve(id), a = (r && r.e.anchor) || [0, 0], k = w / size;
-  g.save();
-  g.translate(x - a[0] * k, y - a[1] * k);
-  g.scale(k, k);
-  texPaint(g, id, 0, 0, opts);
-  g.restore();
+  const size = w === 9 ? 9 : 19;
+  texBoardPaint(g, `entity:${type}:${size}`, x, y, w / size, opts);
 }
 
 function glyph(g, x, y, w, text, color) {

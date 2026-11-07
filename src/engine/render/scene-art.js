@@ -19,6 +19,7 @@
    texDraw(g, id, x, y, frame)   a picture or one frame of it, as it is
    texBoard(g, id, x, y, k, frame) a board picture (20 pixels to a square) scaled
                                  k board units to the pixel, hard-edged
+   texBoardPaint(g, id, x, y, k, opts)  the same, painted like texPaint
    texPaint(g, id, x, y, opts)   the same picture painted pixel by pixel
                                  the way the game's own drawing code
                                  paints: with an alpha over it (lights
@@ -142,4 +143,14 @@ function texBoard(g, id, x, y, k = 1, frame = 0) {
   g.imageSmoothingEnabled = false;
   g.drawImage(b.c, b.sx, b.sy, b.w, b.h, x - a[0] * k, y - a[1] * k, b.w * k, b.h * k);
   g.imageSmoothingEnabled = was;
+}
+/* ...the same painted pixel by pixel (texPaint): with an alpha over it, or its key colors in colors the game
+   picks (a skin's color, the star's hue) */
+function texBoardPaint(g, id, x, y, k = 1, opts) {
+  const r = texResolve(id), a = (r && r.e.anchor) || [0, 0];
+  g.save();
+  g.translate(x - a[0] * k, y - a[1] * k);
+  g.scale(k, k);
+  texPaint(g, id, 0, 0, opts);
+  g.restore();
 }

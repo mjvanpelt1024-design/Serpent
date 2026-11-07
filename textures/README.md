@@ -38,8 +38,8 @@ textures/
 ├── foes/  hazards/  powerups/
 ├── board/                the goal pieces: key, door, plates, seal, shard, thief; relics/ for the relics;
 │                         crests/ for what each boss wears on its head, entities/ for the old engine's
-│                         hazards and power-ups, items/ for apples, XP, rocks and the rest (20 pixels to
-│                         a square, below)
+│                         hazards and power-ups, items/ for apples, XP, rocks and the rest, snake/ for
+│                         the snake's squares (20 pixels to a square, below)
 ├── hearts/               every heart slot the HUD shows (below)
 ├── bosses/               each island's boss face on its wanted poster
 ├── coins/                each island's coin, <island>-<tails|heads>-<12|20|32>.png (color-swap, below)
@@ -253,6 +253,11 @@ head it sits on). The game scales them up to the screen with hard edges, like ev
   and its eye (each fades on its own). The star's `#ff00ff` is painted in its cycling colors. Still
   drawn by the game: the glow under every power-up, the numbers and the "!", the blast, the lightning
   strike, the gust's arrows across the board, the frenzy's turning hand.
+- **The snake** is drawn a square at a time from `board/snake/`: `body-19.png` in the skin's color (its
+  `#ff00ff` becomes the color the skin gives that square, so every skin and its animation still comes
+  from its `.skin` file), `shine-19.png` over it (the light top, the dark bottom, the darker rim) and
+  `shadow-19.png` under it. The `-square` ones are the look with Extras off; `-9` ones are for Treasure's
+  half-size squares. A boss's body squares are drawn the same way.
 - **The items** (`board/items/<type>-19.png`: apple, XP, rock, popsicle, flea, fire, molasses; `-39` for
   two-square ones, `-9` for small ones) are their full look, with their hard drop shadow painted in (the
   see-through black under them). The XP's and the fire's glow are drawn by the game around the picture.

@@ -406,10 +406,12 @@
         c.getContext("2d").drawImage(ev("canvas"), box[0] * rs, box[1] * rs, c.width, c.height, 0, 0, c.width, c.height);
         return c;
       };
+      // (code: the same in both games, or [the old game's, the new one's])
       const boardCheck = (what, code, box = [60, 60, 80, 80], scales = [1, 2, 3], soft = 2) => {
         softLimit = soft;
+        const [oldCode, newCode] = Array.isArray(code) ? code : [code, code];
         for (const rs of scales) {
-          const d = diff(shot(games[0], rs, code, box), shot(games[1], rs, code, box));
+          const d = diff(shot(games[0], rs, oldCode, box), shot(games[1], rs, newCode, box));
           if (d) problems.push(`board: ${what} at ${rs}x: ${d}`);
           counts.board++;
         }
@@ -434,6 +436,18 @@
         const e = type === "sinkhole" ? [`{ openAt: ${ts + 1000} }`, `{ openAt: ${ts - 1} }`] : ["{}"];
         e.forEach(st => boardCheck(`${type} ${w} at ${ts} ${st}`, `ENTITY_TYPES.${type}.draw(ctx, 100, 100, ${w}, ${ts}, Object.assign({ x: 100, y: 100 }, ${st}))`, [80, 80, 60, 60], [1]));
       }
+      // the snake's squares in different colors (a skin's hex, rgb and hsl colors, a boss's white), rounded and
+      // square, with and without details, at 20 and 10 units a square (a rounded corner has three soft edges
+      // stacked on it, body, shine and rim: up to 3 shades there); and the shadow under them
+      for (const c of [20, 10]) for (const [details, extras] of [[true, true], [true, false], [false, true], [false, false]]) for (const color of ["#3ddc84", "rgb(200,60,90)", "hsl(200,80%,60%)", "#ffffff"]) {
+        boardCheck(`snake square ${color} at ${c} (details ${details}, extras ${extras})`, `cell = ${c}; save.settings.details = ${details}; save.settings.extras = ${extras}; drawSnakeCell(100, 100, "${color}"); cell = 20`, [90, 90, 40, 40], [1], 3);
+      }
+      for (const c of [20, 10]) for (const extras of [true, false]) {
+        boardCheck(`snake shadow at ${c} (extras ${extras})`, [
+          `cell = ${c}; ctx.fillStyle = "rgba(0, 0, 0, 0.3)"; ${extras ? "roundedPath(ctx, 100, 100 + cell * 0.16, cell - 1, cell - 1, cell * 0.28); ctx.fill()" : "ctx.fillRect(100, 100 + cell * 0.16, cell - 1, cell - 1)"}; cell = 20`,
+          `cell = ${c}; save.settings.extras = ${extras}; { const [size, sq] = snakeLook(); texBoard(ctx, "snake:shadow" + sq + ":" + size, 100, 100, (cell - 1) / size); } cell = 20`], [90, 90, 40, 40], [1]);
+      }
+      gEval("save.settings.details = true; save.settings.extras = true"); W.eval("save.settings.details = true; save.settings.extras = true");
       // the board's items, in their full look, at each size (with the game's own settings on and its own colors)
       for (const [span, small] of [[1, false], [2, false], [1, true]]) for (const type of ["apple", "xp", "rock", "popsicle", "flea", "fire", "molasses"]) {
         boardCheck(`item ${type} ${span}${small ? " small" : ""}`, `save.settings.details = true; save.settings.extras = true; drawItem(ctx, "${type}", 100, 100, ${span}, ${small}, 1, 0, 20)`, [80, 80, 70, 70], [1]);
