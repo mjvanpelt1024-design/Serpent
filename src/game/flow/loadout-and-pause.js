@@ -73,6 +73,11 @@ function loadoutGo(useNothing = false) {
 function applyRunBoosts() {
   runBoosts = {};
   goldHearts = 0;
+  if (currentModeKey === "custom") {   // a sandbox level starts with its own items, free and not from your stock
+    pendingBoosts = {};
+    (customLevel && customLevel.it || []).forEach(k => { if (CONSUMABLES[k] && CONSUMABLES[k].boost) runBoosts[k] = true; });
+    return;
+  }
   const pick = pendingBoosts;
   pendingBoosts = {};
   CONSUMABLE_KEYS.forEach(k => {

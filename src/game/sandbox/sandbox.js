@@ -16,9 +16,17 @@ function starterLevels() {
     return normalizeLevel({
       n: String(l.name || l.id), e: ({ wrap: "w", walls: "a", wall: "a", mirror: "m" })[l.edge] || "w", s: l.speed || 7, g: rows.join(""), builtin: true,
       pv: panels(l.panelsV), ph: panels(l.panelsH),
-      r: { h: l.hearts ?? 3, ar: l.respawnApples !== false, t: (l.twists || []).map(String), sp: (l.spawns || []).map(String) }
+      r: { h: l.hearts ?? 3, ar: l.respawnApples !== false, t: (l.twists || []).map(String) },
+      sc: chipsFor(l.spawns || [])
     });
   });
+}
+
+/* Enemy types listed in a spawn list -> one chip each, on the top edge */
+function chipsFor(types) {
+  const sc = {};
+  types.map(String).forEach(t => { if (SB_SPAWNS.some(([id]) => id === t)) sc[t] = [...(sc[t] || []), [0, 0]]; });
+  return sc;
 }
 
 /* ----- Level codes ----- */
@@ -47,19 +55,35 @@ function panelParse(s) {
 }
 function levelCode(level) {
   const L = normalizeLevel(level);
-  const json = JSON.stringify({ v: 2, n: L.n, e: L.e, s: L.s, g: rle(L.g), pv: panelStr(L.pv), ph: panelStr(L.ph), r: L.r });
-  return "SNK2-" + btoa(unescape(encodeURIComponent(json)));
+  const json = JSON.stringify({ v: 3, n: L.n, e: L.e, s: L.s, g: rle(L.g), pv: panelStr(L.pv), ph: panelStr(L.ph), r: L.r, k: L.k, th: L.th, vn: L.vn, it: L.it, off: L.off, sc: L.sc });
+  return "SNK3-" + btoa(unescape(encodeURIComponent(json)));
+}
+/* Pasted text: a .level file, or a share code (SNK1- / SNK2- / SNK3-) */
+function parseLevelText(text) {
+  const raw = String(text).trim();
+  if (/^SNK\d-/.test(raw)) return parseLevelCode(raw);
+  const L = parseLevelFile(raw);
+  if (!L) return null;
+  return normalizeLevel(L);
 }
 function parseLevelCode(code) {
   try {
     const raw = String(code).trim();
-    const m = /^SNK([12])-(.+)$/.exec(raw);
+    const m = /^SNK([123])-(.+)$/.exec(raw);
     if (!m) return null;
     const o = JSON.parse(decodeURIComponent(escape(atob(m[2]))));
     const g = unrle(String(o.g || ""));
     if (g.length !== SB_SIZE * SB_SIZE || /[^.#PSAaXxRrOoFfHhMm@*%&!^~]/.test(g)) return null;
     const r = o.r || {};
+    const sc = {};
+    Object.entries(o.sc || {}).forEach(([t, chips]) => {
+      if (SB_SPAWNS.some(([id]) => id === t)) sc[t] = (Array.isArray(chips) ? chips : []).filter(c => Array.isArray(c) && c.length === 2).map(([x, y]) => [Math.min(SB_SIZE - 1, Math.max(0, x | 0)), Math.min(SB_SIZE - 1, Math.max(0, y | 0))]);
+    });
     return normalizeLevel({
+      k: String(o.k || ""), th: String(o.th || ""), vn: Math.max(0, Math.min(30, Math.round(Number(o.vn)) || 0)),
+      it: (Array.isArray(o.it) ? o.it : []).filter(x => CONSUMABLE_KEYS.includes(x) && CONSUMABLES[x].boost).map(String),
+      off: (Array.isArray(o.off) ? o.off : []).filter(x => SB_HAZARDS.includes(x)).map(String),
+      sc: Object.keys(sc).length ? sc : chipsFor(Array.isArray(r.sp) ? r.sp : []),
       n: String(o.n || "Shared level").slice(0, 24),
       e: ["w", "a", "m"].includes(o.e) ? o.e : "w",
       s: [5, 7, 10].includes(o.s) ? o.s : 7,
@@ -69,8 +93,7 @@ function parseLevelCode(code) {
       r: {
         h: Math.max(0, Math.min(5, Math.round(Number(r.h ?? 3)))),
         ar: r.ar !== false,
-        t: (Array.isArray(r.t) ? r.t : []).filter(x => SB_TWISTS.some(t => t[0] === x)),
-        sp: (Array.isArray(r.sp) ? r.sp : []).filter(x => SB_SPAWNS.some(t => t[0] === x))
+        t: (Array.isArray(r.t) ? r.t : []).filter(x => SB_TWISTS.some(t => t[0] === x))
       }
     });
   } catch (e) {
@@ -93,7 +116,7 @@ function uniqueName(list, base) {
 
 function renderShelf() {
   document.querySelectorAll("#screen-shelf .tab[data-shelf]").forEach(t => t.setAttribute("aria-selected", String(t.dataset.shelf === sbShelfTab)));
-  document.getElementById("shelf-import").hidden = sbShelfTab !== "community";
+  document.getElementById("shelf-import").hidden = false;
   document.getElementById("shelf-new").hidden = sbShelfTab !== "mine";
   const body = document.getElementById("shelf-body");
   body.innerHTML = "";
@@ -142,23 +165,27 @@ function renderShelf() {
   });
 }
 
+/* Paste Code: a .level file (or a share code) becomes one of My Levels, ready to play or edit */
 function importCode() {
   const box = document.getElementById("shelf-code");
-  const level = parseLevelCode(box.value);
-  if (!level) { showToast("That doesn't look like a level code. They start with SNK2- (or SNK1-)."); sfx("bad"); return; }
-  if (save.community.length >= 50) { showToast("Community is full (50). Delete one first."); return; }
-  level.n = uniqueName(save.community, level.n);
-  save.community.push(level);
+  const level = parseLevelText(box.value);
+  if (!level) { showToast("That isn't a level. Paste the text of a .level file, or a code that starts with SNK3-."); sfx("bad"); return; }
+  if (save.levels.length >= 30) { showToast("My Levels is full (30). Delete one first."); return; }
+  delete level.builtin;
+  level.n = uniqueName(save.levels, level.n);
+  save.levels.push(level);
   persist();
   box.value = "";
+  sbShelfTab = "mine";
   sfx("unlock");
-  showToast(`Added "${level.n}" to Community.`);
+  showToast(`Added "${level.n}" to My Levels.`);
   renderShelf();
 }
 
+/* Copies the level as .level text (Paste Code reads it back) */
 function copyCode(level) {
-  const code = levelCode(level);
-  const done = () => showToast("Level code copied. Paste it anywhere to share.");
+  const code = levelFileText(normalizeLevel(JSON.parse(JSON.stringify(level))));
+  const done = () => showToast("Level copied as .level text. Paste it anywhere to share.");
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done, () => promptCode(code));
   else promptCode(code);
   return code;
@@ -210,7 +237,10 @@ function renderSandbox() {
     const g = c.getContext("2d");
     if (t.panel) paintPanelIcon(g, t.panel);
     else paintSbCell(g, cat.sized ? SB_ITEMS[t.id][0] : t.id, 8, 8, 28, performance.now());
-    b.append(c, Object.assign(document.createElement("span"), { textContent: t.label }));
+    const off = cat.toggles && sbLevel.off.includes(t.id);
+    if (off) b.classList.add("off");
+    const chips = cat.chips ? (sbLevel.sc[t.id] || []).length : 0;
+    b.append(c, Object.assign(document.createElement("span"), { textContent: t.label + (off ? " (off)" : chips ? " ×" + chips : "") }));
     b.addEventListener("click", () => { sbTool = t.id; sfx("click"); renderSandbox(); });
     pal.appendChild(b);
   });
@@ -218,9 +248,37 @@ function renderSandbox() {
   sizes.hidden = !cat.sized;
   sizes.innerHTML = ["Small", "Normal", "Large"].map((l, i) => `<button class="subtab" data-sbsize="${i}" aria-pressed="${i === sbSize}" aria-selected="${i === sbSize}">${l}</button>`).join("");
   sizes.querySelectorAll("[data-sbsize]").forEach(b => b.addEventListener("click", () => { sbSize = Number(b.dataset.sbsize); sfx("click"); renderSandbox(); }));
+  renderSbExtra(cat);
   const hint = document.getElementById("sb-hint");
-  hint.textContent = cat.id === "walls" && sbTool.length === 2 ? "Tap the line between two squares to place a panel." : sbTool === "." ? "Tap a square to clear it, or a line to remove a panel." : cat.sized && sbSize === 2 ? "Large items fill 2 x 2 squares." : "";
+  hint.textContent = cat.chips ? "Tap an edge square to place a chip. Tap a chip to take it off."
+    : cat.id === "walls" && sbTool.length === 2 ? "Tap the line between two squares to place a panel." : sbTool === "." ? "Tap a square to clear it, or a line to remove a panel." : cat.sized && sbSize === 2 ? "Large items fill 2 x 2 squares." : "";
   drawSandbox();
+}
+
+/* The panel under the tools: wall settings, hazard switches, or the chip counts */
+function renderSbExtra(cat) {
+  const box = document.getElementById("sb-extra");
+  box.innerHTML = "";
+  if (cat.id === "walls") {
+    box.innerHTML = `<div class="set-row"><div><div class="set-label">Disappearing walls</div><div class="set-help">Red walls vanish for a while, then come back.</div></div><button class="btn btn-small" data-sbx="vanish">${sbLevel.vn ? sbLevel.vn + " s" : "Off"}</button></div>`;
+    box.querySelector('[data-sbx="vanish"]').addEventListener("click", () => {
+      const i = SB_VANISH_STEPS.indexOf(sbLevel.vn);
+      sbLevel.vn = SB_VANISH_STEPS[(i + 1) % SB_VANISH_STEPS.length];
+      sfx("toggle");
+      renderSandbox();
+    });
+  } else if (cat.toggles) {
+    box.innerHTML = cat.tools.map(t => `<div class="set-row"><div class="set-label">${t.label}</div><button class="switch" role="switch" aria-checked="${!sbLevel.off.includes(t.id)}" data-sbx="${t.id}" aria-label="${t.label} in this level"></button></div>`).join("");
+    box.querySelectorAll("[data-sbx]").forEach(b => b.addEventListener("click", () => {
+      const id = b.dataset.sbx;
+      sbLevel.off = sbLevel.off.includes(id) ? sbLevel.off.filter(x => x !== id) : [...sbLevel.off, id];
+      sfx("toggle");
+      renderSandbox();
+    }));
+  } else if (cat.chips) {
+    box.innerHTML = `<p class="set-help">More chips of one enemy make it turn up more often. Edge squares only.</p>` +
+      cat.tools.map(t => `<div class="set-row"><div class="set-label">${t.label}</div><div>${(sbLevel.sc[t.id] || []).length} chip${(sbLevel.sc[t.id] || []).length === 1 ? "" : "s"}</div></div>`).join("");
+  }
 }
 
 function paintPanelIcon(g, kind) {
@@ -266,6 +324,22 @@ function drawLevelThumb(g, level, u) {
   g.fillRect(0, 0, u * SB_SIZE, u * SB_SIZE);
   for (let k = 0; k < level.g.length; k++) if (level.g[k] !== ".") paintSbCell(g, level.g[k], (k % SB_SIZE) * u, Math.floor(k / SB_SIZE) * u, u, 0);
   drawPanels(g, level, u);
+  drawChips(g, level, u);
+}
+
+/* Spawner chips: one letter per enemy type, on the edge squares */
+const SB_CHIP = { popsicle: ["O", "#ff9ad5"], flea: ["F", "#9be15d"], fire: ["H", "#ff7a1a"], molasses: ["M", "#c79a2b"] };
+function drawChips(g, L, u) {
+  Object.entries(L.sc || {}).forEach(([t, chips]) => {
+    const [letter, color] = SB_CHIP[t] || ["?", "#fff"];
+    chips.forEach(([x, y]) => {
+      const cx = x * u + u / 2, cy = y * u + u / 2;
+      g.fillStyle = color;
+      g.beginPath(); g.arc(cx, cy, u * 0.42, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#000"; g.font = `bold ${Math.round(u * 0.56)}px sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillText(letter, cx, cy + 0.5);
+    });
+  });
 }
 
 const SB_PX = 15;
@@ -285,6 +359,7 @@ function drawSandbox() {
     if (ch !== ".") paintSbCell(g, ch, (i % SB_SIZE) * SB_PX, Math.floor(i / SB_SIZE) * SB_PX, SB_PX, ts);
   }
   drawPanels(g, sbLevel, SB_PX);
+  drawChips(g, sbLevel, SB_PX);
   if (blankWaiting()) drawRelic(g, BLANK_AT[0] * SB_PX - 3, BLANK_AT[1] * SB_PX - 3, ts, SB_PX + 6);
   c.style.borderColor = { w: "#3ddc3d", a: "#ff3b3b", m: "#b36bff" }[sbLevel.e];
 }
@@ -321,10 +396,28 @@ function largeAt(g, x, y) {
   return -1;
 }
 
+/* A chip on an edge square: tap it again to take it off, or tap another type's chip to switch it */
+function spawnerTap(x, y) {
+  if (x < 0 || y < 0 || x >= SB_SIZE || y >= SB_SIZE) return;
+  if (x > 0 && y > 0 && x < SB_SIZE - 1 && y < SB_SIZE - 1) { showToast("Chips go on the edge of the board."); sfx("bad"); return; }
+  const at = list => list.findIndex(([cx, cy]) => cx === x && cy === y);
+  const here = Object.keys(sbLevel.sc).find(t => at(sbLevel.sc[t] || []) >= 0);
+  if (here) {
+    sbLevel.sc[here].splice(at(sbLevel.sc[here]), 1);
+    if (here === sbTool) { sfx("tick"); renderSandbox(); return; }
+  }
+  const list = sbLevel.sc[sbTool] || [];
+  if (list.length >= 8) { showToast("Up to 8 chips of one enemy."); sfx("bad"); return; }
+  sbLevel.sc[sbTool] = [...list, [x, y]];
+  sfx("tick");
+  renderSandbox();
+}
+
 function sbPaint(fx, fy) {
   const x = Math.floor(fx);
   const y = Math.floor(fy);
   if (blankWaiting() && x === BLANK_AT[0] && y === BLANK_AT[1]) { collectRelic({ relic: "blank" }); drawSandbox(); return; }
+  if (SB_CATS.find(c => c.id === sbCat).chips) { spawnerTap(x, y); return; }
   const tool = SB_CATS.flatMap(c => c.tools).find(t => t.id === sbTool);
   if (tool && tool.panel) {
     const e = nearestEdge(fx, fy);
@@ -339,6 +432,7 @@ function sbPaint(fx, fy) {
     if (e.d < 0.22 && sbLevel[e.k][e.key]) { delete sbLevel[e.k][e.key]; sfx("tick"); drawSandbox(); return; }
   }
   if (x < 0 || y < 0 || x >= SB_SIZE || y >= SB_SIZE) return;
+  if (SB_CATS.find(c => c.id === sbCat).toggles && sbLevel.off.includes(sbTool)) { showToast("That hazard is switched off for this level."); sfx("bad"); return; }
   const g = sbLevel.g.split("");
   const ch = currentToolChar();
   const big = SB_CHAR[ch] && SB_CHAR[ch].grade === 2;
@@ -379,8 +473,20 @@ function saveCurrentLevel() {
   sbLevel.n = copy.n;
   document.getElementById("sb-name").value = copy.n;
   persist();
+  downloadLevelFile(copy);
   sfx("buy");
-  showToast(`Saved "${copy.n}" to My Levels.`);
+  showToast(`Saved "${copy.n}" to My Levels and as a .level file.`);
+}
+
+function downloadLevelFile(L) {
+  const a = document.createElement("a");
+  const blob = new Blob([levelFileText(L)], { type: "text/plain" });
+  a.href = URL.createObjectURL(blob);
+  a.download = (L.n.replace(/[^\w -]+/g, "").trim() || "level") + ".level";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
 /* ----- Rules panel ----- */
@@ -397,25 +503,32 @@ function renderRules() {
   const R = sbLevel.r;
   const box = document.getElementById("rules-list");
   const sw = (on, key, label, help) => `<div class="set-row"><div><div class="set-label">${label}</div>${help ? `<div class="set-help">${help}</div>` : ""}</div><button class="switch" role="switch" aria-checked="${on}" data-rule="${key}" aria-label="${label}"></button></div>`;
+  const named = (list, id) => { const o = list.find(x => x.id === id); return o ? (o.name || o.id) : id; };
   box.innerHTML =
     `<div class="set-row"><div class="set-label">Edges</div><button class="btn btn-small" data-rule="edge">${SB_EDGES.find(e => e[0] === sbLevel.e)[1]}</button></div>` +
     `<div class="set-row"><div class="set-label">Speed</div><button class="btn btn-small" data-rule="speed">${SB_SPEEDS.find(s => s[0] === sbLevel.s)[1]}</button></div>` +
     `<div class="set-row"><div class="set-label">Hearts</div><div class="stepper"><button class="btn btn-small" data-rule="h-">-</button><span>${R.h}</span><button class="btn btn-small" data-rule="h+">+</button></div></div>` +
     sw(R.ar, "ar", "Apples respawn", "Off: once they're eaten, they're gone.") +
+    `<h4 class="rules-head">Look</h4>` +
+    `<div class="set-row"><div class="set-label">Skin</div><button class="btn btn-small" data-rule="skin">${sbLevel.k ? named(skins, sbLevel.k) : "Yours"}</button></div>` +
+    `<div class="set-row"><div class="set-label">Theme</div><button class="btn btn-small" data-rule="theme">${sbLevel.th ? named(backdrops, sbLevel.th) : "Yours"}</button></div>` +
+    `<h4 class="rules-head">Start with</h4>` +
+    CONSUMABLE_KEYS.filter(k => CONSUMABLES[k].boost).map(k => sw(sbLevel.it.includes(k), "it:" + k, CONSUMABLES[k].name, CONSUMABLES[k].desc)).join("") +
     `<h4 class="rules-head">Nightmare twists</h4>` +
-    SB_TWISTS.map(([id, label, help]) => sw(R.t.includes(id), "t:" + id, label, help)).join("") +
-    `<h4 class="rules-head">Random spawns</h4>` +
-    SB_SPAWNS.map(([id, label]) => sw(R.sp.includes(id), "sp:" + id, label, "Keep appearing during the run")).join("");
+    SB_TWISTS.map(([id, label, help]) => sw(R.t.includes(id), "t:" + id, label, help)).join("");
   box.querySelectorAll("[data-rule]").forEach(b => b.addEventListener("click", () => {
     const k = b.dataset.rule;
+    const cycle = (list, cur) => { const ids = ["", ...list.map(x => x.id)]; return ids[(ids.indexOf(cur) + 1) % ids.length]; };
     if (k === "edge") sbLevel.e = SB_EDGES[(SB_EDGES.findIndex(e => e[0] === sbLevel.e) + 1) % 3][0];
     else if (k === "speed") sbLevel.s = SB_SPEEDS[(SB_SPEEDS.findIndex(s => s[0] === sbLevel.s) + 1) % 3][0];
     else if (k === "h-") R.h = Math.max(0, R.h - 1);
     else if (k === "h+") R.h = Math.min(5, R.h + 1);
     else if (k === "ar") R.ar = !R.ar;
+    else if (k === "skin") sbLevel.k = cycle(skins, sbLevel.k);
+    else if (k === "theme") sbLevel.th = cycle(backdrops, sbLevel.th);
     else {
       const [list, id] = k.split(":");
-      const arr = R[list];
+      const arr = list === "it" ? sbLevel.it : R[list];
       const i = arr.indexOf(id);
       if (i >= 0) arr.splice(i, 1); else arr.push(id);
     }
@@ -432,19 +545,24 @@ function playCustom(level, fromEditor) {
   const issues = levelProblems(L);
   if (issues.length) { showToast("This level needs " + issues.join(" and ") + "."); sfx("bad"); return; }
   customLevel = JSON.parse(JSON.stringify(L));
+  customLook = { skin: L.k, backdrop: L.th };
   sbReturn = fromEditor;
   modes.custom = { label: L.n, speed: L.s, edge: { w: "wrap", a: "wall", m: "mirror" }[L.e], multiplier: 1, startOrbs: 0, orbChance: 0, rules: "" };
   customBackup = JSON.stringify({ xp: save.xp, xpProgress: save.xpProgress, lifetimeScore: save.lifetimeScore, stats: save.stats, badges: save.badges });
   currentModeKey = "custom";
   currentNightmare = false;
   pendingBoosts = {};
+  applyTheme();
   startGame();
 }
 
 let panels = new Map();   // wall panels on grid lines: "v:x,y" / "h:x,y" -> "red" | "purple"
+let customWalls = null;   // disappearing red walls for this run: { period, hidden, keys }
+let customLook = null;    // { skin, backdrop } of the level being played; null everywhere else
 
 function applyCustomLevel() {
   const L = customLevel;
+  const off = new Set(L.off || []);
   walls = new Map();
   panels = new Map();
   innerSegments = [];
@@ -456,6 +574,7 @@ function applyCustomLevel() {
     const x = (i % SB_SIZE) * cell;
     const y = Math.floor(i / SB_SIZE) * cell;
     const item = SB_CHAR[ch];
+    if (item && off.has(item.type)) continue;   // switched off in this level
     if (item) {
       const it = { x, y, size: item.grade === 2 ? 2 : 1, small: item.grade === 0 };
       if (item.type === "apple") { apples.push(it); apples0++; }
@@ -473,14 +592,32 @@ function applyCustomLevel() {
   snake.dx = cell;
   snake.dy = 0;
   targetApples = L.r.ar ? Math.max(1, apples0) : 0;
-  // Rules: Nightmare twists and random spawns
+  // Twists, then spawners: each chip is one more of that enemy, so it turns up more often
   nm = { custom: true };
   L.r.t.forEach(t => { nm[t] = true; });
   spec = {};
   const SPAWN = { popsicle: { max: 4, delay: [2500, 6000], s: 25 }, flea: { max: 3, delay: [3500, 8000], s: 35 }, fire: { max: 3, delay: [3000, 7000], s: 30 }, molasses: { max: 3, delay: [4000, 9000], s: 30 } };
-  L.r.sp.forEach(k => { spec[k] = SPAWN[k]; });
+  Object.entries(L.sc || {}).forEach(([t, chips]) => {
+    if (!SPAWN[t] || !chips.length || off.has(t)) return;
+    const n = chips.length;
+    spec[t] = { max: SPAWN[t].max + n - 1, delay: SPAWN[t].delay.map(d => Math.max(400, Math.round(d / n))), s: SPAWN[t].s };
+  });
   hazardMode = !!spec.popsicle;
   maxPopsicle = spec.popsicle ? spec.popsicle.max : 0;
+  customWalls = L.vn > 0 ? { period: L.vn * 1000, hidden: false, keys: [...walls.keys()].filter(k => walls.get(k) === "red") } : null;
+}
+
+/* Disappearing walls: each red wall is gone for vn seconds, then back. Game time, so pausing holds it. */
+function tickCustomWalls() {
+  if (!customWalls || currentModeKey !== "custom") return;
+  const hide = Math.floor(runMs / customWalls.period) % 2 === 1;
+  customWalls.hidden = hide;
+  const head = cellKey(snake.x, snake.y);
+  const body = new Set(snake.cells.map(c => cellKey(c.x, c.y)));
+  customWalls.keys.forEach(k => {
+    if (hide) walls.delete(k);
+    else if (!walls.has(k) && k !== head && !body.has(k)) walls.set(k, "red");   // never back in on the snake
+  });
 }
 
 /* Crossing a wall panel: red ends the run, purple is a portal */
@@ -525,6 +662,9 @@ function drawGamePanels(view) {
 }
 
 function restoreAfterCustom() {
+  customLook = null;
+  customWalls = null;
+  applyTheme();
   if (!customBackup) return;
   const b = JSON.parse(customBackup);
   save.xp = b.xp;

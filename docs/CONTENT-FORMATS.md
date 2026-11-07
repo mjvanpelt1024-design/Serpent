@@ -277,6 +277,40 @@ Board characters: `.` empty · `#` red block · `P` portal block · `S` snake st
 
 ---
 
+### Sandbox levels: `.level` (saved from the editor)
+
+Made in the sandbox editor (Play > Sandbox > New level), saved as `<name>.level` and read back by **Paste Code**.
+A plain text file, the same shape as the game levels above, with the sandbox's extra keys. Code: `src/game/sandbox/level-file.js`.
+
+```text
+# Sandbox level. Format: docs/CONTENT-FORMATS.md (Sandbox levels)
+name     = Test Donut
+edge     = walls                 # wrap, walls or mirror
+speed    = 10                    # 5 slow, 7 normal, 10 fast
+hearts   = 2
+apples   = once                  # respawn or once
+skin     = tangerine             # a skin id, or empty for the player's own
+theme    = white                 # a theme (backdrop) id, or empty for the player's own
+vanish   = 2                     # seconds a red wall is gone, then back. 0 = off
+items    = booster               # boost items the run starts with (free)
+twists   = dark                  # nightmare twists
+off      = rock                  # hazards switched off in this level
+
+[panels]                         # v3,4 = the line left of square 3,4; h3,4 = the line above it
+v3,4 = red                       # red or purple
+
+[spawners]                       # chips on the edge: more chips of one enemy, more of them turn up
+popsicle = 0,3; 0,9
+flea     = 19,5
+
+---
+....#.....................       # 20 rows of 20: . open  # red wall  P portal wall  S snake start
+```
+
+Board characters are the sandbox's (the same as a share code): capitals and small letters for food and
+hazards, `@ * % & ! ^ ~` for the large ones. A file must have 20 rows of 20 squares. Share codes (`SNK3-...`)
+hold the same level and paste the same way.
+
 ## Items: content/items/*.item
 
 `name`, `description`, `island` (the tree it grows on), `boost` (`true` = used up when a run starts),

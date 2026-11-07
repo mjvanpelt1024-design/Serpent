@@ -10,11 +10,14 @@
 const nextSkinPrice = () => ECON.skinPrice(save.ownedSkins.length);
 const nextBackdropPrice = () => ECON.backdropPrice(save.ownedBackdrops.length);
 
+/* While a sandbox level plays, its skin and theme (when it names one) stand in for yours */
 function currentSkin() {
+  if (customLook && skinById[customLook.skin]) return skinById[customLook.skin];
   return skinById[save.selectedSkin] || skinById.classic;
 }
 
 function currentBackdrop() {
+  if (customLook && backdropById[customLook.backdrop]) return backdropById[customLook.backdrop];
   return backdropById[save.selectedBackdrop] || backdropById.black;
 }
 

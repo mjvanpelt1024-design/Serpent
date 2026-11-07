@@ -224,6 +224,7 @@ document.getElementById("ach-book").addEventListener("click", openBook);
   document.getElementById("sb-play").addEventListener("click", () => playCustom(sbLevel, true));
   document.getElementById("shelf-add").addEventListener("click", importCode);
   document.getElementById("shelf-new").addEventListener("click", () => openSandbox(null));
+  document.getElementById("profiles-sandbox").addEventListener("click", () => openShelf("mine"));
   document.querySelectorAll("#screen-shelf .tab[data-shelf]").forEach(t => t.addEventListener("click", () => { sbShelfTab = t.dataset.shelf; sfx("tab"); renderShelf(); }));
 })();
 document.getElementById("book-next").addEventListener("click", () => turnPage(1));

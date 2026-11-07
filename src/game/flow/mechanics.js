@@ -287,6 +287,7 @@ function appleSideEffects() {
 /* ----- Each frame ----- */
 let mechSecond = 0;
 function tickMechanics(ts, delta) {
+  tickCustomWalls();
   if (buffs.shield && ts >= (buffs.shieldUntil || 0)) buffs.shield = false;
   if (!feverOn(ts) && fever.meter > 0) fever.meter = Math.max(0, fever.meter - delta / 1000 * 0.035);
   tickEntities(ts, delta);

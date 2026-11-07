@@ -162,6 +162,8 @@
 .sb-tool { width: 3.9em; padding: 0.2em 0.15em 0.3em; border-radius: 0.5em; border: 0; background: var(--panel); cursor: pointer; color: var(--ink-dim); font: inherit; font-size: 0.68em; line-height: 1.15; box-shadow: inset 0 0 0 2px var(--edge), 0 0.18em 0 rgba(0, 0, 0, 0.35); }
 .sb-tool canvas { width: 1.75em; height: 1.75em; display: block; margin: 0 auto 0.15em; font-size: 15px; }
 .sb-tool.on { box-shadow: inset 0 0 0 2px var(--xp), 0 0.18em 0 var(--gold-lip); color: var(--ink); }
+.sb-tool.off { opacity: 0.45; }
+.sb-extra { margin: 0.4em 0; }
 .sb-hint { font-size: 0.75em; color: var(--ink-dim); min-height: 1em; margin: 0 0 0.3em; }
 .sb-board { display: block; margin: 0 auto 0.3em; width: 20em; max-width: 100%; height: auto; aspect-ratio: 1; border: 3px solid #3fd27a; border-radius: 0.3em; touch-action: none; cursor: crosshair; }
 .sb-row { display: flex; gap: 0.3em; justify-content: center; }

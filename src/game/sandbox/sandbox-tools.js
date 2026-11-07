@@ -22,14 +22,18 @@ const SB_CATS = [
     { id: "#", label: "Red block" }, { id: "P", label: "Portal block" },
     { id: "pr", label: "Red panel", panel: "r" }, { id: "pp", label: "Portal panel", panel: "p" }] },
   { id: "food", label: "Food", sized: true, tools: [{ id: "apple", label: "Apple" }, { id: "xp", label: "XP" }] },
-  { id: "hazards", label: "Hazards", sized: true, tools: [
+  { id: "hazards", label: "Hazards", sized: true, toggles: true, tools: [
     { id: "rock", label: "Rock" }, { id: "popsicle", label: "Popsicle" }, { id: "flea", label: "Flea" },
     { id: "fire", label: "Fire" }, { id: "molasses", label: "Molasses" }] },
+  { id: "spawners", label: "Spawners", chips: true, tools: [
+    { id: "popsicle", label: "Popsicles" }, { id: "flea", label: "Fleas" }, { id: "fire", label: "Fire" }, { id: "molasses", label: "Molasses" }] },
   { id: "special", label: "Special", tools: [{ id: "S", label: "Snake start" }, { id: ".", label: "Eraser" }] }
 ];
+const SB_HAZARDS = ["rock", "popsicle", "flea", "fire", "molasses"];   // hazards a level can switch off
+const SB_VANISH_STEPS = [0, 2, 3, 5, 8];   // seconds a disappearing red wall is gone (0 = off)
 const SB_EDGES = [["w", "Wrap"], ["a", "Walls"], ["m", "Mirror"]];
 const SB_SPEEDS = [[5, "Slow"], [7, "Normal"], [10, "Fast"]];
 const SB_TWISTS = [["starve", "Starving", "You shrink over time"], ["dark", "Blackout", "Only a circle of light"], ["avalanche", "Avalanche", "Rocks keep falling"],
   ["noMercy", "No Mercy", "Popsicles end the run"], ["sugar", "Sugar High", "Apples speed you up"], ["flip", "Topsy-Turvy", "Mirror warps flip controls"]];
-const SB_SPAWNS = [["popsicle", "Popsicles"], ["flea", "Fleas"], ["fire", "Fire"], ["molasses", "Molasses"]];
-const defaultRules = () => ({ h: 3, ar: true, t: [], sp: [] });
+const SB_SPAWNS = [["popsicle", "Popsicles"], ["flea", "Fleas"], ["fire", "Fire"], ["molasses", "Molasses"]];   // enemy spawners
+const defaultRules = () => ({ h: 3, ar: true, t: [] });

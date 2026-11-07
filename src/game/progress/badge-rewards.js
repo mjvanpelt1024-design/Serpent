@@ -40,10 +40,14 @@ function newLevel(name = "My level") {
   const g = blankGrid().split("");
   g[10 * SB_SIZE + 5] = "S";
   g[10 * SB_SIZE + 14] = "A";
-  return { v: 2, n: name, e: "w", s: 7, g: g.join(""), pv: {}, ph: {}, r: defaultRules() };
+  return { v: 2, n: name, e: "w", s: 7, g: g.join(""), pv: {}, ph: {}, r: defaultRules(), k: "", th: "", vn: 0, it: [], off: [], sc: {} };
 }
+/* k: skin id ("" = yours), th: backdrop id ("" = yours), vn: disappearing red walls (seconds, 0 = off),
+   it: boost items the run starts with, off: hazards switched off, sc: enemy spawner chips { type: [[x, y], ...] } */
 function normalizeLevel(l) {
-  return Object.assign({ v: 2, e: "w", s: 7, pv: {}, ph: {} }, l, { r: Object.assign(defaultRules(), l.r || {}) });
+  const out = Object.assign({ v: 2, e: "w", s: 7, pv: {}, ph: {}, k: "", th: "", vn: 0, it: [], off: [], sc: {} }, l, { r: Object.assign(defaultRules(), l.r || {}) });
+  delete out.r.sp;   // spawners are chips now (sc)
+  return out;
 }
 
 function sandboxUnlocked() {
