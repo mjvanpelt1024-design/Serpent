@@ -553,9 +553,16 @@ once the payment has cleared). Each offer's `price` is there for that store, in 
 
 ## Build 53: nightmare mode
 
-Unlocked by winning the last island's last level (`nightmare.json` `unlock`). The **moon** in the map's
-legend opens the tunnels (`openNmTunnels` in `camp-nightmare.js`). The Maw's body is the Coil; under each
-island, from the top down (`order`: the Cinder Crown first, Grimscale's Keep last), a tunnel:
+Unlocked by winning the last island's last level (`nightmare.json` `unlock`). **It's on the map** (`src/ui/map-deep.js`):
+the first time the map shows after that boss, it flies to the Cinder Crown, the ground gives way, a hole is dug in
+its grass at the far end, and you go down. Underground (`mapUnder`) the view drops below the island and the
+ground is cut away: a cave hangs under it, the Great Tree's roots reaching down from its ceiling, a ladder up to
+the hole, the tunnel winding through three rows of stops, and the Maw coiled on the cave floor, its eye open in
+the dark. The stops are map pins (`nm-<island>-<id>`); a level's opens its card (objective, twist, snakes, pay,
+Start), the roots and the shop open a panel over the map, and after a run you're back down there with the run
+in the same card. The hole's pin (a moon) goes down, the ladder's pin (or Back) comes up, and the moon in the
+legend goes to the deepest open tunnel. The Maw's body is the Coil; under each island, from the top down
+(`order`: the Cinder Crown first, Grimscale's Keep last), a tunnel:
 
 - **The roots** (the tree at the top of the shaft): upgrades that work in every nightmare level and never
   above ground, one set of three per island (`roots`), paid in that island's money. Each is a stat the
@@ -569,7 +576,8 @@ island, from the top down (`order`: the Cinder Crown first, Grimscale's Keep las
   their `acts` (snacks can borrow too now), go in the normal slots, and the normal workshops take them. No
   merchant ever stocks them (`CAMP.nmItems`, kept out of `CAMP.items`).
 - **The Maw** (level 11): its last stand, from `maw`, a little bigger in each tunnel (`perTunnel`). Beating
-  it opens the next tunnel down, and its stretch of the Coil on the map turns to bone (`COIL_BONE` in
+  it opens the next tunnel down (closing its report digs that island and takes you down), it turns to bone on its
+  cave floor, and its stretch of the Coil on the map turns to bone (`COIL_BONE` in
   `map-coil.js`). After the fifth the Coil's head is bone with its eye crossed out.
 
 Wins pay like a level 15 + n, times `payMult`; that is where the last of the upper islands' upgrades get paid

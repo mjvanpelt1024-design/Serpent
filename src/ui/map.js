@@ -248,6 +248,8 @@ function paintMapWorld(g, t) {
     drawIsleLiving(g, key, t, by);
     NODE_ORDER.forEach(id => drawNodeArt(g, key, id, nodeState(key, id), t, by));
     drawQuestTrail(g, key, t, by);
+    // build 53: an open nightmare tunnel, cut into the rock (map-deep.js)
+    if (typeof drawDeep === "function") drawDeep(g, key, t, by);
   });
 
   // your snake, waiting by the next thing to do
@@ -392,9 +394,11 @@ function layoutMap() {
     c.tx = Math.min(0, Math.max(vw - WORLD_W * s, c.tx));
     c.ty = Math.min(0, Math.max(vh - WORLD_H * s, c.ty));
   } else if (mapSel) {
-    // Frame the whole island, from its tallest tower down to its rock, below the banner
+    // Frame the whole island, from its tallest tower down to its rock, below the banner;
+    // underground (build 53, map-deep.js), from its grass down to the cave's floor
     const isl = ISLANDS[mapSel];
-    const top = isl.y - isl.th - 34, bottom = isl.y + isl.th + isl.depth * 0.5;
+    const under = typeof mapUnder !== "undefined" && mapUnder === mapSel;
+    const top = under ? isl.y - 16 : isl.y - isl.th - 34, bottom = under ? isl.y + DEEP_BOTTOM + 10 : isl.y + isl.th + isl.depth * 0.5;
     const tall = (bottom - top) * 2, wide = (isl.w + 50) * 2;
     const bannerBottom = mapBannerEl.classList.contains("open") ? mapBannerEl.offsetTop + mapBannerEl.offsetHeight + 6 : 6;
     const room = Math.max(vh * 0.4, vh - bannerBottom - 8);
@@ -639,6 +643,33 @@ function renderModes(justUnlocked) {
       }
     });
   });
+  // build 53: the nightmare tunnels' stops, in the caves under their islands (map-deep.js, camp-nightmare.js)
+  if (typeof nmTunnelOpen === "function") MAP_ORDER.forEach(key => {
+    if (placeFogged(key) || !nmTunnelOpen(key)) return;
+    const T = CAMP.nightmare.tunnels[key];
+    // the hole in the grass (go down), and the top of the shaft (back up)
+    const h = deepStop(key, "hole"), u = deepStop(key, "up");
+    add("prop node nmhole open", `nm-${key}-hole`, key, h.x, h.y - 12, `<img class="pi" src="${iconUrl("moon", 2)}" alt=""><span class="lbl">${escapeAttr(T.name)}</span>`,
+      `Go down into ${T.name}`, () => enterUnder(key));
+    add("prop node nm nmup open", `nm-${key}-up`, key, u.x, u.y - 10, `<span class="up-arrow" aria-hidden="true">&#9650;</span><span class="lbl">Back up to ${escapeAttr(CAMP.islandById[key].name)}</span>`,
+      `Back up to ${CAMP.islandById[key].name}`, () => leaveUnder());
+    DEEP_IDS.forEach(id => {
+      const p = deepStop(key, id);
+      if (typeof id === "number") {
+        const maw = id === 11, won = nmLevelWon(key, id), open = nmTunLevelOpen(key, id);
+        const name = maw ? "The Maw" : T.names[id - 1];
+        add(`level nm ${open ? "open" : "locked"} ${won ? "done" : open ? "next" : "locked"}${maw ? " boss" : ""}${maw && nmMawSlain(key) ? " slain" : ""}`, `nm-${key}-${id}`, key, p.x, p.y - (maw ? 12 : 5),
+          (maw ? SKULL_SVG : `<span class="n">${id}</span>`) + `<span class="lbl">${escapeAttr(name)}</span>`,
+          `Nightmare ${id === 11 ? "lair" : "level " + id}: ${name}${open ? "" : ", locked"}`, () => { if (open) openNmGoal(key, id); else sfx("bad"); });
+      } else {
+        const open = id === "roots" || nmShopOpen(key);
+        const name = id === "roots" ? CAMP.nightmare.roots[key].name : `${T.name}: the shop of the deep`;
+        add(`prop node nm ${id} ${open ? "open" : "locked"}`, `nm-${key}-${id}`, key, p.x, p.y - 10,
+          `<img class="pi" src="${iconUrl(id === "roots" ? "tree" : "chest", 2)}" alt="">${open ? "" : `<span class="nlock">${LOCK_SVG}</span>`}<span class="lbl">${escapeAttr(name)}</span>`,
+          `${name}${open ? "" : ", opens after level " + (CAMP.nightmare.shopAfter || 5)}`, () => { if (open) openNmPanel(key, id); else sfx("bad"); });
+      }
+    });
+  });
   // your snake, coiled by the stop it's at: click it for your loadout
   const tv = add("traveler", "traveler", focusKey, 0, 0, "", "Your snake: change what you carry", () => { if (typeof openCampLoadout === "function") openCampLoadout(); });
   tv.title = "Your loadout";
@@ -657,6 +688,12 @@ function updatePins() {
     const isArea = pin.classList.contains("area");
     const fog = placeFogged(area);
     pin.hidden = isArea ? (near && !fog) : !near;
+    // build 53: underground (map-deep.js) only the cave's stops show; on the surface, never them
+    const deep = pin.classList.contains("nm");
+    if (typeof mapUnder !== "undefined") {
+      if (mapUnder) pin.hidden = !(deep && area === mapUnder);
+      else if (deep) pin.hidden = true;
+    }
     const key = pin.dataset.key;
     pin.classList.toggle("selected", !!mapPop && mapPop.key === area && key === nodeKey(area, mapPop.j));
     // up close, the stop's own pin is the button (it glows): click it to play, visit or cross
@@ -685,6 +722,8 @@ function placeTraveler() {
 
 function selectPlace(key) {
   const switching = key !== mapSel;
+  // another island: back up out of any tunnel first (map-deep.js)
+  if (typeof mapUnder !== "undefined" && mapUnder && mapUnder !== key) { mapUnder = null; mapEl.classList.remove("under"); }
   closeLevelPop(true);
   mapSel = key;
   mapNight = false;
@@ -704,6 +743,7 @@ function closePlace() {
   if (!mapSel) return;
   const was = mapSel;
   closeLevelPop(true);
+  if (typeof mapUnder !== "undefined" && mapUnder) { mapUnder = null; mapEl.classList.remove("under"); }
   mapSel = null;
   mapNight = false;
   sfx("whoosh");
@@ -737,7 +777,8 @@ function renderBanner() {
   const I = CAMP.islandById[key];
   const b = mapBannerEl;
   b.style.setProperty("--m", I.colors.accent);
-  const title = st === "fog" ? "Unexplored island" : I.name;
+  const under = typeof mapUnder !== "undefined" && mapUnder === key;
+  const title = st === "fog" ? "Unexplored island" : under ? CAMP.nightmare.tunnels[key].name : I.name;
   // the only words up here are the island's name; the rest is a hover away
   let note = "";
   const i = campIslandIdx(key);
@@ -800,7 +841,7 @@ function legendGo(key, k) {
   if (k === "home") { openNode(key, "home"); return; }
   if (NPC_KINDS.includes(k)) { mapFlyTo(key, k, () => openNode(key, k)); return; }
   if (k === "next") { const n = campNextLevel(key); if (n) mapFlyTo(key, n); return; }
-  if (k === "nightmare") { openNmTunnels(); return; }
+  if (k === "nightmare") { enterUnder(nmCurrentTunnel()); return; }
   if (k === "quest") {
     const qs = questNextStop(key);
     if (qs) mapFlyTo(key, qs.id, qs.id === "challenger" ? () => openNode(key, "challenger") : null);
@@ -1228,6 +1269,7 @@ function closeMapGoal() {
   const back = goBack;
   window.goBack = function () {
     if (currentScreen === "modes" && closeMapGoal()) return;
+    if (currentScreen === "modes" && typeof leaveUnder === "function" && leaveUnder()) return;   // underground: back up first
     return back.apply(this, arguments);
   };
 })();

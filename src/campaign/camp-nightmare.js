@@ -3,7 +3,9 @@
    Nightmare mode (build 53). All numbers: content/campaign/nightmare.json.
 
    Win the last island's last level and the Maw's body (the Coil the islands
-   sit on) opens up. Under each island, from the top down, a tunnel:
+   sit on) opens up. On the map (src/ui/map-deep.js), the ground gives way:
+   a hole in the island's grass, and below it a cave with the tunnel's stops
+   as pins. Under each island, from the top down, a tunnel:
      the roots     the Great Tree's roots hang in: upgrades that work in
                    every nightmare level (one set per island), paid in that
                    island's money at deep prices
@@ -107,7 +109,8 @@ function nmRootStats() {
 
 function nmStart(isl, k) {
   if (!nmTunLevelOpen(isl, k)) return false;
-  closeNmTunnels(true);
+  closeNmPanel();
+  closeMapGoal();
   campStart(isl, k, -1, nmLevelDef(isl, k));
   if (!campRun) return false;
   // the tunnel's twist, on top of whatever the level brings
@@ -316,7 +319,7 @@ function nmMawNumbers(isl) {
       title: won ? (k === NM_MAW ? "The Maw is beaten!" : "Level complete!") : line === "You left the level." ? "Left the level" : "Defeated" };
     campLeaveRun();
     clearPauseState();
-    openNmTunnels(isl, report);
+    nmBackToMap(isl, report);
   });
   wrap("campRestart", orig => function () {
     if (campLast && campLast.nm) { nmStart(campLast.isl, campLast.n); return; }
@@ -336,83 +339,133 @@ function nmMawNumbers(isl) {
 })();
 
 /* =========================================================
-   The tunnel screen: the scroll with the tunnel's name, the tunnels down
-   the left (a skull each), and the shaft: the roots at the top, ten levels
-   winding down, the shop off to the side after level 5, the Maw at the
-   bottom. No words but the scroll; point at anything for its name.
+   On the map (build 53). A tunnel is a cave cut into its island's rock
+   (src/ui/map-deep.js) and its stops are map pins: a level's pin opens its
+   card with Start (openNmGoal), the roots and the shop open a panel over the
+   map (openNmPanel), and after a run the map comes back on the island with
+   the run in the same card. When the last island's last boss falls, the map
+   flies there and the ground gives way (deepDig); every Maw beaten digs the
+   next island down.
    ========================================================= */
-let nmEl = null, nmIsl = null, nmPanel = null, nmReport = null;
+let nmEl = null, nmIsl = null, nmPanel = null, nmPendingDig = null;
+const nmIco = (id, s = 3) => `<img class="nm-ico" src="${iconUrl(id, s)}" alt="">`;
 
-function openNmTunnels(isl = null, report = null) {
-  if (!camp || !nmUnlocked()) return;
-  camp.nm.open = true;
-  nmIsl = isl && nmTunnelOpen(isl) ? isl : nmCurrentTunnel();
-  nmReport = report;
-  nmPanel = null;
+/* The roots or the shop, over the map */
+function openNmPanel(isl, kind) {
+  if (!camp || !nmTunnelOpen(isl)) return;
+  nmIsl = isl;
+  nmPanel = kind;
   if (!nmEl) {
     nmEl = document.createElement("div");
     nmEl.id = "nightmare";
+    nmEl.className = "nm-modal";
     nmEl.setAttribute("role", "dialog");
     nmEl.setAttribute("aria-modal", "true");
-    nmEl.setAttribute("aria-label", "Nightmare");
     document.body.appendChild(nmEl);
     nmEl.addEventListener("click", nmClick);
     document.addEventListener("keydown", e => {
       if (!nmEl || !nmEl.classList.contains("active") || e.key !== "Escape") return;
       e.preventDefault(); e.stopImmediatePropagation();
-      if (nmReport || nmPanel) { nmReport = null; nmPanel = null; renderNightmare(); } else closeNmTunnels();
+      closeNmPanel();
     }, true);
   }
+  nmEl.setAttribute("aria-label", kind === "roots" ? NM_DATA.roots[isl].name : "The shop of the deep");
   nmEl.classList.add("active");
-  document.body.classList.add("nm-open");
-  renderNightmare();
+  renderNmPanel();
+  sfx("tab");
+}
+function closeNmPanel() {
+  if (!nmEl) return;
+  nmEl.classList.remove("active");
+  nmPanel = null;
+  campWalletUpdate();
+}
+function renderNmPanel() {
+  if (!nmEl || !nmPanel) return;
+  nmEl.innerHTML = `<div class="nm-panel plate">${nmPanel === "roots" ? nmRootsHtml(nmIsl) : nmShopHtml(nmIsl)}</div>`;
   campWalletUpdate();
 }
 
-function closeNmTunnels(toLevel = false) {
-  if (!nmEl) return;
-  nmEl.classList.remove("active");
-  document.body.classList.remove("nm-open");
-  if (!toLevel && currentScreen !== "modes") openScreen("modes");
+/* What a win pays, before the run's own bonuses: on the level's card */
+function nmRewardPreview(k, first) {
+  const R = CAMP.rules.rewards;
+  let r = (R.winBase + R.perLevel * (LEVEL_COUNT + k)) * (k === NM_MAW ? R.bossMult : 1) * (NM_DATA.payMult || 1);
+  if (!first) r *= R.replayShare;
+  return Math.max(1, Math.round(r * (1 + upPct("bounty"))));
 }
 
-const nmIco = (id, s = 3) => `<img class="nm-ico" src="${iconUrl(id, s)}" alt="">`;
-function renderNightmare() {
-  const isl = nmIsl, T = NM_DATA.tunnels[isl], I = CAMP.islandById[isl];
-  const rail = NM_ORDER.map(id => {
-    const open = nmTunnelOpen(id), slain = nmMawSlain(id);
-    return `<button class="nm-tun${id === isl ? " here" : ""}${slain ? " slain" : ""}" data-nm="tunnel" data-isl="${id}" ${open ? "" : "disabled"} title="${escapeAttr(open ? `${NM_DATA.tunnels[id].name}, under ${CAMP.islandById[id].name}${slain ? " (the Maw beaten)" : ""}` : "Sealed")}">${nmIco("skull", 2)}</button>`;
-  }).join("");
-  // the shaft: winding left and right, top to bottom
-  const node = (k, x, y) => {
-    const open = nmTunLevelOpen(isl, k), won = nmLevelWon(isl, k), maw = k === NM_MAW;
-    const name = maw ? (nmMawSlain(isl) ? "The Maw (beaten)" : "The Maw") : T.names[k - 1];
-    return `<button class="nm-node${maw ? " maw" : ""}${won ? " won" : ""}${open ? "" : " locked"}" style="--x:${x}%;--y:${y}%" data-nm="play" data-k="${k}" ${open ? "" : "disabled"} title="${escapeAttr(open ? name : "Not yet")}">${maw ? nmIco("skull", 3) : `<b>${k}</b>`}</button>`;
-  };
-  let nodes = `<button class="nm-node roots" style="--x:50%;--y:4%" data-nm="roots" title="${escapeAttr(NM_DATA.roots[isl].name)}">${nmIco("tree", 2)}</button>`;
-  for (let k = 1; k <= NM_LEVELS; k++) nodes += node(k, k % 2 ? 30 + (k % 4 === 1 ? 0 : 8) : 70 - (k % 4 === 0 ? 8 : 0), 4 + k * 8.2);
-  nodes += node(NM_MAW, 50, 96);
-  const shop = nmShopOpen(isl);
-  nodes += `<button class="nm-node shop${shop ? "" : " locked"}" style="--x:88%;--y:${4 + 5.5 * 8.2}%" data-nm="shop" ${shop ? "" : "disabled"} title="${escapeAttr(shop ? "A shop of the deep" : "Opens after level " + (NM_DATA.shopAfter || 5))}">${nmIco("chest", 2)}</button>`;
-  const path = Array.from({ length: NM_LEVELS + 1 }, (_, i) => i).map(i => {
-    const k = i + 1;
-    const x = k === NM_MAW ? 50 : (k % 2 ? 30 + (k % 4 === 1 ? 0 : 8) : 70 - (k % 4 === 0 ? 8 : 0)), y = k === NM_MAW ? 96 : 4 + k * 8.2;
-    return `${x},${y}`;
-  });
-  const lit = Array.from({ length: NM_MAW }, (_, i) => i + 1).filter(k => nmLevelWon(isl, k)).length;
-  nmEl.innerHTML = `<div class="nm-scroll" title="${escapeAttr(`Under ${I.name}`)}">${escapeAttr(T.name)}</div>
-    <button class="nm-x btn btn-small" data-nm="close" aria-label="Back to the map" title="Back to the map">✕</button>
-    <div class="nm-rail">${rail}</div>
-    <div class="nm-shaft${nmMawSlain(isl) ? " slain" : ""}">
-      <svg class="nm-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="50,4 ${path.join(" ")}" class="nm-line"/>
-        <polyline points="50,4 ${path.slice(0, lit + 1).join(" ")}" class="nm-line lit"/>
-      </svg>
-      ${nodes}
-    </div>
-    ${nmPanel ? `<div class="nm-panel plate">${nmPanel === "roots" ? nmRootsHtml(isl) : nmShopHtml(isl)}</div>` : ""}
-    ${nmReport ? nmReportHtml(nmReport) : ""}`;
+/* A tunnel level's card on the map: what it wants, its twist, its snakes, its pay, and Start.
+   With a report: how the run went, and Again / Next. */
+function openNmGoal(key, k, report = null) {
+  if (!nmTunLevelOpen(key, k) && !report) return;
+  const def = nmLevelDef(key, k), T = NM_DATA.tunnels[key], I = CAMP.islandById[key];
+  const twist = (typeof SB_TWISTS !== "undefined" ? SB_TWISTS.find(x => x[0] === T.twist) : null) || [T.twist, T.twist, ""];
+  const snakes = nmSnakeKinds(key, k).kinds.map(s => s.name).join(", ");
+  const R = report, first = !nmLevelWon(key, k);
+  const next = R && R.won && k < NM_MAW && nmTunLevelOpen(key, k + 1);
+  mapGoalFor = { key, j: "nm" + k };
+  const body = R
+    ? `<p class="mg-goal">${escapeAttr(R.title)} · ${fmtInt(R.score)} points</p>` +
+      (R.line ? `<p class="mg-text">${escapeAttr(R.line)}</p>` : "") +
+      R.lines.map(l => `<p class="mg-text">${l}</p>`).join("") + R.notes.map(l => `<p class="mg-text nm-new">${escapeAttr(l)}</p>`).join("")
+    : `<p class="mg-label">Objective</p><p class="mg-goal">${escapeAttr(goalText(def.goal))}</p>
+       <div class="mg-row"><span class="mg-k">Twist</span><span>${escapeAttr(twist[1])}${twist[2] ? ` <em>(${escapeAttr(twist[2])})</em>` : ""}</span></div>
+       ${snakes ? `<div class="mg-row"><span class="mg-k">Snakes</span><span>${escapeAttr(snakes)}</span></div>` : ""}
+       <div class="mg-row"><span class="mg-k">Reward</span><span>${coinHtml(key)} ${fmtInt(nmRewardPreview(k, first))}${first ? " (first win)" : ""}, plus your points</span></div>`;
+  const acts = R
+    ? `<button class="btn" data-mg="back">OK</button><button class="btn btn-small" data-mg="again">${R.won ? "Again" : "Try again"}</button>${next ? `<button class="btn btn-primary" data-mg="next">Next</button>` : ""}`
+    : `<button class="btn" data-mg="back">Back</button><button class="btn btn-primary" data-mg="go">Start</button>`;
+  mapGoalEl.innerHTML = `<div class="mg-card nm-card${R ? (R.won ? " won" : " lost") : ""}">
+      <p class="mg-kicker">${escapeAttr(T.name)} · under ${escapeAttr(I.name)} · ${k === NM_MAW ? "the Maw's lair" : "level " + k}</p>
+      <h3 class="mg-title">${k === NM_MAW ? SKULL_SVG : ""}${escapeAttr(def.name)}</h3>
+      ${body}
+      <div class="mg-acts">${acts}</div>
+    </div>`;
+  mapGoalEl.classList.add("open");
+  mapGoalEl.classList.remove("quest");
+  sfx("tab");
+  const on = (id, fn) => { const b = mapGoalEl.querySelector(`[data-mg="${id}"]`); if (b) b.addEventListener("click", e => { e.stopPropagation(); fn(); }); };
+  on("go", () => nmStart(key, k));
+  on("again", () => nmStart(key, k));
+  on("next", () => nmStart(key, k + 1));
+  on("back", () => { closeMapGoal(); nmDigPending(); });
+  mapGoalEl.onclick = e => { if (e.target === mapGoalEl) { closeMapGoal(); nmDigPending(); } };
+  setTimeout(() => { const b = mapGoalEl.querySelector('[data-mg="next"], [data-mg="go"]'); if (b) b.focus({ preventScroll: true }); }, 40);
 }
+
+/* After a run: back to the map on its island, with the run in the level's card */
+function nmBackToMap(isl, report) {
+  mapReturnTo = isl;
+  lastPlayed = { key: isl, j: report.k, nm: true };
+  if (report.won && report.k === NM_MAW) { const next = NM_ORDER[nmDepth(isl) + 1]; if (next && nmTunnelOpen(next)) nmPendingDig = next; }
+  openScreen("modes");
+  setTimeout(() => {
+    if (currentScreen !== "modes") return;
+    enterUnder(isl);
+    openNmGoal(isl, report.k, report);
+  }, 90);
+}
+/* A Maw beaten: once its report is closed, the next island down is dug open */
+function nmDigPending() {
+  const k = nmPendingDig;
+  nmPendingDig = null;
+  if (k && typeof deepDig === "function") setTimeout(() => deepDig(k), 250);
+}
+
+/* The first time the map shows after the last island's last boss: the ground gives way there */
+(() => {
+  const orig = window.renderModes;
+  if (typeof orig !== "function") return;
+  window.renderModes = function () {
+    const r = orig.apply(this, arguments);
+    if (camp && camp.nm && !camp.nm.open && nmUnlocked()) {
+      camp.nm.open = true;
+      saveCamp();
+      setTimeout(() => { if (typeof deepDig === "function") deepDig(NM_ORDER[0]); }, 1200);
+    }
+    return r;
+  };
+})();
 
 function nmRootsHtml(isl) {
   const R = NM_DATA.roots[isl], depth = nmDepth(isl) + 1;
@@ -466,31 +519,13 @@ function nmBuy(id, rarity) {
   return true;
 }
 
-function nmReportHtml(r) {
-  const nextOpen = r.won && r.k < NM_MAW && nmTunLevelOpen(r.isl, r.k + 1);
-  return `<div class="nm-report plate${r.won ? " won" : ""}">
-    <h3>${escapeAttr(r.title)}</h3>
-    <p class="nm-rk">${escapeAttr(r.name)} · ${fmtInt(r.score)}</p>
-    ${r.line ? `<p class="nm-rline">${escapeAttr(r.line)}</p>` : ""}
-    ${r.lines.map(l => `<p class="nm-rl">${l}</p>`).join("")}${r.notes.map(l => `<p class="nm-rl new">${escapeAttr(l)}</p>`).join("")}
-    <div class="row-buttons"><button class="btn" data-nm="again">${r.won ? "Again" : "Try again"}</button>${nextOpen ? `<button class="btn btn-primary" data-nm="next">Next</button>` : ""}<button class="btn" data-nm="report-x">OK</button></div>
-  </div>`;
-}
-
 function nmClick(e) {
+  if (e.target === nmEl) { closeNmPanel(); return; }
   const b = e.target.closest("[data-nm]");
   if (!b || b.disabled) return;
   const a = b.dataset.nm;
-  if (a === "close") { closeNmTunnels(); return; }
-  if (a === "tunnel") { nmIsl = b.dataset.isl; nmPanel = null; nmReport = null; sfx("click"); }
-  else if (a === "play") { nmStart(nmIsl, +b.dataset.k); return; }
-  else if (a === "roots" || a === "shop") { nmPanel = nmPanel === a ? null : a; sfx("click"); }
-  else if (a === "panel-x") nmPanel = null;
-  else if (a === "root") nmRootBuy(b.dataset.id);
+  if (a === "panel-x") { closeNmPanel(); return; }
+  if (a === "root") nmRootBuy(b.dataset.id);
   else if (a === "buy") nmBuy(b.dataset.id, b.dataset.r);
-  else if (a === "again") { const r = nmReport; nmReport = null; nmStart(r.isl, r.k); return; }
-  else if (a === "next") { const r = nmReport; nmReport = null; nmStart(r.isl, r.k + 1); return; }
-  else if (a === "report-x") nmReport = null;
-  renderNightmare();
-  campWalletUpdate();
+  renderNmPanel();
 }

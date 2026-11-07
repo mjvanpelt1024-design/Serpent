@@ -44,6 +44,7 @@ ui/rules-screen.js
 ui/map.js
 ui/map-coil.js
 ui/map-isles.js
+ui/map-deep.js
 art/coins.js
 art/title-scene.js
 ui/upgrades-screen.js

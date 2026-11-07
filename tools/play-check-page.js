@@ -91,14 +91,29 @@
     const N = CAMP.nightmare, top = N.order[0], cur = campCurrency(top).id;
     check(nmUnlocked(), "nightmare: open once the last island's last level is won");
     check(nmTunnelOpen(top) && !nmTunnelOpen(N.order[1]), "nightmare: only the first tunnel is open at first");
-    openNmTunnels();
-    check(!!(nmEl && nmEl.classList.contains("active")) && nmEl.querySelectorAll(".nm-node").length === N.levels + 3, "nightmare: the tunnel screen shows the roots, 10 levels, the shop and the Maw");
-    check(nmEl.querySelector(".nm-scroll").textContent === N.tunnels[top].name, "nightmare: the scroll says the tunnel's name");
-    check(!!nmEl.querySelector('.nm-node[data-k="2"]:disabled') && !!nmEl.querySelector(".nm-node.shop:disabled"), "nightmare: level 2 and the shop start locked");
+    // on the map: the first time it shows, the ground gives way under the top island
+    camp.nm.open = false;
+    openScreen("modes");
+    await wait(() => mapSel === top && deepReveal[top] !== undefined, 40);
+    check(camp.nm.open && mapSel === top && deepReveal[top] !== undefined, "nightmare: the map flies to the top island and digs it open");
+    const pin = id => mapPinsEl.querySelector(`[data-key="nm-${top}-${id}"]`);
+    await wait(() => mapUnder === top, 30);
+    check(mapUnder === top, "nightmare: then you go down into the tunnel");
+    check(["roots", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "shop", 11, "up"].every(id => !!pin(id) && !pin(id).hidden) && !mapPinsEl.querySelector(`[data-key^="nm-${N.order[1]}-"]`), "nightmare: the cave's stops are pins, showing underground (and none under the next island yet)");
+    check(!!pin("hole") && pin("hole").hidden && [...mapPinsEl.querySelectorAll(`.map-pin.level:not(.nm)[data-area="${top}"]`)].every(p => p.hidden), "nightmare: underground, the surface's pins are hidden");
+    check(mapBannerEl.textContent.includes(N.tunnels[top].name), "nightmare: the scroll says the tunnel's name");
+    check(!pin(1).hidden && pin(2).classList.contains("locked") && pin("shop").classList.contains("locked"), "nightmare: level 1 is open; level 2 and the shop start locked");
+    {
+      const inCave = id => { const p = deepStop(top, id); return deepInside(top, p.x, p.y); };
+      check(["roots", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "shop", 11, "up"].every(inCave), "nightmare: every stop sits inside the cave");
+      check(deepArt(top).width > 0, "nightmare: the cave is painted");
+    }
     const money0 = camp.wallet[cur];
-    // level 1, clicked on the screen
-    nmEl.querySelector('.nm-node[data-k="1"]').click();
-    check(!!campRun && campRun.nmRun && campRun.board === `nm-${top}-1`, "nightmare: clicking level 1 starts it on its own board");
+    // level 1: its pin opens its card, Start plays it
+    pin(1).click();
+    check(mapGoalEl.classList.contains("open") && !!mapGoalEl.querySelector(".nm-card") && mapGoalEl.textContent.includes(N.tunnels[top].names[0]), "nightmare: level 1's pin opens its card on the map");
+    mapGoalEl.querySelector('[data-mg="go"]').click();
+    check(!!campRun && campRun.nmRun && campRun.board === `nm-${top}-1`, "nightmare: Start plays level 1 on its own board");
     check(!!nm[N.tunnels[top].twist], `nightmare: the tunnel's twist (${N.tunnels[top].twist}) is on`);
     check(campRun.def.speed > campLevelDef(top, N.base[0]).speed, "nightmare: faster than the level it's built on");
     {
@@ -106,13 +121,15 @@
       let want = 0; F.board.forEach(r => { want += (r.match(/[#P13]/g) || []).length; });
       check(walls.size <= want && walls.size >= want - 4, `nightmare: the board's walls come from its file (${walls.size} of ${want})`);
     }
+    const report = async () => { await wait(() => currentScreen === "modes" && mapGoalEl.classList.contains("open") && !!mapGoalEl.querySelector(".nm-card.won, .nm-card.lost"), 30); return mapGoalEl; };
     campWinLevel();
+    await report();
     check(camp.nm.levels[`${top}:1`] === 1 && camp.wallet[cur] > money0, "nightmare: a win is recorded and paid in the island's money");
-    check(!campRun && nmEl.classList.contains("active") && !!nmEl.querySelector(".nm-report.won"), "nightmare: after a win, back in the tunnel with the report");
-    check(!!nmEl.querySelector('.nm-report [data-k], .nm-report [data-nm="next"]'), "nightmare: the report offers the next level");
+    check(!campRun && currentScreen === "modes" && mapSel === top && mapUnder === top && !!mapGoalEl.querySelector(".nm-card.won"), "nightmare: after a win, back underground with the report");
+    check(!!mapGoalEl.querySelector('[data-mg="next"]'), "nightmare: the report offers the next level");
     // levels 2-10 through the report's Next button
     for (let k = 2; k <= N.levels; k++) {
-      nmEl.querySelector('.nm-report [data-nm="next"]').click();
+      mapGoalEl.querySelector('[data-mg="next"]').click();
       if (!check(!!campRun && campRun.n === k, `nightmare: Next starts level ${k}`)) break;
       if (k === 6) {
         // the deep's snakes: level 6 of the first tunnel brings the cutter, the thief and the viper
@@ -136,20 +153,36 @@
         }
       }
       campWinLevel();
+      await report();
     }
-    check(nmShopOpen(top), "nightmare: the shop opens after level 5");
+    check(nmShopOpen(top) && !pin("shop").classList.contains("locked"), "nightmare: the shop opens after level 5, on the map too");
     // the Maw
-    nmEl.querySelector('.nm-report [data-nm="next"]').click();
+    mapGoalEl.querySelector('[data-mg="next"]').click();
     check(!!campRun && campRun.n === N.levels + 1 && !!boss && boss.maw && boss.name === "The Maw", "nightmare: level 11 is the Maw");
     check(boss.hearts === N.maw.hearts && boss.armor === 0, "nightmare: the Maw's last stand (no armor, its hearts)");
     campWinLevel();
+    await report();
     check(camp.nm.maw.includes(top) && nmTunnelOpen(N.order[1]), "nightmare: beating the Maw opens the next tunnel down");
+    check(pin(11).classList.contains("slain"), "nightmare: the Maw's pin shows it beaten");
+    // closing the report digs the next island down
+    mapGoalEl.querySelector('[data-mg="back"]').click();
+    await wait(() => mapSel === N.order[1] && deepReveal[N.order[1]] !== undefined, 30);
+    await wait(() => mapUnder === N.order[1], 30);
+    check(mapSel === N.order[1] && mapUnder === N.order[1] && !!mapPinsEl.querySelector(`[data-key="nm-${N.order[1]}-1"]`), "nightmare: then the map flies down, digs the next island and goes down into it");
+    // back up, and down again by the hole
+    goBack();
+    check(!mapUnder && mapSel === N.order[1], "nightmare: Back climbs out to the island");
+    selectPlace(top); pin("hole").click();
+    check(mapUnder === top, "nightmare: the hole in the grass goes back down");
     try { coilCache = null; coilArt(); check(coilCache.tag.includes(top), "nightmare: the Coil redraws with the beaten Maw's stretch in bone"); } catch (e) { problems.push("nightmare: the Coil: " + e.message); }
-    // the roots
+    // the roots, from their pin
     camp.wallet[cur] = 1e6;
-    nmIsl = top;
-    check(nmRootBuy("nr_heart") && camp.nm.roots.nr_heart === 1, "nightmare: a root upgrade can be bought");
+    pin("roots").click();
+    check(nmEl.classList.contains("active") && !!nmEl.querySelector('[data-nm="root"]'), "nightmare: the roots' pin opens their panel");
+    nmEl.querySelectorAll('[data-nm="root"]')[1].click();
+    check(camp.nm.roots.nr_heart === 1, "nightmare: a root upgrade can be bought");
     check(camp.wallet[cur] === 1e6 - N.roots[top].upgrades[1].cost[0], "nightmare: it costs its first tier (times the tunnel's depth, 1)");
+    closeNmPanel();
     nmStart(top, 1);
     check(campRun.extra.hearts >= 1 && currentHearts >= CAMP.rules.snake.hearts + 1, "nightmare: the roots' Heartwood adds a heart in the deep");
     stop();
@@ -169,7 +202,6 @@
     // the title screen: the Maw's poster
     renderTitleDeco();
     check(/td-poster maw/.test(titleDeco.innerHTML + titleWall.innerHTML), "nightmare: the Maw's wanted poster is on the title screen");
-    closeNmTunnels(true);
     await log("nightmare: first tunnel played end to end");
 
     // ----- 3a. the top bar: every island's money, always; the legend: the island in the middle of the map

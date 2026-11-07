@@ -102,10 +102,13 @@ const timer = new Promise(r => setTimeout(() => r({ ok: false, problems: ["no an
 const answer = await Promise.race([result, timer]);
 if (SHOTS && browser) {
   await shots([
-    ["nightmare-tunnel", "CAMP.islands.forEach(I => STORY_BEATS.forEach(b => { const id = storyId(I.id, b); if (!camp.storySeen.includes(id)) camp.storySeen.push(id); })); storyQueue = []; storyEl.classList.remove('open'); closeNmTunnels(true); openNmTunnels(CAMP.nightmare.order[1]); 1"],
-    ["nightmare-roots", "nmEl.querySelector('[data-nm=roots]').click(); 1"],
-    ["nightmare-first", "nmIsl = CAMP.nightmare.order[0]; nmPanel = 'shop'; renderNightmare(); 1"],
-    ["gem-shop", "closeNmTunnels(true); openScreen('modes'); camp.gemDaily = 0; campWalletUpdate(); openGemShop(); 1"],
+    ["nightmare-tunnel", "CAMP.islands.forEach(I => STORY_BEATS.forEach(b => { const id = storyId(I.id, b); if (!camp.storySeen.includes(id)) camp.storySeen.push(id); })); storyQueue = []; storyEl.classList.remove('open'); closeMapGoal(); openScreen('modes'); enterUnder(CAMP.nightmare.order[0]); 1"],
+    ["nightmare-surface", "leaveUnder(); 1"],
+    ["nightmare-island-2", "enterUnder(CAMP.nightmare.order[1]); 1"],
+    ["nightmare-roots", "openNmPanel(CAMP.nightmare.order[0], 'roots'); 1"],
+    ["nightmare-shop", "openNmPanel(CAMP.nightmare.order[0], 'shop'); 1"],
+    ["nightmare-card", "closeNmPanel(); openNmGoal(CAMP.nightmare.order[1], 1); 1"],
+    ["gem-shop", "closeMapGoal(); openScreen('modes'); camp.gemDaily = 0; campWalletUpdate(); openGemShop(); 1"],
     ["map-overview", "closeGemShop(); openScreen('modes'); 1"],
     ["map-legend", "openScreen('modes'); mapSel = 'keep'; renderLegend(); 1"],
     ["home", "openNode('keep', 'home'); 1"],
