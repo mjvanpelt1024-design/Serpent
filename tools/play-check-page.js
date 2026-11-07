@@ -98,7 +98,8 @@
     check(camp.nm.open && mapSel === top && deepReveal[top] !== undefined, "nightmare: the map flies to the top island and digs it open");
     const pin = id => mapPinsEl.querySelector(`[data-key="nm-${top}-${id}"]`);
     await wait(() => mapFlip && mapSel === top && !deepFlipping(), 40);
-    check(mapFlip && mapSel === top && !deepFlipping(), "nightmare: then the islands turn over, onto the tunnel's side");
+    check(mapFlip && mapSel === top && !deepFlipping(), "nightmare: then the world turns around, to the islands' back sides");
+    check(mapMirrored() && pin(1).style.left === (MAP_W - deepStop(top, 1).x) * 2 + "px", "nightmare: from behind the world is mirrored, the pins with it");
     check(["roots", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "shop", 11, "up"].every(id => !!pin(id) && !pin(id).hidden) && !mapPinsEl.querySelector(`[data-key^="nm-${N.order[1]}-"]`), "nightmare: the tunnel's stops are pins on the underside (and none on the next island yet)");
     check(!!pin("hole") && pin("hole").hidden && [...mapPinsEl.querySelectorAll(`.map-pin.level:not(.nm)[data-area="${top}"]`)].every(p => p.hidden), "nightmare: turned over, the surface's pins are hidden");
     check(mapBannerEl.textContent.includes(N.tunnels[top].name), "nightmare: the scroll says the tunnel's name");
@@ -106,7 +107,7 @@
     {
       const onFace = id => { const p = deepStop(top, id); return deepOnFace(top, p.x, p.y); };
       const off = ["roots", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "shop", 11, "up"].filter(id => !onFace(id));
-      check(!off.length, "nightmare: every stop sits on the island's underside" + (off.length ? " (off: " + off.join(", ") + ")" : ""));
+      check(!off.length, "nightmare: every stop sits on the island's back face" + (off.length ? " (off: " + off.join(", ") + ")" : ""));
       check(deepBackArt(top).art.width > 0 && deepBackArt(N.order[2]).tag === "sealed", "nightmare: the underside is painted, and a sealed one for an island not dug yet");
     }
     const money0 = camp.wallet[cur];
@@ -192,15 +193,30 @@
     campStart("keep", 1);
     check(!(campRun.extra && campRun.extra.hearts), "nightmare: the roots do nothing above ground");
     stop();
-    // the shop
+    // the shops: every merchant's five spots, three of the usual and two of the deep's
+    for (const I of CAMP.islands) {
+      const m = merchantStock(I.id, true), nmo = m.stock.filter(nmOffer), plain = m.stock.filter(o => !nmOffer(o));
+      const spots = new Set(m.stock.map(o => o.spot));
+      check(nmo.length === 2 && plain.length === CAMP.rules.merchant.stockSize && spots.size === m.stock.length && [...spots].every(s => s >= 0 && s <= 4),
+        `nightmare: ${I.id}'s merchant has 2 of the deep's things beside its ${plain.length} usual, each in its own spot`);
+      check(nmo.every(o => campItemDef(o.id).family === I.merchantFamily && CAMP.nightmare.sold.includes(o.rarity)), `nightmare: ${I.id}'s are of its own kind, in the deep's rarities`);
+      check(nmo.every(o => offerPrice(I.id, o) === Math.round(nmPrice(I.id, o.id, o.rarity) * (1 - upPct("haggle")))), `nightmare: ${I.id}'s are at nightmare prices`);
+    }
+    // buy one from the tunnel's shop stop: the island's merchant
+    camp.wallet[cur] = 1e7;
+    pin("shop").click();
+    check(currentScreen === "campshop" && shopIsl === top && shopKind === "merchant", "nightmare: the tunnel's shop stop opens its island's merchant");
+    const ks = merchantStock(top), ki = ks.stock.findIndex(nmOffer), kid = ks.stock[ki].id;
     const n0 = camp.satchel.length;
-    check(nmBuy("nm_mawfang", "rare") && camp.satchel.length === n0 + 1 && camp.satchel.some(it => it.id === "nm_mawfang"), "nightmare: the deep's shop sells into your satchel");
-    check(!nmBuy("nm_mawfang", "common"), "nightmare: only the rarities the deep sells");
-    check(!merchantStock("keep", true).stock.some(o => o.id.startsWith("nm_")), "nightmare: the normal merchants never stock the deep's things");
+    ssAct("buy", { i: ki });
+    check(camp.satchel.length === n0 + 1 && camp.satchel.some(it => it.id === kid) && ks.stock[ki].sold, "nightmare: the deep's thing sells into your satchel");
+    goBack();
+    await wait(() => currentScreen === "modes" && mapFlip, 30);
+    check(currentScreen === "modes" && mapFlip, "nightmare: back from the shop, the islands are still turned over");
     // the save
     saveCamp();
     const back = validateSave(readSigned(CAMP_KEY).data);
-    check(back.data.nm.maw.includes(top) && back.data.nm.levels[`${top}:11`] === 1 && back.data.nm.roots.nr_heart === 1 && back.data.satchel.some(it => it.id === "nm_mawfang"), "nightmare: tunnels, the Maw, roots and the deep's things are in the saved file");
+    check(back.data.nm.maw.includes(top) && back.data.nm.levels[`${top}:11`] === 1 && back.data.nm.roots.nr_heart === 1 && back.data.satchel.some(it => it.id === kid), "nightmare: tunnels, the Maw, roots and the deep's things are in the saved file");
     check(!back.issues.length, "nightmare: the saved file passes the save check" + (back.issues.length ? ": " + back.issues.slice(0, 3).join("; ") : ""));
     // the title screen: the Maw's poster
     renderTitleDeco();

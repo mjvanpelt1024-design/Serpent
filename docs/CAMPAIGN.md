@@ -555,14 +555,19 @@ once the payment has cleared). Each offer's `price` is there for that store, in 
 
 Unlocked by winning the last island's last level (`nightmare.json` `unlock`). **It's on the map**
 (`src/ui/map-deep.js`): the first time the map shows after that boss, it flies to the Cinder Crown, the ground
-gives way and a hole is dug in its grass at the far end; then **every island turns over** (`mapFlip`), rock
-pointing up into a darker sky, undersides facing you. An island whose tunnel is open has it carved into its
-underside: the hole you came through (daylight), ten levels in two rows, the Great Tree's roots poking through,
+gives way and a hole is dug in its grass at the far end; then **the whole world turns around** (`mapFlip`): you're
+looking at it from behind, so everything, the Coil (the Maw's body) and the islands, is mirrored left to right under a
+darker sky, and every island shows its back side. An island whose tunnel is open has it carved into its back: the hole you came through (daylight), ten levels in two rows, the Great Tree's roots poking through,
 the shop of the deep, and along the back a trench where the Maw lies, crimson and awake, bone once beaten there.
 An island whose tunnel isn't open is plain, sealed stone. The stops are map pins (`nm-<island>-<id>`); a
 level's opens its card (objective, twist, snakes, pay, Start), the roots and the shop open a panel over the map,
-and after a run the map is turned over again with the run in the same card. The hole's pin (a moon) turns the
-islands over, the daylight's pin, Back or the moon in the legend turns them back. The Maw's body is the Coil; under each island, from the top down
+and after a run the world is turned around again with the run in the same card. The hole's pin (a moon) turns
+the world around, the daylight's pin, Back or the moon in the legend turns it back. Pins keep their world x
+(`pin._x`) and `mapMirrorX` puts them where they show.
+
+**The shops:** once nightmare is open, every merchant's shelf of five has **two of the deep's things** (its own
+kind, rare or legendary, at nightmare prices: `nmPrice`) beside its three of the usual. The tunnel's shop stop
+opens that island's merchant, and coming back the world is still turned around. The Maw's body is the Coil; under each island, from the top down
 (`order`: the Cinder Crown first, Grimscale's Keep last), a tunnel:
 
 - **The roots** (the tree at the top of the shaft): upgrades that work in every nightmare level and never
@@ -572,8 +577,9 @@ islands over, the daylight's pin, Back or the moon in the legend turns them back
   quarter turn (`content/levels/nightmare/`, written by `tools/bake-campaign-levels.js`), faster, needing
   more and with more hazards (`harder`, more again for each tunnel down), with the tunnel's twist (the old
   nightmare twists: dark, starve, avalanche, sugar, noMercy) and no bonus challenge.
-- **The shop** (the chest, after level 5): every nightmare thing (`items`) in the rarities the deep sells
-  (`sold`), at the merchants' price times `priceMult` (more for each tunnel down). They work like the item in
+- **The shop** (the chest, after level 5): the island's own merchant (see The shops, below), whose two
+  nightmare spots sell the deep's things (`items`) in the rarities it sells (`sold`), at the merchants' price
+  times `priceMult` (more for each tunnel down). They work like the item in
   their `acts` (snacks can borrow too now), go in the normal slots, and the normal workshops take them. No
   merchant ever stocks them (`CAMP.nmItems`, kept out of `CAMP.items`).
 - **The Maw** (level 11): its last stand, from `maw`, a little bigger in each tunnel (`perTunnel`). Beating

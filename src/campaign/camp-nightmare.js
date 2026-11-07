@@ -4,8 +4,8 @@
 
    Win the last island's last level and the Maw's body (the Coil the islands
    sit on) opens up. On the map (src/ui/map-deep.js), the ground gives way:
-   a hole in the island's grass, and the islands turn over, the tunnel carved
-   into each underside with its stops as pins. Under each island, from the
+   a hole in the island's grass, and the world turns around to its back side,
+   each tunnel carved into its island's back with its stops as pins. Under each island, from the
    top down, a tunnel:
      the roots     the Great Tree's roots hang in: upgrades that work in
                    every nightmare level (one set per island), paid in that
@@ -370,7 +370,7 @@ function openNmPanel(isl, kind) {
       closeNmPanel();
     }, true);
   }
-  nmEl.setAttribute("aria-label", kind === "roots" ? NM_DATA.roots[isl].name : "The shop of the deep");
+  nmEl.setAttribute("aria-label", NM_DATA.roots[isl].name);
   nmEl.classList.add("active");
   renderNmPanel();
   sfx("tab");
@@ -383,7 +383,7 @@ function closeNmPanel() {
 }
 function renderNmPanel() {
   if (!nmEl || !nmPanel) return;
-  nmEl.innerHTML = `<div class="nm-panel plate">${nmPanel === "roots" ? nmRootsHtml(nmIsl) : nmShopHtml(nmIsl)}</div>`;
+  nmEl.innerHTML = `<div class="nm-panel plate">${nmRootsHtml(nmIsl)}</div>`;
   campWalletUpdate();
 }
 
@@ -459,6 +459,8 @@ function nmDigPending() {
   if (typeof orig !== "function") return;
   window.renderModes = function () {
     const r = orig.apply(this, arguments);
+    // back from the tunnel's shop: the world turns around again
+    if (nmShopReturn) { const k = nmShopReturn; nmShopReturn = null; setTimeout(() => { if (currentScreen === "modes") enterUnder(k); }, 60); }
     if (camp && camp.nm && !camp.nm.open && nmUnlocked()) {
       camp.nm.open = true;
       saveCamp();
@@ -495,29 +497,46 @@ function nmRootBuy(id) {
   return true;
 }
 
-/* The deep's shop: every nightmare thing, in the rarities it's sold in, at nightmare prices */
-const nmPrice = (isl, id, rarity) => Math.round(CAMP.families[campItemDef(id).family].price[rarityIdx(rarity)] * (NM_DATA.priceMult || 1) * (1 + 0.15 * nmDepth(isl)));
-function nmShopHtml(isl) {
-  const rows = (CAMP.nmItems || []).flatMap(d => (NM_DATA.sold || ["rare"]).map(r => {
-    const p = nmPrice(isl, d.id, r), can = campWallet(isl) >= p;
-    return `<div class="nm-row" title="${escapeAttr(d.does || "")}">${campItemIconHtml({ id: d.id, rarity: r, grade: -1 })}<span class="nm-rname" style="color:${rarityColor(r)}">${escapeAttr(d.name)}</span>
-      <button class="btn btn-small ${can ? "btn-gold" : ""}" data-nm="buy" data-id="${d.id}" data-r="${r}" ${can ? "" : "disabled"}>${coinTag(isl, p)}</button></div>`;
-  })).join("");
-  return `<div class="nm-ph">${nmIco("chest", 3)}<b>${escapeAttr(NM_DATA.tunnels[isl].name)}</b><button class="btn btn-small" data-nm="panel-x" aria-label="Close">✕</button></div><div class="nm-list">${rows}</div>`;
+/* ----- The shops (build 53): once nightmare is open, every merchant's shelf of five has two of the
+   deep's things in it beside its three of the usual, at nightmare prices. Same shop, same five spots;
+   the tunnel's shop stop is a way into its island's merchant. ----- */
+const nmPrice = (isl, id, rarity) => Math.round(CAMP.families[campItemDef(id).family].price[rarityIdx(rarity)] * (NM_DATA.priceMult || 1) * (1 + 0.15 * Math.max(0, nmDepth(isl))));
+const nmOffer = o => !!(o && campItemDef(o.id) && campItemDef(o.id).nightmare);
+const NM_SHOP_SLOTS = 2;
+function nmRollRarity() {
+  const sold = NM_DATA.sold || ["rare"];
+  const pool = CAMP.rarities.filter(r => sold.includes(r.id));
+  let r = Math.random() * pool.reduce((a, x) => a + x.weight, 0);
+  for (const x of pool) { r -= x.weight; if (r <= 0) return x.id; }
+  return pool[0].id;
 }
-function nmBuy(id, rarity) {
-  const isl = nmIsl, d = campItemDef(id);
-  if (!d || !d.nightmare || !nmShopOpen(isl) || !(NM_DATA.sold || []).includes(rarity)) return false;
-  const p = nmPrice(isl, id, rarity);
-  if (campWallet(isl) < p) { sfx("bad"); return false; }
-  if (!campSpend(isl, p)) return false;
-  campGive(id, rarity);
-  campBump("itemsBought");
-  campCheckAch();
-  saveCamp();
-  sfx("buy");
-  showToast(`${rarityName(rarity)} ${d.name}: in your satchel.`);
-  return true;
+(() => {
+  const stock = merchantStock;
+  window.merchantStock = function (isl) {
+    const m = stock.apply(this, arguments);
+    if (!camp || !nmUnlocked() || m.stock.some(nmOffer)) return m;
+    const fam = CAMP.islandById[isl].merchantFamily;
+    const pool = (CAMP.nmItems || []).filter(d => d.family === fam).sort(() => Math.random() - 0.5);
+    const used = new Set(m.stock.map(o => o.spot));
+    const free = [0, 1, 2, 3, 4].filter(s => !used.has(s));
+    pool.slice(0, Math.min(NM_SHOP_SLOTS, free.length)).forEach((d, i) => {
+      m.stock.push({ id: d.id, rarity: nmRollRarity(), sold: false, deal: false, spot: free[i], recipe: "" });
+    });
+    saveCamp();
+    return m;
+  };
+  const price = offerPrice;
+  window.offerPrice = function (isl, o) {
+    if (!nmOffer(o)) return price.apply(this, arguments);
+    return Math.max(1, Math.round(nmPrice(isl, o.id, o.rarity) * (1 - upPct("haggle"))));
+  };
+})();
+/* The tunnel's shop stop: its island's merchant; coming back, the world is seen from behind again */
+let nmShopReturn = null;
+function nmOpenShop(isl) {
+  if (!nmShopOpen(isl)) { sfx("bad"); return; }
+  nmShopReturn = isl;
+  openCampShop(isl, "merchant");
 }
 
 function nmClick(e) {
@@ -527,6 +546,5 @@ function nmClick(e) {
   const a = b.dataset.nm;
   if (a === "panel-x") { closeNmPanel(); return; }
   if (a === "root") nmRootBuy(b.dataset.id);
-  else if (a === "buy") nmBuy(b.dataset.id, b.dataset.r);
   renderNmPanel();
 }

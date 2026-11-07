@@ -108,7 +108,7 @@ function goBack() {
     else closeLevelPop();
     return;
   }
-  if (currentScreen === "modes" && typeof mapFlip !== "undefined" && mapFlip) { leaveUnder(); return; }   // turned over: back first
+  if (currentScreen === "modes" && typeof mapFlip !== "undefined" && mapFlip) { leaveUnder(); return; }   // seen from behind: turn back first
   if (currentScreen === "modes" && mapSel) {
     closePlace();
     return;

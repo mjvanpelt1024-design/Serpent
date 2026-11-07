@@ -203,7 +203,13 @@ function drawMap(ts) {
   const t = ts / 1000;
   drawSky(t);
   g.clearRect(0, 0, MAP_W, MAP_H);
-  paintMapWorld(g, t);
+  // build 53, nightmare: the world seen from behind is mirrored, and turns about the island in view (map-deep.js)
+  const turn = typeof deepWorldTurn === "function" ? deepWorldTurn(t) : null;
+  g.save();
+  if (turn && turn.k !== 1) { g.translate(turn.pivot, 0); g.scale(turn.k, 1); g.translate(-turn.pivot, 0); }
+  if (turn && turn.mirrored) { g.translate(MAP_W, 0); g.scale(-1, 1); }
+  paintMapWorld(g, t, turn);
+  g.restore();
 
   // pins ride along with their island
   mapPinsEl.querySelectorAll(".map-pin").forEach(pin => {
@@ -214,7 +220,7 @@ function drawMap(ts) {
 
 /* Everything in the world but the sky: clouds, the Coil, the islands and all that lives on them,
    your snake, the fog and the cloud sea. The title screen paints it too (src/art/title-scene.js). */
-function paintMapWorld(g, t) {
+function paintMapWorld(g, t, turn = null) {
 
   // clouds drifting between the islands, tinted by the sky around them
   for (let i = 0; i < 22; i++) {
@@ -237,9 +243,9 @@ function paintMapWorld(g, t) {
   // the Coil: the body every island hangs on
   drawCoil(g, t);
 
-  // the islands, bobbing gently, with everything that lives on them; turned over (build 53,
-  // nightmare: map-deep.js), their undersides with the tunnels carved in
-  const flipK = typeof deepFlipK === "function" ? deepFlipK(t) : 1;
+  // the islands, bobbing gently, with everything that lives on them; seen from behind (build 53,
+  // nightmare: map-deep.js), their back sides with the tunnels carved in
+  const back = !!(turn && turn.back);
   MAP_ORDER.forEach(key => {
     const isl = ISLANDS[key];
     const art = islandArt(key);
@@ -253,12 +259,12 @@ function paintMapWorld(g, t) {
       drawQuestTrail(g, key, t, by);
       if (typeof drawDeepHole === "function") drawDeepHole(g, key, t, by);
     };
-    if (flipK === 1 || typeof deepDrawIsland !== "function") surface();
-    else deepDrawIsland(g, key, t, by, flipK, surface);
+    if (!back || typeof deepDrawIsland !== "function") surface();
+    else deepDrawIsland(g, key, t, by, true, surface);
   });
 
-  // your snake, waiting by the next thing to do (not while the islands are turned over)
-  if (flipK === 1) drawTraveler(g, t);
+  // your snake, waiting by the next thing to do (not while the world is seen from behind)
+  if (!back && !(turn && turn.k !== 1)) drawTraveler(g, t);
 
   // clouds over the places you have not reached, thinning as they open
   MAP_ORDER.forEach(k => {
@@ -378,7 +384,7 @@ function mapIslandInView(c) {
   let best = null, bestD = Infinity;
   MAP_ORDER.forEach(k => {
     if (typeof placeState === "function" && placeState(k) !== "open") return;
-    const I = ISLANDS[k], d = Math.hypot(I.x - x, I.y - y);
+    const I = ISLANDS[k], d = Math.hypot((typeof mapMirrorX === "function" ? mapMirrorX(I.x) : I.x) - x, I.y - y);
     if (d < bestD) { best = k; bestD = d; }
   });
   return best;
@@ -400,10 +406,10 @@ function layoutMap() {
     c.ty = Math.min(0, Math.max(vh - WORLD_H * s, c.ty));
   } else if (mapSel) {
     // Frame the whole island, from its tallest tower down to its rock, below the banner;
-    // turned over (build 53, map-deep.js), its rock pointing up over its underside
-    const isl = ISLANDS[mapSel];
+    const isl = Object.assign({}, ISLANDS[mapSel]);
+    if (typeof mapMirrorX === "function") isl.x = mapMirrorX(isl.x);
     const under = typeof mapFlip !== "undefined" && mapFlip;
-    const top = under ? isl.y - isl.th - isl.depth * 0.5 : isl.y - isl.th - 34, bottom = under ? isl.y + isl.th + 12 : isl.y + isl.th + isl.depth * 0.5;
+    const top = isl.y - isl.th - 34, bottom = isl.y + isl.th + isl.depth * 0.5;
     const tall = (bottom - top) * 2, wide = (isl.w + 50) * 2;
     const bannerBottom = mapBannerEl.classList.contains("open") ? mapBannerEl.offsetTop + mapBannerEl.offsetHeight + 6 : 6;
     const room = Math.max(vh * 0.4, vh - bannerBottom - 8);
@@ -604,6 +610,7 @@ function renderModes(justUnlocked) {
     pin.className = "map-pin " + cls;
     pin.dataset.key = key;
     pin.dataset.area = area;
+    pin._x = x;
     pin.style.left = x * 2 + "px";
     pin.style.top = y * 2 + "px";
     pin.style.setProperty("--m", CAMP.islandById[area].colors.accent);
@@ -668,10 +675,10 @@ function renderModes(justUnlocked) {
           `Nightmare ${id === 11 ? "lair" : "level " + id}: ${name}${open ? "" : ", locked"}`, () => { if (open) openNmGoal(key, id); else sfx("bad"); });
       } else {
         const open = id === "roots" || nmShopOpen(key);
-        const name = id === "roots" ? CAMP.nightmare.roots[key].name : `${T.name}: the shop of the deep`;
+        const name = id === "roots" ? CAMP.nightmare.roots[key].name : `${CAMP.islandById[key].npcs.merchant.shop}: the deep's stock`;
         add(`prop node nm ${id} ${open ? "open" : "locked"}`, `nm-${key}-${id}`, key, p.x, p.y - 10,
           `<img class="pi" src="${iconUrl(id === "roots" ? "tree" : "chest", 2)}" alt="">${open ? "" : `<span class="nlock">${LOCK_SVG}</span>`}<span class="lbl">${escapeAttr(name)}</span>`,
-          `${name}${open ? "" : ", opens after level " + (CAMP.nightmare.shopAfter || 5)}`, () => { if (open) openNmPanel(key, id); else sfx("bad"); });
+          `${name}${open ? "" : ", opens after level " + (CAMP.nightmare.shopAfter || 5)}`, () => { if (!open) sfx("bad"); else if (id === "shop") nmOpenShop(key); else openNmPanel(key, id); });
       }
     });
   });
@@ -693,10 +700,11 @@ function updatePins() {
     const isArea = pin.classList.contains("area");
     const fog = placeFogged(area);
     pin.hidden = isArea ? (near && !fog) : !near;
-    // build 53: turned over (map-deep.js) only the tunnels' stops show; right way up, never them;
-    // while the islands turn, none
+    // build 53: from behind (map-deep.js) only the tunnels' stops show, mirrored with the world;
+    // from the front, never them; while the world turns, none
     const deep = pin.classList.contains("nm");
     if (typeof mapFlip !== "undefined") {
+      if (pin._x !== undefined) pin.style.left = mapMirrorX(pin._x) * 2 + "px";
       if (deepFlipping()) pin.hidden = true;
       else if (mapFlip) { if (!deep && !isArea) pin.hidden = true; }
       else if (deep) pin.hidden = true;
@@ -755,7 +763,7 @@ function closePlace() {
   mapBannerEl.classList.remove("open");
   // step back out over the island you were looking at, not wherever the camera was before
   const isl = ISLANDS[was];
-  mapCam = camOn(isl.x, isl.y + 4, mapNear());
+  mapCam = camOn(typeof mapMirrorX === "function" ? mapMirrorX(isl.x) : isl.x, isl.y + 4, mapNear());
   layoutMap();
   updatePins();
   const pin = mapPinsEl.querySelector(`[data-key="place-${was}"]`);

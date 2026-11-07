@@ -3,10 +3,11 @@
    Nightmare mode on the map (build 53): the back side of the islands.
 
    Once a tunnel is open (camp-nightmare.js nmTunnelOpen), its island has a
-   hole dug in the grass at its far end. Click it and the whole map flips:
-   every island turns over (mapFlip), its rock pointing up into a darker
-   sky, and its underside faces you. On the underside of an island whose
-   tunnel is open, the tunnel is carved into the stone: the hole you came
+   hole dug in the grass at its far end. Click it and the whole world turns
+   around (mapFlip): you're looking at it from behind, so everything, the
+   Coil and the islands, is mirrored left to right under a darker sky, and
+   every island shows its back side. On the back of an island whose tunnel
+   is open, the tunnel is carved into the stone: the hole you came
    through at the far end, ten levels winding back and forth, the roots of
    the Great Tree poking through, the shop of the deep, and along the back
    a trench where the Maw lies, crimson and awake, bone once it's beaten
@@ -14,21 +15,22 @@
 
    The stops are ordinary map pins (map.js renderModes): "nm-<island>-<id>",
    id roots, 1-10, shop, 11 (the Maw), up (the hole, from below: flip back),
-   and hole (on the grass: flip over). The tunnel's pins show only flipped,
-   the surface's only unflipped.
+   and hole (on the grass: turn around). The tunnel's pins show only from
+   behind, the surface's only from the front. Every pin keeps its spot in the
+   world's own coordinates (pin._x); mapMirrorX puts it where it shows.
    ========================================================= */
 "use strict";
 
 const DEEP_IDS = ["roots", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "shop", 11];
-/* Where the stops are on the underside, from the island's middle: [along its flow (+ = the far end), dy] */
+/* Where the stops are on the back face, from the island's middle: [along its flow (+ = the far end), dy] */
 const DEEP_SPOTS = {
   up: [140, -10], 1: [104, 17], 2: [66, 17], 3: [28, 17], 4: [-10, 17], 5: [-48, 17], shop: [-92, 22], roots: [-134, 12],
   6: [-74, -4], 7: [-36, -4], 8: [2, -4], 9: [40, -4], 10: [78, -4], 11: [-20, -24]
 };
 const deepCache = {};
 const deepReveal = {};       // island -> the time its hole was dug (for the dig)
-let mapFlip = false;         // the map is turned over: every island's underside
-let deepFlipAnim = null;     // { to, at } while the islands turn
+let mapFlip = false;         // the world seen from behind: mirrored, every island's back side
+let deepFlipAnim = null;     // { to, at, pivot } while the world turns
 const DEEP_FLIP_SECS = 0.8;
 
 function deepStop(key, id) {
@@ -46,24 +48,39 @@ function deepHole(key) {
   for (let f = 132; f > 60; f -= 2) if (free(f, 14, 4, 1.2)) { hf = f; break; }
   return (C.hole = { x: Math.round(I.x + I.dir * hf), y: Math.round(I.y + 14) });
 }
-/* Is a map point on an island's underside face? */
+/* Is a map point on an island's back face (where the grass is on the front)? World coordinates. */
 function deepOnFace(key, x, y) {
   const I = ISLANDS[key], s = isleSpan(key, (x - I.x) * I.dir);
-  // turned over, the face is the grass's outline mirrored top to bottom
-  return !!s && y - I.y > -s[1] + 2 && y - I.y < -s[0] - 2;
+  return !!s && y - I.y > s[0] + 2 && y - I.y < s[1] - 2;
 }
 
-/* -1 (turned over) to 1 (right way up), easing while the islands turn */
-function deepFlipK(t) {
-  if (!deepFlipAnim) return mapFlip ? -1 : 1;
-  if (deepFlipAnim.at === null) deepFlipAnim.at = t;
-  const p = Math.min(1, (t - deepFlipAnim.at) / DEEP_FLIP_SECS);
-  const k = Math.cos(Math.PI * p) * (deepFlipAnim.to ? 1 : -1);
-  if (p >= 1) { deepFlipAnim = null; updatePins(); }
-  return k;
+/* The world from behind is mirrored about the map's middle: where a world x shows */
+const mapMirrored = () => mapFlip && !deepFlipAnim;
+const mapMirrorX = x => (mapMirrored() ? MAP_W - x : x);
+
+/* How to draw the world this frame: mirrored (seen from behind), and while it turns, squeezed about
+   the pivot (the island in view) by k, 1 to -1. back: whether the islands show their back sides. */
+function deepWorldTurn(t) {
+  if (typeof currentScreen !== "undefined" && currentScreen !== "modes") return { k: 1, mirrored: false, back: false };
+  if (!deepFlipAnim) return { k: 1, mirrored: mapFlip, back: mapFlip };
+  const A = deepFlipAnim;
+  if (A.at === null) A.at = t;
+  const p = Math.min(1, (t - A.at) / DEEP_FLIP_SECS);
+  if (p >= 1) {
+    deepFlipAnim = null;
+    // the turn is done: frame the mirrored world (the island in view stays put), no slide
+    mapEl.classList.add("dragging");
+    layoutMap();
+    updatePins();
+    requestAnimationFrame(() => mapEl.classList.remove("dragging"));
+    return { k: 1, mirrored: mapFlip, back: mapFlip };
+  }
+  const k = Math.cos(Math.PI * (p < 0.5 ? p * p * 2 : 1 - Math.pow(1 - p, 2) * 2));
+  const from = !A.to;                      // turning back starts from the mirrored world
+  return { k, mirrored: from, back: from !== (k < 0), pivot: A.pivot };
 }
 
-/* An island's underside, painted once (again when its progress changes). Origin: (C.ox, C.oy) = its middle. */
+/* An island's back side, painted once (again when its progress changes). Origin: (C.ox, C.oy) = its middle. */
 function deepBackArt(key) {
   const open = typeof nmTunnelOpen === "function" && camp && camp.nm && nmTunnelOpen(key);
   const tag = !open ? "sealed" : DEEP_IDS.map(id => (typeof id !== "number" ? "" : nmLevelWon(key, id) ? "w" : nmTunLevelOpen(key, id) ? "o" : "-")).join("") + (nmMawSlain(key) ? "S" : "") + (nmShopOpen(key) ? "s" : "");
@@ -71,23 +88,18 @@ function deepBackArt(key) {
   if (C.art && C.tag === tag) return C;
   const I = ISLANDS[key], d = I.dir, seed = I.n * 13 + 5;
   const art = islandArt(key), src = texCanvas(`map:${key}:under`), form = isleForm(key);
-  const lift = form.drop + 20;                                 // room above for the rock, now pointing up
-  const W = src.width, H = src.height + lift;
+  const W = src.width, H = src.height;
   const c = document.createElement("canvas");
   c.width = W; c.height = H;
   const g = c.getContext("2d");
-  const ox = art.ox, oy = art.oy + lift;
-  // the island turned over: its picture mirrored top to bottom about its middle
-  g.save();
-  g.translate(0, 2 * oy);
-  g.scale(1, -1);
-  g.drawImage(src, 0, lift);
-  g.restore();
+  const ox = art.ox, oy = art.oy;
+  // the island's rock and ground (the world mirrors it as it's seen from behind); its grass becomes the back face below
+  g.drawImage(src, 0, 0);
   const px = (x, y, col) => { g.fillStyle = col; g.fillRect(x, y, 1, 1); };
   const T = (ISLE_THEME[key] || {}).rock || [["#4a3a30", "#3a2c24"], ["#3a2c24", "#2a2018"], ["#2a2018", "#1a1410"]];
-  // the face: where the grass was (mirrored, as the whole island is), now its underside, raw stone
+  // the face: where the grass is on the front, now the island's back, raw stone (the world mirrors it)
   const local = (f, dy) => [Math.round(ox + d * f), Math.round(oy + dy)];
-  const faceSpan = lx => { const s = form.top[lx - ox + form.reach]; return s ? [-s[1], -s[0]] : null; };
+  const faceSpan = lx => form.top[lx - ox + form.reach] || null;
   const faceAt = (lx, ly) => { const s = faceSpan(lx); return s && ly - oy > s[0] && ly - oy < s[1] ? s : null; };
   for (let lx = ox - form.reach; lx <= ox + form.reach; lx++) {
     const s = faceSpan(lx);
@@ -170,25 +182,17 @@ function deepBackArt(key) {
   return C;
 }
 
-/* One island on the map, for paintMapWorld: right way up (surface()), turned over, or turning */
-function deepDrawIsland(g, key, t, by, k, surface) {
+/* One island on the map, for paintMapWorld: its front (surface()) or its back */
+function deepDrawIsland(g, key, t, by, back, surface) {
   const I = ISLANDS[key];
-  if (k === 1 || placeFogged(key)) { surface(); return; }
-  g.save();
-  g.translate(0, I.y + by);
-  g.scale(1, Math.max(0.02, Math.abs(k)));
-  g.translate(0, -(I.y + by));
-  if (k > 0) surface();
-  else {
-    const B = deepBackArt(key);
-    g.drawImage(B.art, I.x - B.ox, I.y - B.oy + by);
-    // the Maw's eye, open in its trench
-    if (k === -1 && nmTunnelOpen(key) && !nmMawSlain(key) && (t % 5) > 0.25) {
-      const [mf, mdy] = DEEP_SPOTS[11];
-      mapRect(g, I.x + I.dir * (mf - 30) - 1, I.y + mdy - 3 + by, 3, 2, `rgba(255, 58, 58, ${0.7 + 0.3 * Math.sin(t * 3)})`);
-    }
+  if (!back || placeFogged(key)) { surface(); return; }
+  const B = deepBackArt(key);
+  g.drawImage(B.art, I.x - B.ox, I.y - B.oy + by);
+  // the Maw's eye, open in its trench
+  if (nmTunnelOpen(key) && !nmMawSlain(key) && (t % 5) > 0.25) {
+    const [mf, mdy] = DEEP_SPOTS[11];
+    mapRect(g, I.x + I.dir * (mf - 30) - 1, I.y + mdy - 3 + by, 3, 2, `rgba(255, 58, 58, ${0.7 + 0.3 * Math.sin(t * 3)})`);
   }
-  g.restore();
 }
 
 /* The hole in the grass, right way up (it opens as it's dug, with a little dust) */
@@ -211,13 +215,14 @@ function drawDeepHole(g, key, t, by) {
 /* Turning the map over, and back. key: the island to look at once it's over. */
 function enterUnder(key) {
   if (typeof nmTunnelOpen !== "function" || !nmTunnelOpen(key)) return;
+  if (mapSel !== key) selectPlace(key);
   if (!mapFlip) {
+    // turn about the island in view, where it shows now (the world isn't mirrored yet)
+    deepFlipAnim = { to: true, at: null, pivot: ISLANDS[key].x };
     mapFlip = true;
-    deepFlipAnim = { to: true, at: null };
     mapEl.classList.add("flipped");
     sfx("whoosh");
   }
-  if (mapSel !== key) selectPlace(key);
   updatePins();
   renderBanner();
   renderLegend();
@@ -225,8 +230,9 @@ function enterUnder(key) {
 }
 function leaveUnder() {
   if (!mapFlip) return false;
+  const k = mapSel || mapViewIsl;
+  deepFlipAnim = { to: false, at: null, pivot: k ? MAP_W - ISLANDS[k].x : MAP_W / 2 };
   mapFlip = false;
-  deepFlipAnim = { to: false, at: null };
   mapEl.classList.remove("flipped");
   sfx("whoosh");
   updatePins();
