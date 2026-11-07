@@ -31,6 +31,8 @@ function openCampShop(isl, kind) {
   const I = CAMP.islandById[isl];
   const who = I.npcs[kind];
   document.getElementById("cs-title").textContent = who.shop;
+  // fewer words: the shopkeeper's line is a hover away, on the shop's name
+  document.getElementById("cs-title").title = `${who.name}: "${who.line}"`;
   document.getElementById("cs-quote").innerHTML = `<b>${escapeAttr(who.name)}</b> "${escapeAttr(who.line)}"`;
   screenEls.campshop.style.setProperty("--isl", I.colors.accent);
   watchArt(document.getElementById("cs-art"), `npc:${isl}:${kind}`);
@@ -50,9 +52,8 @@ function renderShop() {
   else shopBodyEl.innerHTML = bankHtml();
   shopBodyEl.querySelectorAll("[data-act]").forEach(b => b.addEventListener("click", () => shopAct(b.dataset.act, b.dataset)));
   shopBodyEl.querySelectorAll("input[data-amt]").forEach(inp => inp.addEventListener("input", () => bankPreview(inp.dataset.amt)));
-  // the top bar shows this island's money and gems; the bank also shows what it trades down to
-  const prev = CAMP.islands[campIslandIdx(shopIsl) - 1];
-  document.getElementById("cs-wallet").innerHTML = prev && shopKind === "banker" ? `<span class="cw-chip plate" title="${escapeAttr(prev.currency.plural)}">${coinHtml(prev.id)}<b>${fmtInt(campWallet(prev.id))}</b></span>` : "";
+  // the top bar shows every money you hold (camp-hud.js), so the bank needs no purse of its own
+  document.getElementById("cs-wallet").innerHTML = "";
   campWalletUpdate();
 }
 
@@ -180,13 +181,15 @@ function newChallenge(isl) {
   const pool = [];
   for (let n = 1; n <= LEVEL_COUNT; n++) if (!BOSS_LEVELS.includes(n) && campWon(isl, n)) pool.push(n);
   pool.sort(() => Math.random() - 0.5);
-  const levels = pool.slice(0, CAMP.rules.challenge.levels).sort((a, b) => a - b);
+  // 3 to 5 trials (challenge.levels to challenge.levelsMax), walked in order along the path
+  const R = CAMP.rules.challenge, lo = R.levels, hi = Math.max(lo, R.levelsMax || lo);
+  const levels = pool.slice(0, lo + Math.floor(Math.random() * (hi - lo + 1))).sort((a, b) => a - b);
   const modIds = CAMP.rules.challenge.mods.map(m => m.id);
   const used = new Set();
   const mods = levels.map(n => {
     const d = campLevelDef(isl, n);
     const ok = modIds.filter(m => !(m === "dark" && d.layout === "tunnel") && !(m === "rocky" && ["maze", "field"].includes(d.layout)) && !(m === "clock" && d.goal.type === "survive" && d.goal.need > 70));
-    // fresh twists first, so the three trials don't all feel the same
+    // fresh twists first, so the trials don't all feel the same
     const pick = ok.sort(() => Math.random() - 0.5).sort((a, b) => used.has(a) - used.has(b)).slice(0, CAMP.rules.challenge.modsPerLevel);
     pick.forEach(m => used.add(m));
     return pick;
@@ -194,41 +197,48 @@ function newChallenge(isl) {
   return { levels, mods, done: levels.map(() => false), startedAt: 0, endsAt: 0, claimed: false, active: false };
 }
 
-const challengeCurrency = () => Math.round(CAMP.rules.challenge.rewardBase * (1 + upPct("treasure")) * (1 + upPct("mastery")));
+/* The quest's pay: the base, a little more for every trial past three, and the upgrades on top */
+const challengeCurrency = C => Math.round(CAMP.rules.challenge.rewardBase * (C && C.levels.length ? C.levels.length / 3 : 1) * (1 + upPct("treasure")) * (1 + upPct("mastery")));
 
+/* A bit of plot: one of rules.challenge.plots, the same one for the same quest */
+function questPlot(isl, C) {
+  const plots = CAMP.rules.challenge.plots || [];
+  const I = CAMP.islandById[isl];
+  if (!plots.length) return I.npcs.challenger.line;
+  const pick = plots[C.levels.reduce((a, n) => a * 31 + n, C.levels.length) % plots.length];
+  return pick.replace(/\{npc\}/g, I.npcs.challenger.name).replace(/\{island\}/g, I.name).replace(/\{n\}/g, String(C.levels.length));
+}
+
+/* The challenger: a bit of plot, the trials as numbered stones (hover for the level and its
+   twists), what it pays, and one button. Start flies to the first trial; each win draws the
+   trail on to the next; after the last you come back here to collect. */
 function challengerHtml() {
   const C = challengeState(shopIsl);
   saveCamp();
   const I = CAMP.islandById[shopIsl];
   const modOf = id => CAMP.rules.challenge.mods.find(m => m.id === id) || { name: id, text: "" };
-  const trials = C.levels.map((n, i) => {
+  const nextI = C.done.findIndex(d => !d);
+  const trials = `<div class="cs-stones">` + C.levels.map((n, i) => {
     const d = campLevelDef(shopIsl, n);
-    const play = C.active && !C.done[i] && !C.claimed;
-    return `<div class="shop-row cs-trial${C.done[i] ? " done" : ""}">
-      <span class="cs-num">${C.done[i] ? "&#10003;" : i + 1}</span>
-      <div><div class="shop-name">${n}. ${escapeAttr(d.name)}</div><div class="shop-desc">${escapeAttr(goalText(d.goal))}${C.mods[i].includes("greedy") ? " (and half again)" : ""}</div>
-      <div class="cp-mods cs-mods">${C.mods[i].map(m => `<span title="${escapeAttr(modOf(m).text)}">${escapeAttr(modOf(m).name)}</span>`).join("")}</div>
-      <div class="shop-desc">${C.mods[i].map(m => escapeAttr(modOf(m).text)).join(" ")}</div></div>
-      ${play ? `<button class="btn btn-buy affordable" data-act="trial" data-i="${i}">Play</button>` : C.done[i] ? `<button class="btn btn-buy equipped" disabled>Done</button>` : `<span></span>`}
-    </div>`;
-  }).join("");
+    const tip = `${n}. ${d.name}: ${goalText(d.goal)}${C.mods[i].includes("greedy") ? " (and half again)" : ""}\n` + C.mods[i].map(m => `${modOf(m).name}: ${modOf(m).text}`).join("\n");
+    return `${i ? `<span class="cs-link${C.done[i - 1] ? " walked" : ""}" aria-hidden="true"></span>` : ""}<span class="cs-stone${C.done[i] ? " done" : C.active && i === nextI ? " now" : ""}" title="${escapeAttr(tip)}" aria-label="${escapeAttr(tip)}">${C.done[i] ? "&#10003;" : i + 1}</span>`;
+  }).join("") + `</div>`;
   const pool = CAMP.rules.challenge.pool;
   const total = pool.reduce((a, p) => a + p.weight, 0);
   const odds = pool.map(p => `<li><span class="pn-label">${p.kind === "gems" ? `${p.min} to ${p.max} gems` : p.kind === "item" ? (CAMP.families[I.merchantFamily].grades ? `A ${CAMP.families[I.merchantFamily].grades[rarityIdx(p.rarity)].toLowerCase()} rune` : `A ${rarityName(p.rarity).toLowerCase()} ${escapeAttr(CAMP.families[I.merchantFamily].name.toLowerCase())} item`) : p.kind === "canister" ? "A Heart Canister (any rarity)" : p.kind === "spellpts" ? `${p.min} to ${p.max} spell upgrade points` : p.kind === "recipe" ? "A rare recipe for the kitchen" : p.kind === "skin" ? "An exclusive skin" : "An exclusive theme"}</span><span class="pn-count">${Math.round(p.weight / total * 100)}%</span></li>`).join("");
-  const reward = `<div class="core-box cs-reward"><span class="ribbon rank-3">Reward</span>
-    <p class="shop-note">${coinTag(shopIsl, challengeCurrency())} ${escapeAttr(I.currency.plural)}, and one roll of the prize pool:</p>
-    <ul class="prestige-needs">${odds}</ul></div>`;
-  let note, foot = "";
-  if (C.claimed) note = `Quest done. ${escapeAttr(I.npcs.challenger.name)} is planning the next one. <span id="cs-timer">${shopTimerText()}</span>`;
+  // the prize pool's odds show when the mouse is on the prize
+  const reward = `<div class="cs-prize" title="One roll of the prize pool on top">${coinTag(shopIsl, challengeCurrency(C))}<span class="cs-plus">+</span><img class="gem-ico" src="${iconUrl("gift", 2)}" alt="A prize roll"><ul class="cs-odds">${odds}</ul></div>`;
+  let note = "", foot = "", timer = "";
+  if (C.claimed) { note = `${escapeAttr(I.npcs.challenger.name)} is planning the next one.`; timer = `<span id="cs-timer">${shopTimerText()}</span>`; }
   else if (!C.levels.length) note = "Win more of this island's levels first: the trials are picked from the ones you've beaten.";
-  else if (!C.active) {
-    note = `Three trials on this island, each with twists. Once you accept, you have ${CAMP.rules.challenge.days} days, and the quest stays until it's done.`;
-    foot = `<div class="row-buttons cs-btns"><button class="btn btn-small${camp.gems >= CAMP.rules.challenge.rerollGems ? "" : ""}" data-act="newch" ${camp.gems >= CAMP.rules.challenge.rerollGems ? "" : "disabled"}>Other trials: ${gemTag(CAMP.rules.challenge.rerollGems)}</button><button class="btn btn-primary" data-act="accept">Accept the quest</button></div>`;
-  } else if (C.done.every(Boolean)) {
-    note = "Every trial is done. Your reward is waiting.";
-    foot = `<div class="row-buttons cs-btns"><button class="btn btn-gold" data-act="claim">Claim the reward</button></div>`;
-  } else note = `Your quest is on. <span id="cs-timer">${shopTimerText()}</span>`;
-  return `<p class="shop-note">${note}</p>${trials}${C.claimed || !C.levels.length ? "" : reward}${foot}`;
+  else {
+    note = escapeAttr(questPlot(shopIsl, C));
+    if (!C.active) foot = `<button class="btn btn-small cs-reroll" data-act="newch" title="Other trials" aria-label="Other trials for ${CAMP.rules.challenge.rerollGems} gems" ${camp.gems >= CAMP.rules.challenge.rerollGems ? "" : "disabled"}>&#8635; ${gemTag(CAMP.rules.challenge.rerollGems)}</button><button class="btn btn-primary" data-act="accept">Start</button>`;
+    else if (C.done.every(Boolean)) foot = `<button class="btn btn-gold" data-act="claim">Collect</button>`;
+    else { foot = `<button class="btn btn-purple" data-act="trial" data-i="${nextI}">Trial ${nextI + 1}</button>`; timer = `<span id="cs-timer">${shopTimerText()}</span>`; }
+  }
+  return `<div class="core-box cs-quest"><p class="cs-plot">${note}</p>${C.levels.length && !C.claimed ? trials + reward : ""}` +
+    `${timer ? `<p class="cs-when">${timer}</p>` : ""}${foot ? `<div class="row-buttons cs-btns">${foot}</div>` : ""}</div>`;
 }
 
 function rollChallengeReward(isl) {
@@ -275,31 +285,44 @@ function rollChallengeReward(isl) {
 /* ----- The bank: the old Exchange's slider, one card per kind of trade ----- */
 const gemUnitCost = isl => CAMP.rules.bank.snaycoinPerGem / Math.pow(CAMP.rules.bank.rateToPrev, campIslandIdx(isl));
 
+/* Trading down any number of islands in one go: the same as walking it down one bank at a time
+   (each step pays rateToPrev, less feePrev), just without the walking. */
+let bankTo = null;              // the island whose money the down-trade buys
+function tradeDown(fromIdx, toIdx, n) {
+  const B = CAMP.rules.bank;
+  let amt = n;
+  for (let j = fromIdx; j > toIdx && amt > 0; j--) amt = Math.max(0, amt * B.rateToPrev - B.feePrev);
+  return Math.floor(amt);
+}
+
 function bankHtml() {
   const i = campIslandIdx(shopIsl);
   const B = CAMP.rules.bank;
-  const prev = CAMP.islands[i - 1];
   const cur = campCurrency(shopIsl);
   const have = campWallet(shopIsl);
   const per = gemUnitCost(shopIsl);
   const maxGems = Math.max(0, Math.floor(have / per) - B.gemFee);
-  let html = `<p class="shop-note">Trades only go one way: down to the island before, or into gems. Every trade costs a flat fee, so one big trade beats lots of small ones.</p>`;
-  if (prev) {
-    html += `<div class="core-box cs-bank"><span class="ribbon rank-2">${escapeAttr(cur.plural)} to ${escapeAttr(prev.currency.plural)}</span>
-      <p class="ex-rate">1 ${escapeAttr(cur.name)} buys ${B.rateToPrev} ${escapeAttr(prev.currency.plural)}, less a fee of ${B.feePrev} ${escapeAttr(prev.currency.plural)} per trade.</p>
-      <input class="ex-range" type="range" min="0" max="${have}" step="1" value="${Math.min(have, 10)}" data-amt="prev" id="bk-prev" aria-label="How many to trade">
+  const below = CAMP.islands.slice(0, i).reverse();
+  if (!below.some(I => I.id === bankTo)) bankTo = below.length ? below[0].id : null;
+  let html = "";
+  if (below.length) {
+    // pick any island below: each coin is a button, the trade goes straight there
+    const picks = below.map(I => `<button class="bk-to${I.id === bankTo ? " on" : ""}" data-act="bkto" data-isl="${I.id}" title="${escapeAttr(I.currency.plural)} (${escapeAttr(I.name)})" aria-label="Trade into ${escapeAttr(I.currency.plural)}" aria-pressed="${I.id === bankTo}">${coinHtml(I.id, 20)}</button>`).join("");
+    html += `<div class="core-box cs-bank" title="Every island down pays ${B.rateToPrev} to 1, less ${B.feePrev} as a fee: one big trade beats lots of small ones">
+      <div class="bk-head">${coinHtml(shopIsl, 20)}<span class="bk-arrow" aria-hidden="true">&#10148;</span><div class="bk-picks">${picks}</div></div>
+      <input class="ex-range" type="range" min="0" max="${have}" step="1" value="${Math.min(have, 10)}" data-amt="prev" id="bk-prev" aria-label="How many ${escapeAttr(cur.plural)} to trade">
       <p class="ex-preview" id="bk-prev-out"></p>
-      <div class="ex-quick"><button class="btn btn-small" data-act="bkset" data-k="prev" data-v="half">Half</button><button class="btn btn-small" data-act="bkset" data-k="prev" data-v="all">All of it</button><button class="btn btn-gold" data-act="toprev">Trade</button></div></div>`;
+      <div class="ex-quick"><button class="btn btn-small" data-act="bkset" data-k="prev" data-v="half">&frac12;</button><button class="btn btn-small" data-act="bkset" data-k="prev" data-v="all">All</button><button class="btn btn-gold" data-act="toprev">Trade</button></div></div>`;
   }
-  html += `<div class="core-box cs-bank"><span class="ribbon rank-3">${escapeAttr(cur.plural)} to gems</span>
-    <p class="ex-rate">${per >= 1 ? `${fmtInt(per)} ${escapeAttr(cur.plural)} per gem` : `1 ${escapeAttr(cur.name)} is worth ${fmtInt(1 / per)} gems`}, and a gem's worth on top as the fee.</p>
+  html += `<div class="core-box cs-bank" title="${per >= 1 ? `${fmtInt(per)} ${escapeAttr(cur.plural)} per gem` : `1 ${escapeAttr(cur.name)} is worth ${fmtInt(1 / per)} gems`}, and a gem's worth on top as the fee">
+    <div class="bk-head">${coinHtml(shopIsl, 20)}<span class="bk-arrow" aria-hidden="true">&#10148;</span><img class="gem-ico bk-gem" src="${iconUrl("gem", 3)}" alt="Gems"></div>
     <input class="ex-range" type="range" min="0" max="${maxGems}" step="1" value="${Math.min(maxGems, 1)}" data-amt="gems" id="bk-gems" aria-label="How many gems">
     <p class="ex-preview" id="bk-gems-out"></p>
-    <div class="ex-quick"><button class="btn btn-small" data-act="bkset" data-k="gems" data-v="all">As many as I can</button><button class="btn btn-gold" data-act="togems">Trade</button></div></div>`;
+    <div class="ex-quick"><button class="btn btn-small" data-act="bkset" data-k="gems" data-v="all">All</button><button class="btn btn-gold" data-act="togems">Trade</button></div></div>`;
   const cash = cashOutPlan();
-  html += `<div class="core-box cs-bank"><span class="ribbon rank-1">Cash out</span>
-    <p class="ex-rate">Everything on this island and every island before it, walked down to ${escapeAttr(CAMP.islands[0].currency.plural)} one bank at a time (a fee at every step), then into gems.</p>
-    <p class="ex-preview">${cash.gems > 0 ? `You'd get ${gemTag(cash.gems)}, paying ${escapeAttr(cash.fees.join(", "))} in fees.` : "Not enough money here to cash out yet."}</p>
+  html += `<div class="core-box cs-bank" title="Everything on this island and every island before it, walked down to ${escapeAttr(CAMP.islands[0].currency.plural)} (a fee at every step), then into gems${cash.gems > 0 ? `. Fees: ${escapeAttr(cash.fees.join(", "))}` : ""}">
+    <div class="bk-head">${CAMP.islands.slice(0, i + 1).map(I => coinHtml(I.id, 20)).join("")}<span class="bk-arrow" aria-hidden="true">&#10148;</span><img class="gem-ico bk-gem" src="${iconUrl("gem", 3)}" alt="Gems"></div>
+    <p class="ex-preview">${cash.gems > 0 ? gemTag(cash.gems) : "&mdash;"}</p>
     <div class="ex-quick"><button class="btn btn-gold" data-act="cashout" ${cash.gems > 0 ? "" : "disabled"}>Cash out</button></div></div>`;
   setTimeout(() => { bankPreview("prev"); bankPreview("gems"); }, 0);
   return html;
@@ -312,9 +335,8 @@ function bankPreview(k) {
     const el = document.getElementById("bk-prev"), out = document.getElementById("bk-prev-out");
     if (!el || !out) return;
     const n = Math.max(0, Math.floor(+el.value || 0));
-    const prev = CAMP.islands[i - 1];
-    const got = n * B.rateToPrev - B.feePrev;
-    out.innerHTML = `${coinTag(shopIsl, n)} for ` + (got > 0 ? `${coinTag(prev.id, got)}` : "nothing: too small to cover the fee");
+    const got = tradeDown(i, campIslandIdx(bankTo), n);
+    out.innerHTML = `${coinTag(shopIsl, n)} &#10148; ` + (got > 0 ? `${coinTag(bankTo, got)}` : "too small to cover the fee");
   } else {
     const el = document.getElementById("bk-gems"), out = document.getElementById("bk-gems-out");
     if (!el || !out) return;
@@ -386,8 +408,7 @@ function shopAct(a, d) {
     const C = challengeState(shopIsl);
     C.active = true; C.startedAt = Date.now(); C.endsAt = Date.now() + CAMP.rules.challenge.days * 86400000; C.claimed = false;
     saveCamp(); sfx("unlock");
-    // straight out to the first trial: all three are ringed on the map, joined by the quest's trail
-    showToast("Quest accepted! Your three trials are ringed on the map.");
+    // straight out to the first trial: the trail draws itself from the tent to it
     mapFlyTo(shopIsl, C.levels[C.done.findIndex(d => !d)]);
     return;
   }
@@ -399,14 +420,15 @@ function shopAct(a, d) {
     return;
   }
   if (a === "trial") {
+    // on to the next trial: the map flies there, and its pin opens the objective card
     const C = challengeState(shopIsl);
-    campBeginLevel(shopIsl, C.levels[+d.i], +d.i);
+    mapFlyTo(shopIsl, C.levels[+d.i]);
     return;
   }
   if (a === "claim") {
     const C = challengeState(shopIsl);
     if (!C.active || !C.done.every(Boolean)) return;
-    const money = challengeCurrency();
+    const money = challengeCurrency(C);
     campPay(shopIsl, money);
     const prize = rollChallengeReward(shopIsl);
     C.active = false; C.claimed = true;
@@ -426,14 +448,15 @@ function shopAct(a, d) {
     bankPreview(d.k);
     return;
   }
+  if (a === "bkto") { bankTo = d.isl; sfx("tick"); renderShop(); return; }
   if (a === "toprev") {
     const n = Math.max(0, Math.floor(+document.getElementById("bk-prev").value || 0));
-    const prev = CAMP.islands[campIslandIdx(shopIsl) - 1];
-    const got = n * B.rateToPrev - B.feePrev;
+    const to = CAMP.islandById[bankTo];
+    const got = to ? tradeDown(campIslandIdx(shopIsl), campIslandIdx(bankTo), n) : 0;
     if (got <= 0 || !campSpend(shopIsl, n)) { sfx("bad"); return; }
-    campPay(prev.id, got);
+    campPay(to.id, got);
     campBump("trades"); campCheckAch(); saveCamp(); sfx("buy");
-    showToast(`Traded for ${fmtInt(got)} ${prev.currency.plural}.`);
+    showToast(`Traded for ${fmtInt(got)} ${to.currency.plural}.`);
     renderShop();
     return;
   }

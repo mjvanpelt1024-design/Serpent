@@ -187,9 +187,9 @@ const SAVE_SCHEMA = S.obj({
   nextUid: S.int(1, 1e9, 1),
   merchants: S.map(islandIds, S.obj({ stock: S.list(STOCK_RULE, 6), restockAt: S.int(0, 9e15, 0) })),
   challenges: S.map(islandIds, S.obj({
-    levels: S.list(S.int(1, 15, 1), 3),
-    mods: S.list(S.list(S.oneOf(() => CAMP.rules.challenge.mods.map(m => m.id), "swift"), 3), 3),
-    done: S.list(S.bool(false), 3),
+    levels: S.list(S.int(1, 15, 1), 5),
+    mods: S.list(S.list(S.oneOf(() => CAMP.rules.challenge.mods.map(m => m.id), "swift"), 3), 5),
+    done: S.list(S.bool(false), 5),
     startedAt: S.int(0, 9e15, 0),
     endsAt: S.int(0, 9e15, 0),
     claimed: S.bool(false),

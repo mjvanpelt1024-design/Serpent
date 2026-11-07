@@ -216,7 +216,7 @@ CR("dev", "shop", "open", "<island> [merchant|challenger|banker] [work]", "Walk 
   return "quiet";
 }, { examples: ["dev shop.open keep work", "dev shop.open reef challenger"] });
 CR("dev", "quest", "new", "[island]", "A fresh quest from the island's challenger.", a => { const isl = islandOr(a[0]); camp.challenges[isl] = newChallenge(isl); campChanged(); say(`[ok] new quest on ${CAMP.islandById[isl].name}: levels ${camp.challenges[isl].levels.join(", ")}`); });
-CR("dev", "quest", "done", "[island]", "Accept the island's quest and finish all three trials (claim it at the challenger).", a => {
+CR("dev", "quest", "done", "[island]", "Accept the island's quest and finish all its trials (claim it at the challenger).", a => {
   const isl = islandOr(a[0]);
   const C = challengeState(isl);
   Object.assign(C, { active: true, claimed: false, startedAt: Date.now(), endsAt: Date.now() + 7 * 86400000, done: [true, true, true] });
@@ -681,10 +681,14 @@ window.askConsole = function () {
     onOk: () => { save.cheats = true; persist(); if (camp) { camp.flags.cheats = true; saveCamp(); } openScreen("console"); }
   });
 };
+let consoleFrom = null;        // the screen the terminal was opened over: { screen, isl, stop }
 (() => {
   const nav = openScreen;
   window.openScreen = function (name) {
     if (name === "console" && camp && !camp.flags.cheats) { window.askConsole(); return; }
+    if (name === "console" && currentScreen && currentScreen !== "console") {
+      consoleFrom = { screen: currentScreen, isl: mapSel, stop: mapPop && mapPop.focus ? { key: mapPop.key, id: mapPop.j } : null };
+    } else if (name !== "console") consoleFrom = null;
     return nav.apply(this, arguments);
   };
   // after any command: the campaign save is written and every money readout refreshed
@@ -694,9 +698,29 @@ window.askConsole = function () {
   const back = goBack;
   window.goBack = function () {
     if (currentScreen === "console" && pauseDetour && campRun) { returnToPause(); return; }
+    if (currentScreen === "console" && consoleFrom) { leaveConsole(); return; }
     return back.apply(this, arguments);
   };
 })();
+
+/* Closing the terminal: back to the screen it was opened over, not to Settings. The map comes
+   back on the same island and stop; other screens are shown as they were (a command may have
+   changed money or items, so they're refreshed). */
+function leaveConsole() {
+  const from = consoleFrom;
+  consoleFrom = null;
+  if (!from || from.screen === "main" || from.screen === "profiles") { openScreen(from ? from.screen : "settings"); return; }
+  if (from.screen === "modes") {
+    mapReturnTo = from.isl;
+    openScreen("modes");
+    if (from.stop) setTimeout(() => { if (currentScreen === "modes") mapFlyTo(from.stop.key, from.stop.id); }, 140);
+    return;
+  }
+  if (from.screen === "campshop" && typeof openCampShop === "function") { const t = shopTab; openCampShop(shopIsl, shopKind); if (t !== shopTab) { shopTab = t; renderShop(); } return; }
+  if (from.screen === "camphome" && typeof openCampHome === "function") { openCampHome(homeIsl); return; }
+  showScreen(from.screen);
+  if (camp) campChanged();
+}
 
 /* ----- Shift+Alt+C: the terminal from anywhere ----- */
 document.addEventListener("keydown", e => {

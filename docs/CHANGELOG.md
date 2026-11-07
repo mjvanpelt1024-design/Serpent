@@ -2,6 +2,15 @@
 
 ## Unreleased: an arsenal, damage types on the board, champions
 
+- **The UI pass: fewer words, more symbols.** The map has no labels until you hover: the only words are
+  the scroll with the island's or the stop's name. A legend of symbols down the side flies to home, the
+  shops, the next level and your quest. Home and the shops walk straight in. Up close, a fifth of the screen
+  on each side (or a drag) walks the path. Click your snake for your loadout; nothing asks what to carry
+  before a level any more. Every island's money sits in the top bar once you have some. The terminal
+  closes back onto the screen you were on.
+- **Quests** have 3 to 5 trials, a bit of plot, and go in order: Start flies to the first, each win draws
+  the trail on to the next, and the last brings you back to the tent to collect.
+- **Banks trade straight down to any island below**, at the same rate as walking it down bank by bank.
 - **Delete a save from the saves window.** Select it and press Delete; a dialog names the save and asks
   again. The file goes to the Recycle Bin. A save that's open in a game can't be deleted.
 

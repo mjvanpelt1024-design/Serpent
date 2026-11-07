@@ -129,11 +129,12 @@ tree, which grows as you buy that island's upgrades. The shopkeepers stand by th
 
 ## Playing a level
 
-Play (on the stop, or on the rules card) opens the old "Bring anything?" box, now "What will you carry?",
-when you own something to carry: **your kit** (one gear, one spell, picked with arrows), your familiar,
-your active rune and heart canister ("with your hearts"), and **the pocket**, four snack slots you click to fill (never the same
-snack twice). The Satchel's Kit tab changes the same things between levels. Then the old 3-2-1
-countdown, and the cursor hides until the run ends or you pause.
+Start (on the objective card) goes straight into the level: nothing asks what to carry any more (build 53).
+What you carry is your **loadout**, opened by clicking your snake on the map: **your kit** (gear, helmet,
+body armor and spell, picked with arrows), your familiar, your active rune and heart canister ("with your
+hearts"), and **the pocket**, four snack slots you click to fill (never the same snack twice). The Satchel's
+Kit tab changes the same things. Then the old 3-2-1 countdown, and the cursor hides until the run ends or
+you pause.
 
 **Nothing is drawn on the board but the game.** The hub around it, in pixel-framed plates:
 
@@ -496,6 +497,42 @@ it in halves.
 `dev run.play crown 15 hold`. In the sandbox editor: the **Foes** tab places spawner chips for the new enemies,
 and the level's rules pick a **Boss** (any island's boss at fight 1, 2 or 3, or a champion). Pictures:
 `python tools/textures/arsenal-art.py` drew the first ones and never overwrites a repainted file.
+
+## Build 53: the UI pass (fewer words, more symbols)
+
+The style is unchanged; what changed is where things are and how many words they use.
+
+- **The map has no labels.** A stop's name, a shop's name and "Last played" show only when the mouse is
+  on the pin. The only words on screen are the scroll at the top: the island's name (its blurb and
+  progress on hover), or up close, the stop's name (its goal, challenge or shopkeeper's line on hover).
+  The whole-map button is just its magnifier; "Drag to explore" is gone.
+- **The legend** (`renderLegend` in `map.js`): symbols down the left side for home, the three shops,
+  the next level (a flag, or a skull before a boss) and, while a quest is on, the quest (a glowing scroll).
+  Words only on hover. Each one flies the map there; home and the shops walk straight in.
+- **Home and the shops don't ask.** A click on their pin, an edge zone or a legend symbol walks in.
+  A locked one still flies close and says why.
+- **Up close, the sides of the screen walk the path.** The arrow buttons became zones a fifth of the
+  screen wide on each side (`.node-arrow.zone`), split top and bottom when two ways lie on one side (a
+  boss and its shop). A chevron shows; where it goes shows on hover. A sideways drag (or swipe) does the
+  same: drag left to walk to the stop on the right. Arrow keys and WASD still work.
+- **Your snake is a button.** The little coil by the stop you're at opens your loadout (`openCampLoadout`
+  in `camp-kit.js`, the old kit box with a Done button). No box before a level.
+- **Every island's money in the top bar** (`campWalletUpdate` in `camp-hud.js`), each only once you hold at
+  least 1 and gone again at 0; the island you're on is lit. Gems too. Click a coin for its card.
+- **The terminal closes back where you were**: the map on the same island and stop, the shop or home
+  you were in, anything else as it was (`leaveConsole` in `cmd-camp.js`). A paused level still goes
+  back to its pause menu.
+- **Quests** have **3 to 5 trials** (`challenge.levels` to `challenge.levelsMax` in `rules.json`) and a bit
+  of plot (`challenge.plots`, with `{npc}`, `{island}` and `{n}`). The challenger shows the plot, the
+  trials as numbered stones (each one's level and twists on hover), the pay (it grows with the number of
+  trials) and the prize roll (odds on hover), and one button: **Start**, then **Trial N**, then **Collect**.
+  The trials go **in order**. Start flies to the first; the map's trail only shows the legs you've walked
+  and the one to the next trial, which draws itself out; after each win the map flies to the next trial,
+  and after the last it walks you into the tent to collect.
+- **The bank trades straight down to any island below**: pick its coin. It works out the same as walking
+  it down one bank at a time (each step 10 to 1, less 5), in one trade. The cards are coins and arrows;
+  the rates are on hover.
+- The shops' quote line moved to a hover on the shop's name.
 
 ## Decided, and not done yet
 

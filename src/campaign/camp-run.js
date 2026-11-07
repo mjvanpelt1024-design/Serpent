@@ -115,9 +115,9 @@ function campDamage(hearts, cause) {
 }
 const vesselHoldsArmor = it => { const d = campItemDef(it.id); return !!(d && d.armor && d.armor[rarityIdx(it.rarity)] > 0); };
 
-/* From the map or a challenge: choose what to carry, then play */
+/* From the map or a challenge: straight in. What you carry is changed on the map, by clicking
+   your snake (openCampLoadout in camp-kit.js), never in a box before the level. */
 function campBeginLevel(isl, n, challengeIdx = -1) {
-  if (typeof openCampKit === "function" && openCampKit(isl, n, challengeIdx)) return;
   campStart(isl, n, challengeIdx);
 }
 
@@ -321,7 +321,7 @@ function campWinLevel() {
   const C = camp.challenges[isl];
   if (campRun.challenge >= 0 && C && C.active) {
     C.done[campRun.challenge] = true;
-    lines.push(C.done.every(Boolean) ? "Quest complete! Claim your reward from the challenger." : `Quest trial ${C.done.filter(Boolean).length} of 3 done`);
+    lines.push(C.done.every(Boolean) ? "Quest complete! Claim your reward from the challenger." : `Quest trial ${C.done.filter(Boolean).length} of ${C.levels.length} done`);
   }
   // what just opened
   const notes = [];
