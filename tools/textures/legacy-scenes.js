@@ -820,9 +820,81 @@
     });
   }
 
+  /* ----- The keepers' scenes (camp-scenes.js): the old code's still parts, layer by layer ----- */
+  function npcList() {
+    const out = [];
+    const layer = (id, file, draw) => { const c = canvasOf(ART_W, ART_H), g = c.getContext("2d"); g.imageSmoothingEnabled = false; draw(artKit(g, 0), g); out.push({ id, file, canvas: c }); };
+    CAMP.islands.forEach(I => {
+      const key = I.id, D = `scenes/npc/${key}/`, accent = I.colors.accent;
+      layer(`npc:${key}:back`, D + "back.png", (k) => {
+        const R = k.R;
+        if (key === "keep") {
+          k.sky("#8a8a8a", "#6a6662", 4);
+          for (let y = 0; y < 48; y += 5) for (let x = (y / 5) % 2 ? -6 : 0; x < ART_W; x += 12) { R(x, y, 11, 4, (x + y) % 3 ? "#9a968e" : "#8e8a82"); R(x, y, 11, 1, "#aaa69e"); }
+          R(122, 6, 22, 20, "#5a5650"); R(124, 8, 18, 16, "#9fd4f4"); R(124, 18, 18, 6, "#8ac46a"); R(132, 8, 1, 16, "#5a5650"); R(124, 15, 18, 1, "#5a5650");
+          R(14, 4, 12, 22, "#b23a3a"); R(14, 26, 6, 3, "#b23a3a"); R(20, 26, 6, 3, "#8e2b2b"); R(18, 10, 4, 8, "#ffd23f"); R(19, 9, 2, 1, "#ffd23f");
+        } else if (key === "spire") k.sky("#1a1650", "#3e2c78", 6);
+        else if (key === "hollow") {
+          k.sky("#c87a3a", "#e8a85a", 4);
+          for (let x = 0; x < ART_W; x += 8) { R(x, 0, 7, 48, (x / 8) % 2 ? "#8a5a30" : "#9a6a3a"); R(x + 7, 0, 1, 48, "#5a3a1e"); }
+          R(0, 4, ART_W, 3, "#5a3a1e");
+        } else if (key === "reef") k.sky("#1a5a8a", "#0a2a4a", 6);
+        else { k.sky("#2a1a1e", "#4a2020", 4); for (let i = 0; i < 6; i++) { const x = i * 30 + 6; R(x, 8, 2, 40, "#1a1216"); } }
+      });
+      if (key === "spire") layer("npc:spire:shelves", D + "shelves.png", (k) => {
+        const R = k.R;
+        [[8, 0], [128, 1]].forEach(([x0, s]) => {
+          R(x0, 6, 26, 42, "#3a2a1a"); R(x0 + 1, 7, 24, 40, "#2a1a10");
+          for (let sh = 0; sh < 4; sh++) {
+            R(x0 + 1, 16 + sh * 10, 24, 1, "#5a3a20");
+            for (let b = 0; b < 7; b++) R(x0 + 2 + b * 3, 9 + sh * 10, 2, 7 - (b + sh + s) % 3, ["#b36bff", "#3a82e0", "#d1202a", "#3ddc84", "#ffd23f"][(b + sh * 2 + s) % 5]);
+          }
+        });
+      });
+      layer(`npc:${key}:merchant`, D + "merchant.png", (k) => {
+        const R = k.R;
+        for (let x = 0; x < ART_W; x += 8) { R(x, 0, 8, 7, (x / 8) % 2 ? accent : "#f4f0e8"); R(x + 2, 7, 4, 2, (x / 8) % 2 ? accent : "#f4f0e8"); }
+        R(0, 9, ART_W, 1, "rgba(0,0,0,0.25)");
+      });
+      layer(`npc:${key}:merchant-front`, D + "merchant-front.png", (k) => {
+        const R = k.R;
+        R(0, 44, ART_W, 16, "#6a4a2a"); R(0, 44, ART_W, 2, "#9a6a3a"); R(0, 46, ART_W, 1, "#4a3018");
+        for (let i = 0; i < 4; i++) R(10 + i * 40, 48, 30, 10, "#5a3a20");
+        CAMP.items.filter(it => it.family === I.merchantFamily).forEach((_, i) => R(84 + i * 15, 43, 12, 1, "rgba(0,0,0,0.3)"));
+      });
+      layer(`npc:${key}:challenger`, D + "challenger.png", (k, g) => {
+        const R = k.R;
+        for (let x = 0; x < ART_W; x += 10) { R(x, 0, 5, 48, accent); R(x + 5, 0, 5, 48, "#f4f0e8"); }
+        g.globalAlpha = 0.35; R(0, 0, ART_W, 48, "#000"); g.globalAlpha = 1;
+        R(0, 2, ART_W, 1, "#5a3a20");
+        R(0, 48, ART_W, 12, "#6a5a3a"); R(0, 48, ART_W, 1, "#8a7a5a");
+        const tx = 128, ty = 30;
+        [[9, "#e8d8a0"], [7, "#c0392b"], [5, "#e8d8a0"], [3, "#c0392b"], [1, "#ffd23f"]].forEach(([r, c]) => { for (let yy = -r; yy <= r; yy++) { const w = Math.round(Math.sqrt(r * r - yy * yy)); R(tx - w, ty + yy, w * 2 + 1, 1, c); } });
+        R(tx - 1, ty + 9, 3, 9, "#5a3a20");
+        [20, 152].forEach(x => R(x, 30, 2, 18, "#5a3a20"));
+      });
+      layer(`npc:${key}:banker`, D + "banker.png", (k) => {
+        const R = k.R;
+        R(0, 0, ART_W, 48, "rgba(0,0,0,0.25)");
+        [[6, 0], [146, 1]].forEach(([x]) => { R(x, 0, 8, 48, "#d8d0c0"); R(x, 0, 2, 48, "#f0e8d8"); R(x + 6, 0, 2, 48, "#a89f8f"); R(x - 1, 0, 10, 3, "#c8c0b0"); });
+        const vx = 118, vy = 24;
+        for (let yy = -15; yy <= 15; yy++) { const w = Math.round(Math.sqrt(225 - yy * yy)); R(vx - w, vy + yy, w * 2 + 1, 1, yy < -8 ? "#b8b8c0" : "#9a9aa4"); }
+        for (let yy = -11; yy <= 11; yy++) { const w = Math.round(Math.sqrt(121 - yy * yy)); R(vx - w, vy + yy, w * 2 + 1, 1, "#7a7a84"); }
+      });
+      layer(`npc:${key}:banker-front`, D + "banker-front.png", (k) => {
+        const R = k.R, vx = 118, vy = 24, c = I.currency.color;
+        R(vx - 2, vy - 2, 5, 5, "#ffd23f");
+        R(20, 30, 70, 2, "#5a3a20");
+        for (let i = 0; i < 8; i++) { const h = 2 + (i * 3) % 7; for (let j = 0; j < h; j++) R(24 + i * 8, 29 - j, 5, 1, j % 2 ? c : shadeHex(c, -0.25)); }
+        R(0, 44, ART_W, 16, "#4a3a2a"); R(0, 44, ART_W, 2, "#7a6a4a");
+      });
+    });
+    return out;
+  }
+
   window.LEGACY_SCENES = {
     sets: { rooms: { list: roomList, backdrop: roomBackdrop, times: ROOM_TIMES, rooms: () => Object.keys(PIC_ROOMS) }, shops: { list: shopList }, keepers: { list: keeperList, moments: keeperMoments, roles: KEEPER_ROLES },
-      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList }, stops: { list: stopList }, tree: { list: treeList } },
+      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList }, stops: { list: stopList }, tree: { list: treeList }, npc: { list: npcList } },
     record, split
   };
 })();

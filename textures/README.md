@@ -54,6 +54,9 @@ textures/
 │   │                     and the falling leaf; the sun, moon, stars, clouds and everything around the tree
 │   ├── tree/             the upgrade tree screen's sky and island, one per island (the tree itself
 │   │                     is still grown by the game from your six upgrades)
+│   ├── npc/              the scene at the top of each shop: <island>/back.png (the room behind the
+│   │                     keeper), merchant.png (the awning), merchant-front.png (the counter),
+│   │                     challenger.png (the tent), banker.png and banker-front.png (the vault)
 │   ├── keepers/          the fifteen shopkeepers, <island>-<role>.png, as sprite sheets (below)
 │   └── shops/            each island's shop and workshop: <island>/back.png (the walls),
 │                         middle.png (the workshop and the shop's shelf), the things that move in that
@@ -140,6 +143,9 @@ with the things that move drawn over it. Each of those is a PNG too:
   light, the den's sea light, the altar's glow. Paint its shape and color at full strength; clear
   pixels let nothing through, half-clear ones half as much.
 - **A particle** is a tiny picture the game moves and fades, like the altar's rising embers.
+
+Soft glows and the dark vignette around a scene's edges are smooth gradients, not pixel art: the game
+still paints those itself, between the pictures, along with the things that move.
 
 Where each moving thing sits and how fast it moves is still in the code (the room's `fx` in
 `src/campaign/camp-invpics.js`, `SS_WALL_FX` and `SS_WORK_FX` in `src/campaign/camp-shop-stage.js`).
@@ -248,5 +254,5 @@ boots the game in a headless Chrome or Edge and makes sure every file in `index.
 `--legacy` to also compare every picture with the game from before textures/ (from git), pixel by pixel,
 the rooms at sixty moments each, every shop with and without stock and orders, and every keeper in
 every one of its looks, and home base piece by piece; that only passes for pictures that haven't been repainted.
-`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`, `map`, `emblems`, `stops`, `tree`) writes a set from that old game into this folder and its index: it's
+`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`, `map`, `emblems`, `stops`, `tree`, `npc`) writes a set from that old game into this folder and its index: it's
 how the folder was made, and with `--force` it overwrites files, repaints and all.
