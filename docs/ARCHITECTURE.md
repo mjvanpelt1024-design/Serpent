@@ -68,8 +68,7 @@ names it always did, so the content can change without touching the rules.
 | `world.txt` `[tree]`, upgrade `slot`s | `src/ui/trees.js` | `TREES`, `TREE_LEAVES` |
 | `world.txt` `music` | `src/engine/audio/music.js` | `MODE_MUSIC` |
 | `worlds/*/levels.dat` | `src/game/world/levels.js` | `LEVEL_NAMES`, `NM_LEVEL_NAMES` |
-| `worlds/*/seed.txt` | `src/engine/core/random.js` | `worldRandom(island)` |
-| labyrinth `[generator]` | `src/game/world/labyrinth.js` | `MAZE` |
+| `levels/*.level` (listed in `levels/index.dat`) | `src/engine/content/formats.js`, `src/game/world/labyrinth.js` | `Formats.level`, `buildMaze()` |
 | `*.upg` (islands and Great Tree) | `src/game/economy/upgrades.js` | `upgradeTracks` |
 | Great Tree `growsFrom`, `part`, `position` | `src/ui/trees.js` | `GLOBAL_GATES`, `GLOBAL_MAIN`, `GLOBAL_DREAMS`, `GLOBAL_TREE` |
 | `items/*.item` | `src/game/items/items.js`, `src/engine/render/pixel-icons.js` (`icon`, `badge`), `src/ui/trees.js` | `CONSUMABLES`, `ITEM_FRUIT`, `ITEM_COLOR`, `ITEM_ISLAND` |

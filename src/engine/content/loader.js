@@ -87,26 +87,43 @@ const ContentLoader = (() => {
   function documentRecord(text, path, ext) {
     const doc = Formats.document(text, warnIn(path));
     if (ext === "story") doc.head.lines = Formats.paragraphs(doc.body);
-    else doc.head.rows = doc.body.filter(l => l.trim() && !/^\s*#/.test(l)).map(l => l.replace(/\s+$/, ""));
+    // A board's rows can start with # (a red wall), so a level's body is never comment-filtered
+    else doc.head.rows = doc.body.filter(l => l.trim() && (ext === "level" || !/^\s*#/.test(l))).map(l => l.replace(/\s+$/, ""));
     return doc.head;
   }
 
-  /* The first real line of a small text file (the seed, the version) */
+  /* The first real line of a small text file (the version) */
   const firstLine = text => (String(text || "").split(/\r?\n/).map(l => l.trim()).find(l => l && !l.startsWith("#")) || "");
+
+  /* The game's levels built from .level files. content/levels/index.dat maps each level's name
+     to its file: "Hedgerow | labyrinth-1.level". Keyed by name, as the worlds name them. */
+  async function gameLevels() {
+    const dir = "content/levels/";
+    const rows = Formats.table(await need(dir + "index.dat"));
+    const texts = await Promise.all(rows.map(r => read(dir + String(r[1]))));
+    const out = {};
+    rows.forEach((r, i) => {
+      const name = String(r[0]), file = String(r[1]);
+      if (texts[i] === null) { warn(dir + "index.dat", 0, `lists "${file}", but ${dir}${file} doesn't exist`); return; }
+      if (out[name]) { warn(dir + "index.dat", 0, `"${name}" is listed twice; the last one wins`); }
+      out[name] = Object.assign(Formats.level(texts[i], warnIn(dir + file)), { name, file: dir + file });
+    });
+    return out;
+  }
 
   async function world(id) {
     const dir = `content/worlds/builtin/${id}/`;
-    const [info, levels, seed, upgrades] = await Promise.all([
-      need(dir + "world.txt"), need(dir + "levels.dat"), read(dir + "seed.txt"), records(dir + "upgrades/", "upg")
+    const [info, levels, upgrades] = await Promise.all([
+      need(dir + "world.txt"), need(dir + "levels.dat"), records(dir + "upgrades/", "upg")
     ]);
-    return { id, info: Formats.values(info, warnIn(dir + "world.txt")), levels: Formats.table(levels), seed: firstLine(seed) || "random", upgrades };
+    return { id, info: Formats.values(info, warnIn(dir + "world.txt")), levels: Formats.table(levels), upgrades };
   }
 
   async function loadBase() {
     const C = {};
     const order = Formats.list(await need("content/worlds/world-order.dat"));
     const [version, economy, levelRules, rules, worlds, greatTree, items, skins, skinTiers, themes, themeTiers,
-      flair, flairSlots, avatars, story, music, community] = await Promise.all([
+      flair, flairSlots, avatars, story, music, community, gameLevelFiles] = await Promise.all([
       read("version.txt"),
       need("content/economy.txt"),
       need("content/rules/levels.dat"),
@@ -123,7 +140,8 @@ const ContentLoader = (() => {
       records("content/avatars/", "avatar"),
       records("content/story/", "story"),
       need("content/music/music.dat"),
-      records("content/worlds/community/", "level", "", true)
+      records("content/worlds/community/", "level", "", true),
+      gameLevels()
     ]);
     C.version = firstLine(version) || "dev";
     C.economy = Formats.values(economy, warnIn("content/economy.txt"));
@@ -143,6 +161,7 @@ const ContentLoader = (() => {
     C.story = story;
     C.music = Formats.table(music);
     C.communityLevels = community;
+    C.gameLevels = gameLevelFiles;   // name -> parsed .level file (see gameLevels() above)
     C.mods = [];
     return C;
   }

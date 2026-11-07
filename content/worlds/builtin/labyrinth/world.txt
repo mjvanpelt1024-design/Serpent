@@ -75,8 +75,4 @@ colors = [#5a4a80, #4d3c70, #2b2142]  # grass, edge, rock
 [tree]
 leaves = [#6a4ab0, #8a6ad0, #b39cf0, #3ddc3d]  # three leaf colors and the fruit color
 
-# The maze generator (src/game/world/labyrinth.js). The seed is in seed.txt.
-[generator]
-cells  = 20                   # maze cells across
-span   = 4                    # board squares per cell
-clear  = 5                    # the starting clearing, in cells
+# The mazes are not generated: each level is a .level file in content/levels/ (see index.dat).

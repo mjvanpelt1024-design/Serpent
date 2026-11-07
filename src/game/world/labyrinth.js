@@ -1,14 +1,12 @@
 /* =========================================================
    src/game/world/labyrinth.js
-   The Labyrinth's maze generator (settings and seed from its world folder)
+   The Labyrinth's mazes. Every maze is a .level file (content/levels/, listed in
+   index.dat); nothing here generates a layout. Format: docs/CONTENT-FORMATS.md (Levels).
    ========================================================= */
 "use strict";
 
-/* ----- Labyrinth: a wrap-around maze with 3-wide corridors.
-   Every run starts in a clearing the size of a normal board, with one way out
-   through the middle of each wall. Close to the clearing the maze is loose and
-   forgiving; it tightens the further out you go. ----- */
-const MAZE = Object.assign({ cells: 20, span: 4, clear: 5 }, (CONTENT.worlds.labyrinth && CONTENT.worlds.labyrinth.info.generator) || {});   // labyrinth/world.txt
+/* ----- Labyrinth: a wrap-around maze, read from its .level file. Each file has the walls
+   (red #, portal P), the snake's start (S) and the dead-end portals. ----- */
 
 const wrapW = v => (maze ? ((v % maze.W) + maze.W) % maze.W : v);
 function wrapDelta(d) {
@@ -17,101 +15,49 @@ function wrapDelta(d) {
   return d > W / 2 ? d - W : d;
 }
 
+/* The name of the level being played: the campaign's maze, or the island's level */
+function mazeLevelName() {
+  if (campRun) return campRun.def.name;
+  return levelName(currentModeKey, currentLevel);
+}
+
+/* Builds the maze for this run from its .level file and returns where the snake starts */
 function buildMaze() {
-  // Every random choice comes from the island's seed (labyrinth/seed.txt)
-  const rng = worldRandom("labyrinth");
-  const getRandomInt = rng.int;
-  const N = MAZE.cells;
-  const S = MAZE.span;
-  const C = MAZE.clear;
-  const T = N * S;
-  const east = Array.from({ length: N }, () => Array(N).fill(false));
-  const south = Array.from({ length: N }, () => Array(N).fill(false));
-  const seen = Array.from({ length: N }, () => Array(N).fill(false));
-  const wrap = v => (v + N) % N;
-  const ci = getRandomInt(0, N), cj = getRandomInt(0, N);        // the clearing's top-left cell
-  // how many cells away from the clearing a cell is (on the torus)
-  const ringDist = (i, j) => {
-    const d = (v, c) => { const r = ((v - c) % N + N) % N; return r < C ? 0 : Math.min(r - C + 1, N - r); };
-    return Math.max(d(i, ci), d(j, cj));
-  };
-
-  // Carve a perfect maze on a torus, then knock out extra walls: lots near the clearing, fewer far away
-  const stack = [[getRandomInt(0, N), getRandomInt(0, N)]];
-  seen[stack[0][0]][stack[0][1]] = true;
-  while (stack.length) {
-    const [i, j] = stack[stack.length - 1];
-    const next = [[1, 0], [-1, 0], [0, 1], [0, -1]]
-      .map(([a, b]) => [wrap(i + a), wrap(j + b), a, b])
-      .filter(([a, b]) => !seen[a][b]);
-    if (!next.length) { stack.pop(); continue; }
-    const [ni, nj, a, b] = next[getRandomInt(0, next.length)];
-    if (a === 1) east[i][j] = true;
-    if (a === -1) east[ni][nj] = true;
-    if (b === 1) south[i][j] = true;
-    if (b === -1) south[ni][nj] = true;
-    seen[ni][nj] = true;
-    stack.push([ni, nj]);
-  }
-  const looseness = d => (d <= 1 ? 0.55 : d === 2 ? 0.38 : d === 3 ? 0.26 : 0.15);
-  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
-    const p = looseness(ringDist(i, j));
-    if (!east[i][j] && rng() < p) east[i][j] = true;
-    if (!south[i][j] && rng() < p) south[i][j] = true;
-  }
-
-  maze = { N, S, T, W: T * cell, east, south, groups: [], prev: [] };
+  const name = mazeLevelName();
+  const L = CONTENT.gameLevels[name];
   walls = new Map();
-  const k = (tx, ty) => cellKey(((tx % T) + T) % T * cell, ((ty % T) + T) % T * cell);
-  const wall = (tx, ty) => walls.set(k(tx, ty), "red");
-  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
-    const x = i * S;
-    const y = j * S;
-    wall(x + S - 1, y + S - 1);
-    for (let t = 0; t < S - 1; t++) {
-      if (!east[i][j]) wall(x + S - 1, y + t);
-      if (!south[i][j]) wall(x + t, y + S - 1);
-    }
+  if (!L) {
+    console.warn(`No .level file for "${name}": check content/levels/index.dat`);
+    maze = { N: 1, S: 4, T: 20, W: 20 * cell, groups: [], prev: [] };
+    return { x: 0, y: 0 };
   }
-
-  // The clearing: open ground the size of a board, walled in, with one gap in the middle of each side
-  const X0 = ci * S, Y0 = cj * S, L = C * S;          // inside runs X0 .. X0+L-2
-  for (let x = X0; x <= X0 + L - 2; x++) for (let y = Y0; y <= Y0 + L - 2; y++) walls.delete(k(x, y));
-  const mid = Math.floor(C / 2) * S;                  // the middle cell along each side
-  const gap = t => t >= mid && t < mid + S - 1;
-  for (let t = -1; t <= L - 1; t++) {
-    if (!gap(t)) { wall(X0 + t, Y0 - 1); wall(X0 + t, Y0 + L - 1); wall(X0 - 1, Y0 + t); wall(X0 + L - 1, Y0 + t); }
+  const T = L.head.size || L.board.length;
+  const S = L.head.span || 4;
+  if (L.board.length !== T || L.board.some(row => row.length !== T)) {
+    console.warn(`${L.file}: the board should be ${T} rows of ${T} squares`);
   }
-  // and the corridor beyond each gap is kept open, so every way out really leads somewhere
-  for (let t = 0; t < S - 1; t++) for (let d = 0; d < S - 1; d++) {
-    walls.delete(k(X0 + mid + t, Y0 - 2 - d)); walls.delete(k(X0 + mid + t, Y0 + L + d));
-    walls.delete(k(X0 - 2 - d, Y0 + mid + t)); walls.delete(k(X0 + L + d, Y0 + mid + t));
-  }
-
-  // Dead ends away from the clearing: the wall at the closed end can become a purple portal
-  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
-    if (ringDist(i, j) <= 1) continue;
-    const open = { e: east[i][j], w: east[wrap(i - 1)][j], s: south[i][j], n: south[i][wrap(j - 1)] };
-    const count = Object.values(open).filter(Boolean).length;
-    if (count !== 1) continue;
-    const x = i * S;
-    const y = j * S;
-    const span = Array.from({ length: S - 1 }, (_, t) => t);
-    let g;
-    if (open.e) g = { tiles: span.map(t => k(x - 1, y + t)), exits: span.map(t => [x, y + t]), dx: cell, dy: 0 };
-    else if (open.w) g = { tiles: span.map(t => k(x + S - 1, y + t)), exits: span.map(t => [x + S - 2, y + t]), dx: -cell, dy: 0 };
-    else if (open.s) g = { tiles: span.map(t => k(x + t, y - 1)), exits: span.map(t => [x + t, y]), dx: 0, dy: cell };
-    else g = { tiles: span.map(t => k(x + t, y + S - 1)), exits: span.map(t => [x + t, y + S - 2]), dx: 0, dy: -cell };
-    if (!g.tiles.every(t => walls.has(t))) continue;
-    g.exits = g.exits.map(([tx, ty]) => ({ x: (((tx % T) + T) % T) * cell, y: (((ty % T) + T) % T) * cell }));
-    g.purple = rng() < 0.45;
-    if (g.purple) g.tiles.forEach(t => walls.set(t, "purple"));
-    maze.groups.push(g);
-  }
-
-  // Start in the middle of the clearing, heading east
-  const sx = ((X0 + Math.floor(L / 2) - 4) % T + T) % T, sy = ((Y0 + Math.floor(L / 2)) % T + T) % T;
-  return { x: sx * cell, y: sy * cell };
+  let start = { x: 0, y: 0 };
+  L.board.forEach((row, y) => [...row].forEach((ch, x) => {
+    const key = cellKey(x * cell, y * cell);
+    if (ch === "#") walls.set(key, "red");
+    else if (ch === "P") walls.set(key, "purple");
+    else if (ch === "S") start = { x: x * cell, y: y * cell };
+  }));
+  // Each portal: its wall squares lead to its exit squares, one square away from the wall.
+  // The maze wraps, so a step can cross the seam: take the short way round.
+  const short = d => ((((d + T / 2) % T) + T) % T) - T / 2;
+  const groups = L.portals.map(p => {
+    const [w0, e0] = [p.wall[0], p.exit[0]];
+    return {
+      tiles: p.wall.map(([x, y]) => cellKey(x * cell, y * cell)),
+      exits: p.exit.map(([x, y]) => ({ x: x * cell, y: y * cell })),
+      dx: short(e0[0] - w0[0]) * cell,
+      dy: short(e0[1] - w0[1]) * cell,
+      purple: walls.get(cellKey(w0[0] * cell, w0[1] * cell)) === "purple"
+    };
+  });
+  maze = { N: T / S, S, T, W: T * cell, groups, prev: [] };
+  return start;
 }
 
 function mazePortalExit(fromKey) {

@@ -132,7 +132,6 @@ Each folder holds:
 builtin/garden-name/
   world.txt        the island itself
   levels.dat       level names
-  seed.txt         the seed for anything generated on this island
   upgrades/        the island's tree: _index.dat + one .upg per upgrade
 ```
 
@@ -159,7 +158,6 @@ builtin/garden-name/
 | `[nightmare.spawns.<type>]` | changes to `[spawns.<type>]` in the Nightmare |
 | `[map]` `x`, `y`, `width`, `colors` | where the island floats (map pixels, 600 across and 340 down; the islands sit along a road that winds right, up, left, up), and, and its grass, edge and rock colors |
 | `[tree]` `leaves` | three leaf colors and the fruit color of its tree |
-| `[generator]` | settings for a procedural generator (the Labyrinth: `cells`, `span`, `clear`) |
 
 An island's **score multiplier** isn't in `world.txt`: the economy's ladder sets it from the island's place
 in `world-order.dat`, so income always climbs evenly (`[ladder] worldGrowth` in `economy.txt`).
@@ -183,11 +181,40 @@ Types: `xp`, `apple`, `rock`, `popsicle`, `flea`, `fire`, `molasses`; the hazard
 `armor`, `shield`, `hourglass`, `star`, `phantom`, `lodestone`, `frenzy`. Brambles, ice and spikes are
 placed with `count`; the rest are timed with `max` and `delay`. What each one does is game code:
 `src/game/flow/entities.js`.
-### seed.txt
 
-`random` (a fresh result every run) or any word or number (the same result every time). Today the
-Labyrinth's maze uses it; any new generator can read its island's seed with `worldRandom("island")`
-from `src/engine/core/random.js`.
+### Game levels: `content/levels/*.level`
+
+A level whose board comes from a file. Nothing is generated: the Labyrinth's three mazes and the
+campaign's Caldera Maze are all files now. `content/levels/index.dat` maps each level's name to its file:
+
+```text
+Hedgerow | labyrinth-1.level
+```
+
+The name is the level's name in its world (`levels.dat`), or the campaign level's name. A file listed
+here replaces the level with that name. To use a level from the custom-levels folder, copy its file here,
+give it the name you want, and list it.
+
+```text
+# Comments start with #
+name    = Hedgerow
+world   = labyrinth           # the island it belongs to
+level   = 1
+size    = 80                  # squares across; the board has this many rows of this many squares
+edge    = maze
+span    = 4                   # squares per maze cell
+
+[portals]                     # dead-end portals: "wall squares > exit squares"
+p01 = "3,20-22 > 4,20-22"     # a square x,y, or a line x,y1-y2 (a column) or x1-x2,y (a row)
+---
+....#####........
+```
+
+Below the `---`, one row per line: `.` open · `#` red wall · `P` portal wall · `S` snake start (exactly one).
+A portal wall lets you through to its exit; a red wall in a dead end can be turned into one.
+
+**Not in a `.level` file yet:** the island's spawns, speed, theme, skin and loadout. Those still come from
+`world.txt`, `levels.dat` and the player's own settings.
 
 ### Upgrades: `.upg`
 
