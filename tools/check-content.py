@@ -141,7 +141,46 @@ def check_island(island, stories):
             problems.append(f"content/story/_index.dat  doesn't list '{page}', the story page for {island}")
 
 
+def check_game_levels():
+    """content/levels/index.dat: each "name | file" line, and each file's header and board"""
+    folder = os.path.join(CONTENT, "levels")
+    index = os.path.join(folder, "index.dat")
+    if not os.path.exists(index):
+        problems.append("content/levels/index.dat  is missing")
+        return
+    with open(index, encoding="utf-8") as f:
+        rows = [l.split("|") for l in f if l.strip() and not l.strip().startswith("#")]
+    names = [r[0].strip() for r in rows if len(r) == 2]
+    for n in sorted({x for x in names if names.count(x) > 1}):
+        problems.append(f"content/levels/index.dat  lists '{n}' twice")
+    for r in rows:
+        if len(r) != 2:
+            problems.append(f"content/levels/index.dat  line '{'|'.join(r).strip()}' isn't 'name | file'")
+            continue
+        path = os.path.join(folder, r[1].strip())
+        if not os.path.exists(path):
+            problems.append(f"content/levels/index.dat  lists '{r[1].strip()}', which doesn't exist")
+            continue
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+        head, _, body = text.partition("\n---\n")
+        size = value_of(path, "size")
+        if size is None or not str(size).isdigit():
+            problems.append(f"{rel(path)}  needs 'size = <squares across>'")
+            continue
+        size = int(size)
+        board = [l for l in body.split("\n") if l.strip()]
+        if len(board) != size or any(len(l) != size for l in board):
+            problems.append(f"{rel(path)}  its board should be {size} rows of {size} squares (it has {len(board)} rows)")
+        bad = sorted({c for l in board for c in l} - set(".#PSAaXxRrOoFfHhMm@*%&!^~"))
+        if bad:
+            problems.append(f"{rel(path)}  unknown board characters: {' '.join(bad)}")
+        if sum(l.count("S") for l in board) != 1:
+            problems.append(f"{rel(path)}  needs exactly one S (the snake's start)")
+
+
 def main():
+    check_game_levels()
     order = listed(os.path.join(CONTENT, "worlds", "world-order.dat"))
     stories = set(listed(os.path.join(CONTENT, "story", "_index.dat")))
     for island in order:

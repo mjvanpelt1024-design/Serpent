@@ -1,0 +1,11 @@
+# ==================================================================
+#  GAME LEVELS: the levels that are built from a .level file
+#  One line per level: its name | its file (in this folder).
+#  The name is the level's name in its world (levels.dat), or in the campaign.
+#  A file that isn't listed here is never loaded.
+# ==================================================================
+
+Hedgerow | labyrinth-1.level
+Catacombs | labyrinth-2.level
+The Coil | labyrinth-3.level
+Caldera Maze | crown-12.level

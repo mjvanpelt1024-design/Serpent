@@ -1,2 +1,0 @@
-# Reserved for procedural generation on this island. 'random' or any word or number.
-random

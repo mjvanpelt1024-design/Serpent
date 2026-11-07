@@ -39,7 +39,7 @@ SnakeGame/
 │   ├── rules/               level tuning, prestige and Nightmare rules
 │   ├── worlds/
 │   │   ├── world-order.dat      the islands, in unlock order
-│   │   ├── builtin/<island>/    world.txt, levels.dat, seed.txt, upgrades/*.upg
+│   │   ├── builtin/<island>/    world.txt, levels.dat, upgrades/*.upg
 │   │   ├── community/           ready-made Workshop levels (*.level)
 │   │   └── user/                notes on keeping your own levels
 │   ├── great-tree/upgrades/ the Great Tree's upgrades (*.upg)
@@ -90,7 +90,7 @@ SnakeGame/
 | Change what an upgrade does per tier, its name or text | its `.upg` file: `content/worlds/builtin/<island>/upgrades/` or `content/great-tree/upgrades/` |
 | Change an island's speed, rules, Nightmare or map spot | `content/worlds/builtin/<island>/world.txt` |
 | Rename levels | `content/worlds/builtin/<island>/levels.dat` |
-| Make the Labyrinth repeat the same maze | `content/worlds/builtin/labyrinth/seed.txt` |
+| Change a Labyrinth or campaign-maze board | its `.level` file in `content/levels/` (listed in `index.dat`) |
 | Repaint an icon, a foe, a heart or a boss face | its PNG in `textures/` (see `textures/README.md`), then F5 |
 | Add a skin, theme, Flair or avatar | copy a file in its folder, rename it, add the name to that folder's `_index.dat` |
 | Add my own music | drop `menu.ogg` (etc.) in `content/music/`, see `music.dat` |

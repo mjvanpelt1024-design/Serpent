@@ -129,6 +129,36 @@ const Formats = (() => {
     return { head: values(head.join("\n"), warn), body };
   }
 
+  /* A squares range: "4" = (4,y), "4-6,9" = x 4..6 on row 9, "4,2-5" = column 4, rows 2..5.
+     Returns the squares in order, first to last. */
+  function squares(text, warn = () => {}) {
+    const m = /^\s*(\d+)(?:-(\d+))?\s*,\s*(\d+)(?:-(\d+))?\s*$/.exec(String(text));
+    if (!m) { warn(`"${text}" isn't a square or a straight line of squares`); return []; }
+    const x0 = Number(m[1]), x1 = m[2] !== undefined ? Number(m[2]) : x0;
+    const y0 = Number(m[3]), y1 = m[4] !== undefined ? Number(m[4]) : y0;
+    if (x1 !== x0 && y1 !== y0) { warn(`"${text}" is a box; a line goes one way only`); return []; }
+    const out = [];
+    for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) {
+      for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) out.push([x, y]);
+    }
+    return y0 > y1 || x0 > x1 ? out.reverse() : out;
+  }
+
+  /* A .level file: the header (key = value lines, [sections]), ---, then the board, one row per line.
+     Portals are lines in [portals]: "wall squares > exit squares" (docs/CONTENT-FORMATS.md, Levels). */
+  function level(text, warn = () => {}) {
+    const doc = document(text, warn);
+    const board = doc.body.map(l => l.replace(/\s+$/, "")).filter(l => l.trim());
+    const portals = Object.keys(doc.head.portals || {}).sort().map(key => {
+      const [wall, exit] = String(doc.head.portals[key]).split(">").map(s => s.trim());
+      const from = squares(wall || "", m => warn(`portal ${key}: ${m}`));
+      const to = squares(exit || "", m => warn(`portal ${key}: ${m}`));
+      if (from.length !== to.length || !from.length) warn(`portal ${key}: the wall and exit must be the same length`);
+      return { wall: from, exit: to };
+    });
+    return { head: doc.head, board, portals };
+  }
+
   /* Story pages: paragraphs separated by blank lines */
   function paragraphs(bodyLines) {
     const out = [];
@@ -171,5 +201,5 @@ const Formats = (() => {
     return [];
   }
 
-  return { value, values, table, list, document, paragraphs, formatter, tiers, FORMATTERS };
+  return { value, values, table, list, document, level, squares, paragraphs, formatter, tiers, FORMATTERS };
 })();

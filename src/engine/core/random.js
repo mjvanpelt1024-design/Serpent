@@ -25,13 +25,3 @@ function seedFromText(text) {
   return h >>> 0;
 }
 
-/* A generator for one island's procedural generation, from its seed.txt.
-   "random" gives a fresh seed every time; anything else repeats exactly. */
-function worldRandom(area) {
-  const w = CONTENT.worlds[area];
-  const seed = w && w.seed && w.seed !== "random" ? seedFromText(w.seed) : (Math.random() * 4294967296) >>> 0;
-  const next = seededRandom(seed);
-  next.seed = seed;
-  next.int = (min, max) => min + Math.floor(next() * (max - min));
-  return next;
-}
