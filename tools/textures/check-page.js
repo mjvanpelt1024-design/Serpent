@@ -183,6 +183,23 @@
         }
       }
 
+      // ----- the story book: every page, its nightmare, every relic, old against new, at moments that catch
+      // the storm's and the thunder's flashes, the mirror's wink, the fuse, the shears, the spikes, night's eye
+      {
+        const storyMoments = [0, 0.05, 0.13, 0.25, 0.3, 1.1, 2.6, 2.83, 3.15, 3.3, 3.5, 4.4, 5.07, 5.25, 5.7, 6.35, 6.8, 9.9, 13.37, 27.3];
+        const firstId = {};
+        Object.entries(W.eval("ART_SCENE")).forEach(([id, sc]) => { if (!(sc in firstId)) firstId[sc] = id; });
+        const ids = Object.values(firstId).flatMap(id => [id, "nm-" + id]).concat(W.eval("RELICS").map(r => r.id));
+        for (const id of ids) for (const t of storyMoments) {
+          const a = canvasOf(160, 60), b = canvasOf(160, 60);
+          W.drawPageArt(a, id, t);
+          drawPageArt(b, id, t);
+          const d = diff(a, b);
+          if (d) problems.push(`story page ${id} at ${t} s: ${d}`);
+          counts.scenes++;
+        }
+      }
+
       // ----- the shops and workshops: the whole stage, old drawStage() against new, with the same
       // stock, orders, gear on the dummy and keeper, every island, at many moments
       const gEval = code => (0, eval)(code);

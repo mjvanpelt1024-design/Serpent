@@ -892,9 +892,206 @@
     return out;
   }
 
+  /* ----- The story book's pictures (story-book-art.js, island-art-46.js): each page's sky, the old
+     code's still parts layer by layer (in the order they were painted between the moving ones), the
+     little things that only switch between looks, the relics, and night over a nightmare ----- */
+  const STORY = {
+    garden: { sky: ["#7cc6f2", "#dff4ff"], layers: [
+      k => { k.R(128, 6, 8, 8, "#fff3b0"); k.R(129, 5, 6, 10, "#fff3b0"); k.R(127, 7, 10, 6, "#fff3b0"); },
+      k => k.R(0, 48, ART_W, 12, "#4f9a3a"),
+      k => { [[12, "#ff6b6b"], [30, "#ffe066"], [96, "#ffffff"], [148, "#ff9ad5"], [72, "#ff6b6b"]].forEach(([x, c]) => k.R(x, 50 + (x % 5), 1, 1, c)); k.R(16, 30, 3, 18, "#6a4426"); },
+      k => k.apple(124, 51)
+    ] },
+    dawn: { sky: ["#f7a07a", "#ffe3b8"], layers: [k => k.R(0, 48, ART_W, 12, "#4f9a3a")] },
+    tutorial: { sky: ["#bfe6c4", "#eef9e6"], layers: [
+      k => { k.R(0, 48, ART_W, 12, "#5aab45"); k.R(6, 10, 4, 38, "#8f4dff"); },
+      k => { k.R(150, 10, 4, 38, "#ff3b3b"); k.rock(70, 43); },
+      k => k.apple(118, 44)
+    ] },
+    shop: { sky: ["#4a2a18", "#7a4a2a"], layers: [
+      k => { for (let y = 4; y < 44; y += 6) k.R(0, y, ART_W, 1, "rgba(0,0,0,0.25)"); },
+      k => {
+        for (let i = 0; i < 9; i++) k.R(i * 18, 0, 18, 6, i % 2 ? "#f4efe2" : "#d0262e");
+        for (let i = 0; i < 9; i++) k.R(i * 18 + 6, 6, 6, 2, i % 2 ? "#f4efe2" : "#d0262e");
+        [16, 30].forEach(y => { k.R(8, y + 6, 44, 2, "#3a2210"); k.R(108, y + 6, 44, 2, "#3a2210");
+          for (let i = 0; i < 4; i++) { [12 + i * 10, 112 + i * 10].forEach(x => { k.R(x, y, 6, 6, "rgba(200,230,255,0.35)"); k.R(x + 1, y + 2, 4, 4, i % 2 ? "#ffd23f" : "#3ddc3d"); }); } });
+      },
+      k => { k.R(30, 44, 100, 16, "#5a3418"); k.R(30, 44, 100, 2, "#8a5526"); },
+      k => k.apple(56, 40)
+    ] },
+    satchel: { sky: ["#6a4a2a", "#8a6238"], layers: [
+      k => { for (let x = 0; x < ART_W; x += 20) k.R(x, 0, 1, ART_H, "rgba(0,0,0,0.18)"); k.R(56, 26, 48, 26, "#8a5526"); k.R(56, 26, 48, 2, "#a8703a"); k.R(56, 50, 48, 2, "#5a3410"); }
+    ] },
+    badges: { sky: ["#2e2a20", "#4a3f2c"], layers: [
+      k => {
+        k.R(10, 6, 140, 34, "#5a4a32"); k.R(10, 6, 140, 1, "#7a6544");
+        const cols = ["#cd7f32", "#c9ced6", "#ffd23f", "#6ee7d8", "#8ab4ff", "#ff77c8"];
+        for (let r = 0; r < 3; r++) for (let i = 0; i < 12; i++) { const x = 16 + i * 11, y = 10 + r * 10, c = cols[(i + r * 2) % cols.length]; k.R(x, y, 6, 6, c); k.R(x, y, 6, 1, "rgba(255,255,255,0.4)"); }
+      },
+      k => k.R(4, 20, 3, 10, "#3a2a1a"),
+      k => k.R(0, 48, ART_W, 12, "#2a2418")
+    ] },
+    ledger: { sky: ["#140e0a", "#2a1c12"], layers: [
+      k => k.R(122, 30, 4, 12, "#efe4c8"),
+      k => { k.R(26, 30, 90, 26, "#efe2c0"); k.R(70, 30, 2, 26, "#c9b48a"); }
+    ] },
+    curtain: { sky: ["#140a14", "#2a1424"], layers: [
+      k => { for (let i = 0; i < 4; i++) { const cx = 46 + i * 22, cy = 22; k.R(cx - 5, cy - 5, 11, 11, "#3a3a44"); k.R(cx - 4, cy - 4, 9, 9, "#d8d0b8"); k.R(cx, cy, 1, 1, "#222"); } },
+      k => k.R(118, 26, 3, 16, "#888"),
+      k => k.R(0, 48, ART_W, 12, "#1a0e12"),
+      k => k.R(0, 0, ART_W, 4, "#5a0e1a")
+    ] },
+    classic: { sky: ["#a9b9cc", "#dfe6ee"], layers: [
+      k => { k.R(0, 46, ART_W, 14, "#8a6a48"); for (let y = 20; y < 46; y += 4) for (let x = (y / 4) % 2 ? 0 : 4; x < ART_W; x += 8) { k.R(x, y, 7, 3, (x + y) % 3 ? "#b23a3a" : "#9a2f30"); } k.R(0, 20, ART_W, 1, "#7a2424"); },
+      k => k.R(114, 32, 7, 3, "#c86a4a")
+    ] },
+    quarry: { sky: ["#e8cfa0", "#f6e8c8"], layers: [
+      k => { for (let y = 34; y < 48; y += 3) k.R(0, y, ART_W, 1, "rgba(120,90,50,0.25)"); },
+      k => { k.R(0, 48, ART_W, 12, "#b89a6a"); k.rock(20, 40, 8); k.rock(132, 42, 6); k.rock(96, 44, 4); k.rock(40, 44, 3); k.R(104, 36, 14, 10, "#8a8984"); k.R(104, 36, 14, 1, "#b8b7b1"); }
+    ] },
+    parlor: { sky: ["#ffd6ea", "#d8ecff"], layers: [
+      k => {
+        for (let x = 0; x < ART_W; x += 8) for (let y = 48; y < ART_H; y += 4) k.R(x + ((y / 4) % 2) * 4, y, 4, 4, "#f4f4ff");
+        k.R(0, 48, ART_W, 1, "#c9b8d8");
+        k.R(20, 22, 120, 22, "#e8f6ff"); k.R(20, 22, 120, 2, "#ffffff"); k.R(20, 42, 120, 2, "#a8c8e0");
+      }
+    ] },
+    storm: { skies: [["#3c4a66", "#6a7a96"], ["#c8d4ea", "#e8eef8"]], layers: [
+      k => { k.R(0, 48, ART_W, 12, "#3f7f35"); for (let i = 0; i < 6; i++) { const x = 8 + i * 28; k.R(x + 4, 38, 2, 10, "#5a3a22"); } }
+    ] },
+    mirror: { sky: ["#1e1436", "#2c2048"], layers: [
+      k => { for (let i = 0; i < 5; i++) { const x = 6 + i * 31; k.R(x, 6, 24, 40, "#b8a8ff"); k.R(x + 1, 7, 22, 38, "#3a2c66"); k.R(x + 3, 9, 2, 30, "rgba(255,255,255,0.18)"); } },
+      k => k.R(0, 46, ART_W, 14, "#2a1f48")
+    ], parts: { eye: { at: [72, 21], size: [16, 7], frames: [1, 0].map(open => R => { R(72, 21, 16, 7 * open || 1, "#ffd23f"); if (open) R(78, 21, 4, 7, "#141010"); }) } } },
+    vault: { sky: ["#2a2014", "#4a3820"], layers: [
+      k => {
+        for (let y = -19; y <= 19; y++) for (let x = -19; x <= 19; x++) {
+          const d = Math.hypot(x, y);
+          if (d <= 19) k.R(40 + x, 26 + y, 1, 1, d > 17 ? "#5a4018" : d > 15 ? "#a07a30" : (x + y) % 7 === 0 ? "#b8913c" : "#c9a04a");
+        }
+        for (let i = 0; i < 8; i++) { const a = Math.PI * 2 * i / 8; k.R(40 + Math.round(Math.cos(a) * 16.5), 26 + Math.round(Math.sin(a) * 16.5), 1, 1, "#ffe98a"); }
+      },
+      k => { k.R(37, 23, 6, 6, "#6a4c1e"); k.R(38, 24, 4, 4, "#ffe98a"); k.R(0, 46, ART_W, 14, "#5a4422"); },
+      k => k.apple(110, 34, true),
+      k => k.R(138, 47, 4, 3, "#ffd23f")
+    ] },
+    tunnel: { sky: ["#0e0c0c", "#1c1414"] },
+    furnace: { sky: ["#200806", "#4a120a"], layers: [
+      k => k.R(0, 50, ART_W, 10, "#5a1a12"),
+      k => [[8, 14], [146, 14]].forEach(([x, y]) => { k.R(x, y, 6, 30, "#8f4dff"); k.R(x + 1, y + 1, 4, 28, "#6a2fd0"); })
+    ] },
+    maze: { sky: ["#140e24", "#1c1530"], layers: [
+      k => { for (let y = 2; y < ART_H; y += 8) for (let x = 2; x < ART_W; x += 8) { if (mapHash(x, y, 3) < 0.55) k.R(x, y, 8, 2, "#4a3a78"); if (mapHash(x, y, 9) < 0.45) k.R(x, y, 2, 8, "#4a3a78"); } }
+    ] },
+    ouroboros: { sky: ["#0a0618", "#20103a"] },
+    // the twelve islands' pages (island-art-46.js)
+    sunflower: { sky: ["#5fb8f2", "#fff2c4"], layers: [
+      k => k.R(126, 8, 9, 9, "#ffe066"),
+      k => { k.R(0, 48, ART_W, 12, "#8ab82a"); for (let i = 0; i < 9; i++) { const x = 8 + i * 18, h = 14 + (i % 3) * 4; k.R(x + 2, 48 - h, 1, h, "#3a7a2a"); } }
+    ] },
+    bramble: { sky: ["#4a6a5a", "#9ab89a"], layers: [
+      k => {
+        k.R(0, 46, ART_W, 14, "#2d5a1e");
+        for (let i = 0; i < 14; i++) {
+          const x = (i * 23 + 7) % ART_W, y = 34 + (i % 4) * 4;
+          k.R(x, y, 8, 6, "#3f7a2a"); k.R(x + 1, y - 2, 5, 3, "#4f8f33");
+          k.R(x - 1, y + 2, 1, 1, "#e8e0c8"); k.R(x + 8, y + 1, 1, 1, "#e8e0c8"); k.R(x + 3, y - 3, 1, 1, "#e8e0c8");
+          if (i % 3 === 0) k.R(x + 5, y + 1, 1, 1, "#c0282e");
+        }
+      }
+    ], parts: { shears: { at: [114, 50], size: [12, 4], frames: [false, true].map(gl => R => { R(118, 50, 8, 1, gl ? "#ffffff" : "#d8dde6"); R(118, 53, 8, 1, gl ? "#ffffff" : "#d8dde6"); R(114, 50, 4, 4, "#ff5a61"); }) } } },
+    hive: { sky: ["#f2c46a", "#fff2c4"], layers: [
+      k => {
+        k.R(0, 46, ART_W, 14, "#c89a30");
+        k.R(20, 4, 60, 3, "#6a4426");
+        for (let j = 0; j < 7; j++) { const w = 22 - Math.abs(j - 3) * 3; k.R(40 - w / 2, 8 + j * 4, w, 4, j % 2 ? "#e0a820" : "#c08a10"); }
+        k.R(38, 30, 4, 3, "#3a2a10");
+      },
+      k => { k.R(140, 46, 8, 9, "#c9ced6"); k.R(140, 46, 8, 1, "#ffffff"); k.R(141, 55, 6, 1, "#5b6470"); }
+    ] },
+    thunder: { sky: ["#2a3440", "#6a7a8a"], layers: [
+      k => k.R(0, 48, ART_W, 12, "#4a5260"),
+      k => k.R(136, 47, 8, 7, "rgba(127,227,255,0.5)")
+    ] },
+    frost: { sky: ["#9ac8e8", "#f0f8ff"], layers: [
+      k => { k.R(0, 44, ART_W, 16, "#c8dcf0"); for (let x = 10; x < ART_W; x += 34) { k.R(x, 46, 24, 8, "rgba(190,232,255,0.8)"); k.R(x + 3, 48, 10, 1, "#ffffff"); } },
+      k => { k.R(130, 36, 8, 1, "#8a5a30"); k.R(130, 46, 8, 1, "#8a5a30"); k.R(131, 37, 6, 4, "rgba(220,240,255,0.9)"); k.R(133, 41, 2, 1, "#ffcf33"); k.R(131, 42, 6, 4, "rgba(220,240,255,0.9)"); k.R(132, 44, 4, 2, "#ffcf33"); }
+    ] },
+    hunt: { sky: ["#c8a870", "#f0dca0"], layers: [
+      k => { k.R(0, 46, ART_W, 14, "#6a8a3a"); for (let x = 0; x < ART_W; x += 2) k.R(x, 42 - (x % 5), 1, 5 + (x % 5), "#8aa050"); },
+      k => k.apple(100, 51)
+    ] },
+    keg: { sky: ["#5a3a2a", "#c8885a"], layers: [
+      k => { k.R(0, 46, ART_W, 14, "#5a4028"); for (let i = 0; i < 3; i++) { const x = 14 + i * 24; k.R(x, 30, 16, 16, "#7a5232"); k.R(x, 33, 16, 2, "#3a2a1a"); k.R(x, 41, 16, 2, "#3a2a1a"); k.R(x + 6, 30, 4, 1, "#2a1a10"); } }
+    ], parts: { bomb: { at: [112, 41], size: [9, 13], frames: [false, true].map(spark => R => { R(112, 46, 9, 8, "#2a2a30"); R(115, 43, 2, 3, "#8a6a3a"); if (spark) R(114, 41, 3, 2, "#ffd23f"); }) } } },
+    moor: { sky: ["#2a2a38", "#6a7a7a"], layers: [
+      k => { k.R(0, 46, ART_W, 14, "#2a3a2a"); k.R(118, 24, 22, 22, "#4a4a52"); k.R(126, 14, 6, 10, "#4a4a52"); k.R(128, 10, 2, 4, "#5a5a62"); k.R(127, 32, 4, 6, "#1a1a20"); }
+    ] },
+    clockwork: { sky: ["#5a4a38", "#b89a6a"], layers: [
+      k => { k.R(120 - 3, 24 - 3, 6, 6, "#5a4a38"); k.R(0, 46, ART_W, 14, "#4a4038"); },
+      k => { k.R(140, 44, 12, 9, "#e8d39a"); k.R(142, 46, 8, 1, "#5a3a1a"); k.R(142, 48, 6, 1, "#5a3a1a"); }
+    ], parts: { spikes: { at: [8, 40], size: [77, 6], frames: [true, false].map(up => R => { for (let i = 0; i < 6; i++) { const x = 8 + i * 14; for (let s = 0; s < 3; s++) R(x + s * 3, up ? 40 : 44, 1, up ? 6 : 2, "#e8edf5"); } }) } } },
+    chrono: { sky: ["#1a1430", "#4a3a6a"], layers: [k => k.R(0, 48, ART_W, 12, "#2a2050")] },
+    gale: { sky: ["#7aa0c0", "#e8f4ff"], layers: [
+      k => { k.R(0, 40, 40, 20, "#6a7a88"); k.R(0, 40, 40, 2, "#8aa0b0"); k.R(120, 44, 40, 16, "#6a7a88"); k.R(120, 44, 40, 2, "#8aa0b0"); k.R(40, 50, 80, 10, "#4a5a68"); },
+      k => { k.R(140, 38, 5, 5, "#ff5a61"); k.R(141, 39, 1, 1, "#ffffff"); }
+    ] },
+    maw: { sky: ["#120808", "#3a1010"], layers: [k => k.R(0, 42, ART_W, 10, "#3a1a1a")],
+      parts: { gem: { at: [140, 30], size: [7, 7], frames: [false, true].map(g2 => R => { R(140, 30, 7, 7, "#e9fff1"); R(143, 31, 1, 3, "#1f8a4a"); if (g2) R(143, 33, 2, 1, "#1f8a4a"); }) } } },
+    relic: { sky: ["#1a1208", "#3a2a14"], named: { shadow: k => k.R(54, 50, 52, 4, "rgba(0,0,0,0.35)") } }
+  };
+  /* The relics' still parts, drawn round the middle of the spotlight (most are the old RELIC_ART itself) */
+  const RELIC_STILL = {
+    brick: k => RELIC_ART.brick(k, 0), pebble: k => RELIC_ART.pebble(k, 0), stick: k => RELIC_ART.stick(k, 0),
+    shard: k => RELIC_ART.shard(k, 0), map: k => RELIC_ART.map(k, 0), core: k => RELIC_ART.core(k, 0), scale: k => RELIC_ART.scale(k, 0),
+    ember: k => { k.R(-8, -12, 16, 24, "rgba(200,230,255,0.25)"); k.R(-8, -12, 16, 1, "#cfe8ff"); k.R(-8, -12, 1, 24, "#cfe8ff"); k.R(7, -12, 1, 24, "#cfe8ff"); k.R(-8, 11, 16, 1, "#cfe8ff"); k.R(-6, -14, 12, 2, "#8a6a4a"); },
+    blank: k => { k.R(-10, -14, 20, 28, "#ffffff"); k.R(-10, -14, 20, 1, "#f2f2f2"); k.R(9, -14, 1, 28, "#d9d0bb"); }
+  };
+  function storyList() {
+    const out = [], D = "scenes/story/";
+    const page = draw => { const c = canvasOf(ART_W, ART_H), g = c.getContext("2d"); g.imageSmoothingEnabled = false; draw(artKit(g, 0), g); return c; };
+    const skyOf = ([top, bottom]) => page(k => k.sky(top, bottom));
+    // a little thing that switches looks, cut to its box (it complains if anything lands outside)
+    const partOf = ([x0, y0], [w, h], draw) => {
+      const c = canvasOf(w + 8, h + 8), g = c.getContext("2d");
+      draw((x, y, ww, hh, col) => { g.fillStyle = col; g.fillRect(Math.round(x) - x0 + 4, Math.round(y) - y0 + 4, ww, hh); });
+      const p = pixels(c);
+      for (let y = 0; y < h + 8; y++) for (let x = 0; x < w + 8; x++) if (p[(y * (w + 8) + x) * 4 + 3] && (x < 4 || y < 4 || x >= w + 4 || y >= h + 4)) throw new Error(`a ${w}x${h} story part spills over at ${x - 4}, ${y - 4}`);
+      const o = canvasOf(w, h); o.getContext("2d").drawImage(c, 4, 4, w, h, 0, 0, w, h);
+      return o;
+    };
+    Object.entries(STORY).forEach(([name, S]) => {
+      const skies = S.skies || [S.sky];
+      out.push(Object.assign({ id: `story:${name}:sky`, file: `${D}${name}/sky.png`, canvas: skies.length > 1 ? sheet(skies.map(skyOf)) : skyOf(skies[0]) }, skies.length > 1 ? { frames: skies.length } : {}));
+      (S.layers || []).forEach((draw, i) => out.push({ id: `story:${name}:${i + 1}`, file: `${D}${name}/${i + 1}.png`, canvas: page(draw) }));
+      Object.entries(S.named || {}).forEach(([n, draw]) => out.push({ id: `story:${name}:${n}`, file: `${D}${name}/${n}.png`, canvas: page(draw) }));
+      Object.entries(S.parts || {}).forEach(([n, P]) => {
+        const frames = P.frames.map(f => partOf(P.at, P.size, f));
+        out.push(Object.assign({ id: `story:${name}:${n}`, file: `${D}${name}/${n}.png`, canvas: frames.length > 1 ? sheet(frames) : frames[0] }, frames.length > 1 ? { frames: frames.length } : {}));
+      });
+    });
+    // the relics, each cut to what it painted, its anchor the middle of the spotlight
+    Object.entries(RELIC_STILL).forEach(([id, draw]) => {
+      const c = canvasOf(64, 64), g = c.getContext("2d");
+      g.imageSmoothingEnabled = false;
+      g.translate(32, 32);
+      draw(artKit(g, 0));
+      const p = pixels(c);
+      let x0 = 64, y0 = 64, x1 = -1, y1 = -1;
+      for (let i = 0; i < 64 * 64; i++) if (p[i * 4 + 3]) { const x = i % 64, y = Math.floor(i / 64); x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+      if (x0 === 0 || y0 === 0 || x1 === 63 || y1 === 63) throw new Error(`the ${id} relic doesn't fit its scratch canvas`);
+      const w = x1 - x0 + 1, h = y1 - y0 + 1, o = canvasOf(w, h);
+      o.getContext("2d").drawImage(c, x0, y0, w, h, 0, 0, w, h);
+      out.push({ id: `story:relic:${id}`, file: `${D}relic/${id}.png`, canvas: o, anchor: [32 - x0, 32 - y0] });
+    });
+    // night falling over a nightmare's page
+    out.push({ id: "story:night", file: `${D}night.png`, canvas: solidOf(ART_W, ART_H, "rgba(24, 6, 48, 0.58)") });
+    return out;
+  }
+
   window.LEGACY_SCENES = {
     sets: { rooms: { list: roomList, backdrop: roomBackdrop, times: ROOM_TIMES, rooms: () => Object.keys(PIC_ROOMS) }, shops: { list: shopList }, keepers: { list: keeperList, moments: keeperMoments, roles: KEEPER_ROLES },
-      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList }, stops: { list: stopList }, tree: { list: treeList }, npc: { list: npcList } },
+      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList }, stops: { list: stopList }, tree: { list: treeList }, npc: { list: npcList }, story: { list: storyList } },
     record, split
   };
 })();

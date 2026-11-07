@@ -57,6 +57,11 @@ textures/
 │   ├── npc/              the scene at the top of each shop: <island>/back.png (the room behind the
 │   │                     keeper), merchant.png (the awning), merchant-front.png (the counter),
 │   │                     challenger.png (the tent), banker.png and banker-front.png (the vault)
+│   ├── story/            the story book's pictures, one folder per page (garden/, shop/, storm/, the
+│   │                     twelve islands' pages...): sky.png, then 1.png, 2.png... laid over it in that
+│   │                     order between the things that move; a few little things that only switch
+│   │                     looks (the mirror's eye, the bomb's fuse, the clockwork spikes); relic/ for
+│   │                     the relics under their spotlight; night.png, laid over a nightmare's page
 │   ├── keepers/          the fifteen shopkeepers, <island>-<role>.png, as sprite sheets (below)
 │   └── shops/            each island's shop and workshop: <island>/back.png (the walls),
 │                         middle.png (the workshop and the shop's shelf), the things that move in that
@@ -143,6 +148,12 @@ with the things that move drawn over it. Each of those is a PNG too:
   light, the den's sea light, the altar's glow. Paint its shape and color at full strength; clear
   pixels let nothing through, half-clear ones half as much.
 - **A particle** is a tiny picture the game moves and fades, like the altar's rising embers.
+- **The story book's pages** (`scenes/story/<page>/`) are a sky and numbered layers: `sky.png` first, then
+  `1.png`, `2.png`... each laid where it always was among the things the game draws live (the hills
+  rolling by, your snake in your skin, flames, glows), so a layer's clear pixels show what's under it and
+  its half-clear ones (the shop's shadowed planks, the jars of XP) shade it. The storm's `sky.png` has two
+  frames, the second lit by lightning. A relic (`relic/brick.png`) has an anchor: the pixel that sits
+  in the middle of the spotlight as it bobs.
 
 Soft glows and the dark vignette around a scene's edges are smooth gradients, not pixel art: the game
 still paints those itself, between the pictures, along with the things that move.
@@ -254,5 +265,5 @@ boots the game in a headless Chrome or Edge and makes sure every file in `index.
 `--legacy` to also compare every picture with the game from before textures/ (from git), pixel by pixel,
 the rooms at sixty moments each, every shop with and without stock and orders, and every keeper in
 every one of its looks, and home base piece by piece; that only passes for pictures that haven't been repainted.
-`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`, `map`, `emblems`, `stops`, `tree`, `npc`) writes a set from that old game into this folder and its index: it's
+`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`, `map`, `emblems`, `stops`, `tree`, `npc`, `story`) writes a set from that old game into this folder and its index: it's
 how the folder was made, and with `--force` it overwrites files, repaints and all.

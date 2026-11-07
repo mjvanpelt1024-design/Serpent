@@ -63,7 +63,7 @@ SnakeGame/
 │   ├── hearts/  bosses/  coins/  icons/     the HUD, wanted posters, money, map pins, cursors, avatars...
 │   ├── ui/                  the menus' frames: plates, windows, buttons, tabs (color-swap), parchment
 │   ├── map/                 each island on the map: under the paths, over them, and in the haze
-│   └── scenes/              painted scenes: backgrounds, sprite sheets, lights (rooms, shops, keepers, home so far)
+│   └── scenes/              painted scenes: backgrounds, layers, sprite sheets, lights (rooms, shops, keepers, home, story book...)
 │
 ├── styles/              CSS, in the order index.html links them
 ├── assets/              the fonts (with their licenses) and icons
