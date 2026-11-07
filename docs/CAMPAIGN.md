@@ -366,9 +366,8 @@ folder: `textures/README.md`). `textures/index.json` maps the ids the game asks 
 one is a pink checkerboard and a console warning); `src/engine/render/pixel-icons.js` draws them flat on
 the board and in the painted scenes (`texCanvas`, `texUrl`) and lit from the top left in menus
 (`iconUrl`). A new item needs its PNG and its line in the index, nothing in the code. The picture rooms,
-the shops and workshops and the shopkeepers are scenes in `textures/scenes/` (`src/engine/render/scene-art.js`
-draws their layers, sprite sheets, lights and color-swap pictures). Still drawn by code for now: home base,
-story art, the pixel frames, coins, the map's islands, theme backdrops, snake skins, familiars on the board and
+the shops and workshops, the shopkeepers and home base are scenes in `textures/scenes/` (`src/engine/render/scene-art.js`
+draws their layers, sprite sheets, lights and color-swap pictures). Still drawn by code for now: story art, the pixel frames, coins, the map's islands, theme backdrops, snake skins, familiars on the board and
 the old engine's hazards.
 
 ## Build 51

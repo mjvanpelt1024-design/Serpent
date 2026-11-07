@@ -66,9 +66,12 @@
       const diff = (a, b) => {
         if (a.width !== b.width || a.height !== b.height) return `size ${b.width}x${b.height}, was ${a.width}x${a.height}`;
         const pa = pixels(a), pb = pixels(b);
-        let n = 0;
-        for (let i = 0; i < pa.length; i += 4) if (pa[i] !== pb[i] || pa[i + 1] !== pb[i + 1] || pa[i + 2] !== pb[i + 2] || pa[i + 3] !== pb[i + 3]) n++;
-        return n ? `${n} pixel${n === 1 ? "" : "s"} differ` : "";
+        let n = 0, first = "";
+        for (let i = 0; i < pa.length; i += 4) if (pa[i] !== pb[i] || pa[i + 1] !== pb[i + 1] || pa[i + 2] !== pb[i + 2] || pa[i + 3] !== pb[i + 3]) {
+          if (!n) first = ` (first at ${(i / 4) % a.width}, ${Math.floor(i / 4 / a.width)}: was ${[...pa.slice(i, i + 4)]}, now ${[...pb.slice(i, i + 4)]})`;
+          n++;
+        }
+        return n ? `${n} pixel${n === 1 ? "" : "s"} differ${first}` : "";
       };
       const compareUrls = async (what, oldUrl, newUrl) => {
         if (oldUrl === newUrl) return;
@@ -214,6 +217,52 @@
           const d = diff(ssOld, ssNew);
           if (d) problems.push(`shop ${I.id} (${sname}, keeper ${ki}) at ${t.toFixed(3)} s: ${d}`);
           counts.scenes++;
+        }
+      }
+
+      // ----- home base: its paintings at full width, the sky's things, the tree at several sizes, each
+      // thing around it in each of its states (the old functions against the new, same save in both)
+      const HS = W.LEGACY_SCENES.sets.home;
+      const both = code => { gEval(code); W.eval(code); };
+      both("HOME_W = 320");
+      const homeMoments = Array.from({ length: 24 }, (_, i) => 0.2 + i * 0.437 + (i % 3) * 0.061);
+      const homeItems = [item(101, "sword", "rare"), item(102, "crab", "common"), item(103, "plenty", "rare"), item(104, "nail", "common")];
+      const tiersFor = (isl, have) => { const out = {}; let left = have; for (const u of CAMP.islandById[isl].tree.upgrades) { const n = Math.min(left, u.values.length - 1); if (n) out[u.id] = n; left -= n; } return out; };
+      const homeScene = (setup, draw, oldDraw, what) => {
+        const a = canvasOf(320, 135), b = canvasOf(320, 135);
+        W.eval(setup); oldDraw(a.getContext("2d"));
+        gEval(setup); draw(b.getContext("2d"));
+        const d = diff(a, b);
+        if (d) problems.push(`home: ${what}: ${d}`);
+        counts.scenes++;
+      };
+      for (const I of CAMP.islands) {
+        const isl = I.id, total = I.tree.upgrades.reduce((s, u) => s + u.values.length - 1, 0);
+        both(`homeIsl = ${JSON.stringify(isl)}`);
+        // the paintings, at the width they were made for
+        const d1 = diff(W.homeSky(isl), texCanvas(`home:${isl}:sky`)), d2 = diff(W.homeGround(isl), texCanvas(`home:${isl}:ground`));
+        if (d1) problems.push(`home ${isl} sky: ${d1}`);
+        if (d2) problems.push(`home ${isl} ground: ${d2}`);
+        counts.scenes += 2;
+        const back = g => { g.drawImage(W.homeSky(isl), 0, 0); g.drawImage(W.homeGround(isl), 0, 0); };
+        for (const t of homeMoments) {
+          homeScene("", g => { back(g); drawHomeStars(g, isl, t); }, g => { back(g); HS.stars(g, isl, t); }, `${isl} stars, sun and moon at ${t.toFixed(3)} s`);
+          homeScene("", g => { back(g); drawHomeDrift(g, isl, t); }, g => { back(g); HS.drift(g, isl, t); }, `${isl} far islands and clouds at ${t.toFixed(3)} s`);
+        }
+        // the tree at five sizes, at each of its four moments
+        for (const have of [0, 1, Math.floor(total / 2), total - 1, total]) for (let k = 0; k < 4; k++) {
+          const t = (k + 0.5) * HS.step, setup = `camp.upgrades = ${JSON.stringify(tiersFor(isl, have))};`;
+          homeScene(setup, g => { back(g); drawHomeTreeBig(g, isl, 160, 102, t); }, g => { back(g); W.drawHomeTreeBig(g, isl, 160, 102, t); }, `${isl} tree with ${have} tiers at moment ${k}`);
+        }
+        // everything around it, in each state
+        const states = [
+          { name: "bare", setup: `camp.satchel = []; camp.equip = {}; camp.achievements = {}; camp.wallet = {}; camp.upgrades = {};` },
+          { name: "full", setup: `camp.satchel = ${JSON.stringify(homeItems)}; camp.equip = { gear: 101, pet: 102, rune: 103 }; camp.achievements = { first: 1 }; camp.wallet = ${JSON.stringify(Object.fromEntries(CAMP.islands.map(J => [campCurrency(J.id).id, 1e9])))}; camp.upgrades = ${JSON.stringify(tiersFor(isl, 5))};` }
+        ];
+        for (const st of states) for (const t of homeMoments) {
+          const things = g => [["Trophy", 104, 104], ["Mirror", 212, 104], ["Easel", 238, 106], ["Satchel", 173, 105], ["Rack", 94, 132], ["Shelf", 117, 130], ["Den", 188, 131], ["Stones", 222, 130]];
+          homeScene(st.setup, g => { back(g); things().forEach(([n, x, y]) => gEval("drawHome" + n)(g, x, y, t)); drawHomeCarving(g, t); },
+            g => { back(g); things().forEach(([n, x, y]) => W["drawHome" + n](g, x, y, t)); W.drawHomeCarving(g, t); }, `${isl} things (${st.name}) at ${t.toFixed(3)} s`);
         }
       }
     }

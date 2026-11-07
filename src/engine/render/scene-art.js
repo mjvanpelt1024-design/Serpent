@@ -72,6 +72,8 @@ function texRuns(id, frame = 0) {
       x += n;
     }
   }
+  // one color all over: painted as one rectangle (the same at any position, whole or fractional)
+  if (runs.length === b.h && runs.every(r => r[0] === 0 && r[2] === b.w && r[3] === runs[0][3] && r[4] === runs[0][4] && r[5] === runs[0][5] && r[6] === runs[0][6] && r[7] === runs[0][7])) runs.solid = { w: b.w, h: b.h };
   texRunCache.set(cacheKey, runs);
   return runs;
 }
@@ -80,16 +82,17 @@ function texRuns(id, frame = 0) {
 function texPaint(g, id, x, y, { alpha = 1, frame = 0, colors = null } = {}) {
   const runs = texRuns(id, frame);
   const was = g.globalAlpha;
-  for (const [rx, ry, n, r, gg, b, a, key] of runs) {
+  const rects = runs.solid ? [[0, 0, runs.solid.w].concat(runs[0].slice(3))] : runs;
+  for (const [rx, ry, n, r, gg, b, a, key] of rects) {
     const swap = key && colors && colors[key];
     if (swap) {
       // a supplied color is used as it's given; any alpha goes over it as the canvas's own
-      if (alpha !== 1 || a !== 255) g.globalAlpha = was * alpha * a / 255;
+      if (alpha !== 1 || a !== 255) g.globalAlpha = was * (a === 255 ? alpha : alpha * a / 255);
       g.fillStyle = swap;
     } else {
       g.fillStyle = `rgba(${r},${gg},${b},${a === 255 ? alpha : alpha * a / 255})`;
     }
-    g.fillRect(x + rx, y + ry, n, 1);
+    g.fillRect(x + rx, y + ry, n, runs.solid ? runs.solid.h : 1);
     g.globalAlpha = was;
   }
 }

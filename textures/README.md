@@ -43,6 +43,8 @@ textures/
 │   ├── rooms/            the picture rooms at home: rack/, shelf/, den/, stones/, satchel/, each with
 │   │                     background.png and the things that move in it; marks/ for the little marks
 │   │                     on things (the away tag, a wax seal, a trinket's dot, the rarity pip)
+│   ├── home/             home base: <island>/sky.png and ground.png (320 wide), tree.png, far islands
+│   │                     and the falling leaf; the sun, moon, stars, clouds and everything around the tree
 │   ├── keepers/          the fifteen shopkeepers, <island>-<role>.png, as sprite sheets (below)
 │   └── shops/            each island's shop and workshop: <island>/back.png (the walls),
 │                         middle.png (the workshop and the shop's shelf), the things that move in that
@@ -85,6 +87,7 @@ So to move or rename a file, move it and change its one line here. Two ids can s
 | `room:rack`, `room:shelf:flame`, `room:mark:seal` | a picture room's background, something that moves in it, a mark on a thing |
 | `shop:keep:back`, `shop:reef:hoop`, `shop:parcel` | a shop's walls (or `middle`, `front`), something in its workshop, something every shop shares |
 | `keeper:keep:merchant` | a shopkeeper's sprite sheet (island, then merchant, challenger or banker) |
+| `home:keep:tree`, `home:trophy`, `home:cloud-3` | home base: an island's own picture, or one every home shares |
 | `gem`, `clock`, `anchor` | a picture asked for by name: by the code, or by a content file's `icon =` (old-style upgrades and items) or `picture =` (avatars) |
 
 To give an old-style upgrade, item or avatar a new picture: put the PNG in `icons/`, add a line
@@ -107,6 +110,12 @@ with the things that move drawn over it. Each of those is a PNG too:
   are states rather than moments: an order parcel busy and ready, the lagoon's three hoops. A sheet can
   be a grid instead (`"columns": 3`: frame 0 top left, along the row, then down), and an `"anchor"`
   says which pixel of a frame stands on the spot the game draws it at.
+- **Home base** is as wide as the window allows (184 to 320 pixels), so its `sky.png` and `ground.png` are
+  320 wide and the game shows their middle. Its tree (`<island>/tree.png`) is a sheet with four columns
+  (its leaves stirring) and a row for every upgrade tier you can buy, from bare to full; the game picks the
+  row by how many you've bought, so a sheet with fewer rows (say six sizes) works too, spread over the
+  tiers. The fruit are part of each row; their glints are `glint.png`. Each cloud is three puffs, one a
+  frame, laid over one another; the far islands drift as one picture each.
 - **The shopkeepers** are one sheet each (`scenes/keepers/keep-merchant.png` is Sir Hissington): three
   columns as they sway (left, upright, right), four rows (eyes open, blinking, tongue out, blinking with
   the tongue out). The anchor is the bottom of the coil. The same sheet is drawn small by the stall on
@@ -170,6 +179,6 @@ node tools/textures/textures.mjs check
 boots the game in a headless Chrome or Edge and makes sure every file in `index.json` loads. Add
 `--legacy` to also compare every picture with the game from before textures/ (from git), pixel by pixel,
 the rooms at sixty moments each, every shop with and without stock and orders, and every keeper in
-every one of its looks; that only passes for pictures that haven't been repainted.
-`export <set>` (`icons`, `rooms`, `shops`, `keepers`) writes a set from that old game into this folder and its index: it's
+every one of its looks, and home base piece by piece; that only passes for pictures that haven't been repainted.
+`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`) writes a set from that old game into this folder and its index: it's
 how the folder was made, and with `--force` it overwrites files, repaints and all.

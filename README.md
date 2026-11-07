@@ -61,7 +61,7 @@ SnakeGame/
 │   ├── items/  junk/  crafted/  upgrades/   the campaign's things, runes in all eight conditions
 │   ├── foes/  hazards/  powerups/  board/   what's on the board
 │   ├── hearts/  bosses/  icons/             the HUD, wanted posters, map pins, cursors, avatars...
-│   └── scenes/              painted scenes: backgrounds, sprite sheets, lights (rooms, shops, keepers so far)
+│   └── scenes/              painted scenes: backgrounds, sprite sheets, lights (rooms, shops, keepers, home so far)
 │
 ├── styles/              CSS, in the order index.html links them
 ├── assets/              the fonts (with their licenses) and icons

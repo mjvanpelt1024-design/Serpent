@@ -312,8 +312,213 @@
     return out;
   }
 
+  /* ----- Home base (camp-home.js) -----
+     The old drawHome() and its helpers, regrouped. Sky and ground are the old homeSky() and
+     homeGround() at the widest the home gets (320); the rest is the old code's own lines. */
+  const HOME_STEP = 2 * Math.PI / 1.3 / 4;
+  const mr = g => (a, b, w, h, c) => mapRect(g, a, b, w, h, c);
+  /* The old tree without its lantern and fruit glints, for any number of tiers bought */
+  function homeTreeOld(g, isl, x, y, t, have, total) {
+    const R = mr(g);
+    const f = total ? have / total : 0;
+    const leaves = CTREE_LEAVES[isl];
+    const h = 40 + Math.round(f * 26), tw = 6 + Math.round(f * 6);
+    for (let i = -1; i <= 1; i += 2) for (let k = 0; k < 8; k++) R(x + i * (tw / 2 + k), y - 2 + Math.round(k * 0.4), 2, 2, k % 3 ? "#5a3a20" : "#6a4628");
+    for (let j = 0; j < h; j++) {
+      const w = Math.round(tw * (1 - j / h * 0.45));
+      const sway = Math.round(Math.sin(t * 0.6 + j * 0.05) * (j / h) * 1.2);
+      R(x - Math.floor(w / 2) + sway, y - j, w, 1, "#5a3a20");
+      R(x - Math.floor(w / 2) + sway, y - j, 1, 1, "#8a6238");
+      R(x - Math.floor(w / 2) + sway + w - 1, y - j, 1, 1, "#3a2414");
+      if (j % 7 === 3) R(x - 1 + sway, y - j, 2, 1, "#4a2e18");
+    }
+    const bough = (a, len, at) => { for (let k = 0; k < len; k++) R(x + Math.cos(a) * k, y - at + Math.sin(a) * k * 0.6, 2, 2, "#5a3a20"); };
+    bough(Math.PI + 0.4, 18 + f * 10, h * 0.62); bough(-0.4, 18 + f * 10, h * 0.6); bough(Math.PI + 0.9, 12 + f * 6, h * 0.82); bough(-0.9, 12 + f * 6, h * 0.8);
+    const clusters = [[0, -h - 4, 18], [-20, -h * 0.72, 14], [20, -h * 0.7, 14], [-30, -h * 0.5, 10], [30, -h * 0.48, 10], [-10, -h - 14, 12], [12, -h - 12, 12]];
+    clusters.forEach(([dx, dy, r0], ci) => {
+      const r = r0 * (0.7 + f * 0.6);
+      const n = Math.round((60 + f * 140) * (r0 / 18));
+      for (let k = 0; k < n; k++) {
+        const a = mapHash(k, ci, 21) * Math.PI * 2, d = Math.sqrt(mapHash(k, ci, 23)) * r;
+        const lx = x + dx + Math.cos(a) * d * 1.2 + Math.sin(t * 1.3 + k) * 0.4, ly = y + dy + Math.sin(a) * d * 0.8;
+        R(lx, ly, 2, 2, leaves[(k + (Math.sin(a) < -0.3 ? 2 : Math.sin(a) > 0.4 ? 0 : 1)) % 3]);
+      }
+    });
+    for (let i = 0; i < Math.min(30, have); i++) {
+      const [dx, dy, r0] = clusters[i % clusters.length];
+      const a = mapHash(i, 4, 9) * Math.PI * 2, d = r0 * 0.7 * Math.sqrt(mapHash(i, 5, 9));
+      const fx = x + dx + Math.cos(a) * d * 1.2, fy = y + dy + Math.sin(a) * d * 0.8;
+      R(fx, fy, 2, 2, leaves[3]);
+      R(fx, fy, 1, 1, shadeHex(leaves[3], 0.5));
+    }
+  }
+  /* A picture from the old code's own calls, drawn with its top left corner at 0, 0 (ox, oy is where the
+     old code's x, y falls in it); it complains if anything lands outside */
+  function spriteAt(w, h, ox, oy, draw) {
+    const c = canvasOf(w + 8, h + 8);
+    draw(mr(c.getContext("2d")), ox + 4, oy + 4, c.getContext("2d"));
+    const p = pixels(c);
+    for (let y = 0; y < h + 8; y++) for (let x = 0; x < w + 8; x++) if (p[(y * (w + 8) + x) * 4 + 3] && (x < 4 || y < 4 || x >= w + 4 || y >= h + 4)) throw new Error(`a ${w}x${h} picture spills over at ${x - 4}, ${y - 4}`);
+    const out = canvasOf(w, h); out.getContext("2d").drawImage(c, 4, 4, w, h, 0, 0, w, h);
+    return out;
+  }
+  const solidOf = (w, h, color) => { const c = canvasOf(w, h), g = c.getContext("2d"); g.fillStyle = color; g.fillRect(0, 0, w, h); return c; };
+  function homeList() {
+    const out = [];
+    const add = (id, file, canvas, extra = {}) => out.push(Object.assign({ id, file, canvas }, extra));
+    const D = "scenes/home/";
+    const keepW = W_HOME();
+    window.eval("HOME_W = 320");
+    CAMP.islands.forEach(I => {
+      const isl = I.id, isle = ISLANDS[isl];
+      add(`home:${isl}:sky`, `${D}${isl}/sky.png`, homeSky(isl));
+      add(`home:${isl}:ground`, `${D}${isl}/ground.png`, homeGround(isl));
+      // the far islands, each as it is when it sits on a whole pixel
+      for (let i = 0; i < 5; i++) {
+        const y = 20 + mapHash(i, 6, 3) * 50, w = 8 + mapHash(i, 7, 3) * 12, yl = y - Math.floor(y);
+        const [r0, g0, b0] = skyAt(isle.y - 150 + y * 1.2);
+        const c = canvasOf(40, 16), g = c.getContext("2d"), x = 20;
+        g.fillStyle = `rgba(${Math.round(r0 * 0.75)},${Math.round(g0 * 0.78)},${Math.round(b0 * 0.85)},0.7)`;
+        g.fillRect(Math.round(x - w / 2), Math.round(yl), Math.round(w), 2);
+        for (let r = 1; r < w * 0.5; r++) { const ww = Math.max(1, Math.round(w * (1 - r / (w * 0.5)))); g.fillRect(Math.round(x - ww / 2), Math.round(yl + 1 + r), ww, 1); }
+        add(`home:${isl}:far-${i + 1}`, `${D}${isl}/far-island-${i + 1}.png`, c);
+      }
+      add(`home:${isl}:leaf`, `${D}${isl}/falling-leaf.png`, sheet([0, 1, 2].map(k => sprite(1, 1, R => R(0, 0, 1, 1, CTREE_LEAVES[isl][k])))), { frames: 3 });
+      // the tree: a row for every tier bought (0 to all), four moments of its leaves stirring
+      const total = I.tree.upgrades.reduce((a, u) => a + u.values.length - 1, 0);
+      const frames = [];
+      // drawn where the game draws it (160, 102: the same sums, so the same roundings), on a canvas
+      // moved down 40 pixels so nothing is cut off at the top
+      for (let have = 0; have <= total; have++) for (let k = 0; k < 4; k++) {
+        const c = canvasOf(320, 175), g = c.getContext("2d"); g.translate(0, 40); homeTreeOld(g, isl, 160, 102, (k + 0.5) * HOME_STEP, have, total); frames.push(c);
+      }
+      let x0 = 320, y0 = 175, x1 = -1, y1 = -1;
+      frames.forEach(f => { const p = pixels(f); for (let i = 0; i < 320 * 175; i++) if (p[i * 4 + 3]) { const x = i % 320, y = Math.floor(i / 320); x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); } });
+      if (x0 === 0 || y0 === 0 || x1 === 319 || y1 === 174) throw new Error(`${isl}: the tree doesn't fit its scratch canvas`);
+      const w = x1 - x0 + 1, h = y1 - y0 + 1, tree = canvasOf(w * 4, h * (total + 1)), tg = tree.getContext("2d");
+      frames.forEach((f, i) => tg.drawImage(f, x0, y0, w, h, (i % 4) * w, Math.floor(i / 4) * h, w, h));
+      add(`home:${isl}:tree`, `${D}${isl}/tree.png`, tree, { frames: (total + 1) * 4, columns: 4, anchor: [160 - x0, 142 - y0] });
+    });
+    window.eval(`HOME_W = ${keepW}`);
+    // the sky's things
+    add("home:star", `${D}star.png`, sheet([sprite(1, 1, R => R(0, 0, 1, 1, "#fffbe0")), sprite(1, 1, R => R(0, 0, 1, 1, "rgba(255,250,230,0.5)"))]), { frames: 2 });
+    add("home:sun", `${D}sun.png`, (() => { const c = canvasOf(19, 19), g = c.getContext("2d"); skyDisc(g, 9, 9, 9, "rgba(255,220,150,0.3)"); skyDisc(g, 9, 9, 6, "#fff0b8"); return c; })());
+    add("home:moon", `${D}moon.png`, (() => { const c = canvasOf(15, 15), g = c.getContext("2d"); skyDisc(g, 7, 7, 7, "rgba(255,250,220,0.15)"); skyDisc(g, 7, 7, 5, "#fff6d8"); return c; })());
+    add("home:moon-shadow", `${D}moon-shadow.png`, (() => { const c = canvasOf(11, 11), g = c.getContext("2d"); skyDisc(g, 5, 5, 4.4, "rgba(40,30,80,0.9)"); return c; })());
+    // a cloud is three puffs that overlap, each laid on separately: one puff a frame (drawCloud's own rectangles)
+    for (let i = 0; i < 6; i++) {
+      const w = 20 + mapHash(i, 8, 3) * 26, x = 40, y = 12, h = Math.max(2, Math.round(w * 0.22));
+      const puffs = [[Math.round(x), Math.round(y), Math.round(w), h], [Math.round(x + w * 0.15), Math.round(y - h * 0.6), Math.round(w * 0.4), h], [Math.round(x + w * 0.45), Math.round(y - h), Math.round(w * 0.35), h]];
+      add(`home:cloud-${i + 1}`, `${D}cloud-${i + 1}.png`, sheet(puffs.map(([px, py, pw, ph]) => { const c = canvasOf(90, 24), g = c.getContext("2d"); g.fillStyle = "#ffffff"; g.fillRect(px, py, pw, ph); return c; })), { frames: 3 });
+    }
+    // the things around the tree
+    add("home:trophy", `${D}trophy.png`, sheet([0, 1].map(got => spriteAt(16, 22, 8, 22, (R, x, y) => {
+      R(x - 7, y - 10, 14, 10, "#a8a29a"); R(x - 7, y - 10, 14, 1, "#d0cac0"); R(x - 7, y - 10, 2, 10, "#c0bab0"); R(x + 5, y - 10, 2, 10, "#7a766e");
+      R(x - 8, y - 12, 16, 2, "#c0bab0"); R(x - 8, y - 1, 16, 1, "#6a665e");
+      const cup = got ? ["#ffd23f", "#c08a10", "#fff6c4"] : ["#9aa3ad", "#5b6470", "#d8dde6"];
+      R(x - 5, y - 22, 10, 6, cup[0]); R(x - 4, y - 16, 8, 1, cup[0]); R(x - 3, y - 15, 6, 1, cup[1]);
+      R(x - 1, y - 14, 2, 2, cup[1]); R(x - 3, y - 13, 6, 1, cup[0]);
+      R(x - 7, y - 21, 2, 1, cup[0]); R(x - 7, y - 20, 1, 3, cup[0]); R(x + 5, y - 21, 2, 1, cup[0]); R(x + 6, y - 20, 1, 3, cup[0]);
+      R(x - 4, y - 22, 2, 5, cup[2]); R(x + 3, y - 22, 1, 6, cup[1]);
+    }))), { frames: 2 });
+    add("home:trophy-glint", `${D}trophy-glint.png`, spriteAt(3, 3, 4, 25, (R, x, y) => { R(x - 3, y - 25, 1, 3, "#ffffff"); R(x - 4, y - 24, 3, 1, "#ffffff"); }));
+    [1, 2, 3].forEach(r => add(`home:trophy-glow-${r}`, `${D}trophy-glow-${r}.png`, solidOf(10 + r * 4, 9 + r * 4, "rgb(255,210,63)")));
+    add("home:mirror", `${D}mirror.png`, spriteAt(16, 36, 8, 35, (R, x, y) => {
+      R(x - 8, y - 32, 16, 30, "#8a5a30"); R(x - 8, y - 32, 16, 1, "#b07a42"); R(x - 8, y - 32, 1, 30, "#a06a38");
+      R(x - 6, y - 30, 12, 26, "#9ab8c8");
+      for (let j = 0; j < 26; j++) R(x - 6, y - 30 + j, 12, 1, j < 9 ? "#b8d8e8" : j < 18 ? "#a8c8d8" : "#98b8c8");
+      R(x - 7, y - 2, 2, 3, "#5a3a1e"); R(x + 5, y - 2, 2, 3, "#5a3a1e");
+      R(x - 1, y - 35, 2, 3, "#ffd23f");
+    }));
+    add("home:mirror-shine", `${D}mirror-shine.png`, solidOf(2, 1, "#ffffff"));
+    add("home:easel", `${D}easel.png`, spriteAt(19, 30, 9, 30, (R, x, y) => {
+      R(x - 6, y - 26, 1, 26, "#6a4628"); R(x + 6, y - 26, 1, 26, "#6a4628"); R(x, y - 30, 1, 30, "#5a3a20");
+      R(x - 8, y - 10, 17, 2, "#7a5232");
+      R(x - 9, y - 28, 19, 16, "#e8dcc0");
+      R(x - 9, y - 28, 19, 1, "#f8f0e0"); R(x + 9, y - 28, 1, 16, "#b8ac90");
+      R(x - 6, y - 11, 2, 1, "#ff3b3b"); R(x - 3, y - 11, 2, 1, "#3a82e0"); R(x, y - 11, 2, 1, "#ffd23f");
+    }));
+    add("home:satchel-strap", `${D}satchel-strap.png`, spriteAt(15, 7, 1, 15, (R, x, y) => { R(x - 1, y - 14, 1, 6, "#5a3a1e"); R(x + 13, y - 14, 1, 6, "#5a3a1e"); R(x, y - 15, 13, 1, "#5a3a1e"); }));
+    add("home:satchel", `${D}satchel.png`, spriteAt(13, 11, 0, 10, (R, x, y) => {
+      R(x, y - 10, 13, 10, "#b07a42"); R(x, y - 10, 13, 1, "#d09a5a"); R(x, y - 10, 1, 10, "#c88a50"); R(x + 12, y - 10, 1, 10, "#7a5232");
+      R(x, y - 10, 13, 4, "#9a6a3a"); R(x, y - 7, 13, 1, "#5a3a1e");
+      R(x + 5, y - 8, 3, 3, "#ffd23f"); R(x + 6, y - 7, 1, 1, "#a8860b");
+      R(x, y, 13, 1, "rgba(0,0,0,0.3)");
+    }));
+    add("home:glint", `${D}glint.png`, solidOf(1, 1, "#ffffff"));
+    add("home:rack", `${D}rack.png`, spriteAt(21, 31, 10, 31, (R, x, y) => {
+      R(x - 10, y - 2, 21, 2, "#4a3018");
+      R(x - 9, y - 30, 2, 28, "#6a4628"); R(x + 8, y - 30, 2, 28, "#6a4628"); R(x - 10, y - 31, 21, 2, "#7a5232");
+      R(x - 8, y - 20, 17, 1, "#5a3a20"); R(x - 8, y - 9, 17, 1, "#5a3a20");
+      R(x - 6, y - 29, 1, 27, "#9aa3ad"); R(x - 7, y - 31, 3, 3, "#c8ced6");
+      R(x + 5, y - 26, 1, 22, "#d8dde6"); R(x + 3, y - 8, 5, 1, "#c08a10");
+    }));
+    add("home:rack-empty", `${D}rack-empty.png`, sprite(8, 9, R => { R(0, 0, 8, 9, "#8a6a4a"); R(1, 1, 6, 7, "#a8845a"); }));
+    add("home:shelf", `${D}shelf.png`, spriteAt(19, 28, 9, 28, (R, x, y) => {
+      R(x - 9, y - 24, 19, 24, "#4a2e18"); R(x - 8, y - 23, 17, 22, "#2a1a0e");
+      R(x - 8, y - 16, 17, 1, "#6a4628"); R(x - 8, y - 8, 17, 1, "#6a4628");
+      const cols = ["#b36bff", "#3a82e0", "#d1202a", "#3ddc84", "#ffd23f"];
+      for (let i = 0; i < 4; i++) { R(x - 7 + i * 4, y - 22, 3, 6, cols[i]); R(x - 7 + i * 4, y - 14, 3, 6, cols[(i + 2) % 5]); R(x - 6 + i * 4, y - 6, 2, 5, cols[(i + 4) % 5]); }
+      R(x + 4, y - 28, 2, 4, "#e8dcc0");
+    }));
+    add("home:shelf-flame", `${D}shelf-flame.png`, solidOf(2, 2, "#ffb020"));
+    add("home:shelf-glow", `${D}shelf-glow.png`, solidOf(10, 10, "rgb(255,200,120)"));
+    add("home:den", `${D}den.png`, spriteAt(23, 11, 11, 10, (R, x, y) => {
+      R(x - 11, y - 8, 23, 8, "#b08040"); for (let k = -10; k < 12; k += 3) R(x + k, y - 7, 1, 6, "#8a6030");
+      R(x - 10, y - 10, 21, 3, "#7a6aa8"); R(x - 9, y - 10, 19, 1, "#9a8ac8"); R(x - 11, y, 23, 1, "rgba(0,0,0,0.3)");
+    }));
+    add("home:stones", `${D}stones.png`, spriteAt(23, 20, 11, 19, (R, x, y) => {
+      [[-7, 14], [0, 19], [7, 12]].forEach(([dx, h], i) => {
+        R(x + dx - 3, y - h, 6, h, "#6a6260"); R(x + dx - 3, y - h, 6, 1, "#8a8280"); R(x + dx + 2, y - h, 1, h, "#4a4240");
+        R(x + dx - 1, y - h + 4, 2, 1, i === 1 ? "#ff00ff" : "#3a3230"); R(x + dx, y - h + 5, 1, 3, i === 1 ? "#ff00ff" : "#3a3230");
+      });
+      R(x - 11, y, 23, 1, "rgba(0,0,0,0.3)");
+    }), { keys: { "#ff00ff": "rune" } });
+    add("home:stones-glow", `${D}stones-glow.png`, solidOf(8, 10, "#ff00ff"), { keys: { "#ff00ff": "glow" } });
+    const widths = [5, 7, 9, 11, 11, 11, 11, 11, 11, 11, 9, 7, 5];
+    add("home:carving", `${D}carving.png`, sheet([false, true].map(ready => sprite(11, 13, R => widths.forEach((w, j) => {
+      const x0 = (11 - w) / 2;
+      R(x0, j, w, 1, j === 0 || j === 12 ? "#24140a" : j < 4 ? "#c8945a" : "#a8784a");
+      R(x0, j, 1, 1, ready ? "#ff00ff" : "#24140a"); R(x0 + w - 1, j, 1, 1, ready ? "#ff00ff" : "#24140a");
+    })))), { frames: 2, keys: { "#ff00ff": "edge" } });
+    add("home:carving-glow", `${D}carving-glow.png`, solidOf(15, 17, "rgb(255,210,90)"));
+    add("home:carving-cuts", `${D}carving-cuts.png`, sheet([false, true].map(ready => sprite(12, 10, R => CARVE_ROWS.forEach((row, j) => [...row].forEach((ch, i) => {
+      if (ch !== "x") return;
+      R(i, j, 1, 1, ready ? (j < 3 ? "#fff0a0" : "#ffd23f") : "#3a2414");
+      if (!ready) R(i + 1, j + 1, 1, 1, "#d8a868");
+    }))))), { frames: 2 });
+    add("home:firefly", `${D}firefly.png`, sheet(["#fff6a8", "#c8d060"].map(c => solidOf(1, 1, c))), { frames: 2 });
+    add("home:lantern", `${D}lantern.png`, sprite(5, 9, R => { R(2, 0, 1, 4, "#3a2a1a"); R(0, 4, 5, 5, "#3a2a1a"); R(1, 5, 3, 3, "#ffd27a"); }));
+    [1, 2, 3].forEach(r => add(`home:lantern-glow-${r}`, `${D}lantern-glow-${r}.png`, solidOf(5 + r * 4, 5 + r * 4, "rgb(255,210,120)")));
+    return out;
+  }
+  const W_HOME = () => window.eval("HOME_W");
+  /* The old sky's stars, sun and moon (drawHome's own lines), for the check */
+  function homeStarsOld(g, isl, t) {
+    const R = mr(g), isle = ISLANDS[isl], HW = W_HOME();
+    if (isle.n >= 2) for (let i = 0; i < 60; i++) { const tw = Math.sin(t * (1 + mapHash(i, 2, 7) * 3) + i); if (tw > -0.2) R(mapHash(i, 1, 7) * HW, mapHash(i, 3, 7) * 70, 1, 1, tw > 0.7 ? "#fffbe0" : "rgba(255,250,230,0.5)"); }
+    if (isle.n === 0) { skyDisc(g, 16, 74, 9, "rgba(255,220,150,0.3)"); skyDisc(g, 16, 74, 6, "#fff0b8"); }
+    if (isle.n === 4) { skyDisc(g, HW - 30, 22, 7, "rgba(255,250,220,0.15)"); skyDisc(g, HW - 30, 22, 5, "#fff6d8"); skyDisc(g, HW - 28, 21, 4.4, "rgba(40,30,80,0.9)"); }
+  }
+  /* The old far islands and clouds with every one put on a whole pixel x (where the new pictures match it) */
+  function homeDriftOld(g, isl, t) {
+    const isle = ISLANDS[isl];
+    for (let i = 0; i < 5; i++) {
+      const x = Math.round(((mapHash(i, 5, 3) * 300 + t * (0.6 + i * 0.2)) % 300) - 30), y = 20 + mapHash(i, 6, 3) * 50, w = 8 + mapHash(i, 7, 3) * 12;
+      const [r0, g0, b0] = skyAt(isle.y - 150 + y * 1.2);
+      g.fillStyle = `rgba(${Math.round(r0 * 0.75)},${Math.round(g0 * 0.78)},${Math.round(b0 * 0.85)},0.7)`;
+      g.fillRect(Math.round(x - w / 2), Math.round(y), Math.round(w), 2);
+      for (let r = 1; r < w * 0.5; r++) { const ww = Math.max(1, Math.round(w * (1 - r / (w * 0.5)))); g.fillRect(Math.round(x - ww / 2), Math.round(y + 1 + r), ww, 1); }
+    }
+    for (let i = 0; i < 6; i++) {
+      const w = 20 + mapHash(i, 8, 3) * 26, x = Math.round(((mapHash(i, 9, 3) * 320 + t * (1.4 + i * 0.3)) % 320) - 40), y = 10 + i * 13;
+      drawCloud(g, x, y, w, "rgba(255,255,255,0.55)");
+    }
+  }
+
   window.LEGACY_SCENES = {
-    sets: { rooms: { list: roomList, backdrop: roomBackdrop, times: ROOM_TIMES, rooms: () => Object.keys(PIC_ROOMS) }, shops: { list: shopList }, keepers: { list: keeperList, moments: keeperMoments, roles: KEEPER_ROLES } },
+    sets: { rooms: { list: roomList, backdrop: roomBackdrop, times: ROOM_TIMES, rooms: () => Object.keys(PIC_ROOMS) }, shops: { list: shopList }, keepers: { list: keeperList, moments: keeperMoments, roles: KEEPER_ROLES },
+      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP } },
     record, split
   };
 })();
