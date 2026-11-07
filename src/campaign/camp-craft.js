@@ -38,8 +38,10 @@ CAMP_REPAIRS.push(c => {
     if (typeof it.grade !== "number") it.grade = -1;
     if (!d) return;
     const fam = d.family;
-    // gear from before build 51 gets the parts its rarity comes with, and lasts for good now
-    if (fam === "gear") {
+    // gear from before build 51 gets the parts its rarity comes with, and lasts for good now;
+    // armor pieces (build 52) take a trinket but no parts
+    if (fam === "gear" && campItemSlot(it.id) !== "gear") { it.parts = []; if (it.trinket && !(CAMP.craftById[it.trinket] && CAMP.craftById[it.trinket].stat)) it.trinket = ""; }
+    else if (fam === "gear") {
       if (!it.parts.length && !it._fitted) it.parts = builtInParts(it.id, it.rarity);
       it.parts = [...new Set(it.parts.filter(p => CAMP.craftById[p] && CAMP.craftById[p].fits === gearClass(it.id)))].slice(0, 2);
       if (it.trinket && !(CAMP.craftById[it.trinket] && CAMP.craftById[it.trinket].stat)) it.trinket = "";
@@ -55,7 +57,8 @@ CAMP_REPAIRS.push(c => {
 });
 
 /* ----- Gear: one hit a level, plus each part fitted, plus a trinket ----- */
-const gearClass = id => (id === "sword" ? "weapon" : "armor");
+/* Weapons take weapon parts (every weapon borrows the sword's ways, build 52); the rest take armor parts */
+const gearClass = id => (campItemActs(id) === "sword" ? "weapon" : "armor");
 const partsFor = id => (CRAFT.parts || []).filter(p => p.fits === gearClass(id));
 /* Gear from the merchant comes with parts already fitted: uncommon one, rare and legendary both */
 function builtInParts(id, rarity) {
@@ -76,8 +79,9 @@ function gearExtras() {
 /* Fits a part or trinket from the satchel to a piece of gear, for good */
 function campFit(gearUid, craftUid) {
   const g = satchelItem(gearUid), p = satchelItem(craftUid);
-  if (!g || !p || campItemSlot(g.id) !== "gear" || !CAMP.craftById[p.id]) return "That doesn't fit.";
+  if (!g || !p || !["gear", "helmet", "body"].includes(campItemSlot(g.id)) || !CAMP.craftById[p.id]) return "That doesn't fit.";
   const def = CAMP.craftById[p.id];
+  if (!def.stat && campItemSlot(g.id) !== "gear") return "Armor pieces take a trinket, not parts.";
   if (def.stat) {
     if (g.trinket) return "This piece already has a trinket. Trinkets are fitted for good.";
     g.trinket = p.id;

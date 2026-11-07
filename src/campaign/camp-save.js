@@ -43,7 +43,7 @@ function repairCamp(c) {
   campSplitRunes(c);
   Object.keys(c.equip).forEach(slot => {
     const it = c.satchel.find(x => x.uid === c.equip[slot]);
-    if (!it || !CAMP.itemById[it.id] || CAMP.families[CAMP.itemById[it.id].family].slot !== slot) delete c.equip[slot];
+    if (!it || !CAMP.itemById[it.id] || campItemSlot(it.id) !== slot) delete c.equip[slot];
   });
   // snacks live in the pocket now: four slots, each a snack in the satchel, none twice
   const isSnack = uid => { const it = c.satchel.find(x => x.uid === uid); return !!(it && CAMP.itemById[it.id] && CAMP.itemById[it.id].family === "food"); };
@@ -214,7 +214,8 @@ function campBuyUpgrade(id) {
 
 /* ----- The satchel ----- */
 const campItemDef = id => CAMP.itemById[id] || null;
-const campItemSlot = id => (campItemDef(id) ? CAMP.families[campItemDef(id).family].slot : CAMP.craftById && CAMP.craftById[id] ? "craft" : "loot");
+/* Which slot a thing goes in: its family's, except armor pieces (build 52), which go on your head or body */
+const campItemSlot = id => { const d = campItemDef(id); if (d) return d.piece === "helmet" || d.piece === "body" ? d.piece : CAMP.families[d.family].slot; return CAMP.craftById && CAMP.craftById[id] ? "craft" : "loot"; };
 const satchelItem = uid => camp.satchel.find(it => it.uid === uid) || null;
 const campEquipped = slot => satchelItem(camp.equip[slot]);
 
@@ -239,6 +240,7 @@ function campItemLeft(it) {
   const slot = campItemSlot(it.id);
   if (slot === "pet") return it.train ? `Trained ${"★".repeat(it.train)}` : "Never wears out";
   if (slot === "rune") return "Yours for good";
+  if (slot === "helmet" || slot === "body") { const s = typeof armorSetOf === "function" && armorSetOf(it.id); return s ? `${s.name} set · never wears out` : "Never wears out"; }
   if (slot === "gear") { const n = freshUses(it.id, it.rarity, it); return `Absorbs ${n} hit${n === 1 ? "" : "s"} a level`; }
   if (slot === "spell") { const n = freshUses(it.id, it.rarity, it); return `${n} charge${n === 1 ? "" : "s"} a level`; }
   if (slot === "loot" || slot === "craft") return it.qty > 1 ? `You have ${it.qty}` : "You have one";
@@ -299,7 +301,7 @@ function campSellPrice(it) {
     return Math.round((CAMP.lootById[it.id] || { value: 1 }).value * bonus);
   }
   const P = CAMP.families[d.family].price;
-  let base = P[rarityIdx(it.rarity)];
+  let base = P[rarityIdx(it.rarity)] * (d.priceMult || 1);   // an armor set's tier (build 52)
   // a rune is priced by its exact condition; snacks by what's left of them
   if (d.family === "rune") base = P[0] * ((CAMP.craft.forge || {}).sell || [0.35, 0.7, 1, 1.6, 2.4, 3.2, 3.8, 6])[runeGrade(it)] / 0.35;
   let wear = 1;

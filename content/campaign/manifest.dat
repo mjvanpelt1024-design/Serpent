@@ -1,11 +1,12 @@
 # Made by tools/sign-content.py. Don't edit: change the data and run it again.
-crafting.json 328b17ed82326d9b
+crafting.json 9b0ddb89f3cae153
+foes.json 0f883fd9996ab9f3
 islands/crown.json 09cfcbf2fc499e38
 islands/hollow.json 06be3242e0275bd8
 islands/keep.json b31922c763e5a1f5
 islands/reef.json dd5251f13c567c83
 islands/spire.json 19efc65b51da5765
-items.json bb0d71757675807b
-rules.json 532b24c0de405236
+items.json 2b12722c12454892
+rules.json 19415171f592b24b
 upgrades.json d71ed00e8cc1cc14
-seal 1a93b5d756eed5a1
+seal a590dfbb094793bd

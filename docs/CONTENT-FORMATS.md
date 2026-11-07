@@ -295,6 +295,8 @@ vanish   = 2                     # seconds a red wall is gone, then back. 0 = of
 items    = booster               # boost items the run starts with (free)
 twists   = dark                  # nightmare twists
 off      = rock                  # hazards switched off in this level
+boss     = crown                 # build 52: an island (its boss) or a champion's id, or empty for none
+fight    = 2                     # which of the boss's fights: 1 stamina, 2 armor, 3 hearts
 
 [panels]                         # v3,4 = the line left of square 3,4; h3,4 = the line above it
 v3,4 = red                       # red or purple
@@ -306,6 +308,9 @@ flea     = 19,5
 ---
 ....#.....................       # 20 rows of 20: . open  # red wall  P portal wall  S snake start
 ```
+
+Spawners can also be the campaign's enemies (build 52): `knightling`, `scorpion`, `sparkbeetle`, `inkwraith`,
+`mantis`, `viper`, `frostsprite`, `urchin`, `firebat` (the editor's **Foes** tab).
 
 Board characters are the sandbox's (the same as a share code): capitals and small letters for food and
 hazards, `@ * % & ! ^ ~` for the large ones. A file must have 20 rows of 20 squares. Share codes (`SNK3-...`)

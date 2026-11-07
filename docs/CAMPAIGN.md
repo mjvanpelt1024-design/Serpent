@@ -15,6 +15,7 @@ This file is the design and the map of where things live. The numbers themselves
 | The five upgrade trees | `content/campaign/upgrades.json` |
 | Rewards, timers, the bank, challenges, achievements, cosmetics, zones | `content/campaign/rules.json` |
 | The workshops: junk recipes, parts, spell levels and seals, recipes and ingredients, training, the forge | `content/campaign/crafting.json` |
+| Damage types on the board: hits' tags, enemies' rules, the new enemies, resistance power-ups, boss traits, champions | `content/campaign/foes.json` |
 | The signatures of all of the above | `content/campaign/manifest.dat` (made by a tool, never by hand) |
 | The save, its schema and the data check | `src/campaign/integrity.js`, `src/campaign/camp-save.js` |
 | The map: islands, paths, stops, pins, camera | `src/ui/map.js` (the Coil and the sky: `map-coil.js`) |
@@ -34,6 +35,8 @@ This file is the design and the map of where things live. The numbers themselves
 | The shops as pictures, and their workshops | `camp-shop-stage.js` |
 | Your things in pictures: the rack, the shelf, the den, the stones, the Satchel | `camp-invpics.js` |
 | Enemies, hazards, power-ups, the rival snake, zones and their map cues, the new snacks | `camp-foes.js` |
+| Stat lines, armor sets, two-line trinkets, your resistances, weapon and spell tags and traits (build 52) | `camp-arsenal.js` |
+| Build 52's enemies, resistance power-ups, boss traits, champions, the sandbox's boss | `camp-bestiary.js` |
 | The title screen's numbers, posters, stickers and pins | `camp-title.js` |
 | Story placeholder pages | `camp-story.js` |
 | The terminal's campaign commands, Shift+Alt+C | `src/dev/terminal/cmd-camp.js` |
@@ -438,6 +441,61 @@ cheated for good. `help`, `help item`, tab completion and history work as before
 recipe, skin and theme). `dev everything.reset` wipes the whole game back to a brand new save once you type
 CONFIRM on the next line: every bent rule goes back to normal, the cheated marker is cleared, and the terminal
 closes (settings are kept).
+
+## Build 52: an arsenal, damage types, champions
+
+Everything here is data; the numbers are placeholders until playtesting. The damage rules are step 2's
+(`docs/DAMAGE.md`); `camp-arsenal.js` feeds them and `camp-bestiary.js` adds the foes.
+
+### Your kit
+
+- **Gear** is now three slots: **gear** (a weapon, or one of the old tools: shield, helm, cloak, thorns),
+  **helmet** and **body**. An item's `piece` says which (`weapon`, `helmet`, `body`); armor pieces never wear out.
+- **"acts"**: a new item borrows an old one's behavior. Every weapon acts as the sword (kills what you run into,
+  strikes a boss head-on); Ice Lance, Chain Spark and Venom Bolt fly like the fireball; Flame Shroud is a force
+  field; Gale Step a blink; the salamander and the eel snip like the crab (each with its own `snips`), the owl
+  pushes like the puffer, the hedgehog takes a hit like the turtle, the toad fetches like the firefly.
+  `campEquippedId(slot)` answers with the borrowed id, so every old check works for the new items.
+- **Stat lines** (`stats`, up to four): rarity sets how many count (`statsByRarity`: common 1 to legendary 4).
+  They use the rune table's stats, the 36 damage stats, and the spell stats. They add into `campRun.extra`, which
+  `runeVal()` reads, so they work wherever a rune's stat does.
+- **Armor sets** (`armorSets`): ten, tier 1 (okay) to 5 (great); `armorTiers` names the tiers and scales the price.
+  Both pieces worn: the set's `bonus` and its `bad` line.
+- **Weapons**: `hit` (tags and family), `damage` (added to every blow on a boss, per rarity, times how the boss
+  takes the tags; what's left over carries to the next blow) and `traits` (`weaponTraits`): burn (fire: one more
+  blow a moment later), chill (ice: freezes the boss a moment, chills hazards when it kills), shock (electricity:
+  a kill zaps the next enemy), toxin (venom: the boss tires half again as fast), pierce (piercing: one more piece
+  of armor off in fight 2), cleave (slashing: a kill takes the enemies beside your head).
+- **Spells**: `hit` tags too, and `spellPower`, `spellCharges` and `<word>.spells` stats make them stronger.
+- **Trinkets** (`crafting.json`): a `major` and a `minor` line; the tier is the rarity. Named after their two
+  damage stats, first name then second name. One fits on any gear or armor piece.
+
+### What hits you
+
+Every cause of damage can have tags (`foes.json` `hits`): embers fire/ember, lava fire, frost ice/rime, lightning
+electricity/spark, acid venom/toxin, stings piercing/barb, crabs slashing/edge... `campResistHit` resolves them
+against your target (kit, rune, power-ups) inside `takeHit`: immunity stops the hit, resistance and weakness scale
+it in halves.
+
+### Foes
+
+- **Nine new enemies** (`enemies`), built from six kinds of movement: chaser, crawler, charger (dashes when you line
+  up), drifter (drops its hazard), blinker (the imp's way), lurker (sits still, bristles now and then; eat it while
+  its spines are in). Each joins its islands' enemy levels from level `from` on.
+- **Power-ups** (`powerups`) grant stats for a few seconds and turn up where their trouble does (`for`).
+- **Boss traits** (`bosses.<island>.traits`): charger, blink, summon, trail, enrage, regen, rally, devour, tide.
+  The boss plate lists them and the boss's immune/resist/weak tags.
+- **Champions** (`champions`): one per island, met only in a quest trial with the **Champion** twist. They come in
+  a few seconds into the level and fight like a last boss fight (hearts, no armor) with abilities only they have:
+  stormcall, frostbreath, venomspit, quake, swarm, phase (mist: nothing touches it, it passes through you) and
+  harden (stone: no blow lands). Beaten, they pay `bounty` (points and the island's money); the level goes on.
+
+### Testing them
+
+`item flamebrand.give legendary`, `item wyrmhelm.give rare`, `dev spawn.scorpion 3`, `dev spawn.salve`,
+`dev run.play crown 15 hold`. In the sandbox editor: the **Foes** tab places spawner chips for the new enemies,
+and the level's rules pick a **Boss** (any island's boss at fight 1, 2 or 3, or a champion). Pictures:
+`python tools/textures/arsenal-art.py` drew the first ones and never overwrites a repainted file.
 
 ## Decided, and not done yet
 

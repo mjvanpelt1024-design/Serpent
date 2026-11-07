@@ -27,6 +27,9 @@ const SB_CATS = [
     { id: "fire", label: "Fire" }, { id: "molasses", label: "Molasses" }] },
   { id: "spawners", label: "Spawners", chips: true, tools: [
     { id: "popsicle", label: "Popsicles" }, { id: "flea", label: "Fleas" }, { id: "fire", label: "Fire" }, { id: "molasses", label: "Molasses" }] },
+  // build 52: the campaign's new enemies, as spawner chips too (content/campaign/foes.json)
+  { id: "foes", label: "Foes", chips: true, tools: [
+    { id: "knightling", label: "Tin knightlings" }, { id: "scorpion", label: "Scorpions" }, { id: "sparkbeetle", label: "Spark beetles" }, { id: "inkwraith", label: "Ink wraiths" }, { id: "mantis", label: "Blade mantises" }, { id: "viper", label: "Marsh vipers" }, { id: "frostsprite", label: "Frost sprites" }, { id: "urchin", label: "Sea urchins" }, { id: "firebat", label: "Cinder bats" }] },
   { id: "special", label: "Special", tools: [{ id: "S", label: "Snake start" }, { id: ".", label: "Eraser" }] }
 ];
 const SB_HAZARDS = ["rock", "popsicle", "flea", "fire", "molasses"];   // hazards a level can switch off
@@ -35,5 +38,8 @@ const SB_EDGES = [["w", "Wrap"], ["a", "Walls"], ["m", "Mirror"]];
 const SB_SPEEDS = [[5, "Slow"], [7, "Normal"], [10, "Fast"]];
 const SB_TWISTS = [["starve", "Starving", "You shrink over time"], ["dark", "Blackout", "Only a circle of light"], ["avalanche", "Avalanche", "Rocks keep falling"],
   ["noMercy", "No Mercy", "Popsicles end the run"], ["sugar", "Sugar High", "Apples speed you up"], ["flip", "Topsy-Turvy", "Mirror warps flip controls"]];
-const SB_SPAWNS = [["popsicle", "Popsicles"], ["flea", "Fleas"], ["fire", "Fire"], ["molasses", "Molasses"]];   // enemy spawners
+const SB_SPAWNS = [["popsicle", "Popsicles"], ["flea", "Fleas"], ["fire", "Fire"], ["molasses", "Molasses"],   // enemy spawners
+  ["knightling", "Tin knightlings"], ["scorpion", "Scorpions"], ["sparkbeetle", "Spark beetles"], ["inkwraith", "Ink wraiths"], ["mantis", "Blade mantises"], ["viper", "Marsh vipers"], ["frostsprite", "Frost sprites"], ["urchin", "Sea urchins"], ["firebat", "Cinder bats"]];
+/* A boss to fight in a sandbox level (build 52): "" none, an island id (that island's boss) or a champion's id */
+const SB_BOSSES = () => (typeof CAMP === "undefined" ? [] : CAMP.islands.map(I => ({ id: I.id, name: I.boss.name })).concat(((CAMP.foes || {}).champions || []).map(c => ({ id: c.id, name: c.name + " (champion)" }))));
 const defaultRules = () => ({ h: 3, ar: true, t: [] });

@@ -465,6 +465,10 @@ function campTryRevive(cause) {
     if (save.dev.invincible) return false;
     if (campGuardHit(cause)) return false;
     if (guardHit()) return false;                 // the Rampage Star, or a bubble shield
+    // build 52: the hit's damage tags against your resistances, immunities and weaknesses (camp-arsenal.js)
+    const res = campResistHit(hearts, cause);
+    if (res.blocked) return false;
+    hearts = res.hearts;
     // a rune that makes you take more damage: the extra adds up in halves, so +50% is an extra half every other half
     const more = runeVal("damage");
     if (more && hearts !== Infinity) {

@@ -61,6 +61,7 @@
 
 /* ---------- The boss plate: what it shrugs off ---------- */
 .cp-resist { font-size: 0.7em; color: #ffb0a8; }
+.cp-traits { font-size: 0.7em; color: #ffd27a; }   /* build 52: a boss's traits */
 
 /* ---------- The shops' names on their pins: long ones wrap to two lines instead of running into the next ---------- */
 .map-pin.prop .lbl { white-space: normal; width: max-content; max-width: 64px; text-align: center; line-height: 1.1; }

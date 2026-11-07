@@ -1,5 +1,35 @@
 # Changelog
 
+## Unreleased: an arsenal, damage types on the board, champions
+
+- **Weapons.** Eight new weapons beside the Arming Sword (Barbed Dagger, Boar Spear, Woodsman's Axe, Flamebrand,
+  Rimefang, Storm Maul, Viper's Kiss, Moon Glaive). Each has damage tags, a damage level per rarity that adds to
+  every blow on a boss, and a trait from its tag: burn, chill, shock, toxin, pierce or cleave. Enemies take a
+  weapon by their own rules: immune (it does nothing), resisted (costs another use), weak (free).
+- **Armor: a helmet and a body piece.** Two new slots and ten sets, from okay (Hide) to great (Wyrmscale). Every
+  piece has four stat lines and its rarity says how many count (one for common up to four for legendary). Wear
+  both pieces of a set for its bonus, and its drawback (Chainmail: Electric Weakness).
+- **Trinkets have two stats**, a major one and a minor one. Twelve new ones are named after their two damage stats
+  in that order: a Fire Ember Locket (Fire Resistance, then Ember Resistance) isn't an Ember Fire Locket. Sigils
+  boost spells (Fire Spells, Spark Spells...). A trinket now fits on armor too.
+- **More spells, familiars and runes.** Ice Lance, Chain Spark, Venom Bolt, Flame Shroud and Gale Step; the Cinder
+  Salamander, Snowy Owl, Spark Eel, Bristle the Hedgehog and Toadstool Toad (each with stat lines); the Runes of
+  the Pyre, the Glacier, the Storm, the Serpent, the Bulwark and Spellfire. Spell Power and "<word> Spells" stats
+  make spells stronger.
+- **Damage types on the board.** Every hazard and enemy hit has tags (embers are fire/ember, frost is ice/rime,
+  lightning electricity/spark, acid venom/toxin, stings piercing/barb...), resolved against everything you wear.
+- **Power-ups that grant resistance or immunity**: Fireproof Salve, Ember Ward, Frost Tonic, Grounding Stone,
+  Antivenom, Ironskin Draught. They turn up where their trouble does.
+- **Nine new enemies**: tin knightlings, scorpions, spark beetles, ink wraiths, blade mantises, marsh vipers, frost
+  sprites, sea urchins and cinder bats, on the later enemy levels of their islands.
+- **Every boss has traits**: Grimscale charges harder and rallies once; Hexfang blinks and summons imps; Gorgemaw
+  devours apples and enrages; Leviathorn rings itself with frost and gets its breath back; the Cinder Wyrm leaves a
+  burning trail. Each takes damage tags its own way (the Wyrm is immune to fire and weak to ice).
+- **Champions**: five bosses you only meet in quests (the new Champion twist), with abilities nothing else has:
+  storms, frost breath, venom spit, quakes, swarms, mist and stone. Beat one for a bounty; the level goes on.
+- **Sandbox**: a Foes tab of spawner chips for the new enemies, and a Boss in the level's rules (any island's boss
+  at any of its fights, or a champion). Saved in the .level file and the share code.
+
 ## Unreleased: save files and the saves window
 
 - **Saves are files.** Each save is a `.world` file in `%APPDATA%\SnakeGame\worlds`, with the same keys the game

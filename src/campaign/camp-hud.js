@@ -184,6 +184,8 @@ function campHudUpdate() {
   const kit = [];
   const gear = bare ? null : campEquipped("gear");
   kit.push(row("gear", gear, gear ? pips(gear.uses, Math.max(gear.uses, freshUses(gear.id, gear.rarity, gear))) : "", gear && ts - campRun.gearFx < 300 ? "flash" : ""));
+  // armor (build 52): only shown when worn, with its set when the whole set is on
+  ["helmet", "body"].forEach(sl => { const a = bare ? null : campEquipped(sl); if (a) { const set = wornSet(); kit.push(row(sl, a, set ? `${escapeAttr(set.name)} set` : `${itemStatLines(a.id, a.rarity).length} stat${itemStatLines(a.id, a.rarity).length === 1 ? "" : "s"}`)); } });
   const spell = bare ? null : campEquipped("spell");
   const cd = spell ? Math.max(0, campRun.castReadyAt - ts) : 0;
   kit.push(row("spell", spell, spell ? `${pips(spell.uses, Math.max(spell.uses, freshUses(spell.id, spell.rarity, spell)))} <kbd>${isTouchDevice() ? "Spell" : "Space"}</kbd>${campRun.freeCasts > 0 ? ` <span class="cp-free">+${campRun.freeCasts} free</span>` : ""}${cd > 0 ? " <span class='cp-cd'>...</span>" : ""}` : ""));
@@ -222,6 +224,9 @@ function campHudUpdate() {
   chip("Zoom", "#ff8c1a", fx.fastUntil || 0);
   chip("Slow", "#c8862e", fx.slowUntil || 0);
   if (ts < graceUntil && gameState === "PLAYING") fxs.push(`<span class="cp-chip" style="--c:#ffd23f">Safe</span>`);
+  // power-ups that grant a resistance or an immunity (build 52), one chip per power-up
+  const seenG = new Set();
+  (campRun.grants || []).forEach(g => { if (ts < g.until && !seenG.has(g.label)) { seenG.add(g.label); chip(g.label, g.color || "#ffffff", g.until); } });
   const fxEl = $(".cp-fx");
   fxEl.innerHTML = fxs.length ? `<span class="cp-k">Effects</span><span class="cp-chips">${fxs.join("")}</span>` : "";
   fxEl.hidden = !fxs.length;
@@ -274,9 +279,13 @@ function campHudUpdate() {
     const tired = bossExhausted(ts), charging = bossCharging(ts);
     st.classList.toggle("tired", tired);
     st.classList.toggle("charge", charging);
-    const st2 = boss.beaten ? "Beaten!" : tired ? "Exhausted: bite it!" : charging ? "Charging! Let it crash into you" : ts < boss.frozenUntil ? "Frozen" : "Dodge its head, let it ram you";
+    const st2 = boss.beaten ? "Beaten!" : ts < (boss.hardenUntil || 0) ? "Stone: nothing lands" : ts < (boss.phaseUntil || 0) ? "Mist: it passes through you" : tired ? "Exhausted: bite it!" : charging ? "Charging! Let it crash into you" : ts < boss.frozenUntil ? "Frozen" : ts < (boss.poisonUntil || 0) ? "Poisoned: tiring fast" : "Dodge its head, let it ram you";
     const res = boss.resist.length ? `<span class="cp-resist">Shrugs off ${boss.resist.map(id => escapeAttr((campItemDef(id) || { name: id }).name)).join(", ")}</span>` : "";
-    setHtml($(".cp-boss-state"), `${escapeAttr(st2)}${res ? "<br>" + res : ""}`);
+    // build 52: its traits, and how it takes damage tags
+    const R = boss.rules || {}, word = l => (l || []).map(t => DAMAGE_NAMES[t].broad).join(", ");
+    const tags = [R.immune && R.immune.length ? `Immune: ${word(R.immune)}` : "", R.resist && R.resist.length ? `Resists: ${word(R.resist)}` : "", R.weak && R.weak.length ? `Weak: ${word(R.weak)}` : ""].filter(Boolean).join(" · ");
+    const traits = traitWords(boss.traits).join(", ");
+    setHtml($(".cp-boss-state"), `${escapeAttr(st2)}${res ? "<br>" + res : ""}${tags ? `<br><span class="cp-resist">${escapeAttr(tags)}</span>` : ""}${traits ? `<br><span class="cp-traits">${escapeAttr(traits)}</span>` : ""}`);
   }
 
   // the pointer to whatever the quest wants you to find

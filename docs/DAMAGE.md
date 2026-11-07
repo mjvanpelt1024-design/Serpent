@@ -62,8 +62,8 @@ Listing the same tag under two of `immune`, `resist` and `weak` is a content err
 
 ## Fields for items, trinkets and hazards
 
-These fields are checked by `checkDamageSpec`. Nothing in the existing content uses them yet; later
-steps add them to the content files.
+These fields are checked by `checkDamageSpec`. Since build 52 the campaign uses them (see "Where the content
+uses them" below).
 
 | Field | On | Meaning |
 |---|---|---|
@@ -76,3 +76,31 @@ steps add them to the content files.
 
 Words and tags are in `DAMAGE_TAGS` and `DAMAGE_NAMES` in `damage.js`. Change them there, then update
 the table above and the tests (the tests check for 36 stats and unique names).
+
+## Where the content uses them (build 52)
+
+| What | Where | Fields |
+|---|---|---|
+| Hazard and enemy hits | `content/campaign/foes.json` `hits`, and each new enemy's `hit` | `tags`, `family` |
+| How enemies take weapons and spells | `foes.json` `rules` (old enemies), each new enemy | `immune`, `resist`, `weak` |
+| How bosses and champions take them | `foes.json` `bosses.<island>.rules`, `champions[].rules` | `immune`, `resist`, `weak` |
+| Weapons and spells | `content/campaign/items.json`, `hit` on the item | `tags`, `family` |
+| Armor, weapons, familiars | `items.json` `stats` (rarity sets how many count) | stat ids as `grants` |
+| Trinkets | `content/campaign/crafting.json`, `major` and `minor` | stat ids |
+| Runes | `items.json` `good` and `bad` | stat ids |
+| Power-ups and Flame Shroud | `foes.json` `powerups[].grants`, `items.json` `grants` | `grants` |
+
+The campaign adds one more kind of stat beside these 36: **spell stats**, `<word>.spells` with the same twelve
+words ("Fire Spells", "Ember Spells"), plus `spellPower` and `spellCharges`. They make spells stronger and live in
+`src/campaign/camp-arsenal.js`, not in `damage.js`.
+
+**Trinket names.** A trinket gives two stats, a major one and then a minor one. One made of two damage (or spell)
+stats is named after them in that order: its first name is its major stat's word and its second name its minor
+stat's, so a *Fire Ember Locket* (Fire Resistance, then Ember Resistance) and an *Ember Fire Locket* (Ember
+Resistance, then Fire Resistance) are different trinkets. `tools/check-campaign.py` and
+`tools/tests/arsenal.test.js` hold the content to this.
+
+**In play** (`camp-arsenal.js`): your worn pieces' stat lines, their trinkets, the set bonus, your familiar's
+lines, your rune and any power-up you picked up add up into one target; `takeHit` resolves each hit's tags
+against it. Damage comes in halves, so what resistance takes off (or weakness adds on) carries over between hits.
+

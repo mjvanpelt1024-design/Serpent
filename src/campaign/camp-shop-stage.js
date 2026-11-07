@@ -322,7 +322,7 @@ const SS_PANELS = {
     }
     const d = campItemDef(o.id);
     return `<div class="ss-card">${campItemIconHtml({ id: o.id, rarity: o.rarity, grade: -1 }, "big")}<div>` +
-      ssHead(campItemName({ id: o.id, rarity: o.rarity, grade: -1 }), `${escapeAttr(CAMP.slots.find(s => s.id === CAMP.families[d.family].slot).name)}${o.deal && !o.sold ? ` · <span class="cs-deal">${CAMP.rules.merchant.dealDiscount}% off</span>` : ""}`) + `</div></div>` +
+      ssHead(campItemName({ id: o.id, rarity: o.rarity, grade: -1 }), `${escapeAttr(CAMP.slots.find(s => s.id === campItemSlot(d.id)).name)}${o.deal && !o.sold ? ` · <span class="cs-deal">${CAMP.rules.merchant.dealDiscount}% off</span>` : ""}`) + `</div></div>` +
       itemFacts(o.id, o.rarity) +
       `<div class="ss-acts">${o.sold ? `<button class="btn" disabled>Sold</button>` : `<button class="btn ${can ? "btn-gold" : ""}" data-ss="buy" data-i="${ssPick.i}" ${can ? "" : "disabled"}>${can ? "Buy for" : "Need"} ${coinHtml(shopIsl)} ${fmtInt(price)}</button>`}</div>`;
   },
@@ -367,7 +367,7 @@ const SS_PANELS = {
       <button class="btn ${canCraft(sel) && !full ? "btn-gold" : ""}" data-ss="craft" data-id="${sel.id}" ${canCraft(sel) && !full ? "" : "disabled"}>${full ? "All three order slots are busy" : canCraft(sel) ? `Make it (${hrs(craftHours(sel))})` : "Missing materials"}</button></div>`;
   },
   fit() {
-    const gear = camp.satchel.filter(it => campItemSlot(it.id) === "gear");
+    const gear = camp.satchel.filter(it => ["gear", "helmet", "body"].includes(campItemSlot(it.id)));
     const g = gear.find(x => x.uid === ssPick.gear) || null;
     const pieces = camp.satchel.filter(it => campItemSlot(it.id) === "craft");
     if (!gear.length) return ssHead("The fitting stand", "You have no gear to fit anything to yet.");
@@ -375,7 +375,7 @@ const SS_PANELS = {
       `<p class="ss-step">1. The gear</p><div class="ss-tiles">${gear.map(it => ssTile(it, { on: it === g, data: `data-ss="pickg" data-uid="${it.uid}"`, title: campItemName(it), badge: it.trinket ? "★" : "" })).join("")}</div>`;
     if (g) {
       html += `<p class="ss-p"><b>${escapeAttr(campItemName(g))}</b>: ${escapeAttr(campItemLeft(g))}. Parts: ${partsFor(g.id).map(p => `<span class="pi-tag${g.parts.includes(p.id) ? " on" : ""}">${escapeAttr(p.name)}</span>`).join(" ")} · Trinket: ${g.trinket ? `<span class="pi-tag on">${escapeAttr(CAMP.craftById[g.trinket].name)}</span>` : "none"}</p>`;
-      const fits = pieces.filter(p => { const c = CAMP.craftById[p.id]; return c.stat ? !g.trinket : c.fits === gearClass(g.id) && !g.parts.includes(p.id); });
+      const fits = pieces.filter(p => { const c = CAMP.craftById[p.id]; return c.stat ? !g.trinket : campItemSlot(g.id) === "gear" && c.fits === gearClass(g.id) && !g.parts.includes(p.id); });
       html += `<p class="ss-step">2. What to fit</p>` + (fits.length ? `<div class="ss-tiles">${fits.map(p => ssTile(p, { on: p.uid === ssPick.piece, data: `data-ss="pickp" data-uid="${p.uid}"`, title: CAMP.craftById[p.id].name, badge: p.qty > 1 ? "x" + p.qty : "" })).join("")}</div>` : `<p class="ss-p">Nothing you've made fits this piece. Make trinkets and parts at the workbench.</p>`);
       const p = satchelItem(ssPick.piece);
       if (p && fits.includes(p)) html += `<div class="ss-sel"><p class="ss-p">${escapeAttr(CAMP.craftById[p.id].name)}: ${escapeAttr(craftFacts(CAMP.craftById[p.id]))} It can never come off.</p><button class="btn btn-gold" data-ss="fit">Fit it for good</button></div>`;

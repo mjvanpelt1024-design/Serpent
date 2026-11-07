@@ -31,15 +31,22 @@ const BOSS_RETREAT = 1500;      // it backs off after a hit either way
 const BOSS_CHARGE_MS = 1700;
 const BOSS_HIT_CD = 800;
 
+/* Each island boss's special traits and damage rules (content/campaign/foes.json "bosses", build 52) */
+const bossFoes = isl => ((CAMP.foes || {}).bosses || {})[isl] || {};
 function spawnBoss(def, fight) {
-  const B = CAMP.islandById[campRun.isl].boss;
+  const I = CAMP.islandById[campRun.isl];
+  return spawnBossFrom(I.boss, fight, I.n, campRun.isl, bossFoes(campRun.isl));
+}
+/* A boss from its numbers B (an island's boss or a champion), at fight 1-3, on island number n.
+   F: its traits and damage rules; extra: anything more it carries (a champion's bounty). */
+function spawnBossFrom(B, fight, n, isl, F = {}, extra = {}) {
   const corners = [[N20 - 3, N20 - 3], [N20 - 3, 2], [2, N20 - 3], [N20 - 3, 10]]
     .map(([cx, cy]) => ({ x: cx * cell, y: cy * cell }))
     .filter(p => !walls.has(cellKey(p.x, p.y)))
     .sort((a, b) => (Math.abs(b.x - snake.x) + Math.abs(b.y - snake.y)) - (Math.abs(a.x - snake.x) + Math.abs(a.y - snake.y)));
   const at = corners[0] || { x: (N20 - 3) * cell, y: (N20 - 3) * cell };
   const now = performance.now();
-  const smart = bossSmartFor(CAMP.islandById[campRun.isl].n, fight);
+  const smart = bossSmartFor(n, fight);
   boss = {
     def: B, fight, name: B.name,
     cells: [{ x: at.x, y: at.y }], prev: null, maxCells: B.length,
@@ -48,8 +55,11 @@ function spawnBoss(def, fight) {
     armor: fight === 3 ? 0 : B.armor, maxArmor: B.armor,
     stamina: 1, exhaustedUntil: 0, exhaustStart: 0,
     nextCharge: now + BOSS_DELAY + (4000 + Math.random() * 2000) / (0.35 + 0.65 * smart), chargeUntil: 0,
-    dmg: 0, beaten: false, smart, resist: B.resist || []
+    dmg: 0, beaten: false, smart, resist: B.resist || [],
+    // build 52: where it's from (its crest), its damage rules, its traits and their timers
+    isl, rules: F.rules || {}, traits: F.traits || [], traitAt: {}, blowCarry: 0
   };
+  Object.assign(boss, extra);
   // no taunt: the story stays in the book (build 51)
   sfx("bad");
 }
@@ -223,10 +233,17 @@ function bossRetreat(ts, ms = BOSS_RETREAT) {
   boss.chargeUntil = 0;
 }
 
-/* How hard a blow on the boss lands: one, more with a sword, a Rune of Fury or the Coral Fig's bites */
+/* How hard a blow on the boss lands: one, more with a weapon, a Rune of Fury or the Coral Fig's bites.
+   A weapon adds its damage level (build 52), times how the boss takes the weapon's tags (immune, resist,
+   weak: what's left over carries to the next blow); a piercing weapon takes one more piece of armor off. */
 function bossBlow() {
   let n = 1;
-  if (campEquippedId("gear") === "sword") n += campEquippedRarity("gear") === "legendary" ? 2 : 1;
+  const w = campEquippedId("gear") === "sword" ? campEquipped("gear") : null;
+  if (w) {
+    let part = bossBlows(weaponDamage(w), bossTakes(weaponHit(w)));
+    if (weaponTraits(w).includes("pierce") && boss && boss.fight === 2) part++;
+    n += part;
+  }
   n += runeVal("bite");
   if (roll(upVal("bite"))) n++;
   return n;
@@ -234,6 +251,8 @@ function bossBlow() {
 
 /* The boss ran its head into your snake: it hurts itself. Thorn Mail on your body pricks it harder. */
 function bossRams(ts, onHead) {
+  // turned to mist, it passes through you (a champion's Phase)
+  if (ts < (boss.phaseUntil || 0)) return;
   bossRetreat(ts);
   boss.stunnedUntil = ts + 700;
   if (ts < boss.hitCdUntil) return;
@@ -249,6 +268,7 @@ function bossRams(ts, onHead) {
 function bossTouchedBy(nx, ny, ts) {
   if (!boss || boss.beaten) return false;
   if (!boss.cells.some(c => c.x === nx && c.y === ny)) return false;
+  if (ts < (boss.phaseUntil || 0)) return false;
   if (ts < boss.hitCdUntil) return false;
   boss.hitCdUntil = ts + BOSS_HIT_CD;
   // worn out, it's open: a bite on it hurts it, not you
@@ -258,7 +278,7 @@ function bossTouchedBy(nx, ny, ts) {
     return gameState !== "PLAYING";
   }
   // a force field zaps it instead of you
-  if (fieldOn(ts) && !bossResists("forcefield")) {
+  if (fieldOn(ts) && !bossResists(campRun.fieldSpell || "forcefield")) {
     sfx("pop");
     bossRetreat(ts);
     damageBoss(1, "field");
@@ -290,10 +310,44 @@ function bossTouchedBy(nx, ny, ts) {
   return dead;
 }
 
+/* Where a blow came from: a spell (its tags meet the boss's rules here) or your weapon (its tags were
+   counted in bossBlow); either may carry traits (burn, chill, toxin) */
+function bossBlowSource(how) {
+  const spell = how === "fireball" ? "fireball" : String(how).startsWith("spell:") ? how.slice(6) : how === "field" ? (campRun && campRun.fieldSpell) || "forcefield" : null;
+  if (spell) { const d = campItemDef(spell); return { spell, hit: d && d.hit, traits: (d && d.traits) || [] }; }
+  if (["ram", "head", "bite", "sword"].includes(how)) { const w = campEquippedId("gear") === "sword" ? campEquipped("gear") : null; return { hit: weaponHit(w), traits: weaponTraits(w) }; }
+  return {};
+}
+/* Would n blows finish it? */
+function bossFinishedBy(n) {
+  if (boss.fight === 1) return boss.stamina - 0.22 * n <= 0;
+  if (boss.fight === 2) return boss.armor - n <= 0;
+  return boss.hearts - n <= 0;
+}
+
 /* A blow of n on the boss: fight 1 knocks the wind out of it, fight 2 its armor, fight 3 its hearts */
 function damageBoss(n, how) {
   if (!boss || boss.beaten) return;
   const ts = performance.now();
+  const first = boss.def.name.split(" ")[0];
+  // build 52: stone or mist takes no blow; a spell's tags meet the boss's rules; a rally; a champion's fall
+  if (bossHardened(ts)) { showToast(ts < (boss.phaseUntil || 0) ? `${first} is mist: nothing lands.` : `${first} is stone: nothing lands.`); sfx("rock"); return; }
+  const src = bossBlowSource(how);
+  if (src.spell && src.hit) {
+    n = bossBlows(n, bossTakes(src.hit));
+    if (n <= 0) { showToast(`${first} shrugs off the ${tagWord(src.hit)}!`); sfx("bad"); return; }
+  }
+  if (n <= 0) return;
+  bossTraits(src.traits, src.hit);
+  if (boss.traits.some(t => t.id === "rally") && !boss.rallied && bossFinishedBy(n)) {
+    boss.rallied = true;
+    boss.stunnedUntil = ts + 600;
+    campBossFlash = ts;
+    showToast(`${first} rallies and shrugs off the blow!`);
+    sfx("medal");
+    return;
+  }
+  if (boss.champion && bossFinishedBy(n)) { championDown(); return; }
   if (boss.fight === 1) {
     boss.stamina = Math.max(0, boss.stamina - 0.22 * n);
     boss.dmg++;
@@ -301,7 +355,7 @@ function damageBoss(n, how) {
     campBossFlash = ts;
     sfx("rock");
     if (boss.stamina <= 0) { bossGivesUp(); return; }
-    showToast(`${BOSS_HOW[how] || "A hit!"} ${boss.def.name.split(" ")[0]} is winded.`);
+    showToast(`${bossHowText(how)} ${boss.def.name.split(" ")[0]} is winded.`);
     return;
   }
   for (let i = 0; i < n; i++) {
@@ -327,9 +381,10 @@ function damageBoss(n, how) {
     return;
   }
   const left = boss.fight === 2 ? `${boss.armor} armor left` : `${boss.hearts} ${boss.hearts === 1 ? "heart" : "hearts"} left`;
-  showToast(`${BOSS_HOW[how] || "A hit!"} ${left}.`);
+  showToast(`${bossHowText(how)} ${left}.`);
 }
-const BOSS_HOW = { ram: "It crashed into you!", head: "It rammed your head and hurt itself!", bite: "Bite!", sword: "Your sword struck it!", fireball: "Fireball hit!", field: "Your force field zapped it!", thorns: "Your thorns pricked it!" };
+const BOSS_HOW = { ram: "It crashed into you!", head: "It rammed your head and hurt itself!", bite: "Bite!", sword: "Your weapon struck it!", fireball: "Fireball hit!", field: "Your force field zapped it!", thorns: "Your thorns pricked it!", burn: "It burns!" };
+const bossHowText = how => BOSS_HOW[how] || (String(how).startsWith("spell:") && campItemDef(how.slice(6)) ? `${campItemDef(how.slice(6)).name} hit!` : "A hit!");
 let campBossFlash = 0;
 
 /* ----- Drawing -----
@@ -345,6 +400,9 @@ function drawBoss(view, ts) {
   const charging = bossCharging(ts);
   const f = Math.min(1, Math.max(0, 1 - (boss.moveAt - ts) / bossInterval(ts)));
   const flash = ts - campBossFlash < 220;
+  const stone = ts < (boss.hardenUntil || 0), mist = ts < (boss.phaseUntil || 0);
+  ctx.save();
+  if (mist) ctx.globalAlpha = 0.4 + 0.1 * Math.sin(ts / 90);
   const pts = boss.cells.map((c, i) => {
     const p = boss.prev && boss.prev[i] ? boss.prev[i] : c;
     const jump = Math.abs(c.x - p.x) > cell * 2 || Math.abs(c.y - p.y) > cell * 2;
@@ -364,6 +422,7 @@ function drawBoss(view, ts) {
     let col = i % 2 ? B.body : shade(B.body, 0.18);
     if (frozen) col = i % 2 ? "#9fd8ff" : "#7ab8e8";
     if (tired && !frozen) col = shade(col, -0.25);
+    if (stone) col = i % 2 ? "#8a8a92" : "#a8a8b0";
     if (flash) col = "#ffffff";
     const k = cell / 20;
     if (i === 0) {
@@ -420,6 +479,7 @@ function drawBoss(view, ts) {
     ctx.fillText("z", hx + cell * 0.8 + ph * cell * 0.4, hy - cell * 0.1 - ph * cell * 0.8);
     ctx.globalAlpha = 1;
   }
+  ctx.restore();
 }
 
 /* Each island's boss wears something of its island on its head: crest:<island>, a picture in
@@ -432,7 +492,7 @@ const CREST_FRAME = {
   crown: ts => Math.sin(ts / 150) > 0.3 ? 1 : 0
 };
 function drawBossCrest(x, y, fx, fy, ts) {
-  const isl = campRun.isl;
+  const isl = boss.crest || boss.isl || campRun.isl;
   texBoard(ctx, "crest:" + isl, x, y, cell / 20, CREST_FRAME[isl] ? CREST_FRAME[isl](ts) : 0);
 }
 

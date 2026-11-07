@@ -23,7 +23,8 @@
       {"id": "dark", "name": "Blackout", "text": "You can only see around your head."},
       {"id": "bare", "name": "Bare Scales", "text": "No gear, spells, snacks, familiars or canisters."},
       {"id": "clock", "name": "Against the Clock", "text": "Finish within 90 seconds."},
-      {"id": "rocky", "name": "Rockslide", "text": "Rocks scattered everywhere."}
+      {"id": "rocky", "name": "Rockslide", "text": "Rocks scattered everywhere."},
+      {"id": "champion", "name": "Champion", "text": "The challenger's own champion hunts you through the level: a boss you only meet in quests. Beat it for a bounty, or just win the level."}
     ],
     "pool": [
       {"kind": "gems", "weight": 50, "min": 8, "max": 25},

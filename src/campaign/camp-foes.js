@@ -130,10 +130,11 @@ function enemyLanded(e, def) {
 function biteHead(e, def) {
   removeEntity(e);
   if (starOn() || feverOn() || fieldOn()) { smashEntity(e); return; }
-  const r = campGearMeets(["bee", "yellowjacket", "imp", "mole", "crab", "wisp"].includes(e.type) ? "wasp" : e.type);
+  // every island enemy meets your gear as a wasp would, but with its own damage rules (build 52)
+  const r = campGearMeets(FOES[e.type] ? "wasp" : e.type, e.type);
   if (r === "kill") return;
   if (r === "shove") { shoveAside(e); entities.push(e); return; }
-  if (campRun.wards && campRun.wards.net > 0) { campRun.wards.net--; showToast("The net caught it!"); sfx("pop"); return; }
+  if (campRun && campRun.wards && campRun.wards.net > 0) { campRun.wards.net--; showToast("The net caught it!"); sfx("pop"); return; }
   sfx("flea");
   takeHit(def.bite, e.type);
 }

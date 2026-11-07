@@ -109,6 +109,8 @@ campaign/camp-screens.js
 campaign/camp-scenes.js
 campaign/camp-shops.js
 campaign/camp-shop-stage.js
+campaign/camp-arsenal.js
+campaign/camp-bestiary.js
 campaign/camp-kit.js
 campaign/camp-tree.js
 campaign/camp-home.js

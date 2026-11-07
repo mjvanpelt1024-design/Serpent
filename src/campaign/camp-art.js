@@ -40,6 +40,8 @@ function drawPetSprite(g, id, x, y, w, ts, P) {
     g.shadowBlur = 0;
   }
   if (TextureLoader.has(`pet:${id}:${size}`)) texBoard(g, `pet:${id}:${size}`, x, y, w / size, PET_FRAME[id] ? PET_FRAME[id](ts, P) : 0);
+  // a familiar with no board sprite sheet yet (build 52's) is drawn from its 12 x 12 picture, bobbing
+  else if (TextureLoader.has(`ci:${id}`)) { g.imageSmoothingEnabled = false; g.drawImage(texCanvas(`ci:${id}`), Math.round(x), Math.round(y + (Math.sin(ts / 200) > 0 ? -1 : 0)), Math.round(w), Math.round(w)); }
   g.restore();
 }
 

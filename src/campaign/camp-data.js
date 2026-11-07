@@ -15,6 +15,15 @@ const CAMP = (() => {
     tree.upgrades.forEach(u => { upgradeById[u.id] = u; treeOf[u.id] = isl.id; });
   });
   const items = C.items.items || [];
+  // build 52: a trinket's major line also answers to .stat and .v (the workshop's code asks for those),
+  // and armor pieces cost what their set's tier says
+  ((C.crafting || {}).trinkets || []).forEach(t => { if (t.major && t.stat === undefined) { t.stat = t.major.stat; t.v = t.major.v; } });
+  const sets = C.items.armorSets || [], tiers = C.items.armorTiers || [];
+  items.forEach(it => {
+    const s = it.set && sets.find(x => x.id === it.set);
+    const t = s && tiers.find(x => x.tier === s.tier);
+    if (t && !it.priceMult) it.priceMult = t.priceMult;
+  });
   return {
     islands,
     islandById: Object.fromEntries(islands.map(i => [i.id, i])),
@@ -34,7 +43,14 @@ const CAMP = (() => {
     ingredientById: Object.fromEntries(((C.crafting || {}).ingredients || []).map(r => [r.id, r])),
     upgradeById,
     treeOf,
-    rules: C.rules
+    rules: C.rules,
+    // build 52: armor sets, weapon traits, and the board's damage types (content/campaign/foes.json)
+    armorSets: sets,
+    armorSetById: Object.fromEntries(sets.map(s => [s.id, s])),
+    armorTiers: tiers,
+    statsByRarity: C.items.statsByRarity || [1, 2, 3, 4],
+    weaponTraits: C.items.weaponTraits || {},
+    foes: C.foes || {}
   };
 })();
 

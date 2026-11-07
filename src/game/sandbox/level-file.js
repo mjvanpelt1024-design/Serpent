@@ -9,7 +9,9 @@ const LEVEL_FILE_SIZE = 20;
 const LEVEL_FILE_CHARS = ".#PSAaXxRrOoFfHhMm@*%&!^~";
 const LEVEL_FILE_EDGES = { wrap: "w", walls: "a", mirror: "m" };
 const LEVEL_FILE_SPEEDS = [5, 7, 10];
-const LEVEL_FILE_SPAWNERS = ["popsicle", "flea", "fire", "molasses"];
+const LEVEL_FILE_SPAWNERS = ["popsicle", "flea", "fire", "molasses",
+  // build 52: the campaign's new enemies (content/campaign/foes.json; tools/tests/arsenal.test.js keeps the two in step)
+  "knightling", "scorpion", "sparkbeetle", "inkwraith", "mantis", "viper", "frostsprite", "urchin", "firebat"];
 
 /* Level object -> .level text. L must already be normalized. */
 function levelFileText(L) {
@@ -28,6 +30,8 @@ function levelFileText(L) {
     `items    = ${(L.it || []).join(", ")}`,
     `twists   = ${(L.r.t || []).join(", ")}`,
     `off      = ${(L.off || []).join(", ")}          # hazards turned off in this level`,
+    `boss     = ${L.b || ""}          # an island (its boss) or a champion, or empty for none`,
+    `fight    = ${L.bf || 3}          # which of the boss's three fights: 1 stamina, 2 armor, 3 hearts`,
     "",
     "[panels]                     # wall panels: v = the line left of square x,y; h = the line above it",
   ];
@@ -54,7 +58,7 @@ function parseLevelFile(text) {
   for (const ch of g) if (!LEVEL_FILE_CHARS.includes(ch)) return null;
 
   const list = v => String(v || "").split(",").map(s => s.trim()).filter(Boolean);
-  const L = { n: "Sandbox level", e: "w", s: 7, g, pv: {}, ph: {}, k: "", th: "", vn: 0, it: [], off: [], sc: {}, r: { h: 3, ar: true, t: [] } };
+  const L = { n: "Sandbox level", e: "w", s: 7, g, pv: {}, ph: {}, k: "", th: "", vn: 0, it: [], off: [], sc: {}, b: "", bf: 3, r: { h: 3, ar: true, t: [] } };
   let section = "";
   for (const raw of lines.slice(0, sep)) {
     const line = raw.replace(/\s#.*$/, "").trim();
@@ -87,6 +91,8 @@ function parseLevelFile(text) {
         case "items": L.it = list(val); break;
         case "twists": L.r.t = list(val); break;
         case "off": L.off = list(val); break;
+        case "boss": L.b = /^[a-z]{0,24}$/.test(val) ? val : ""; break;
+        case "fight": if ([1, 2, 3].includes(Number(val))) L.bf = Number(val); break;
       }
     }
   }

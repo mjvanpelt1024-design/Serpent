@@ -124,7 +124,7 @@ function itemFacts(id, rarity, own = null) {
   // gear absorbs hits and spells hold charges every level now (build 51); your own piece counts its upgrades
   const it = own || { id, rarity, parts: d.family === "gear" ? builtInParts(id, rarity) : [], trinket: "", lv: 0, train: 0 };
   const n = freshUses(id, rarity, it);
-  const stat = d.family === "gear" ? `${plural(n, "hit")} a level` : d.family === "spell" ? `${plural(n, "charge")} a level${d.power ? `, ${campItemPower(it)} ${d.unit}` : ""}` : d.charges ? `${plural(n, "charge")}${d.power ? `, ${campItemPower(it)} ${d.unit}` : ""}` : d.power ? `${campItemPower(it)} ${d.unit}` : "";
+  const stat = d.piece === "helmet" || d.piece === "body" ? "Never wears out" : d.family === "gear" ? `${plural(n, "hit")} a level` : d.family === "spell" ? `${plural(n, "charge")} a level${d.power ? `, ${campItemPower(it)} ${d.unit}` : ""}` : d.charges ? `${plural(n, "charge")}${d.power ? `, ${campItemPower(it)} ${d.unit}` : ""}` : d.power ? `${campItemPower(it)} ${d.unit}` : "";
   return `<div class="shop-desc">${escapeAttr(d.does)}</div>
     <div class="shop-meta"><span class="cs-stat">${stat}</span><span class="cs-good">Good: ${escapeAttr(d.strong)}</span></div>
     <div class="shop-meta"><span class="cs-weak">Weak: ${escapeAttr(d.weak)}</span></div>

@@ -34,13 +34,28 @@ SPAWNS = {"popsicle", "flea", "fire", "molasses", "rock", "apple", "xp",
           "golden", "shears", "armor", "shield", "hourglass", "star", "phantom", "lodestone", "frenzy"}
 PLACED = {"rock", "bramble", "ice", "spikes"}          # these use count, not max + delay
 ENDLESS_SPAWNS = {"rock", "flea", "popsicle"}         # the tunnel only rolls these, by rate
-FAMILIES = {"gear", "spell", "food", "pet", "rune"}     # sold by merchants, five items each (runes: five or more)
+FAMILIES = {"gear", "spell", "food", "pet", "rune"}     # sold by merchants, five or more items each (the shelf shows three at a time)
+# build 52: damage types (src/game/damage/damage.js, docs/DAMAGE.md). Each tag has a broad word and a narrow word.
+DAMAGE_WORDS = {"piercing": ("piercing", "barb"), "slashing": ("slashing", "edge"), "fire": ("fire", "ember"),
+                "ice": ("ice", "rime"), "electricity": ("electricity", "spark"), "venom": ("venom", "toxin")}
+DISPLAY_WORD = {"piercing": "Piercing", "barb": "Barb", "slashing": "Slashing", "edge": "Edge", "fire": "Fire", "ember": "Ember",
+                "ice": "Ice", "rime": "Rime", "electricity": "Electric", "spark": "Spark", "venom": "Venom", "toxin": "Toxin"}
+TAGS = set(DAMAGE_WORDS)
+NARROW = {n for _, n in DAMAGE_WORDS.values()}
+DAMAGE_STATS = {f"{w}.{k}" for pair in DAMAGE_WORDS.values() for w in pair for k in ("resistance", "weakness", "immunity")}
+SPELL_STATS = {f"{w}.spells" for pair in DAMAGE_WORDS.values() for w in pair} | {"spellPower", "spellCharges"}
+WEAPON_TRAITS = {"burn", "chill", "shock", "toxin", "pierce", "cleave"}
+PIECES = {"weapon", "helmet", "body"}
+ENEMY_KINDS = {"chaser", "crawler", "charger", "drifter", "blinker", "lurker"}
+BOSS_TRAITS = {"charger", "blink", "summon", "trail", "enrage", "regen", "rally", "devour", "tide"}
+CHAMPION_ABILITIES = BOSS_TRAITS | {"stormcall", "frostbreath", "venomspit", "quake", "swarm", "phase", "harden"}
 # what a rune can do: src/campaign/camp-runes.js has the effect and the words for each
 RUNE_STATS = {"applePoints", "points", "apples", "hazards", "speed", "money", "hearts", "armor", "damage", "bossDrain", "bite",
-              "echo", "echoCut", "loot", "freeCasts", "castCooldown", "gemChance", "growth", "graceSecs"}
+              "echo", "echoCut", "loot", "freeCasts", "castCooldown", "gemChance", "growth", "graceSecs"} | DAMAGE_STATS | SPELL_STATS
 SPECIAL_FAMILIES = {"vessel"}                         # never sold: found on the board or won
 CAUSES = {"boss", "bomb", "spikes", "hunter", "lightning", "ghost", "poison", "wasp", "bramble", "flea", "fire", "echo",
-          "bee", "yellowjacket", "imp", "mole", "crab", "wisp", "ember", "acid", "frost", "lava", "trap", "rivalbonk"}
+          "bee", "yellowjacket", "imp", "mole", "crab", "wisp", "ember", "acid", "frost", "lava", "trap", "rivalbonk",
+          "popsicle", "ice", "shears", "knightling", "scorpion", "sparkbeetle", "inkwraith", "mantis", "viper", "frostsprite", "urchin", "firebat"}
 NPC_KINDS = ("merchant", "challenger", "banker")
 HATS = {"helm", "hennin", "tophat", "wizard", "hood", "fez", "chef", "beret", "straw", "shell", "tricorn", "horns", "crown", ""}
 EXTRAS = {"beard", "monocle", "mustache", "eyepatch", "none", ""}
@@ -200,8 +215,9 @@ def check_items(items):
         per[f] = per.get(f, 0) + 1
         for key in ("name", "does", "strong", "weak") + (() if f == "rune" else ("legend",)):
             check(it.get(key), where, f"missing \"{key}\" (every item needs a strength and a weakness)")
-        if f == "gear":
+        if f == "gear" and it.get("piece") in (None, "weapon"):
             check(len(it.get("uses", [])) == 4, where, "gear needs uses for four rarities")
+        check_arsenal_item(it, where, items)
         if f in ("spell", "food"):
             check(len(it.get("charges", [])) == 4, where, "needs charges for four rarities")
         if f in ("spell", "food", "pet"):
@@ -225,10 +241,16 @@ def check_items(items):
         if f in SPECIAL_FAMILIES:
             check(count >= 1, rel, f"family {f} needs at least one item")
             continue
-        if f in ("rune", "food"):
-            check(count >= 5, rel, f"family {f} has {count} items; the merchant needs at least 5")
-            continue
-        check(count == 5, rel, f"family {f} has {count} items; each merchant needs exactly 5")
+        check(count >= 5, rel, f"family {f} has {count} items; the merchant needs at least 5")
+    # build 52: armor sets, two pieces each (a helmet and a body piece)
+    for st in items.get("armorSets", []):
+        where = f"{rel} armor set {st.get('id')}"
+        pieces = [i for i in items.get("items", []) if i.get("set") == st.get("id")]
+        check(sorted(i.get("piece") for i in pieces) == ["body", "helmet"], where, "needs exactly one helmet and one body piece")
+        check(st.get("tier") in {t.get("tier") for t in items.get("armorTiers", [])}, where, "tier isn't one of armorTiers")
+        for line in st.get("bonus", []) + st.get("bad", []):
+            check(line.get("stat") in TRINKET_STATS and num(line.get("v"), -1000, 1000), where, f"stat line {line} unknown")
+    check(len(items.get("statsByRarity", [])) == 4, rel, "statsByRarity needs four numbers, one per rarity")
     for l in items.get("loot", []):
         check(num(l.get("value"), 1, 1e6) and num(l.get("island"), 1, 5), f"{rel} loot {l.get('id')}", "needs a value and an island (1-5)")
         check(l.get("grade") in ("common", "uncommon", "rare"), f"{rel} loot {l.get('id')}", "grade must be common, uncommon or rare")
@@ -236,6 +258,51 @@ def check_items(items):
 
 # build 51: the workshops (content/campaign/crafting.json)
 TRINKET_STATS = RUNE_STATS | {"thiefGuard", "stingGuard", "coldWard", "heatWard"}
+
+
+def check_hit(hit, where):
+    if hit is None:
+        return
+    check(isinstance(hit, dict) and isinstance(hit.get("tags"), list) and hit["tags"] and all(t in TAGS for t in hit["tags"]), where, f"hit tags {hit} must be a list of damage tags")
+    fam = hit.get("family") if isinstance(hit, dict) else None
+    if fam is not None:
+        check(fam in NARROW and any(DAMAGE_WORDS[t][1] == fam for t in hit.get("tags", []) if t in DAMAGE_WORDS), where, f"hit family \"{fam}\" must be the narrow word of one of its tags")
+
+
+def check_rules_tags(rules, where):
+    seen = {}
+    for k in ("immune", "resist", "weak"):
+        for t in rules.get(k, []) or []:
+            check(t in TAGS, where, f"{k} has unknown tag \"{t}\"")
+            check(t not in seen, where, f"{t} is listed under {seen.get(t)} and {k}")
+            seen[t] = k
+
+
+def check_arsenal_item(it, where, items):
+    """Build 52's fields on an item: piece, acts, hit, damage, traits, stats, set, grants, snips."""
+    by_id = {i.get("id"): i for i in items.get("items", [])}
+    f = it.get("family")
+    if "piece" in it:
+        check(f == "gear" and it["piece"] in PIECES, where, "piece must be weapon, helmet or body, on gear")
+    if "acts" in it:
+        a = by_id.get(it["acts"])
+        check(a is not None and a.get("family") == f and "acts" not in a, where, f"acts \"{it['acts']}\" must be an old item of the same family")
+    check_hit(it.get("hit"), where)
+    if it.get("piece") == "weapon":
+        check(it.get("acts", it.get("id")) == "sword", where, "a weapon acts as the sword")
+        check(len(it.get("damage", [])) == 4 and all(num(x, 0, 10) for x in it.get("damage", [])), where, "a weapon needs a damage level for four rarities")
+    for t in it.get("traits", []):
+        check(t in WEAPON_TRAITS, where, f"trait \"{t}\" unknown")
+    stats = it.get("stats")
+    if stats is not None:
+        check(isinstance(stats, list) and 1 <= len(stats) <= 4, where, "stats: one to four lines (rarity sets how many count)")
+        for line in stats:
+            check(line.get("stat") in TRINKET_STATS and num(line.get("v"), -1000, 1000) and line.get("v") != 0, where, f"stat line {line} unknown")
+    if it.get("piece") in ("helmet", "body"):
+        check(it.get("set") in {s.get("id") for s in items.get("armorSets", [])}, where, f"set \"{it.get('set')}\" isn't in armorSets")
+        check(isinstance(stats, list) and len(stats) == 4, where, "an armor piece needs four stat lines (one per rarity)")
+    for g in it.get("grants", []):
+        check(g.get("stat") in DAMAGE_STATS and num(g.get("amount"), 0.01, 1000), where, f"grants {g} needs a damage stat and an amount")
 def check_crafting(cr, items):
     rel = "crafting.json"
     if not cr or not items:
@@ -246,7 +313,15 @@ def check_crafting(cr, items):
     for t in cr.get("trinkets", []):
         where = f"{rel} trinket {t.get('id')}"
         check(t.get("id") not in seen, where, "id used twice"); seen.add(t.get("id"))
-        check(t.get("stat") in TRINKET_STATS, where, f"stat \"{t.get('stat')}\" unknown")
+        # build 52: two lines, a major one and a minor one; one named after its damage stats says them in that order
+        mj, mn = t.get("major") or {}, t.get("minor") or {}
+        check(mj.get("stat") in TRINKET_STATS and mn.get("stat") in TRINKET_STATS, where, f"needs a major and a minor line with stats the game knows ({mj.get('stat')}, {mn.get('stat')})")
+        check(mj.get("stat") != mn.get("stat"), where, "its major and minor lines must be different stats")
+        check(num(mj.get("v"), -1000, 1000) and num(mn.get("v"), -1000, 1000), where, "major and minor need numbers")
+        words = [x.get("stat", "").split(".")[0] for x in (mj, mn)]
+        if all("." in x.get("stat", "") for x in (mj, mn)):
+            want = f"{DISPLAY_WORD.get(words[0], words[0])} {DISPLAY_WORD.get(words[1], words[1])} "
+            check(str(t.get("name", "")).startswith(want), where, f"a trinket of two damage stats is named first name then second name: \"{want}...\"")
         m = t.get("needs", [])
         check(all(x in loot for x in m), where, "needs a material that isn't in items.json loot")
         g = [loot.get(x) for x in m]
@@ -268,6 +343,68 @@ def check_crafting(cr, items):
         check(r.get("makes") in food, where, "makes a snack that isn't in items.json")
         check(all(x in ing for x in r.get("needs", [])), where, "needs an ingredient that isn't listed")
         check(r.get("source") in ("shop", "find", "quest"), where, "source must be shop, find or quest")
+
+
+# build 52: content/campaign/foes.json
+def check_foes(fo, island_ids):
+    rel = "foes.json"
+    if not fo:
+        check(False, rel, "missing")
+        return
+    for cause, h in fo.get("hits", {}).items():
+        if cause.startswith("_"):
+            continue
+        check(cause in CAUSES, f"{rel} hits.{cause}", "isn't a cause the game deals")
+        check_hit(h, f"{rel} hits.{cause}")
+    for foe, r in fo.get("rules", {}).items():
+        if not foe.startswith("_"):
+            check_rules_tags(r, f"{rel} rules.{foe}")
+    ids = set()
+    for e in fo.get("enemies", []):
+        where = f"{rel} enemy {e.get('id')}"
+        check(e.get("id") and e["id"] not in ids, where, "needs a unique id")
+        ids.add(e.get("id"))
+        check(e.get("kind") in ENEMY_KINDS, where, f"kind must be one of {sorted(ENEMY_KINDS)}")
+        check(e.get("name") and e.get("label") and e.get("fact"), where, "needs a name, a label and a fact")
+        check(num(e.get("bite"), 0.5, 3) and num(e.get("steal", 0), 0, 1000), where, "bite (hearts) and steal (points) out of range")
+        check(all(i in island_ids for i in e.get("islands", [])) and e.get("islands"), where, "islands must be island ids")
+        check(num(e.get("from", 6), 1, 15), where, "from must be a level 1-15")
+        check_hit(e.get("hit"), where)
+        check_rules_tags(e, where)
+        if e.get("drops"):
+            check(e["drops"] in {"ember", "frost", "acid", "lava"}, where, "drops must be ember, frost, acid or lava")
+        check(e.get("id") in CAUSES, where, "add its id to CAUSES at the top of this file")
+    for p in fo.get("powerups", []):
+        where = f"{rel} power-up {p.get('id')}"
+        check(p.get("id") and p["id"] not in ids, where, "needs a unique id")
+        ids.add(p.get("id"))
+        check(num(p.get("secs"), 1, 60), where, "secs 1-60")
+        check(p.get("grants") and all(g.get("stat") in DAMAGE_STATS and num(g.get("amount"), 0.01, 100) for g in p.get("grants", [])), where, "grants must be damage stats with an amount")
+        check(p.get("said") and p.get("label"), where, "needs a label and what it says")
+    traits = fo.get("traits", {})
+    for isl, b in fo.get("bosses", {}).items():
+        if isl.startswith("_"):
+            continue
+        where = f"{rel} bosses.{isl}"
+        check(isl in island_ids, where, "isn't an island")
+        check_rules_tags(b.get("rules", {}), where)
+        for t in b.get("traits", []):
+            check(t.get("id") in BOSS_TRAITS, where, f"trait \"{t.get('id')}\" isn't a boss trait (champions' abilities are theirs alone)")
+            check(t.get("id") in traits, where, f"trait \"{t.get('id')}\" has no words in traits")
+    check(set(k for k in fo.get("bosses", {}) if not k.startswith("_")) == set(island_ids), rel, "every island's boss needs its traits")
+    seen = set()
+    for c in fo.get("champions", []):
+        where = f"{rel} champion {c.get('id')}"
+        check(c.get("id") and c["id"] not in seen, where, "needs a unique id")
+        seen.add(c.get("id"))
+        check(c.get("island") in island_ids, where, "island must be an island id")
+        check(num(c.get("hearts"), 1, 12) and num(c.get("length"), 3, 20) and num(c.get("speed"), 0.2, 2) and num(c.get("stamina"), 5, 200), where, "hearts, length, speed and stamina out of range")
+        check(isinstance(c.get("drain"), list) and len(c["drain"]) >= 1, where, "needs a drain")
+        abil = [a.get("id") for a in c.get("abilities", [])]
+        check(all(a in CHAMPION_ABILITIES and a in traits for a in abil), where, f"abilities {abil} unknown")
+        check(any(traits.get(a, {}).get("champion") for a in abil), where, "needs at least one champion-only ability")
+        check_rules_tags(c.get("rules", {}), where)
+    check({c.get("island") for c in fo.get("champions", [])} == set(island_ids), rel, "every island needs a champion")
 
 
 def check_upgrades(ups, island_ids):
@@ -333,6 +470,7 @@ def main():
     check_crafting(load("crafting.json"), load("items.json"))
     check_upgrades(load("upgrades.json"), ids)
     check_rules(load("rules.json"))
+    check_foes(load("foes.json"), ids)
     if problems:
         print(f"{len(problems)} problem(s):")
         for p in problems:

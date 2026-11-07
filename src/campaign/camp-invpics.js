@@ -53,7 +53,7 @@ function pIcon(g, it, x, y, s = 2) {
 const picGrid = (cols, rows, x0, y0, dx, dy) => { const out = []; for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) out.push({ x: x0 + c * dx, y: y0 + r * dy }); return out; };
 const PIC_ROOMS = {
   rack: {
-    title: "The Armory Rack", slot: "gear", spots: picGrid(5, 2, 22, 46, 30, 50), hero: { x: 196, y: 70, label: "On you" },
+    title: "The Armory Rack", slot: "gear", slots: ["gear", "helmet", "body"], spots: picGrid(5, 2, 22, 46, 30, 50), hero: { x: 196, y: 70, label: "On you" },
     empty: "No gear yet. Sir Hissington sells it at The Coiled Anvil, past Brightscale Keep's first boss.",
     // the window's morning light, coming and going
     fx(g, t) { texPaint(g, "room:rack:light", 160, 34, { alpha: 0.08 + 0.04 * Math.sin(t) }); }
@@ -94,7 +94,9 @@ function picItems(room) {
       .sort((a, b) => order[campItemSlot(a.id)] - order[campItemSlot(b.id)] || (campItemSlot(a.id) === "loot" ? ["rare", "uncommon", "common"].indexOf(lootGrade(a.id)) - ["rare", "uncommon", "common"].indexOf(lootGrade(b.id)) : 0) || a.uid - b.uid);
     return items.concat(camp.recipes.map(id => ({ kind: "recipe", id, uid: "recipe:" + id })));
   }
-  return camp.satchel.filter(it => campItemSlot(it.id) === R.slot).sort((a, b) => (camp.equip[R.slot] === b.uid) - (camp.equip[R.slot] === a.uid) || rarityIdx(b.rarity) - rarityIdx(a.rarity) || a.uid - b.uid);
+  // the rack holds your armor too (build 52): weapons and tools, then helmets, then body armor
+  const ins = R.slots || [R.slot], worn = it => Object.values(camp.equip).includes(it.uid);
+  return camp.satchel.filter(it => ins.includes(campItemSlot(it.id))).sort((a, b) => worn(b) - worn(a) || ins.indexOf(campItemSlot(a.id)) - ins.indexOf(campItemSlot(b.id)) || rarityIdx(b.rarity) - rarityIdx(a.rarity) || a.uid - b.uid);
 }
 const picFind = uid => (String(uid).startsWith("recipe:") ? { kind: "recipe", id: String(uid).slice(7), uid } : satchelItem(uid));
 
@@ -166,12 +168,13 @@ function drawPicRoom(t) {
   const per = R.spots.length;
   const shown = items.slice(picPage * per, picPage * per + per);
   const on = R.slot ? camp.equip[R.slot] : 0;
+  const worn = uid => (R.slots ? R.slots.some(sl => camp.equip[sl] === uid) : uid === on);
   R.spots.forEach((s, i) => {
     const it = shown[i];
     if (!it) return;
     const bob = picRoom === "den" ? Math.round(Math.sin(t * 2 + i) * 1) : 0;
     const away = it.uid && itemAway(it.uid);
-    g.globalAlpha = away || it.uid === on ? 0.35 : 1;
+    g.globalAlpha = away || worn(it.uid) ? 0.35 : 1;
     if (picRoom === "den" && !away) drawPetSprite(g, it.id, s.x - 10, s.y - 12 + bob, 20, t * 1000, { shells: 1 });
     else if (!away) pIcon(g, it, s.x - 12, s.y - 12 + bob);
     g.globalAlpha = 1;
@@ -257,9 +260,9 @@ function renderPicInfo() {
     html = `<div class="pi-head">${campItemIconHtml(it)}<div><div class="pi-name" style="color:${color}">${escapeAttr(campItemName(it))}${it.qty > 1 ? ` x${it.qty}` : ""}</div><div class="pi-sub">${sub}</div></div></div>${body}${picItemState(it)}`;
     const away = itemAway(it.uid);
     if (away) html += `<p class="pi-meta pi-away">${escapeAttr(orderLabel(orderFor(it.uid)))}: back in ${fmtLeft(orderFor(it.uid).readyAt - Date.now())}.</p>`;
-    if (["gear", "spell", "pet", "rune", "canister"].includes(slot) && !away) {
+    if (["gear", "helmet", "body", "spell", "pet", "rune", "canister"].includes(slot) && !away) {
       const on = camp.equip[slot] === it.uid;
-      const words = { gear: ["Wear it", "Take it off"], spell: ["Carry it", "Put it back"], pet: ["Bring it", "Leave it home"], rune: ["Make it active", "Take it off"], canister: ["Carry it", "Leave it"] }[slot];
+      const words = { gear: ["Wear it", "Take it off"], helmet: ["Wear it", "Take it off"], body: ["Wear it", "Take it off"], spell: ["Carry it", "Put it back"], pet: ["Bring it", "Leave it home"], rune: ["Make it active", "Take it off"], canister: ["Carry it", "Leave it"] }[slot];
       acts.push(`<button class="btn ${on ? "" : "btn-primary"}" data-pi="equip">${on ? words[1] : words[0]}</button>`);
     }
     if (slot === "food") {

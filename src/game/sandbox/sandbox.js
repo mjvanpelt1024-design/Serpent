@@ -55,7 +55,7 @@ function panelParse(s) {
 }
 function levelCode(level) {
   const L = normalizeLevel(level);
-  const json = JSON.stringify({ v: 3, n: L.n, e: L.e, s: L.s, g: rle(L.g), pv: panelStr(L.pv), ph: panelStr(L.ph), r: L.r, k: L.k, th: L.th, vn: L.vn, it: L.it, off: L.off, sc: L.sc });
+  const json = JSON.stringify({ v: 3, n: L.n, e: L.e, s: L.s, g: rle(L.g), pv: panelStr(L.pv), ph: panelStr(L.ph), r: L.r, k: L.k, th: L.th, vn: L.vn, it: L.it, off: L.off, sc: L.sc, b: L.b || undefined, bf: L.b ? L.bf : undefined });
   return "SNK3-" + btoa(unescape(encodeURIComponent(json)));
 }
 /* Pasted text: a .level file, or a share code (SNK1- / SNK2- / SNK3-) */
@@ -84,6 +84,7 @@ function parseLevelCode(code) {
       it: (Array.isArray(o.it) ? o.it : []).filter(x => CONSUMABLE_KEYS.includes(x) && CONSUMABLES[x].boost).map(String),
       off: (Array.isArray(o.off) ? o.off : []).filter(x => SB_HAZARDS.includes(x)).map(String),
       sc: Object.keys(sc).length ? sc : chipsFor(Array.isArray(r.sp) ? r.sp : []),
+      b: /^[a-z]{1,24}$/.test(String(o.b || "")) ? String(o.b) : "", bf: [1, 2, 3].includes(o.bf) ? o.bf : 3,
       n: String(o.n || "Shared level").slice(0, 24),
       e: ["w", "a", "m"].includes(o.e) ? o.e : "w",
       s: [5, 7, 10].includes(o.s) ? o.s : 7,
@@ -236,6 +237,7 @@ function renderSandbox() {
     c.width = 44; c.height = 44;
     const g = c.getContext("2d");
     if (t.panel) paintPanelIcon(g, t.panel);
+    else if (cat.id === "foes" && typeof foeSprite === "function") foeSprite(t.id, 28, g, 8, 8);   // the campaign's picture (build 52)
     else paintSbCell(g, cat.sized ? SB_ITEMS[t.id][0] : t.id, 8, 8, 28, performance.now());
     const off = cat.toggles && sbLevel.off.includes(t.id);
     if (off) b.classList.add("off");
@@ -328,7 +330,9 @@ function drawLevelThumb(g, level, u) {
 }
 
 /* Spawner chips: one letter per enemy type, on the edge squares */
-const SB_CHIP = { popsicle: ["O", "#ff9ad5"], flea: ["F", "#9be15d"], fire: ["H", "#ff7a1a"], molasses: ["M", "#c79a2b"] };
+const SB_CHIP = { popsicle: ["O", "#ff9ad5"], flea: ["F", "#9be15d"], fire: ["H", "#ff7a1a"], molasses: ["M", "#c79a2b"],
+  knightling: ["K", "#c8ced6"], scorpion: ["Z", "#d88a3a"], sparkbeetle: ["B", "#ffe86a"], inkwraith: ["W", "#a87ae0"], mantis: ["N", "#7ac85a"],
+  viper: ["V", "#5aa83a"], frostsprite: ["I", "#bfe8ff"], urchin: ["U", "#c89ae8"], firebat: ["T", "#ff6a3a"] };
 function drawChips(g, L, u) {
   Object.entries(L.sc || {}).forEach(([t, chips]) => {
     const [letter, color] = SB_CHIP[t] || ["?", "#fff"];
@@ -512,6 +516,9 @@ function renderRules() {
     `<h4 class="rules-head">Look</h4>` +
     `<div class="set-row"><div class="set-label">Skin</div><button class="btn btn-small" data-rule="skin">${sbLevel.k ? named(skins, sbLevel.k) : "Yours"}</button></div>` +
     `<div class="set-row"><div class="set-label">Theme</div><button class="btn btn-small" data-rule="theme">${sbLevel.th ? named(backdrops, sbLevel.th) : "Yours"}</button></div>` +
+    `<h4 class="rules-head">Boss</h4>` +
+    `<div class="set-row"><div><div class="set-label">Boss</div><div class="set-help">An island's boss, or a champion from the challengers' quests</div></div><button class="btn btn-small" data-rule="boss">${sbLevel.b ? named(SB_BOSSES(), sbLevel.b) : "None"}</button></div>` +
+    (sbLevel.b && !(typeof championById === "function" && championById(sbLevel.b)) ? `<div class="set-row"><div><div class="set-label">Fight</div><div class="set-help">1: wear it out. 2: break its armor. 3: finish it.</div></div><button class="btn btn-small" data-rule="fight">${sbLevel.bf}</button></div>` : "") +
     `<h4 class="rules-head">Start with</h4>` +
     CONSUMABLE_KEYS.filter(k => CONSUMABLES[k].boost).map(k => sw(sbLevel.it.includes(k), "it:" + k, CONSUMABLES[k].name, CONSUMABLES[k].desc)).join("") +
     `<h4 class="rules-head">Nightmare twists</h4>` +
@@ -526,6 +533,8 @@ function renderRules() {
     else if (k === "ar") R.ar = !R.ar;
     else if (k === "skin") sbLevel.k = cycle(skins, sbLevel.k);
     else if (k === "theme") sbLevel.th = cycle(backdrops, sbLevel.th);
+    else if (k === "boss") sbLevel.b = cycle(SB_BOSSES(), sbLevel.b);
+    else if (k === "fight") sbLevel.bf = sbLevel.bf % 3 + 1;
     else {
       const [list, id] = k.split(":");
       const arr = list === "it" ? sbLevel.it : R[list];
@@ -553,7 +562,10 @@ function playCustom(level, fromEditor) {
   currentNightmare = false;
   pendingBoosts = {};
   applyTheme();
+  if (typeof boss !== "undefined") boss = null;
   startGame();
+  // a boss to fight (build 52): the campaign's boss engine, in the sandbox (camp-bestiary.js)
+  if (L.b && typeof sandboxBossStart === "function") sandboxBossStart(L.b, L.bf);
 }
 
 let panels = new Map();   // wall panels on grid lines: "v:x,y" / "h:x,y" -> "red" | "purple"
@@ -597,6 +609,8 @@ function applyCustomLevel() {
   L.r.t.forEach(t => { nm[t] = true; });
   spec = {};
   const SPAWN = { popsicle: { max: 4, delay: [2500, 6000], s: 25 }, flea: { max: 3, delay: [3500, 8000], s: 35 }, fire: { max: 3, delay: [3000, 7000], s: 30 }, molasses: { max: 3, delay: [4000, 9000], s: 30 } };
+  // the campaign's new enemies (build 52): one at a time per chip, every few seconds
+  SB_SPAWNS.forEach(([t]) => { if (!SPAWN[t] && typeof ENTITY_TYPES !== "undefined" && ENTITY_TYPES[t]) SPAWN[t] = { max: 1, delay: [6000, 10000] }; });
   Object.entries(L.sc || {}).forEach(([t, chips]) => {
     if (!SPAWN[t] || !chips.length || off.has(t)) return;
     const n = chips.length;

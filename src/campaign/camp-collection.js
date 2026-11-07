@@ -142,7 +142,7 @@ window.renderInventory = function () {
     if (!kit.length) { empty("<strong>Nothing to carry yet</strong>Each island's merchant sells one kind of thing: gear on the first island, spells on the second, snacks, familiars, runes. The challengers hand some out too."); return; }
     const note = document.createElement("p");
     note.className = "shop-note";
-    note.textContent = "Your kit is one gear and one spell. One rune is active at a time, under your hearts: runes are yours for good, so swap them freely. Snacks go in your pocket, four at most, eaten with keys 1 to 4 in a level. Change any of it here or just before a level starts.";
+    note.textContent = "Your kit is one gear (a weapon or a tool), a helmet, body armor and one spell. One rune is active at a time, under your hearts: runes are yours for good, so swap them freely. Snacks go in your pocket, four at most, eaten with keys 1 to 4 in a level. Change any of it here or just before a level starts.";
     body.appendChild(note);
     const button = (it, on, label, onLabel, fn) => {
       const btn = makeBuyButton(on ? onLabel : label, `inv-${it.uid}`);

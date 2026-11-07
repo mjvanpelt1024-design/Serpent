@@ -2,7 +2,8 @@
    src/campaign/camp-kit.js
    Choosing what to carry, between levels. The old "Bring anything?"
    box asks before every level once you own something to carry:
-     your kit     one gear and one spell, picked with arrows
+     your kit     one gear (a weapon, or a tool), a helmet and body
+                  armor (build 52), and one spell, picked with arrows
      a familiar   to come along beside you
      your rune    the one that's active (yours for good), and a
                   canister of extra hearts: both sit with your hearts
@@ -13,7 +14,7 @@
 "use strict";
 
 let kitFor = null;            // { isl, n, challenge } while the box is open
-const KIT_SLOTS = ["gear", "spell"];
+const KIT_SLOTS = ["gear", "helmet", "body", "spell"];
 const KIT_EXTRAS = ["pet", "rune", "canister"];
 const CARRIED = KIT_SLOTS.concat(KIT_EXTRAS, ["food"]);
 

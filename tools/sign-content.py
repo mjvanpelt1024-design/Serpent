@@ -38,7 +38,7 @@ def sign(text):
 def campaign_files():
     with open(os.path.join(CAMP, "islands", "_index.dat"), encoding="utf-8") as f:
         ids = [l.strip() for l in f if l.strip() and not l.strip().startswith("#")]
-    return ["items.json", "upgrades.json", "rules.json", "crafting.json"] + ["islands/%s.json" % i for i in ids]
+    return ["items.json", "upgrades.json", "rules.json", "crafting.json", "foes.json"] + ["islands/%s.json" % i for i in ids]
 
 
 def main():

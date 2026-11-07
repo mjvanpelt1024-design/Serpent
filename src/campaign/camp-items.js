@@ -8,16 +8,21 @@
 const ENEMY_CAUSES = ["flea", "wasp", "ghost", "hunter", "boss", "echo", "bee", "yellowjacket", "imp", "mole", "crab", "wisp", "rivalbonk"];
 const ELEMENT_CAUSES = ["fire", "lightning", "bomb", "ember", "lava"];
 
-const campBare = () => !!(campRun && campRun.mods.includes("bare"));
-/* What you're wearing in a slot, by id. Spent gear (no hits left this level) counts as nothing. */
-const campEquippedId = slot => { if (campBare()) return null; const it = campEquipped(slot); if (it && slot === "gear" && campRun && it.uses <= 0) return null; return it ? it.id : null; };
+/* Bare scales: a quest twist, and the sandbox too (build 52: a sandbox boss fight uses no campaign kit) */
+const campBare = () => (campRun ? campRun.mods.includes("bare") : currentModeKey === "custom");
+/* What you're wearing in a slot, by id. Spent gear (no hits left this level) counts as nothing.
+   A new item that borrows an old one's behavior ("acts", build 52) answers with the old one's id:
+   every weapon is a "sword" here, the Ice Lance a "fireball", the hedgehog a "turtle". */
+const campEquippedId = slot => { if (campBare()) return null; const it = campEquipped(slot); if (it && slot === "gear" && campRun && it.uses <= 0) return null; return it ? campItemActs(it.id) : null; };
 const campEquippedRarity = slot => { const it = campEquipped(slot); return it ? it.rarity : null; };
 /* An item's power at its rarity: a spell's levels and seal add to it, training sharpens a familiar */
 const campItemPower = it => {
   const d = campItemDef(it.id);
   if (!d || !d.power) return 0;
   const base = d.power[rarityIdx(it.rarity)];
-  if (d.family === "spell") return d.unit === "targets" || d.unit === "squares" ? base + Math.floor((it.lv || 0) / 4) + (it.seal ? 1 : 0) : Math.round(base * spellPowerMult(it) * 10) / 10;
+  // build 52: Spell Power and "<word>.spells" stats (trinkets, armor, runes) make spells stronger too
+  const boost = d.family === "spell" && typeof spellBoost === "function" ? spellBoost(it) : 0;
+  if (d.family === "spell") return d.unit === "targets" || d.unit === "squares" ? base + Math.floor((it.lv || 0) / 4) + (it.seal ? 1 : 0) + Math.floor(boost / (d.unit === "targets" ? 40 : 25)) : Math.round(base * spellPowerMult(it) * (1 + boost / 100) * 10) / 10;
   if (d.family === "pet") return petPower(it, base);
   return base;
 };
@@ -26,7 +31,7 @@ const campItemPower = it => {
    at none left it's spent until the next level, and it's whole again then. */
 function campUseGear(id, free = false) {
   const it = campEquipped("gear");
-  if (campBare() || !it || it.id !== id || it.uses <= 0) return false;
+  if (campBare() || !it || campItemActs(it.id) !== id || it.uses <= 0) return false;
   if (free) { campRun.gearFx = performance.now(); return true; }
   it.uses--;
   campRun.gearFx = performance.now();
@@ -115,15 +120,26 @@ function shoveAside(obj) {
 }
 
 /* The head ran into something. Gear gets the first say.
-   type: rock, popsicle, flea, fire, wasp, ghost, bramble, spikes.
+   type: rock, popsicle, flea, fire, wasp, ghost, bramble, spikes. foe: the enemy's own type, when
+   the island's enemies are counted as wasps (a weapon's tags meet that enemy's rules, build 52).
    Returns "kill", "shove" or null (gear didn't help). */
-function campGearMeets(type) {
+function campGearMeets(type, foe = type) {
   const gear = campEquippedId("gear");
   const leg = campEquippedRarity("gear") === "legendary";
   if (fieldOn()) { sfx("pop"); return "kill"; }
   const enemy = ["flea", "wasp", "ghost"].includes(type);
   if (gear === "sword") {
-    if (enemy) { campUseGear("sword"); showToast("Your sword cut it down!"); sfx("rock"); campBonusEvent("kill"); return "kill"; }
+    if (enemy) {
+      // a weapon's tags against the enemy's rules: immune, it does nothing; resisted, it costs another hit; weak, it's free
+      const w = campEquipped("gear"), mult = foeTakes(foe, weaponHit(w)), name = campItemDef(w.id).name;
+      if (mult <= 0) { showToast(`Your ${name} does nothing to it: it's immune to ${tagWord(weaponHit(w))}.`); sfx("bad"); return null; }
+      campUseGear("sword", mult > 1);
+      if (mult < 1 && w.uses > 0) campUseGear("sword");
+      showToast(mult > 1 ? `Your ${name} cut right through it!` : mult < 1 ? `Your ${name} cut it down, barely.` : `Your ${name} cut it down!`);
+      sfx("rock"); campBonusEvent("kill");
+      weaponKillTraits(w, null);
+      return "kill";
+    }
     if (["rock", "popsicle", "bramble", "spikes"].includes(type)) {
       const it = campEquipped("gear");
       if (leg) campUseGear("sword");
@@ -196,10 +212,12 @@ function campCast() {
   const leg = it.rarity === "legendary";
   const p = campItemPower(it);
   let ok = true;
-  if (it.id === "forcefield") { campRun.fieldUntil = ts + p * 1000; campRun.fieldBounce = leg; sfx("shimmer"); }
-  else if (it.id === "fireball") ok = castFireball(p * (leg ? 2 : 1));
-  else if (it.id === "blink") ok = castBlink(p, leg);
-  else if (it.id === "frost") {
+  // a new spell casts the way the one it borrows from does ("acts", build 52)
+  const act = campItemActs(it.id);
+  if (act === "forcefield") { campRun.fieldUntil = ts + p * 1000; campRun.fieldBounce = leg; campRun.fieldSpell = it.id; campRun.fieldGrants = campItemDef(it.id).grants || null; sfx("shimmer"); }
+  else if (act === "fireball") ok = castFireball(p * (leg && it.id === "fireball" ? 2 : 1), it.id);
+  else if (act === "blink") ok = castBlink(p, leg);
+  else if (act === "frost") {
     freezeHazards(p * 1000);
     if (boss && !boss.beaten) {
       if (bossResists("frost")) showToast(`${boss.def.name.split(" ")[0]} shakes off the frost!`);
@@ -208,7 +226,7 @@ function campCast() {
     if (hunter && hunter.alive) hunter.stunnedUntil = ts + p * 1000;
     campObjs.forEach(o => { if (o.kind === "thief") o.moveAt = ts + p * 1000; });
     sfx("molasses");
-  } else if (it.id === "magnet") { buffs.lodeUntil = ts + p * 1000; campRun.magnetDouble = leg ? ts + p * 1000 : 0; sfx("portal"); }
+  } else if (act === "magnet") { buffs.lodeUntil = ts + p * 1000; campRun.magnetDouble = leg ? ts + p * 1000 : 0; sfx("portal"); }
   if (!ok) { campRun.castReadyAt = ts + 300; return; }
   // the Rune of the Sage's free casts go first, and don't spend the spell's charges
   if (campRun.freeCasts > 0) campRun.freeCasts--;
@@ -221,25 +239,26 @@ function campCast() {
   saveCamp();
 }
 
-let campShots = [];        // fireballs in flight: { x, y, target, born }
+let campShots = [];        // fireballs in flight: { x, y, target, born, spell }
 
 function fireTargets() {
   const list = [];
   if (boss && !boss.beaten) list.push({ kind: "boss", get x() { return boss.cells[0].x; }, get y() { return boss.cells[0].y; } });
   if (hunter && hunter.alive) list.push({ kind: "hunter", get x() { return hunter.cells[0].x; }, get y() { return hunter.cells[0].y; } });
-  entities.forEach(e => { if (["wasp", "ghost", "bramble", "bomb", "spikes"].includes(e.type)) list.push({ kind: "entity", ref: e, x: e.x, y: e.y }); });
+  // every enemy is a target too (build 52: the islands' own ones and the new ones), and the hazards a spell can burn
+  entities.forEach(e => { if (["wasp", "ghost", "bramble", "bomb", "spikes"].includes(e.type) || FOES[e.type] || ["ember", "acid", "frost"].includes(e.type)) list.push({ kind: "entity", ref: e, x: e.x, y: e.y }); });
   hazards.forEach(h => { if (h.type === "flea" || h.type === "fire") list.push({ kind: "hazard", ref: h, x: h.x, y: h.y }); });
   popsicles.forEach(pp => { if (!pp.isBonusApple) list.push({ kind: "popsicle", ref: pp, x: pp.x, y: pp.y }); });
   return list;
 }
 
-function castFireball(n) {
+function castFireball(n, spell = "fireball") {
   const dist = t => maze ? Math.abs(wrapDelta(t.x - snake.x)) + Math.abs(wrapDelta(t.y - snake.y)) : Math.abs(t.x - snake.x) + Math.abs(t.y - snake.y);
   const targets = fireTargets().sort((a, b) => dist(a) - dist(b));
   if (!targets.length) { showToast("Nothing to burn."); return false; }
   for (let i = 0; i < n; i++) {
     const t = targets[Math.min(i, targets.length - 1)];
-    campShots.push({ x: snake.x + cell / 2, y: snake.y + cell / 2, target: t, born: performance.now(), trail: [] });
+    campShots.push({ x: snake.x + cell / 2, y: snake.y + cell / 2, target: t, born: performance.now(), trail: [], spell });
   }
   sfx("fire");
   return true;
@@ -255,20 +274,28 @@ function tickShots(ts, delta) {
     const step = cell * 22 * delta / 1000;
     s.trail.unshift({ x: s.x, y: s.y });
     if (s.trail.length > 6) s.trail.pop();
-    if (d <= step || ts - s.born > 2500) { fireballHits(t); return false; }
+    if (d <= step || ts - s.born > 2500) { fireballHits(t, s.spell); return false; }
     s.x += dx / d * step; s.y += dy / d * step;
     return true;
   });
 }
 
-function fireballHits(t) {
+function fireballHits(t, spell = "fireball") {
   sfx("rock");
+  const hit = spellHit({ id: spell });
   if (t.kind === "boss" && boss && !boss.beaten) {
-    // a fireball hurts a boss in every fight, unless it's fireproof
-    if (bossResists("fireball")) showToast(`${boss.def.name.split(" ")[0]} shrugs off the flames!`);
-    else damageBoss(1, "fireball");
+    // a fireball hurts a boss in every fight, unless it's fireproof; the spell's tags meet the boss's rules (damageBoss)
+    if (bossResists(spell)) showToast(`${boss.def.name.split(" ")[0]} shrugs off the ${spell === "fireball" ? "flames" : campItemDef(spell).name}!`);
+    else damageBoss(1, spell === "fireball" ? "fireball" : "spell:" + spell);
   } else if (t.kind === "hunter" && hunter && hunter.alive) stunHunter("star");
-  else if (t.kind === "entity") { if (["wasp", "ghost"].includes(t.ref.type)) campBonusEvent("kill"); removeEntity(t.ref); }
+  else if (t.kind === "entity") {
+    // an enemy immune to the spell's tags doesn't feel it
+    if (hit && FOES[t.ref.type] && foeTakes(t.ref.type, hit) <= 0) { showToast(`It shrugs off the ${tagWord(hit)}.`); return; }
+    if (["wasp", "ghost"].includes(t.ref.type) || FOES[t.ref.type]) campBonusEvent("kill");
+    removeEntity(t.ref);
+    const d = campItemDef(spell);
+    if (d && d.traits && d.traits.includes("chill")) freezeHazards(800);
+  }
   else if (t.kind === "hazard") { const i = hazards.indexOf(t.ref); if (i >= 0) { if (t.ref.type === "flea") campBonusEvent("kill"); hazards.splice(i, 1); } }
   else if (t.kind === "popsicle") { const i = popsicles.indexOf(t.ref); if (i >= 0) popsicles.splice(i, 1); }
 }
@@ -302,7 +329,9 @@ function castBlink(n, leg) {
 /* ----- Familiars ----- */
 function campPetSetup() {
   const it = campBare() ? null : campEquipped("pet");
-  campRun.pet = it ? { id: it.id, rarity: it.rarity, nextAt: performance.now() + 2500, readyAt: 0, shells: it.id === "turtle" ? (it.rarity === "legendary" ? 2 : 1) : 0, fx: 0, fxAt: null } : null;
+  // a familiar that borrows another's behavior ("acts") acts as that one; the real id keeps its picture
+  const act = it ? campItemActs(it.id) : null;
+  campRun.pet = it ? { id: act, real: it.id, rarity: it.rarity, nextAt: performance.now() + 2500, readyAt: 0, shells: act === "turtle" ? (it.rarity === "legendary" ? 2 : 1) : 0, fx: 0, fxAt: null } : null;
 }
 
 function tickPet(ts) {
@@ -349,13 +378,15 @@ function tickPet(ts) {
     if (it.rarity === "legendary") { campRun.apples++; }
     maintainApples();
   } else if (P.id === "crab") {
-    const types = it.rarity === "legendary" ? ["wasp", "bramble", "spikes"] : ["wasp", "bramble"];
+    // a familiar that borrows the crab's snip has its own list of what it snips (build 52)
+    const own = campItemDef(it.id).snips;
+    const types = own || (it.rarity === "legendary" ? ["wasp", "bramble", "spikes"] : ["wasp", "bramble"]);
     const e = entities.find(x => types.includes(x.type) && near(x, range));
-    const f = hazards.find(h => h.type === "flea" && near(h, range));
+    const f = hazards.find(h => (own ? own.includes(h.type) : h.type === "flea") && near(h, range));
     const r = it.rarity === "legendary" ? rocks.find(x => near(x, range)) : null;
     const hit = e || f || r;
     if (!hit) { P.nextAt = ts + 500; return; }
-    if (e) { if (e.type === "wasp") campBonusEvent("kill"); removeEntity(e); }
+    if (e) { if (e.type === "wasp" || FOES[e.type]) campBonusEvent("kill"); removeEntity(e); }
     else if (f) { campBonusEvent("kill"); hazards.splice(hazards.indexOf(f), 1); }
     else rocks.splice(rocks.indexOf(r), 1);
     P.fxAt = { x: hit.x, y: hit.y }; P.fx = ts;
@@ -372,7 +403,7 @@ function drawPet(view, ts) {
   const [sx, sy] = view.toScreen(seg.x, seg.y);
   const px = Math.sign(snake.dy), py = -Math.sign(snake.dx);
   const x = sx + px * cell * 0.95 + cell * 0.1 + Math.sin(ts / 300) * cell * 0.08, y = sy + py * cell * 0.95 + cell * 0.1 + Math.cos(ts / 240) * cell * 0.1;
-  drawPetSprite(ctx, P.id, x, y, cell * 0.8, ts, P);
+  drawPetSprite(ctx, P.real || P.id, x, y, cell * 0.8, ts, P);
   if (P.fxAt && ts - P.fx < 300) {
     const [fx, fy] = view.toScreen(P.fxAt.x, P.fxAt.y);
     ctx.save();
