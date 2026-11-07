@@ -1007,19 +1007,27 @@ function drawIsleLiving(g, key, t, by) {
   }
 }
 
-/* ----- The stops: a stone for each level, a lair for each boss, and the shopkeepers' places ----- */
+/* ----- The stops: a stone for each level, a lair for each boss, and the shopkeepers' places -----
+   Pictures in textures/map/stops/ and textures/map/<island>/ (map:stone, map:<island>:lair-<size>,
+   map:gate, map:<island>:stall-<kind>...), their state a frame (locked, open...), the island's own colors
+   swapped in (its accent, its boss's eyes, its money); what moves (pennants, eyes, glows, torches, the
+   bank's coin) placed and timed here. */
 function drawNodeArt(g, key, id, st, t, by) {
   const I = CAMP.islandById[key];
   const p = nodeAt(key, id);
   const x = p.x, y = p.y + by;
-  const R = (a, b, w, h, c) => mapRect(g, a, b, w, h, c);
   const accent = I.colors.accent;
   if (typeof id === "number") {
     if (isBossLevel(id)) { drawLair(g, key, id, st, x, y, t); return; }
     // a flat stepping stone; a planted pennant once it's won
-    R(x - 3, y, 7, 2, st === "locked" ? "#6a6a70" : "#a8a8b0"); R(x - 2, y, 5, 1, st === "locked" ? "#8a8a90" : "#d0d0d8"); R(x - 3, y + 2, 7, 1, "rgba(0,0,0,0.25)");
-    if (st === "done") { const fx = x + 4; R(fx, y - 7, 1, 8, "#5a3a20"); R(fx + 1, y - 7 + Math.round(Math.sin(t * 5 + id) * 0.6), 3, 2, accent); R(fx + 1, y - 5, 2, 1, shadeHex(accent, -0.3)); }
-    if (st === "next") { const k = 0.5 + 0.5 * Math.sin(t * 3); g.fillStyle = `rgba(255,224,120,${0.25 + 0.3 * k})`; g.fillRect(x - 5, y - 1, 11, 4); }
+    texPaint(g, "map:stone", Math.round(x) - 3, Math.round(y), { frame: st === "locked" ? 0 : 1 });
+    if (st === "done") {
+      const fx = x + 4;
+      texDraw(g, "map:pennant-pole", Math.round(fx), Math.round(y - 7));
+      texPaint(g, "map:pennant", Math.round(fx + 1), Math.round(y - 7 + Math.round(Math.sin(t * 5 + id) * 0.6)), { colors: { flag: accent } });
+      texPaint(g, "map:pennant-shade", Math.round(fx + 1), Math.round(y - 5), { colors: { shade: shadeHex(accent, -0.3) } });
+    }
+    if (st === "next") { const k = 0.5 + 0.5 * Math.sin(t * 3); texPaint(g, "map:stone-glow", x - 5, y - 1, { alpha: 0.25 + 0.3 * k }); }
     return;
   }
   if (id === "home") { drawHomeTree(g, key, x, y, t); return; }
@@ -1028,115 +1036,80 @@ function drawNodeArt(g, key, id, st, t, by) {
   if (st !== "locked") drawKeeper(g, key, id, x + ISLANDS[key].dir * (id === "banker" ? -9 : 9), y + 1, t);
 }
 
-/* A boss's lair: a heap of rock with a black mouth, and eyes that watch you */
+/* A boss's lair: a heap of rock with a black mouth (three sizes, bigger for the later fights), and
+   eyes that watch you; your banner over it once it's beaten */
 function drawLair(g, key, n, st, x, y, t) {
   const B = CAMP.islandById[key].boss;
-  const R = (a, b, w, h, c) => mapRect(g, a, b, w, h, c);
   const big = n === LEVEL_COUNT ? 2 : n === 10 ? 1 : 0;
   const w = 19 + big * 3, h = 13 + big * 2;
-  const rock = { keep: "#7a7472", spire: "#5a4a7a", hollow: "#7a5a3a", reef: "#6a7a8a", crown: "#3a2a2e" }[key];
-  for (let j = 0; j < h; j++) { const ww = Math.round(w * Math.sqrt(1 - Math.pow(j / h, 2))); R(x - Math.floor(ww / 2), y + 1 - j, ww, 1, j > h * 0.6 ? shadeHex(rock, 0.2) : rock); }
-  R(x - Math.floor(w / 2), y + 1, w, 1, shadeHex(rock, -0.35));
-  // boulders on its flanks, and the mouth of the cave
-  isleRock(g, x - Math.floor(w / 2) + 2, y + 1, 2, shadeHex(rock, 0.1)); isleRock(g, x + Math.floor(w / 2) - 2, y + 1, 2, shadeHex(rock, -0.1));
-  R(x - 3, y - 5, 7, 6, "#0e0a0c"); R(x - 2, y - 6, 5, 1, "#0e0a0c");
+  texDrawAt(g, `map:${key}:lair-${big}`, Math.round(x), Math.round(y));
   if (st === "done") {
-    // the lair is empty, and your banner flies over it
-    R(x + 5, y - h - 7, 1, 9, "#5a3a20");
-    for (let k = 0; k < 5; k++) R(x + 6 + k, y - h - 7 + Math.round(Math.sin(t * 5 - k) * 0.6), 1, 3, k % 2 ? "#ffd23f" : CAMP.islandById[key].colors.accent);
+    texDraw(g, "map:lair-pole", Math.round(x + 5), Math.round(y - h - 7));
+    for (let k = 0; k < 5; k++) texPaint(g, "map:banner-strip", Math.round(x + 6 + k), Math.round(y - h - 7 + Math.round(Math.sin(t * 5 - k) * 0.6)), { frame: k % 2 ? 1 : 0, colors: { flag: CAMP.islandById[key].colors.accent } });
     return;
   }
   const blink = (t + n) % 4 < 0.15;
-  if (st !== "locked" && !blink) { R(x - 2, y - 3, 1, 1, B.eye); R(x + 2, y - 3, 1, 1, B.eye); if (Math.sin(t * 2 + n) > 0.4) { g.fillStyle = "rgba(255,60,60,0.25)"; g.fillRect(x - 3, y - 4, 7, 3); } }
-  if (st === "next") { const k = 0.5 + 0.5 * Math.sin(t * 3); g.fillStyle = `rgba(255,90,110,${0.12 + 0.18 * k})`; g.fillRect(x - Math.floor(w / 2) - 1, y - h, w + 2, h + 2); }
-  // bones by the door
-  R(x - 6, y, 2, 1, "#e8e0c8"); R(x + 5, y, 1, 1, "#e8e0c8");
-  // spikes on top for the last fight
-  if (big === 2) for (let k = -1; k <= 1; k++) R(x + k * 4, y - h - 1 - (k ? 0 : 1), 1, 2, shadeHex(rock, -0.3));
+  if (st !== "locked" && !blink) { texPaint(g, "map:lair-eyes", Math.round(x - 2), Math.round(y - 3), { colors: { eye: B.eye } }); if (Math.sin(t * 2 + n) > 0.4) texPaint(g, "map:lair-eye-glow", x - 3, y - 4, { alpha: 0.25 }); }
+  if (st === "next") { const k = 0.5 + 0.5 * Math.sin(t * 3); texPaint(g, `map:lair-glow-${big}`, x - Math.floor(w / 2) - 1, y - h, { alpha: 0.12 + 0.18 * k }); }
+  // bones by the door, and spikes on top for the last fight
+  texDraw(g, "map:lair-bones", Math.round(x - 6), Math.round(y));
+  if (big === 2) texDrawAt(g, `map:${key}:lair-spikes`, Math.round(x), Math.round(y));
 }
 
-/* The home tree: as tall and full as this island's upgrades, with your satchel against it */
+/* The home tree: as tall and full as this island's upgrades (a row of its sheet for every tier bought,
+   four moments of its leaves stirring), with your satchel against it; its fruit glint */
+const MAP_TREE_STEP = 2 * Math.PI / 1.3 / 4;
 function drawHomeTree(g, key, x, y, t) {
-  const R = (a, b, w, h, c) => mapRect(g, a, b, w, h, c);
   const tree = CAMP.islandById[key].tree;
   const have = tree.upgrades.reduce((a, u) => a + upTier(u.id), 0);
   const total = tree.upgrades.reduce((a, u) => a + u.values.length - 1, 0);
+  const id = `map:${key}:home-tree`, rows = Math.max(1, Math.ceil(texFrameCount(id) / 4));
   const f = total ? have / total : 0;
-  const leaves = { keep: ["#2f7d2a", "#3f9a3a", "#5ab046", "#ff3b3b"], spire: ["#3a3a9a", "#5a5ac8", "#8a8af0", "#7fe3ff"], hollow: ["#a8501a", "#d87a2a", "#f0a840", "#ff3b3b"], reef: ["#1a7a6a", "#2a9a8a", "#5acaba", "#ff9ab0"], crown: ["#6a1a1a", "#a82a1a", "#e85a1a", "#ffd23f"] }[key];
-  const hgt = 8 + Math.round(f * 10);
-  R(x - 1, y - hgt, 2 + (f > 0.5 ? 1 : 0), hgt + 1, "#5a3a20"); R(x - 1, y - hgt, 1, hgt + 1, "#7a5232");
-  R(x - 3, y, 2, 1, "#5a3a20"); R(x + 2, y, 2, 1, "#5a3a20");
-  const r = 4 + f * 6, n = 30 + Math.round(f * 70);
-  for (let i = 0; i < n; i++) {
-    const a = mapHash(i, key.length, 71) * Math.PI * 2, dd = Math.sqrt(mapHash(i, key.length, 73)) * r;
-    R(x + Math.cos(a) * dd * 1.3 + Math.sin(t * 1.3 + i) * 0.3, y - hgt + Math.sin(a) * dd * 0.85, 1, 1, leaves[i % 3]);
-  }
-  // fruit, one for every tier bought (up to a dozen), glinting
+  texDrawAt(g, id, Math.round(x), Math.round(y), Math.round(f * (rows - 1)) * 4 + Math.floor(t / MAP_TREE_STEP) % 4);
+  const hgt = 8 + Math.round(f * 10), r = 4 + f * 6;
+  const fruit = [];
   for (let i = 0; i < Math.min(12, have); i++) {
     const a = i * 2.39, dd = r * (0.4 + 0.5 * mapHash(i, 9, 3));
-    const fx = x + Math.cos(a) * dd * 1.2, fy = y - hgt + Math.sin(a) * dd * 0.7;
-    R(fx, fy, 1, 1, leaves[3]);
-    if (Math.sin(t * 3 + i * 2) > 0.92) R(fx, fy - 1, 1, 1, "#ffffff");
+    fruit.push([Math.round(x + Math.cos(a) * dd * 1.2), Math.round(y - hgt + Math.sin(a) * dd * 0.7)]);
   }
-  // the satchel, leaning on the trunk
-  const sx = x + 3 * ISLANDS[key].dir;
-  R(sx - 1, y - 3, 4, 3, "#b07a42"); R(sx - 1, y - 3, 4, 1, "#d09a5a"); R(sx, y - 4, 2, 1, "#5a3a1e"); R(sx + 1, y - 2, 1, 1, "#ffd23f");
+  // (a glint is left off where a later fruit, or the satchel, sits over it, as it always was)
+  const sx = Math.round(x + 3 * ISLANDS[key].dir), sy = Math.round(y);
+  fruit.forEach(([fx, fy], i) => {
+    if (Math.sin(t * 3 + i * 2) <= 0.92) return;
+    const gy = fy - 1;
+    if (fruit.some(([ax, ay], j) => j > i && ax === fx && ay === gy)) return;
+    if ((gy >= sy - 3 && gy <= sy - 1 && fx >= sx - 1 && fx <= sx + 2) || (gy === sy - 4 && (fx === sx || fx === sx + 1))) return;
+    texDraw(g, "map:glint", fx, gy);
+  });
 }
 
 /* The bridge: a stone arch where the Coil carries you up, torches lit once it's open */
 function drawGate(g, key, x, y, st, t) {
-  const R = (a, b, w, h, c) => mapRect(g, a, b, w, h, c);
   const open = st !== "locked";
-  R(x - 6, y - 10, 3, 11, "#b8b2a4"); R(x + 4, y - 10, 3, 11, "#8f8a7e"); R(x - 6, y - 10, 1, 11, "#d8d2c4");
-  R(x - 5, y - 12, 11, 2, "#b8b2a4"); R(x - 4, y - 13, 9, 1, "#d8d2c4"); R(x - 1, y - 14, 3, 1, "#ffd23f");
-  R(x - 3, y - 10, 7, 11, open ? "#ffe9a0" : "#1a1418");
-  if (open) { g.fillStyle = `rgba(255,240,170,${0.25 + 0.15 * Math.sin(t * 3)})`; g.fillRect(x - 5, y - 12, 11, 13); }
-  else for (let i = 0; i < 4; i++) R(x - 3 + i * 2, y - 10, 1, 11, "#5a5048");
-  // torches
-  [-8, 8].forEach((dx, i) => {
-    R(x + dx, y - 6, 1, 5, "#5a3a20");
-    if (open) { const fl = Math.sin(t * 11 + i * 2) > 0; R(x + dx, y - 8, 1, 2, fl ? "#ffd23f" : "#ff8a1a"); R(x + dx + (fl ? 0 : 0), y - 9, 1, 1, fl ? "#ff6a1a" : "#ffd23f"); }
-  });
+  texDrawAt(g, "map:gate", Math.round(x), Math.round(y), open ? 1 : 0);
+  if (open) {
+    texPaint(g, "map:gate-glow", x - 5, y - 12, { alpha: 0.25 + 0.15 * Math.sin(t * 3) });
+    [-8, 8].forEach((dx, i) => texDraw(g, "map:torch-flame", Math.round(x + dx), Math.round(y - 9), Math.sin(t * 11 + i * 2) > 0 ? 0 : 1));
+  }
 }
 
-/* The shopkeepers' places: a market stall, a challenger's tent, a bank */
+/* The shopkeepers' places: a market stall (its island's goods on the counter), a challenger's tent with
+   its pennant, a bank with a coin turning on its roof; boarded up until they open */
 function drawStall(g, key, id, x, y, st, t) {
-  const R = (a, b, w, h, c) => mapRect(g, a, b, w, h, c);
   const I = CAMP.islandById[key];
   const accent = I.colors.accent;
   const shut = st === "locked";
-  if (id === "merchant") {
-    // a stall under a striped awning, its goods on the counter
-    R(x - 7, y - 4, 14, 5, "#6a4a2a"); R(x - 7, y - 4, 14, 1, "#9a6a3a");
-    R(x - 6, y - 10, 1, 6, "#5a3a1e"); R(x + 5, y - 10, 1, 6, "#5a3a1e");
-    for (let i = -8; i <= 7; i++) R(x + i, y - 12, 1, 2, Math.floor((i + 20) / 2) % 2 ? accent : "#f4f0e8");
-    for (let i = -8; i <= 7; i += 2) R(x + i, y - 10, 1, 1, Math.floor((i + 20) / 2) % 2 ? accent : "#f4f0e8");
-    if (shut) { R(x - 5, y - 9, 10, 5, "#8a6a4a"); for (let j = 0; j < 5; j += 2) R(x - 5, y - 9 + j, 10, 1, "#6a4a2a"); return; }
-    const goods = { gear: ["#c8ced6", "#9aa3ad", "#3a6ab8"], spell: ["#b36bff", "#7fe3ff", "#ff6a1a"], food: ["#d8a050", "#c86a2a", "#ff3b3b"], pet: ["#ffcf5a", "#ff5a3a", "#7ac85a"], rune: ["#3ddc84", "#ffd23f", "#ff3b3b"] }[I.merchantFamily] || ["#ffd23f", "#ff3b3b", "#3ddc84"];
-    goods.forEach((c, i) => { R(x - 5 + i * 4, y - 6, 2, 2, c); R(x - 5 + i * 4, y - 6, 1, 1, shadeHex(c, 0.4)); });
-  } else if (id === "challenger") {
-    // a tall pointed tent with a pennant
-    for (let j = 0; j < 12; j++) { const w = 2 + j; R(x - Math.floor(w / 2), y - 12 + j, w, 1, j % 3 === 2 ? shadeHex(accent, -0.25) : accent); R(x - Math.floor(w / 2), y - 12 + j, 1, 1, shadeHex(accent, 0.3)); }
-    for (let j = 0; j < 12; j += 2) R(x - Math.floor((2 + j) / 2) + Math.floor((2 + j) / 2), y - 12 + j, 1, 2, "#f4f0e8");
-    R(x - 2, y - 5, 4, 5, shut ? "#3a2a20" : "#1a1410"); if (!shut) R(x - 1, y - 4, 2, 1, "#ffd23f");
-    R(x, y - 16, 1, 4, "#5a3a20");
-    for (let k = 0; k < 4; k++) R(x + 1 + k, y - 16 + Math.round(Math.sin(t * 6 - k) * 0.6), 1, 2 - (k > 2 ? 1 : 0), k % 2 ? "#ffffff" : "#c0392b");
-    if (shut) { R(x - 4, y - 7, 8, 1, "#5a3a20"); R(x - 3, y - 8, 1, 3, "#5a3a20"); R(x + 2, y - 8, 1, 3, "#5a3a20"); }
-  } else {
-    // the bank: steps, columns, a pediment and a coin turning on its roof
-    const stone = shut ? ["#8a8680", "#6a6660", "#4a4640"] : ["#e8e0d0", "#c8c0b0", "#9a9284"];
-    R(x - 8, y - 1, 16, 2, stone[2]); R(x - 7, y - 2, 14, 1, stone[1]);
-    for (let i = 0; i < 4; i++) { R(x - 6 + i * 4, y - 9, 2, 7, stone[0]); R(x - 5 + i * 4, y - 9, 1, 7, stone[1]); }
-    R(x - 8, y - 11, 16, 2, stone[1]); R(x - 8, y - 11, 16, 1, stone[0]);
-    for (let j = 0; j < 4; j++) R(x - 7 + j * 2, y - 12 - j, 14 - j * 4, 1, j % 2 ? stone[1] : stone[0]);
-    R(x - 1, y - 7, 2, 5, shut ? "#3a3632" : "#2a2018");
-    if (shut) return;
+  const colors = { accent, accentDark: shadeHex(accent, -0.25), accentLit: shadeHex(accent, 0.3) };
+  texPaint(g, `map:${key}:stall-${id}`, Math.round(x) - texAnchor(`map:${key}:stall-${id}`)[0], Math.round(y) - texAnchor(`map:${key}:stall-${id}`)[1], { frame: shut ? 1 : 0, colors });
+  if (id === "challenger") {
+    for (let k = 0; k < 4; k++) texDraw(g, "map:tent-flag", Math.round(x + 1 + k), Math.round(y - 16 + Math.round(Math.sin(t * 6 - k) * 0.6)), k % 2 ? (k > 2 ? 2 : 1) : 0);
+    if (shut) texDraw(g, "map:tent-planks", Math.round(x - 4), Math.round(y - 8));
+  } else if (id === "banker" && !shut) {
     const c = I.currency.color, turn = Math.abs(Math.cos(t * 1.6)), cw = Math.max(1, Math.round(5 * turn));
-    R(x, y - 19, 1, 3, "#5a3a1e");
-    R(x - Math.floor(cw / 2), y - 24, cw, 5, c);
-    if (cw >= 3) { R(x - Math.floor(cw / 2), y - 24, cw, 1, shadeHex(c, 0.5)); R(x, y - 23, 1, 3, shadeHex(c, -0.4)); }
+    texPaint(g, "map:bank-coin", Math.round(x) - 2, Math.round(y) - 24, { frame: cw - 1, colors: { coin: c, coinLit: shadeHex(c, 0.5), coinDark: shadeHex(c, -0.4) } });
   }
 }
+const texAnchor = id => { const r = texResolve(id); return (r && r.e.anchor) || [0, 0]; };
 
 /* A shopkeeper: a little snake standing tall, in its hat. Each one is a sprite sheet,
    textures/scenes/keepers/<island>-<role>.png (keeper:<island>:<role>): three columns as it sways

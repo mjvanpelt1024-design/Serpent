@@ -96,6 +96,7 @@ So to move or rename a file, move it and change its one line here. Two ids can s
 | `coin:keep:tails:12` | an island's coin, a side and a size |
 | `ui:plate`, `ui:button-up`, `ui:corner-tl` | a menu frame |
 | `map:keep:under`, `map:keep:over`, `map:keep:fog` | an island on the map |
+| `map:stone`, `map:keep:lair-2`, `map:keep:stall-banker` | a stop on the map |
 | `emblem:sparkle` | a theme's emblem in the Tailor |
 | `keeper:keep:merchant` | a shopkeeper's sprite sheet (island, then merchant, challenger or banker) |
 | `home:keep:tree`, `home:trophy`, `home:cloud-3` | home base: an island's own picture, or one every home shares |
@@ -201,7 +202,12 @@ paths, so they're still drawn by the game). An island you haven't reached shows 
 The small islets floating near each one are `islet-<n>.png`, each with an `"anchor"` (the point that
 sits on its spot); they bob on their own. Under each island hang spikes that drip water, sparkles, sand or lava: the drips fall from the points
 listed in the picture's entry, `"tips": [[x, y], ...]`, so if you repaint the spikes, move the points.
-The stops (stones, lairs, the home tree, stalls), the water, birds and smoke are still drawn live.
+The stops are pictures too: `map/stops/` (the level stone, locked and open; the pennant on a won level,
+color-swapped to the island's accent; the gate, locked and open, and its torch flames; the bones, eyes
+and glows of a lair; the tent's pennant; the bank's coin turning, five widths, in the island's money
+color) and `map/<island>/` (its lairs in three sizes, the last one's spikes, its little home tree with
+a row for every tier bought, and its three stalls, open and boarded up, in the island's accent). The
+water, birds and smoke are still drawn live.
 
 ## How menus light a picture
 
@@ -240,5 +246,5 @@ boots the game in a headless Chrome or Edge and makes sure every file in `index.
 `--legacy` to also compare every picture with the game from before textures/ (from git), pixel by pixel,
 the rooms at sixty moments each, every shop with and without stock and orders, and every keeper in
 every one of its looks, and home base piece by piece; that only passes for pictures that haven't been repainted.
-`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`, `map`, `emblems`) writes a set from that old game into this folder and its index: it's
+`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`, `map`, `emblems`, `stops`) writes a set from that old game into this folder and its index: it's
 how the folder was made, and with `--force` it overwrites files, repaints and all.

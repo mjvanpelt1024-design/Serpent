@@ -260,6 +260,33 @@
         counts.scenes++;
       });
 
+      // ----- the map's stops: every island's every stop in every state, at many moments (the home tree at
+      // a few sizes), the old drawNodeArt() against the new, each drawn around its own spot
+      const stopMoments = [0.3, 1.1, 2.04, 3.7, 5.55, 8.2, 13.1];
+      const tierSave = (isl, have) => { const out = {}; let left = have; for (const u of CAMP.islandById[isl].tree.upgrades) { const n = Math.min(left, u.values.length - 1); if (n) out[u.id] = n; left -= n; } return JSON.stringify(out); };
+      const toBoth = code => { gEval(code); W.eval(code); };
+      for (const key of Object.keys(gEval("ISLANDS"))) {
+        const total = CAMP.islandById[key].tree.upgrades.reduce((s, u) => s + u.values.length - 1, 0);
+        const ids = gEval("NODE_ORDER");
+        for (const have of [0, Math.floor(total / 2), total]) {
+          toBoth(`camp.upgrades = ${tierSave(key, have)}`);
+          for (const id of ids) for (const st of ["locked", "open", "next", "done"]) {
+            if (id === "home" && st !== "open") continue;
+            if (have && id !== "home") continue;
+            const p = gEval("nodeAt")(key, id);
+            for (const t of (id === "home" ? [0, 1, 2, 3].map(k => (k + 0.5) * (2 * Math.PI / 1.3 / 4)) : stopMoments)) {
+              const a = canvasOf(90, 90), b = canvasOf(90, 90);
+              const ga = a.getContext("2d"), gb = b.getContext("2d");
+              ga.translate(45 - Math.round(p.x), 65 - Math.round(p.y)); gb.translate(45 - Math.round(p.x), 65 - Math.round(p.y));
+              W.drawNodeArt(ga, key, id, st, t, 0); drawNodeArt(gb, key, id, st, t, 0);
+              const d = diff(a, b);
+              if (d) problems.push(`map stop ${key} ${id} (${st}${id === "home" ? `, ${have} tiers` : ""}) at ${t.toFixed(3)} s: ${d}`);
+              counts.scenes++;
+            }
+          }
+        }
+      }
+
       // ----- the Tailor's theme emblems: every theme's, at the sizes the Tailor shows
       for (const bd of gEval("backdrops")) for (const size of [56, 40, 28]) {
         const old = W.eval("backdrops").find(x => x.id === bd.id);

@@ -681,9 +681,122 @@
     });
   }
 
+  /* ----- The map's stops (map-isles.js drawNodeArt and friends): the old code's still parts ----- */
+  const SK = { accent: "#ff00ff", accentDark: "#c000c0", accentLit: "#ff60ff", flag: "#ff00ff", shade: "#a000a0", eye: "#00ffff", coin: "#ffff00", coinLit: "#ffff80", coinDark: "#808000" };
+  const skeys = names => Object.fromEntries(names.map(n => [SK[n], n]));
+  /* Old code drawn around x, y = 40, 60 on a scratch canvas, cut to what it painted; frames share one box */
+  function anchoredSheet(draws, cols = draws.length) {
+    const frames = draws.map(d => { const c = canvasOf(80, 80), g = c.getContext("2d"); d(g, mr(g), 40, 60); return c; });
+    let x0 = 80, y0 = 80, x1 = -1, y1 = -1;
+    frames.forEach(f => { const p = pixels(f); for (let i = 0; i < 6400; i++) if (p[i * 4 + 3]) { const x = i % 80, y = Math.floor(i / 80); x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); } });
+    if (x0 === 0 || y0 === 0 || x1 === 79 || y1 === 79) throw new Error("a stop doesn't fit its scratch canvas");
+    const w = x1 - x0 + 1, h = y1 - y0 + 1, rows = Math.ceil(frames.length / cols), out = canvasOf(w * cols, h * rows), og = out.getContext("2d");
+    frames.forEach((f, i) => og.drawImage(f, x0, y0, w, h, (i % cols) * w, Math.floor(i / cols) * h, w, h));
+    return { canvas: out, anchor: [40 - x0, 60 - y0], frames: frames.length };
+  }
+  const ROCK = { keep: "#7a7472", spire: "#5a4a7a", hollow: "#7a5a3a", reef: "#6a7a8a", crown: "#3a2a2e" };
+  const GOODS = { gear: ["#c8ced6", "#9aa3ad", "#3a6ab8"], spell: ["#b36bff", "#7fe3ff", "#ff6a1a"], food: ["#d8a050", "#c86a2a", "#ff3b3b"], pet: ["#ffcf5a", "#ff5a3a", "#7ac85a"], rune: ["#3ddc84", "#ffd23f", "#ff3b3b"] };
+  function stopList() {
+    const out = [];
+    const add = (id, file, canvas, extra = {}) => out.push(Object.assign({ id, file, canvas }, extra));
+    const A = (id, file, s, keys) => add(id, file, s.canvas, Object.assign({ anchor: s.anchor }, s.frames > 1 ? { frames: s.frames } : {}, keys ? { keys } : {}));
+    const D = "map/stops/";
+    // the level stone, locked and open (its shadow see-through), and the pennant planted on a won one
+    add("map:stone", D + "stone.png", sheet(["locked", "open"].map(st => sprite(7, 3, R => { R(0, 0, 7, 2, st === "locked" ? "#6a6a70" : "#a8a8b0"); R(1, 0, 5, 1, st === "locked" ? "#8a8a90" : "#d0d0d8"); R(0, 2, 7, 1, "rgba(0,0,0,0.25)"); }))), { frames: 2 });
+    add("map:pennant-pole", D + "pennant-pole.png", solidOf(1, 8, "#5a3a20"));
+    add("map:pennant", D + "pennant.png", solidOf(3, 2, SK.flag), { keys: skeys(["flag"]) });
+    add("map:pennant-shade", D + "pennant-shade.png", solidOf(2, 1, SK.shade), { keys: skeys(["shade"]) });
+    add("map:stone-glow", D + "stone-glow.png", solidOf(11, 4, "rgb(255,224,120)"));
+    // lairs: the rock and its mouth (three sizes, each island's rock), the bones, the last lair's spikes
+    CAMP.islands.forEach(I => {
+      const key = I.id, rock = ROCK[key];
+      [0, 1, 2].forEach(big => {
+        const w = 19 + big * 3, h = 13 + big * 2;
+        A(`map:${key}:lair-${big}`, `map/${key}/lair-${big}.png`, anchoredSheet([(g, R, x, y) => {
+          for (let j = 0; j < h; j++) { const ww = Math.round(w * Math.sqrt(1 - Math.pow(j / h, 2))); R(x - Math.floor(ww / 2), y + 1 - j, ww, 1, j > h * 0.6 ? shadeHex(rock, 0.2) : rock); }
+          R(x - Math.floor(w / 2), y + 1, w, 1, shadeHex(rock, -0.35));
+          isleRock(g, x - Math.floor(w / 2) + 2, y + 1, 2, shadeHex(rock, 0.1)); isleRock(g, x + Math.floor(w / 2) - 2, y + 1, 2, shadeHex(rock, -0.1));
+          R(x - 3, y - 5, 7, 6, "#0e0a0c"); R(x - 2, y - 6, 5, 1, "#0e0a0c");
+        }]));
+      });
+      A(`map:${key}:lair-spikes`, `map/${key}/lair-spikes.png`, anchoredSheet([(g, R, x, y) => { const h = 13 + 2 * 2; for (let k = -1; k <= 1; k++) R(x + k * 4, y - h - 1 - (k ? 0 : 1), 1, 2, shadeHex(rock, -0.3)); }]));
+      // the home tree, a row for every tier bought and four moments of its leaves; the satchel against it
+      const total = I.tree.upgrades.reduce((a, u) => a + u.values.length - 1, 0);
+      const leaves = { keep: ["#2f7d2a", "#3f9a3a", "#5ab046", "#ff3b3b"], spire: ["#3a3a9a", "#5a5ac8", "#8a8af0", "#7fe3ff"], hollow: ["#a8501a", "#d87a2a", "#f0a840", "#ff3b3b"], reef: ["#1a7a6a", "#2a9a8a", "#5acaba", "#ff9ab0"], crown: ["#6a1a1a", "#a82a1a", "#e85a1a", "#ffd23f"] }[key];
+      const p = nodeAt(key, "home"), X = Math.round(p.x), Y = Math.round(p.y);
+      const draws = [];
+      for (let have = 0; have <= total; have++) for (let k = 0; k < 4; k++) draws.push((g, R) => {
+        // drawn at the stop's own place on the map (moved onto the scratch canvas whole pixels at a time)
+        g.translate(40 - X, 60 - Y);
+        const t = (k + 0.5) * (2 * Math.PI / 1.3 / 4), x = p.x, y = p.y, f = total ? have / total : 0;
+        const hgt = 8 + Math.round(f * 10);
+        R(x - 1, y - hgt, 2 + (f > 0.5 ? 1 : 0), hgt + 1, "#5a3a20"); R(x - 1, y - hgt, 1, hgt + 1, "#7a5232");
+        R(x - 3, y, 2, 1, "#5a3a20"); R(x + 2, y, 2, 1, "#5a3a20");
+        const r = 4 + f * 6, n = 30 + Math.round(f * 70);
+        for (let i = 0; i < n; i++) { const a = mapHash(i, key.length, 71) * Math.PI * 2, dd = Math.sqrt(mapHash(i, key.length, 73)) * r; R(x + Math.cos(a) * dd * 1.3 + Math.sin(t * 1.3 + i) * 0.3, y - hgt + Math.sin(a) * dd * 0.85, 1, 1, leaves[i % 3]); }
+        for (let i = 0; i < Math.min(12, have); i++) { const a = i * 2.39, dd = r * (0.4 + 0.5 * mapHash(i, 9, 3)); R(x + Math.cos(a) * dd * 1.2, y - hgt + Math.sin(a) * dd * 0.7, 1, 1, leaves[3]); }
+        const sx = x + 3 * ISLANDS[key].dir;
+        R(sx - 1, y - 3, 4, 3, "#b07a42"); R(sx - 1, y - 3, 4, 1, "#d09a5a"); R(sx, y - 4, 2, 1, "#5a3a1e"); R(sx + 1, y - 2, 1, 1, "#ffd23f");
+      });
+      const tree = anchoredSheet(draws, 4);
+      add(`map:${key}:home-tree`, `map/${key}/home-tree.png`, tree.canvas, { frames: tree.frames, columns: 4, anchor: tree.anchor });
+      // the shopkeepers' places, open and boarded up, in the island's colors
+      const fam = I.merchantFamily;
+      A(`map:${key}:stall-merchant`, `map/${key}/stall-merchant.png`, anchoredSheet([false, true].map(shut => (g, R, x, y) => {
+        R(x - 7, y - 4, 14, 5, "#6a4a2a"); R(x - 7, y - 4, 14, 1, "#9a6a3a");
+        R(x - 6, y - 10, 1, 6, "#5a3a1e"); R(x + 5, y - 10, 1, 6, "#5a3a1e");
+        for (let i = -8; i <= 7; i++) R(x + i, y - 12, 1, 2, Math.floor((i + 20) / 2) % 2 ? SK.accent : "#f4f0e8");
+        for (let i = -8; i <= 7; i += 2) R(x + i, y - 10, 1, 1, Math.floor((i + 20) / 2) % 2 ? SK.accent : "#f4f0e8");
+        if (shut) { R(x - 5, y - 9, 10, 5, "#8a6a4a"); for (let j = 0; j < 5; j += 2) R(x - 5, y - 9 + j, 10, 1, "#6a4a2a"); return; }
+        (GOODS[fam] || ["#ffd23f", "#ff3b3b", "#3ddc84"]).forEach((c, i) => { R(x - 5 + i * 4, y - 6, 2, 2, c); R(x - 5 + i * 4, y - 6, 1, 1, shadeHex(c, 0.4)); });
+      })), skeys(["accent"]));
+      A(`map:${key}:stall-challenger`, `map/${key}/stall-challenger.png`, anchoredSheet([false, true].map(shut => (g, R, x, y) => {
+        for (let j = 0; j < 12; j++) { const w = 2 + j; R(x - Math.floor(w / 2), y - 12 + j, w, 1, j % 3 === 2 ? SK.accentDark : SK.accent); R(x - Math.floor(w / 2), y - 12 + j, 1, 1, SK.accentLit); }
+        for (let j = 0; j < 12; j += 2) R(x - Math.floor((2 + j) / 2) + Math.floor((2 + j) / 2), y - 12 + j, 1, 2, "#f4f0e8");
+        R(x - 2, y - 5, 4, 5, shut ? "#3a2a20" : "#1a1410"); if (!shut) R(x - 1, y - 4, 2, 1, "#ffd23f");
+        R(x, y - 16, 1, 4, "#5a3a20");
+      })), skeys(["accent", "accentDark", "accentLit"]));
+      A(`map:${key}:stall-banker`, `map/${key}/stall-banker.png`, anchoredSheet([false, true].map(shut => (g, R, x, y) => {
+        const stone = shut ? ["#8a8680", "#6a6660", "#4a4640"] : ["#e8e0d0", "#c8c0b0", "#9a9284"];
+        R(x - 8, y - 1, 16, 2, stone[2]); R(x - 7, y - 2, 14, 1, stone[1]);
+        for (let i = 0; i < 4; i++) { R(x - 6 + i * 4, y - 9, 2, 7, stone[0]); R(x - 5 + i * 4, y - 9, 1, 7, stone[1]); }
+        R(x - 8, y - 11, 16, 2, stone[1]); R(x - 8, y - 11, 16, 1, stone[0]);
+        for (let j = 0; j < 4; j++) R(x - 7 + j * 2, y - 12 - j, 14 - j * 4, 1, j % 2 ? stone[1] : stone[0]);
+        R(x - 1, y - 7, 2, 5, shut ? "#3a3632" : "#2a2018");
+      })));
+    });
+    // the lair's watching eyes and their red glow, the glow round the next lair, the bones, the banner
+    add("map:lair-eyes", D + "lair-eyes.png", sprite(5, 1, R => { R(0, 0, 1, 1, SK.eye); R(4, 0, 1, 1, SK.eye); }), { keys: skeys(["eye"]) });
+    add("map:lair-eye-glow", D + "lair-eye-glow.png", solidOf(7, 3, "rgb(255,60,60)"));
+    [0, 1, 2].forEach(big => add(`map:lair-glow-${big}`, `${D}lair-glow-${big}.png`, solidOf(19 + big * 3 + 2, 13 + big * 2 + 2, "rgb(255,90,110)")));
+    add("map:lair-bones", D + "lair-bones.png", sprite(12, 1, R => { R(0, 0, 2, 1, "#e8e0c8"); R(11, 0, 1, 1, "#e8e0c8"); }));
+    add("map:lair-pole", D + "lair-pole.png", solidOf(1, 9, "#5a3a20"));
+    add("map:banner-strip", D + "banner-strip.png", sheet([solidOf(1, 3, SK.flag), solidOf(1, 3, "#ffd23f")]), { frames: 2, keys: skeys(["flag"]) });
+    add("map:glint", D + "glint.png", solidOf(1, 1, "#ffffff"));
+    // the bridge's gate, locked and open, its glow and its torches' flames
+    A("map:gate", D + "gate.png", anchoredSheet([false, true].map(open => (g, R, x, y) => {
+      R(x - 6, y - 10, 3, 11, "#b8b2a4"); R(x + 4, y - 10, 3, 11, "#8f8a7e"); R(x - 6, y - 10, 1, 11, "#d8d2c4");
+      R(x - 5, y - 12, 11, 2, "#b8b2a4"); R(x - 4, y - 13, 9, 1, "#d8d2c4"); R(x - 1, y - 14, 3, 1, "#ffd23f");
+      R(x - 3, y - 10, 7, 11, open ? "#ffe9a0" : "#1a1418");
+      if (!open) for (let i = 0; i < 4; i++) R(x - 3 + i * 2, y - 10, 1, 11, "#5a5048");
+      [-8, 8].forEach(dx => R(x + dx, y - 6, 1, 5, "#5a3a20"));
+    })));
+    add("map:gate-glow", D + "gate-glow.png", solidOf(11, 13, "rgb(255,240,170)"));
+    add("map:torch-flame", D + "torch-flame.png", sheet([true, false].map(fl => sprite(1, 3, R => { R(0, 1, 1, 2, fl ? "#ffd23f" : "#ff8a1a"); R(0, 0, 1, 1, fl ? "#ff6a1a" : "#ffd23f"); }))), { frames: 2 });
+    // the tent's pennant (red, white, and its short white tip), the planks over a shut tent, the bank's coin turning
+    add("map:tent-flag", D + "tent-flag.png", sheet([["#c0392b", 2], ["#ffffff", 2], ["#ffffff", 1]].map(([c, h]) => sprite(1, 2, R => R(0, 0, 1, h, c)))), { frames: 3 });
+    add("map:tent-planks", D + "tent-planks.png", sprite(8, 3, R => { R(0, 1, 8, 1, "#5a3a20"); R(1, 0, 1, 3, "#5a3a20"); R(6, 0, 1, 3, "#5a3a20"); }));
+    add("map:bank-coin", D + "bank-coin.png", sheet([1, 2, 3, 4, 5].map(cw => sprite(5, 8, R => {
+      R(2, 5, 1, 3, "#5a3a1e");
+      R(2 - Math.floor(cw / 2), 0, cw, 5, SK.coin);
+      if (cw >= 3) { R(2 - Math.floor(cw / 2), 0, cw, 1, SK.coinLit); R(2, 1, 1, 3, SK.coinDark); }
+    }))), { frames: 5, keys: skeys(["coin", "coinLit", "coinDark"]) });
+    return out;
+  }
+
   window.LEGACY_SCENES = {
     sets: { rooms: { list: roomList, backdrop: roomBackdrop, times: ROOM_TIMES, rooms: () => Object.keys(PIC_ROOMS) }, shops: { list: shopList }, keepers: { list: keeperList, moments: keeperMoments, roles: KEEPER_ROLES },
-      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList } },
+      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList }, stops: { list: stopList } },
     record, split
   };
 })();

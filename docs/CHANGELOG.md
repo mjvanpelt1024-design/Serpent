@@ -22,7 +22,8 @@
   base's sky and ground are one 320-wide painting per island, centered in narrower windows. Every
   island's coin is a color-swap picture, its shades filled in from the island's money color, and so
   are the menus' frames (plates, windows, buttons, tabs), filled in from the theme's colors. The map's
-  islands are pictures too: under the paths, over them, and in the haze; and the Tailor's theme emblems
+  islands are pictures too: under the paths, over them, and in the haze, and so are their stops (stones,
+  lairs, the little home tree, the gate, the stalls); and the Tailor's theme emblems
   are color-swap pictures in each theme's colors. Lights and glows pulse over their PNGs; the rarity
   pip and ribbon are color-swap pictures. They look exactly as before, checked pixel by pixel at many moments
   (`node tools/textures/textures.mjs check --legacy`). How to: `textures/README.md`.
