@@ -220,6 +220,13 @@
         }
       }
 
+      // ----- coins: every island's, both sides, every size the game asks for
+      for (const I of CAMP.islands) for (const side of ["tails", "heads"]) for (const size of W.LEGACY_SCENES.sets.coins.sizes) {
+        const d = diff(W.coinCanvas(I.id, side, size), coinCanvas(I.id, side, size));
+        if (d) problems.push(`coin ${I.id} ${side} ${size}: ${d}`);
+        counts.scenes++;
+      }
+
       // ----- home base: its paintings at full width, the sky's things, the tree at several sizes, each
       // thing around it in each of its states (the old functions against the new, same save in both)
       const HS = W.LEGACY_SCENES.sets.home;

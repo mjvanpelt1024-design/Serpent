@@ -39,6 +39,7 @@ textures/
 ├── board/                the goal pieces: key, door, plates, seal, shard, thief; relics/ for the relics
 ├── hearts/               every heart slot the HUD shows (below)
 ├── bosses/               each island's boss face on its wanted poster
+├── coins/                each island's coin, <island>-<tails|heads>-<12|20|32>.png (color-swap, below)
 ├── scenes/
 │   ├── rooms/            the picture rooms at home: rack/, shelf/, den/, stones/, satchel/, each with
 │   │                     background.png and the things that move in it; marks/ for the little marks
@@ -86,6 +87,7 @@ So to move or rename a file, move it and change its one line here. Two ids can s
 | `heart:full-armor4`, `boss:keep`, `rune:empty` | a heart slot, a boss face, the empty rune slot |
 | `room:rack`, `room:shelf:flame`, `room:mark:seal` | a picture room's background, something that moves in it, a mark on a thing |
 | `shop:keep:back`, `shop:reef:hoop`, `shop:parcel` | a shop's walls (or `middle`, `front`), something in its workshop, something every shop shares |
+| `coin:keep:tails:12` | an island's coin, a side and a size |
 | `keeper:keep:merchant` | a shopkeeper's sprite sheet (island, then merchant, challenger or banker) |
 | `home:keep:tree`, `home:trophy`, `home:cloud-3` | home base: an island's own picture, or one every home shares |
 | `gem`, `clock`, `anchor` | a picture asked for by name: by the code, or by a content file's `icon =` (old-style upgrades and items) or `picture =` (avatars) |
@@ -140,8 +142,24 @@ in the thing's rarity color. Its entry says which colors are keys and what they 
 "room:mark:pip": { "file": "scenes/rooms/marks/rarity-pip.png", "keys": { "#ff00ff": "pip" } }
 ```
 
-Paint the key colors exactly (any other color shows as it is). The coins and the menus' pixel frames
-will work this way too, with each island's or theme's colors filled in.
+Paint the key colors exactly (any other color shows as it is).
+
+**Coins** are color-swap pictures too: each island's money is one color (its currency's `color` in
+`content/campaign/islands/<island>.json`), and the coin is painted in shades of it. Paint a coin with
+these keys and the game fills in that island's shades; the hats and the snake's tongue are real colors:
+
+| Key | Becomes the money color... |
+|---|---|
+| `#ff00ff` | as it is (the face) |
+| `#ff20ff` | 12% lighter (the shine in the middle) |
+| `#ff40ff` | 10% lighter (the rim's lit side) |
+| `#ff80ff` | 45% lighter (lit edges of the carving, the beads) |
+| `#c000c0` | 42% darker (the rim's shadowed side) |
+| `#a000a0` | 28% darker (the carving) |
+| `#600060` | 50% darker (the carving's shadow, the snake's eye) |
+
+Money shows tails at 12 pixels (20 in the top bar); click the coin in the top bar and it flips to heads,
+with a 32-pixel heads on its card.
 
 ## How menus light a picture
 
@@ -180,5 +198,5 @@ boots the game in a headless Chrome or Edge and makes sure every file in `index.
 `--legacy` to also compare every picture with the game from before textures/ (from git), pixel by pixel,
 the rooms at sixty moments each, every shop with and without stock and orders, and every keeper in
 every one of its looks, and home base piece by piece; that only passes for pictures that haven't been repainted.
-`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`) writes a set from that old game into this folder and its index: it's
+`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`) writes a set from that old game into this folder and its index: it's
 how the folder was made, and with `--force` it overwrites files, repaints and all.

@@ -516,9 +516,57 @@
     }
   }
 
+  /* ----- Coins (coins.js): the old coinCanvas(), its shades of the money color swapped for keys ----- */
+  const COIN_KEY_COLORS = { face: "#ff00ff", rim: "#c000c0", rimLit: "#ff40ff", lit: "#ff80ff", dark: "#a000a0", deep: "#600060", glow: "#ff20ff" };
+  function coinTemplate(isl, side, size) {
+    const c = canvasOf(size, size), g = c.getContext("2d");
+    const K = COIN_KEY_COLORS;
+    const pal = { k: "#1a1410", rim: K.rim, rimLit: K.rimLit, face: K.face, lit: K.lit, dark: K.dark, deep: K.deep };
+    const r = size / 2, cx = r - 0.5, cy = r - 0.5;
+    const px = (x, y, col) => { g.fillStyle = col; g.fillRect(x, y, 1, 1); };
+    const big = size >= 20;
+    const rimW = big ? 2 : 1;
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      const d = Math.hypot(x - cx, y - cy);
+      if (d > r - 0.2) continue;
+      const lit = (x - cx) + (y - cy) < 0;
+      if (d > r - 1.2) px(x, y, pal.k);
+      else if (d > r - 1.2 - rimW) {
+        const bead = big && Math.round(Math.atan2(y - cy, x - cx) / (Math.PI / 14)) % 2 === 0;
+        px(x, y, bead ? (lit ? pal.lit : pal.face) : lit ? pal.rimLit : pal.rim);
+      } else px(x, y, d < r * 0.45 && lit ? K.glow : (x - cx) + (y - cy) > r * 0.9 ? pal.dark : pal.face);
+    }
+    const art = side === "tails" ? COIN_MARK[isl] : COIN_HEAD[isl];
+    const scale = size >= 24 ? (side === "tails" ? 3 : 2) : big && side === "tails" ? 2 : 1;
+    const w = art[0].length * scale, h = art.length * scale;
+    const ox = Math.round(cx - w / 2 + 0.5), oy = Math.round(cy - h / 2 + 0.5);
+    const at = (x, y) => { const row = art[Math.floor(y / scale)]; return row ? row[Math.floor(x / scale)] || "." : "."; };
+    const [hat, hatDark] = COIN_HAT[isl];
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const ch = at(x, y);
+      if (ch === ".") continue;
+      let col = ch === "x" || ch === "s" ? pal.dark : ch === "e" ? pal.deep : ch === "t" ? "#ff3b5a" : ch === "h" ? hat : ch === "H" ? hatDark : pal.dark;
+      if ((ch === "x" || ch === "s") && at(x - 1, y) === "." && at(x, y - 1) === ".") col = pal.lit;
+      px(ox + x, oy + y, col);
+      if (ch !== "e" && at(x + 1, y + 1) === "." && x + 1 < w + 1) px(ox + x + 1, oy + y + 1, pal.deep);
+    }
+    if (side === "heads" && scale > 1) { px(ox + 4, oy + 8, "#ffffff"); }
+    if (big) { px(Math.round(cx - r * 0.5), Math.round(cy - r * 0.55), "#ffffff"); px(Math.round(cx - r * 0.55) + 1, Math.round(cy - r * 0.55), pal.lit); }
+    else px(Math.round(cx - r * 0.45), Math.round(cy - r * 0.45), "#ffffff");
+    return c;
+  }
+  const COIN_SIZES = [12, 20, 32];
+  function coinList() {
+    const keys = Object.fromEntries(Object.entries(COIN_KEY_COLORS).map(([name, hex]) => [hex, name]));
+    const out = [];
+    CAMP.islands.forEach(I => ["tails", "heads"].forEach(side => COIN_SIZES.forEach(size =>
+      out.push({ id: `coin:${I.id}:${side}:${size}`, file: `coins/${I.id}-${side}-${size}.png`, canvas: coinTemplate(I.id, side, size), keys }))));
+    return out;
+  }
+
   window.LEGACY_SCENES = {
     sets: { rooms: { list: roomList, backdrop: roomBackdrop, times: ROOM_TIMES, rooms: () => Object.keys(PIC_ROOMS) }, shops: { list: shopList }, keepers: { list: keeperList, moments: keeperMoments, roles: KEEPER_ROLES },
-      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP } },
+      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES } },
     record, split
   };
 })();
