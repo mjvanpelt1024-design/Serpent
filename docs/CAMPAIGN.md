@@ -373,7 +373,8 @@ in `textures/map/` (the paths are drawn live; the signposts, lantern posts and s
 layers in `textures/scenes/story/` with what moves drawn live between them. The board is drawn 20 pixels to a
 square (`texBoard`): the bosses' crests, the familiars, the old engine's hazards and power-ups, the items, the
 snake's squares (color-swapped with each skin's colors) and the pattern themes' backdrops are pictures in
-`textures/board/`, `textures/familiars/` and `textures/themes/`. Still drawn by code for now: the flair.
+`textures/board/`, `textures/familiars/` and `textures/themes/`, and so is the flair (`textures/board/flair/`).
+Still drawn by code on purpose: smooth gradients and glows, particles, and things that turn or stretch.
 
 ## Build 51
 

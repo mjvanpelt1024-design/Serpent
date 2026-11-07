@@ -1321,6 +1321,75 @@
     });
     cell = cellWas;
     S.details = was.details; S.extras = was.extras; window.visibleColor = vis;
+    // the flair (flair-drawing.js): the old drawing itself, one piece at a time, on a snake laid out so that
+    // only that piece lands round 200, 200 (every other square far off the board; the head and neck next to
+    // each other, so the snake still faces the way it should), anchored on the square it sits on
+    {
+      const C = 20, O = 200, OFF = -4000, DIRS = [{ x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }, { x: 0, y: -1 }];
+      const at = (x, y, d, n = 1) => ({ x: x - d.x * C * n, y: y - d.y * C * n });
+      // n squares facing f; place(j, x, y) gives square j's spot on the board, or nothing (then it's far off)
+      const lay = (n, f, place) => (x, y) => Array.from({ length: n }, (_, j) => {
+        const p = place(j, x, y);
+        if (p) return p;
+        if (j === 0) return { x: OFF, y: OFF };
+        if (j === 1 && !place(0, x, y)) return at(OFF, OFF, f);
+        return { x: OFF + 600 * j, y: OFF - 600 * j };
+      });
+      const piece = (set, segsAt, ts = 0) => (g, x, y) => drawFlairSet(g, set, segsAt(x, y), C, 1, ts);
+      const one = (slot, id) => ({ [slot]: id });
+      const R = DIRS[0];
+      const F = (name, frames, extra = {}) => add(`flair:${name}`, `board/flair/${name}.png`, fromBoard(frames, extra.columns), extra);
+      const glowless = draw => (g, x, y) => {
+        Object.defineProperty(g, "shadowColor", { configurable: true, get: () => "rgba(0, 0, 0, 0)", set() {} });
+        try { draw(g, x, y); } finally { delete g.shadowColor; }
+      };
+      // body patterns on a body square (an odd one: hearts, stars and gears skip the even ones; the zigzag's
+      // even squares lean the other way); the ancient pattern's diamond (painted with its pulse) and its edge
+      ["purpledots", "hearts", "stars", "spots"].forEach(b => F(b, [piece(one("body", b), lay(2, R, (j, x, y) => j === 1 && { x, y }))]));
+      // the gear, whole (its hole is cut through whatever is under it, the snake and the board: its own picture)
+      F("gears", [(g, x, y) => {
+        Object.defineProperty(g, "globalCompositeOperation", { configurable: true, get: () => "source-over", set() {} });
+        try { piece(one("body", "gears"), lay(2, R, (j, xx, yy) => j === 1 && { x: xx, y: yy }))(g, x, y); } finally { delete g.globalCompositeOperation; }
+      }]);
+      F("gears-hole", [(g, x, y) => { g.fillStyle = "#000000"; g.beginPath(); g.arc(x + 9.5, y + 9.5, 6 * 0.3, 0, Math.PI * 2); g.fill(); }]);
+      F("zigzag", [piece(one("body", "zigzag"), lay(2, R, (j, x, y) => j === 1 && { x, y })), piece(one("body", "zigzag"), lay(3, R, (j, x, y) => j === 2 && { x, y }))]);
+      const diamond = (g, x, y) => { const m = { x: x + 9.5, y: y + 9.5 }; g.beginPath(); g.moveTo(m.x, m.y - 6); g.lineTo(m.x + 5, m.y - 1); g.lineTo(m.x, m.y + 6); g.lineTo(m.x - 5, m.y - 1); g.closePath(); };
+      F("ancient", [(g, x, y) => { g.fillStyle = "rgb(255, 210, 63)"; diamond(g, x, y); g.fill(); }]);
+      F("ancient-edge", [(g, x, y) => { g.strokeStyle = "rgba(120, 80, 10, 0.7)"; g.lineWidth = 1; diamond(g, x, y); g.stroke(); }]);
+      // tails (head and neck off the board; the tail's two squares after them), a square at a time (the tip
+      // off the board, so the tail points the way behind the head):
+      // the rattle's rings across a tail going sideways, then one going up or down (the gold tail is a
+      // gradient, drawn live); the maraca, bow and flame at the tip, by which way the tip points (and for the
+      // bow and flame, which way the head faces: across or up and down), the flame at five flickers
+      const square = (tail, f, ts = 0) => piece(one("tail", tail), lay(4, f, (j, x, y) => j === 2 && { x, y }), ts);
+      F("rattle", [square("rattle", DIRS[0]), square("rattle", DIRS[1])]);
+      F("candycane", [square("candycane", R)]);
+      F("brasstail", [square("brasstail", R)]);
+      const tip = (tail, f, t, ts = 0) => piece(one("tail", tail), lay(4, f, (j, x, y) => (j === 3 && { x, y }) || (j === 2 && at(x, y, t))), ts);
+      F("maraca", DIRS.map(t => tip("maraca", R, t)));
+      F("bow", [DIRS[0], DIRS[1]].flatMap(f => DIRS.map(t => tip("bow", f, t))), { columns: 4 });
+      F("flametail", [DIRS[0], DIRS[1]].flatMap(f => DIRS.flatMap(t => [-1, -0.5, 0, 0.5, 1].map(v => tip("flametail", f, t, 70 * Math.asin(v))))), { columns: 5 });
+      // capes: a square of it, the last one wider; the hero's emblem; the scarf at the neck and the bow tie
+      // under the chin, by which way the head faces; a badge's medal: its ribbon, its disc (its color swapped
+      // in, the family's medal color) and its shine
+      ["redcape", "herocape", "royalcape"].forEach(cp => F(cp, [piece(one("cape", cp), lay(4, R, (j, x, y) => j === 1 && { x, y })), piece(one("cape", cp), lay(4, R, (j, x, y) => j === 3 && { x, y }))]));
+      F("herocape-emblem", [(g, x, y) => { const m = { x: x + 9.5, y: y + 9.5 }; g.fillStyle = "#ffd23f"; g.beginPath(); g.arc(m.x, m.y, 4.5, 0, Math.PI * 2); g.fill(); g.fillStyle = "#d1202a"; star(g, m.x, m.y, 3.4); }]);
+      F("scarf", DIRS.map(f => piece(one("cape", "scarf"), lay(2, f, (j, x, y) => (j === 1 && { x, y }) || (j === 0 && at(x, y, f, -1))))));
+      F("bowtie", DIRS.map(f => piece(one("cape", "bowtie"), lay(2, f, (j, x, y) => (j === 0 && { x, y }) || (j === 1 && at(x, y, f))))));
+      const medal = (g, x, y) => ({ x: x + 9.5, y: y + 9.5 });
+      F("medal-ribbon", [(g, x, y) => { const m = medal(g, x, y); g.fillStyle = "#2552d6"; g.beginPath(); g.moveTo(m.x - 5, m.y - 8); g.lineTo(m.x, m.y); g.lineTo(m.x + 5, m.y - 8); g.closePath(); g.fill(); }]);
+      F("medal", [(g, x, y) => { const m = medal(g, x, y); g.fillStyle = "#ff00ff"; g.beginPath(); g.arc(m.x, m.y + 1.5, 5.5, 0, Math.PI * 2); g.fill(); }], { keys: { "#ff00ff": "medal" } });
+      F("medal-shine", [(g, x, y) => { const m = medal(g, x, y); g.beginPath(); g.arc(m.x, m.y + 1.5, 5.5, 0, Math.PI * 2); g.strokeStyle = "rgba(0, 0, 0, 0.45)"; g.lineWidth = 1.2; g.stroke(); g.fillStyle = "rgba(255, 255, 255, 0.85)"; star(g, m.x, m.y + 1.5, 2.8); }]);
+      // faces, by which way the head faces (the googly eyes' pupils at three places as they wobble)
+      const face = (id, f, ts = 0) => piece(one("face", id), lay(2, f, (j, x, y) => (j === 0 && { x, y }) || (j === 1 && at(x, y, f))), ts);
+      ["shades", "nerd", "goggles", "mustache", "eyepatch", "monocle"].forEach(id => F(id, DIRS.map(f => face(id, f))));
+      F("googly", DIRS.flatMap(f => [-Math.PI / 2, 0, Math.PI / 2].map(a => face("googly", f, 90 * a))), { columns: 3 });
+      // hats, upright on the head (the propeller at eight turns; the halo without its glow, drawn live)
+      const hat = (id, ts = 0) => piece(one("head", id), lay(2, R, (j, x, y) => (j === 0 && { x, y }) || (j === 1 && at(x, y, R))), ts);
+      ["partyhat", "cowboy", "santa", "tophat", "steamhat", "wizard", "pirate", "crown"].forEach(id => F(id, [hat(id)]));
+      F("propeller", Array.from({ length: 8 }, (_, j) => hat("propeller", 60 * 2 * Math.PI * j / 8)));
+      F("halo", [glowless(hat("halo"))]);
+    }
     return out;
   }
 

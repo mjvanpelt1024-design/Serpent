@@ -448,6 +448,17 @@
           `cell = ${c}; save.settings.extras = ${extras}; { const [size, sq] = snakeLook(); texBoard(ctx, "snake:shadow" + sq + ":" + size, 100, 100, (cell - 1) / size); } cell = 20`], [90, 90, 40, 40], [1]);
       }
       gEval("save.settings.details = true; save.settings.extras = true"); W.eval("save.settings.details = true; save.settings.extras = true");
+      // the flair: every piece (and two badges' medals) on a snake of six facing each way, and on one whose tail
+      // turns, at moments that land on its frames
+      {
+        const FL = W.eval("FLAIR.map(f => [f.slot, f.id])").concat(W.eval("BADGE_FAMILIES.slice(0, 2).map(f => ['cape', 'medal:' + f.id])"));
+        const snakes = [[1, 0], [0, 1], [-1, 0], [0, -1]].map(([fx, fy]) => Array.from({ length: 6 }, (_, i) => ({ x: 200 - fx * 20 * i, y: 200 - fy * 20 * i })));
+        snakes.push([[200, 200], [180, 200], [160, 200], [140, 200], [140, 220], [140, 240]].map(([x, y]) => ({ x, y })));
+        const TIMES = { googly: [0, 45 * Math.PI, 135 * Math.PI], flametail: [-1, -0.5, 0, 0.5, 1].map(v => 70 * Math.asin(v)), propeller: [0, 1, 2, 5].map(j => 60 * 2 * Math.PI * j / 8), goldtail: [0, 700], ancient: [0, 777] };
+        for (const [slot, id] of FL) for (const segs of snakes) for (const ts of TIMES[id] || [0]) {
+          boardCheck(`flair ${id} (${segs[0].x},${segs[0].y} to ${segs[5].x},${segs[5].y}) at ${ts.toFixed(1)}`, `drawFlairSet(ctx, ${JSON.stringify({ [slot]: id })}, ${JSON.stringify(segs)}, 20, 1, ${ts})`, [40, 40, 320, 320], [1]);
+        }
+      }
       // the themes' patterns: every pattern theme's board, its old painter against its picture (and gradient), at 1x
       for (const id of W.eval("backdrops").filter(b => b.kind === "pattern").map(b => b.id)) {
         const paint = ev => ev(`(() => { const c = document.createElement("canvas"); c.width = c.height = 400; paintBackdrop(c.getContext("2d"), backdrops.find(b => b.id === "${id}"), 400, 400); return c; })()`);

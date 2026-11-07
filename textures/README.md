@@ -39,7 +39,8 @@ textures/
 ├── board/                the goal pieces: key, door, plates, seal, shard, thief; relics/ for the relics;
 │                         crests/ for what each boss wears on its head, entities/ for the old engine's
 │                         hazards and power-ups, items/ for apples, XP, rocks and the rest, snake/ for
-│                         the snake's squares (20 pixels to a square, below)
+│                         the snake's squares, flair/ for hats, faces, capes, patterns and tails (20
+│                         pixels to a square, below)
 ├── hearts/               every heart slot the HUD shows (below)
 ├── bosses/               each island's boss face on its wanted poster
 ├── coins/                each island's coin, <island>-<tails|heads>-<12|20|32>.png (color-swap, below)
@@ -259,6 +260,18 @@ head it sits on). The game scales them up to the screen with hard edges, like ev
   from its `.skin` file), `shine-19.png` over it (the light top, the dark bottom, the darker rim) and
   `shadow-19.png` under it. The `-square` ones are the look with Extras off; `-9` ones are for Treasure's
   half-size squares. A boss's body squares are drawn the same way.
+- **The flair** (`board/flair/<id>.png`) sits on the square it belongs to, anchored on its top left
+  corner: hats and faces on the head, the bow tie under the chin, the scarf and a badge's medal on the
+  neck, a pattern on each body square, a tail piece on the last two. Whatever turns with the snake has a
+  frame for each way it can face, in the order right, down, left, up: the faces, the scarf, the bow tie
+  (the googly eyes have three wobbles of their pupils for each). The maraca has one for each way the tail
+  points; the bow and the flame have them for the head facing across (first) or up and down, then each
+  way the tail points (the flame at five flickers). The rattle's rings run across a tail going sideways,
+  then one going up or down; a cape has a square and its wider last square; the zigzag leans one way on
+  odd squares and the other on even ones; the propeller has eight turns. A badge's medal disc
+  (`medal.png`) is `#ff00ff`, painted in its family's color. The game still draws the ancient pattern's
+  pulse (over `ancient.png`), the halo's glow, the gear's hole (cut right through, with `gears-hole.png`)
+  and the gold tail, a gradient.
 - **The pattern themes** (`themes/<painter>.png`, the name a theme file gives as its `painter`) are the
   board as it looks under that theme in its own colors: a tile that repeats across the board from its
   top left corner (a 40 x 40 brick, a check, a polka dot) or the whole 400 x 400 board (stars, circuits,

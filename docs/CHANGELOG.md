@@ -29,8 +29,8 @@
   ghosts); and the Tailor's theme emblems
   are color-swap pictures in each theme's colors. The board itself is drawn 20 pixels to a square: the
   bosses' crests, the familiars, the hazards and power-ups, apples and the other items, the snake's
-  squares (in each skin's colors) and the pattern themes are pictures too, a touch crisper-edged on big
-  screens. Lights and glows pulse over their PNGs; the rarity
+  squares (in each skin's colors), the pattern themes and every piece of flair are pictures too, a touch
+  crisper-edged on big screens. Lights and glows pulse over their PNGs; the rarity
   pip and ribbon are color-swap pictures. They look exactly as before, checked pixel by pixel at many moments
   (`node tools/textures/textures.mjs check --legacy`). How to: `textures/README.md`.
 
