@@ -43,6 +43,12 @@ function levelFileText(L) {
     const chips = (L.sc && L.sc[t]) || [];
     if (chips.length) out.push(`${t} = ${chips.map(([x, y]) => `${x},${y}`).join("; ")}`);
   });
+  // build 53: the kit the level is played in: slot = item id and rarity (src/campaign/camp-sandbox.js)
+  const kit = Object.entries(L.kit || {});
+  if (kit.length) {
+    out.push("", "[kit]                         # what you wear in this level: slot = item rarity (any item in the game)");
+    kit.forEach(([slot, k]) => out.push(`${slot} = ${k.id} ${k.r}`));
+  }
   out.push("", "---");
   for (let r = 0; r < LEVEL_FILE_SIZE; r++) out.push(L.g.slice(r * LEVEL_FILE_SIZE, (r + 1) * LEVEL_FILE_SIZE));
   return out.join("\n") + "\n";
@@ -59,7 +65,7 @@ function parseLevelFile(text) {
   for (const ch of g) if (!LEVEL_FILE_CHARS.includes(ch)) return null;
 
   const list = v => String(v || "").split(",").map(s => s.trim()).filter(Boolean);
-  const L = { n: "Sandbox level", e: "w", s: 7, g, pv: {}, ph: {}, k: "", th: "", vn: 0, it: [], off: [], sc: {}, b: "", bf: 3, r: { h: 3, ar: true, t: [] } };
+  const L = { n: "Sandbox level", e: "w", s: 7, g, pv: {}, ph: {}, k: "", th: "", vn: 0, it: [], off: [], sc: {}, b: "", bf: 3, kit: {}, r: { h: 3, ar: true, t: [] } };
   let section = "";
   for (const raw of lines.slice(0, sep)) {
     const line = raw.replace(/\s#.*$/, "").trim();
@@ -76,6 +82,10 @@ function parseLevelFile(text) {
       const kind = val === "purple" ? "p" : val === "red" ? "r" : null;
       if (!kind) continue;
       (m[1] === "v" ? L.pv : L.ph)[`${m[2]},${m[3]}`] = kind;
+    } else if (section === "kit") {
+      // checked against the campaign's items when the level is normalized (sbKitClean)
+      const [id, r] = val.split(/\s+/);
+      if (/^[a-z]{1,10}$/.test(key) && /^[a-z0-9_]{1,24}$/.test(id || "")) L.kit[key] = { id, r: r || "common" };
     } else if (section === "spawners") {
       if (!LEVEL_FILE_SPAWNERS.includes(key)) continue;
       L.sc[key] = val.split(";").map(p => p.trim().split(",").map(Number)).filter(([x, y]) => Number.isInteger(x) && Number.isInteger(y) && x >= 0 && y >= 0 && x < LEVEL_FILE_SIZE && y < LEVEL_FILE_SIZE);

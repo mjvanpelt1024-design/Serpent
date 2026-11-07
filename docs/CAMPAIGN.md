@@ -591,7 +591,19 @@ numbers are placeholders for playtesting.**
 - From the earlier plan, kept as a checklist: one commit per task; satchel roles (carried, cast, passive,
   loot to sell); the bank's cash-out to gems.
 - Not done yet, on purpose: a seeded RNG in bug reports, save versioning beyond `v: 1`, real-money gems.
-- The sandbox's loadout can't wear campaign kit yet (weapons, armor, spells, runes, familiars): a sandbox run
-  is "bare" (`campBare`). The campaign reads a sandbox board's walls and start, not its food, hazards or chips.
+- The campaign reads a sandbox board's walls and start, not its food, hazards or chips (when it replaces a
+  campaign board in `content/levels/campaign/`).
+
+## Build 53: the sandbox's kit
+
+The sandbox's Loadout panel has a **Kit**: an item for each slot (gear or weapon, helmet, body armor, spell,
+familiar, rune) from anywhere in the game, nightmare things too, at any rarity. A level with a kit plays as a
+campaign level wearing it (`sbKitPlay` in `camp-sandbox.js`, through `campStart` like a nightmare level): the
+board's walls, portal walls and start, its spawner chips and placed rocks and hazards (by count), its edges,
+speed, hearts, twists and boss or champion. Its food squares, wall panels, disappearing walls, boost items and
+own skin and theme don't carry over; a level with no kit plays the old way, with all of them. The kit is made
+up for the run (`sbKitNow` stands in for your equipment in `campEquipped`; no snacks), and nothing of the run
+reaches your save: no pay, records, finds or achievements, and the save is put back as it was when it ends.
+A kit is kept in the level's `.level` file (`[kit]`) and its share code.
 - Headless tests: `node --test tools/tests/*.test.js` (data and formats) and `node tools/play-check.mjs` (the game
   itself, in headless Chrome or Edge).

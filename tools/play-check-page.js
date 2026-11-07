@@ -172,6 +172,48 @@
     closeNmTunnels(true);
     await log("nightmare: first tunnel played end to end");
 
+    // ----- 4. a sandbox level with a kit: plays as a campaign level wearing it, and leaves the save alone
+    {
+      const L = normalizeLevel(newLevel("Kit test"));
+      L.g = "..S" + ".".repeat(47) + "A" + ".".repeat(49) + "#".repeat(8) + "...." + "#".repeat(8) + ".".repeat(280);
+      L.kit = { gear: { id: "nm_mawfang", r: "legendary" }, helmet: { id: "wyrmhelm", r: "legendary" }, body: { id: "wyrmmail", r: "legendary" },
+        spell: { id: "fireball", r: "rare" }, pet: { id: "turtle", r: "common" }, rune: { id: "fury", r: "fine" }, food: { id: "stew", r: "rare" } };
+      L.sc = { knightling: [[0, 3], [0, 5]] };
+      L.r.h = 2; L.r.t = ["dark"]; L.e = "a";
+      const clean = normalizeLevel(L);
+      check(Object.keys(clean.kit).length === 6 && !clean.kit.food, "sandbox kit: six slots kept, a snack isn't a kit slot");
+      check(JSON.stringify(parseLevelText(levelFileText(clean)).kit) === JSON.stringify(clean.kit), "sandbox kit: survives the .level file");
+      check(JSON.stringify(parseLevelCode(levelCode(clean)).kit) === JSON.stringify(clean.kit), "sandbox kit: survives a share code");
+      sbLevel = JSON.parse(JSON.stringify(clean)); renderRules();
+      check(document.querySelectorAll("#rules-list select[data-kit][data-part=id]").length === 6 && document.querySelectorAll("#rules-list select[data-part=r]").length === 6, "sandbox kit: the Loadout panel has a pick and a rarity for each slot");
+      const strip = c => { const o = JSON.parse(JSON.stringify(c)); delete o.played; return JSON.stringify(o); };
+      const before = strip(camp), satchel0 = camp.satchel.length;
+      check(levelProblems(clean).length === 0, "sandbox kit: the test level is playable" + (levelProblems(clean).length ? ": needs " + levelProblems(clean).join(", ") : ""));
+      playCustom(clean, true);
+      check(!!campRun && campRun.sandbox && !campRun.nmRun, "sandbox kit: plays as a campaign level" + (errors.length ? " (" + errors.slice(-2).join(" | ") + ")" : ""));
+      if (!campRun) throw new Error("no kit run");
+      check(campEquipped("gear") && campEquipped("gear").id === "nm_mawfang" && campEquipped("gear").uses > 0 && campEquipped("helmet").id === "wyrmhelm", "sandbox kit: wears the level's kit, not yours");
+      check(!!campRun.rune && campRun.rune.id === "fury" && campEquippedId("pet") === "turtle", "sandbox kit: its rune and familiar work");
+      check(currentHearts === Math.max(0, 2 + runeVal("hearts")) && !!nm.dark && campRun.rivalAt === Infinity, "sandbox kit: the level's hearts and twist, no rival snake");
+      check(MODE_ITEMS.campaign.knightling && MODE_ITEMS.campaign.knightling.max === 2 && !MODE_ITEMS.campaign.sinkhole, "sandbox kit: its spawner chips, and none of an island's own");
+      check(walls.size === 16 - [0, 1, 2, 3].filter(k => walls.has(cellKey((2 + k) * cell, 0))).length && snake.x === 2 * cell && snake.y === 0, "sandbox kit: its walls and start");
+      campFail("wall");
+      // (with no profile picked, as here, the sandbox screens send you to pick one first: openScreen)
+      const back = want => currentScreen === want || (!activeSlot && currentScreen === "profiles");
+      check(!campRun && sbKitNow === null && back("sandbox"), "sandbox kit: a loss goes back to the editor" + ` [screen ${currentScreen}, run ${!!campRun}, kit ${!!sbKitNow}]`);
+      { const a = JSON.parse(strip(camp)), b = JSON.parse(before); const diff = Object.keys(b).filter(k => JSON.stringify(a[k]) !== JSON.stringify(b[k])); check(!diff.length && camp.satchel.length === satchel0, "sandbox kit: the save is exactly as it was" + (diff.length ? " [differs: " + diff.join(", ") + "]" : "")); }
+      // a kit with a boss
+      clean.b = "reef"; clean.bf = 2;
+      playCustom(clean, false);
+      check(!!boss && boss.fight === 2 && campRun.def.goal.type === "boss", "sandbox kit: an island boss fight");
+      campWinLevel();
+      check(!campRun && back("shelf") && strip(camp) === before, "sandbox kit: a win goes back to the level list, nothing paid");
+      // a level with no kit plays the old way
+      clean.kit = {}; clean.b = "";
+      playCustom(clean, true);
+      check(!campRun && currentModeKey === "custom", "sandbox: a level with no kit plays as before");
+    }
+
     check(errors.length === 0, "no errors in the console" + (errors.length ? ": " + errors.slice(0, 5).join(" | ") : ""));
   } catch (e) {
     problems.push("the check stopped: " + (e.stack || e.message));

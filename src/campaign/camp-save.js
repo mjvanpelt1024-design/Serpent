@@ -217,7 +217,10 @@ const campItemDef = id => CAMP.itemById[id] || null;
 /* Which slot a thing goes in: its family's, except armor pieces (build 52), which go on your head or body */
 const campItemSlot = id => { const d = campItemDef(id); if (d) return d.piece === "helmet" || d.piece === "body" ? d.piece : CAMP.families[d.family].slot; return CAMP.craftById && CAMP.craftById[id] ? "craft" : "loot"; };
 const satchelItem = uid => camp.satchel.find(it => it.uid === uid) || null;
-const campEquipped = slot => satchelItem(camp.equip[slot]);
+/* What's worn in a slot. While a sandbox level runs with a kit of its own (camp-sandbox.js), that kit
+   stands in for yours: sbKitNow = { slot: item }, made up for the run and never in your satchel. */
+let sbKitNow = null;
+const campEquipped = slot => (sbKitNow ? sbKitNow[slot] || null : satchelItem(camp.equip[slot]));
 
 /* How many uses or charges an item has, after upgrades. Gear and spells last for good now
    (build 51): this is what they have at the start of every level. Pass the item itself to count

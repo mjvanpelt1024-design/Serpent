@@ -121,7 +121,8 @@ function campBeginLevel(isl, n, challengeIdx = -1) {
   campStart(isl, n, challengeIdx);
 }
 
-/* nmDef: a nightmare level (camp-nightmare.js nmLevelDef), played under island isl as its tunnel's level n */
+/* nmDef: a level given directly instead of island isl's level n: a nightmare level (camp-nightmare.js
+   nmLevelDef, nightmare: true) or a sandbox level with a kit (camp-sandbox.js, sandbox: true) */
 function campStart(isl, n, challengeIdx = -1, nmDef = null) {
   const def = nmDef || campLevelDef(isl, n);
   if (!def || (!nmDef && !campLevelOpen(isl, n))) return;
@@ -134,14 +135,14 @@ function campStart(isl, n, challengeIdx = -1, nmDef = null) {
   // the worn gear's trinket adds to the same table (build 51)
   const extra = mods.includes("bare") ? {} : gearExtras();
   // nightmare: the roots' upgrades work in every level down there (camp-nightmare.js)
-  if (nmDef && typeof nmRootStats === "function") Object.entries(nmRootStats()).forEach(([k, v]) => { extra[k] = (extra[k] || 0) + v; });
+  if (nmDef && nmDef.nightmare && typeof nmRootStats === "function") Object.entries(nmRootStats()).forEach(([k, v]) => { extra[k] = (extra[k] || 0) + v; });
   const rv = stat => ((rune && rune.vals[stat]) || 0) + (extra[stat] || 0);
   // gear and spells last for good: whole again for every level
   campRefillKit();
 
   const spawns = JSON.parse(JSON.stringify(def.spawns || {}));
   // build 51: the island's own enemies and hazards, the zones every island shares, and the answers to them
-  if (typeof campZoneSpawns === "function") campZoneSpawns(isl, n, def, spawns);
+  if (typeof campZoneSpawns === "function" && !def.sandbox) campZoneSpawns(isl, n, def, spawns);
   if (mods.includes("swarm")) Object.values(spawns).forEach(s => {
     if (s.max) s.max *= 2;
     if (s.count) s.count *= 2;
@@ -185,7 +186,7 @@ function campStart(isl, n, challengeIdx = -1, nmDef = null) {
     lucky: boostFx.lucky, secondWind: upVal("secondwind") > 0, echoReady: rv("echo") > 0, echoUsed: false, freeCasts: rv("freeCasts"), dmgCarry: 0,
     over: false, speed, prevBest: nmDef ? 0 : (camp.levels[campLevelId(isl, n)] || { best: 0 }).best,
     // which .level board it plays on (content/levels/index.dat), and whether it's a nightmare level
-    board: nmDef ? nmDef.board : `${isl}-${n}`, nmRun: !!nmDef
+    board: nmDef ? nmDef.board : `${isl}-${n}`, nmRun: !!(nmDef && nmDef.nightmare), sandbox: !!(nmDef && nmDef.sandbox)
   };
   campShots = [];
   boss = null;

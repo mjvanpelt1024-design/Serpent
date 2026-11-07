@@ -48,6 +48,8 @@ function newLevel(name = "My level") {
 function normalizeLevel(l) {
   const out = Object.assign({ v: 2, e: "w", s: 7, pv: {}, ph: {}, k: "", th: "", vn: 0, it: [], off: [], sc: {}, b: "", bf: 3 }, l, { r: Object.assign(defaultRules(), l.r || {}) });
   out.bf = [1, 2, 3].includes(out.bf) ? out.bf : 3;
+  // build 53: the kit it's played in ({ slot: { id, r } }, camp-sandbox.js); empty = the old sandbox, no kit
+  out.kit = typeof sbKitClean === "function" ? sbKitClean(out.kit) : (out.kit && typeof out.kit === "object" ? out.kit : {});
   delete out.r.sp;   // spawners are chips now (sc)
   return out;
 }

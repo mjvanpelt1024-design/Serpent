@@ -323,6 +323,15 @@ flea     = 19,5
 ....#.....................       # 20 rows of 20: . open  # red wall  P portal wall  S snake start
 ```
 
+A level can carry a **kit** (build 53): what you wear in it, any item in the game, as `slot = item rarity`.
+A level with a kit plays as a campaign level wearing it (docs/CAMPAIGN.md, "The sandbox's kit").
+
+```text
+[kit]
+gear   = flamebrand legendary      # gear (or a weapon), helmet, body, spell, pet, rune
+rune   = fury fine
+```
+
 Spawners can also be the campaign's enemies (build 52): `knightling`, `scorpion`, `sparkbeetle`, `inkwraith`,
 `mantis`, `viper`, `frostsprite`, `urchin`, `firebat` (the editor's **Foes** tab).
 

@@ -51,7 +51,7 @@ function campRefillKit() {
 /* ----- The pocket: four snacks, eaten with keys 1 to 4 -----
    Each bite spends a charge; at none left the snack is gone and its slot empties.
    A bite that would do nothing (full hearts, whole armor, no gear) isn't taken. */
-const pocketItem = i => (camp.pocket[i] ? satchelItem(camp.pocket[i]) : null);
+const pocketItem = i => (sbKitNow ? null : camp.pocket[i] ? satchelItem(camp.pocket[i]) : null);   // a sandbox kit has no snacks
 function campEatSnack(i) {
   if (!campRun || gameState !== "PLAYING" || paused || campRun.over) return;
   const it = pocketItem(i);

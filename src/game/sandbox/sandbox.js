@@ -55,7 +55,7 @@ function panelParse(s) {
 }
 function levelCode(level) {
   const L = normalizeLevel(level);
-  const json = JSON.stringify({ v: 3, n: L.n, e: L.e, s: L.s, g: rle(L.g), pv: panelStr(L.pv), ph: panelStr(L.ph), r: L.r, k: L.k, th: L.th, vn: L.vn, it: L.it, off: L.off, sc: L.sc, b: L.b || undefined, bf: L.b ? L.bf : undefined });
+  const json = JSON.stringify({ v: 3, n: L.n, e: L.e, s: L.s, g: rle(L.g), pv: panelStr(L.pv), ph: panelStr(L.ph), r: L.r, k: L.k, th: L.th, vn: L.vn, it: L.it, off: L.off, sc: L.sc, b: L.b || undefined, bf: L.b ? L.bf : undefined, kit: Object.keys(L.kit || {}).length ? L.kit : undefined });
   return "SNK3-" + btoa(unescape(encodeURIComponent(json)));
 }
 /* Pasted text: a .level file, or a share code (SNK1- / SNK2- / SNK3-) */
@@ -85,6 +85,7 @@ function parseLevelCode(code) {
       off: (Array.isArray(o.off) ? o.off : []).filter(x => SB_HAZARDS.includes(x)).map(String),
       sc: Object.keys(sc).length ? sc : chipsFor(Array.isArray(r.sp) ? r.sp : []),
       b: /^[a-z]{1,24}$/.test(String(o.b || "")) ? String(o.b) : "", bf: [1, 2, 3].includes(o.bf) ? o.bf : 3,
+      kit: o.kit && typeof o.kit === "object" ? o.kit : {},     // cleaned by normalizeLevel
       n: String(o.n || "Shared level").slice(0, 24),
       e: ["w", "a", "m"].includes(o.e) ? o.e : "w",
       s: [5, 7, 10].includes(o.s) ? o.s : 7,
@@ -519,10 +520,21 @@ function renderRules() {
     `<h4 class="rules-head">Boss</h4>` +
     `<div class="set-row"><div><div class="set-label">Boss</div><div class="set-help">An island's boss, or a champion from the challengers' quests</div></div><button class="btn btn-small" data-rule="boss">${sbLevel.b ? named(SB_BOSSES(), sbLevel.b) : "None"}</button></div>` +
     (sbLevel.b && !(typeof championById === "function" && championById(sbLevel.b)) ? `<div class="set-row"><div><div class="set-label">Fight</div><div class="set-help">1: wear it out. 2: break its armor. 3: finish it.</div></div><button class="btn btn-small" data-rule="fight">${sbLevel.bf}</button></div>` : "") +
+    sbKitRulesHtml() +
     `<h4 class="rules-head">Start with</h4>` +
     CONSUMABLE_KEYS.filter(k => CONSUMABLES[k].boost).map(k => sw(sbLevel.it.includes(k), "it:" + k, CONSUMABLES[k].name, CONSUMABLES[k].desc)).join("") +
     `<h4 class="rules-head">Nightmare twists</h4>` +
     SB_TWISTS.map(([id, label, help]) => sw(R.t.includes(id), "t:" + id, label, help)).join("");
+  // the kit (build 53): an item for each slot, and its rarity
+  box.querySelectorAll("select[data-kit]").forEach(s => s.addEventListener("change", () => {
+    const slot = s.dataset.kit, kit = sbLevel.kit = sbLevel.kit || {};
+    if (s.dataset.part === "id") { if (s.value) kit[slot] = { id: s.value, r: (kit[slot] && kit[slot].r) || "common" }; else delete kit[slot]; }
+    else if (kit[slot]) kit[slot].r = s.value;
+    sfx("toggle");
+    renderRules();
+    const again = box.querySelector(`select[data-kit="${slot}"][data-part="${s.dataset.part}"]`);
+    if (again) again.focus({ preventScroll: true });
+  }));
   box.querySelectorAll("[data-rule]").forEach(b => b.addEventListener("click", () => {
     const k = b.dataset.rule;
     const cycle = (list, cur) => { const ids = ["", ...list.map(x => x.id)]; return ids[(ids.indexOf(cur) + 1) % ids.length]; };
@@ -548,11 +560,27 @@ function renderRules() {
   }));
 }
 
+/* The Loadout panel's kit (build 53): any weapon, armor piece, spell, familiar or rune in the game, at any
+   rarity. A level with a kit plays as a campaign level wearing it (src/campaign/camp-sandbox.js). */
+function sbKitRulesHtml() {
+  if (typeof SBK_SLOTS === "undefined" || typeof CAMP === "undefined") return "";
+  const kit = sbLevel.kit || {};
+  const rows = SBK_SLOTS.map(([slot, label]) => {
+    const k = kit[slot];
+    const items = sbKitChoices(slot).map(d => `<option value="${d.id}"${k && k.id === d.id ? " selected" : ""}>${escapeAttr(d.name)}${d.nightmare ? " (nightmare)" : ""}</option>`).join("");
+    const rar = k ? `<select class="sb-kit-r" data-kit="${slot}" data-part="r" aria-label="${label} rarity">${CAMP.rarities.map(r => `<option value="${r.id}"${k.r === r.id ? " selected" : ""}>${escapeAttr(r.name)}</option>`).join("")}</select>` : "";
+    return `<div class="set-row sb-kit-row"><div class="set-label">${label}</div><div class="sb-kit-pick"><select class="sb-kit" data-kit="${slot}" data-part="id" aria-label="${label}"><option value="">None</option>${items}</select>${rar}</div></div>`;
+  }).join("");
+  return `<h4 class="rules-head">Kit</h4><p class="set-help sb-kit-help">Wear anything in the game. A level with a kit plays like a campaign level: its walls, start, spawners, boss, hearts and twists, but not its food squares, panels or disappearing walls.</p>${rows}`;
+}
+
 /* ----- Playing a custom level: no XP, stats or badges, so the sandbox can't be farmed ----- */
 function playCustom(level, fromEditor) {
   const L = normalizeLevel(level);
   const issues = levelProblems(L);
   if (issues.length) { showToast("This level needs " + issues.join(" and ") + "."); sfx("bad"); return; }
+  // build 53: a level with a kit plays as a campaign level wearing it (src/campaign/camp-sandbox.js)
+  if (typeof sbHasKit === "function" && sbHasKit(L)) { sbKitPlay(L, fromEditor); return; }
   customLevel = JSON.parse(JSON.stringify(L));
   customLook = { skin: L.k, backdrop: L.th };
   sbReturn = fromEditor;
