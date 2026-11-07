@@ -28,7 +28,7 @@ shopkeepers, upgrade trees, and a narrator with opinions.
 
 ```
 SnakeGame/
-├── SnakeGame.exe        the launcher: double-click to play
+├── SnakeGame.exe        the launcher: double-click to open your saves and play
 ├── launcher.ini         launcher settings: window size, F5/F12, where mods live
 ├── version.txt          the build number shown in Settings
 ├── index.html           the page the launcher opens: screens and buttons
@@ -112,9 +112,12 @@ If something is wrong anyway, the game shows a panel naming the file and line in
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): how the code is organized and how it starts
 - [`docs/MODDING.md`](docs/MODDING.md): mods that add or change content without touching the game
 - [`docs/LAUNCHER.md`](docs/LAUNCHER.md): building the launcher, where saves live, shipping
+- [`docs/WORLDS.md`](docs/WORLDS.md): the save files (`.world`), how the game writes them, the saves window
 
 ## Saves
 
-Saves live in the launcher's own browser storage, under `%APPDATA%\SnakeGame`. Replacing the game folder
-with a new build never touches them. There is one save; Settings > "Back up your progress" copies a save
-code you can keep. The save is signed and checked on every load, so edits made outside the game don't stick.
+Each save is a `.world` file in `%APPDATA%\SnakeGame\worlds`, listed by **Snake Saves** (the window that opens
+when you run `SnakeGame.exe`). **New** makes an empty save; **Play** opens the game on it. The game saves every
+minute when something changed, and again when its window closes. Replacing the game folder with a new build
+never touches them. Settings > "Back up your progress" copies a save code you can keep. The save is signed and
+checked on every load, so edits made outside the game don't stick. Details: [`docs/WORLDS.md`](docs/WORLDS.md).

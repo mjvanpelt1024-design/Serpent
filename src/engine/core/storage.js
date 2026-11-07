@@ -6,8 +6,26 @@
 
 /* =========================================================
    Storage: localStorage, or an in-memory stand-in if blocked
+   A world (SnakeGame.exe --world <id>, see docs/WORLDS.md) keeps
+   its keys in memory instead, loaded from its .world file, and
+   src/game/save/world-save.js writes them back to that file.
    ========================================================= */
+const WORLD = (typeof window !== "undefined" && window.SNAKE_WORLD) || null;
+let worldDirty = false;                     // something changed since the last write to the file
+function worldStore(world) {
+  const data = new Map(Object.entries((world && world.data) || {}));
+  const changed = () => { worldDirty = true; };
+  return {
+    getItem: k => (data.has(k) ? data.get(k) : null),
+    setItem: (k, v) => { data.set(k, String(v)); changed(); },
+    removeItem: k => { if (data.delete(k)) changed(); },
+    key: i => Array.from(data.keys())[i] ?? null,
+    get length() { return data.size; },
+    snapshot: () => Object.fromEntries(data)
+  };
+}
 const store = (() => {
+  if (WORLD) return worldStore(WORLD);
   try {
     const probe = "__probe__";
     window.localStorage.setItem(probe, "1");

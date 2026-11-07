@@ -1,12 +1,14 @@
 // =====================================================================
 //  SnakeGame launcher
 //
-//  A small Windows program that opens the game in its own window using
-//  WebView2 (the Edge engine built into Windows 10 and 11). It:
+//  A small Windows program that opens its windows with WebView2 (the Edge
+//  engine built into Windows 10 and 11). Run with no arguments it shows the
+//  saves window (list, New, Play); with "--world <id>" it opens the game on
+//  that save. It:
 //    - serves the game folder at https://game.snakegame.example/ so the
 //      game can read its content files straight from disk
 //    - serves the mods folder at https://mods.snakegame.example/
-//    - keeps saves and browser data in %APPDATA%\SnakeGame
+//    - keeps saves (.world files, docs\WORLDS.md) and browser data in %APPDATA%\SnakeGame
 //    - handles full screen (F11, Alt+Enter, or the game's own toggle),
 //      reload (F5) and developer tools (F12), per launcher.ini
 //    - remembers the window's size and position
@@ -33,6 +35,7 @@
 #include <cwctype>
 #include <cwchar>
 #include <filesystem>
+#include <fstream>
 #include <iterator>
 #include <string>
 
@@ -96,9 +99,15 @@ static ComPtr<Interface> Callback(Function function) {
 static const wchar_t* kGameHost = L"game.snakegame.example";
 static const wchar_t* kModsHost = L"mods.snakegame.example";
 static const wchar_t* kGameUrl = L"https://game.snakegame.example/index.html";
+static const wchar_t* kLauncherUrl = L"https://game.snakegame.example/world-launcher/index.html";
 static const wchar_t* kAppFolder = L"SnakeGame";
+static const wchar_t* kWorldsFolder = L"worlds";      // %APPDATA%\SnakeGame\worlds\<id>.world
 static const wchar_t* kWindowClass = L"SnakeGameLauncherWindow";
+static const wchar_t* kLauncherTitle = L"Snake Saves";
+static const int kLauncherWidth = 640;                // the saves window, at 96 DPI
+static const int kLauncherHeight = 440;
 static const COLORREF kBackground = RGB(10, 28, 22);  // matches the game's loading screen
+static const UINT_PTR kQuitTimer = 1;                 // gives the game a moment to write its save on close
 
 // ---------------------------------------------------------------------
 //  Settings from launcher.ini (next to SnakeGame.exe)
@@ -113,13 +122,23 @@ struct Settings {
     std::wstring modsFolder = L"documents";  // "documents" or "game"
 };
 
+// The launcher has two windows, chosen by the command line:
+//   SnakeGame.exe              the saves window (Launcher): list, New, Play
+//   SnakeGame.exe --world <id> the game, on one save (Game). Play starts it.
+enum class Mode { Launcher, Game };
+
 static HWND g_window = nullptr;
 static Settings g_settings;
+static Mode g_mode = Mode::Launcher;
+static std::wstring g_worldId;          // the save this game is on (Game mode)
+static std::wstring g_documentScript;   // what every page sees first: the launcher's settings and, in Game mode, the save
 static fs::path g_gameDir, g_dataDir, g_modsDir;
 static ComPtr<ICoreWebView2Environment> g_environment;
 static ComPtr<ICoreWebView2Controller> g_controller;
 static ComPtr<ICoreWebView2> g_webview;
 static bool g_fullscreen = false;
+static bool g_flushing = false;         // Game mode: asked the game to write its save before closing
+static bool g_quitting = false;
 static WINDOWPLACEMENT g_placementBeforeFullscreen = { sizeof(WINDOWPLACEMENT) };
 
 // ---------------------------------------------------------------------
@@ -282,15 +301,156 @@ static void ResizeWebView() {
 }
 
 // ---------------------------------------------------------------------
-//  Messages from the game (window.chrome.webview.postMessage)
-//    "quit"            close the launcher
-//    "fullscreen:on"   "fullscreen:off"   "fullscreen:toggle"
+//  Worlds: one save per .world file in %APPDATA%\SnakeGame\worlds.
+//  The file is JSON (docs\WORLDS.md). The launcher only moves its text:
+//  the game and the saves window build and read it.
+// ---------------------------------------------------------------------
+static fs::path WorldsFolder() { return g_dataDir / kWorldsFolder; }
+static fs::path WorldFile(const std::wstring& id) { return WorldsFolder() / (id + L".world"); }
+
+// Save keys are the letters, digits, '-' and '_' only: they become file names
+static bool ValidWorldId(const std::wstring& id) {
+    if (id.empty() || id.size() > 40) return false;
+    for (wchar_t ch : id) {
+        bool ok = (ch >= L'a' && ch <= L'z') || (ch >= L'A' && ch <= L'Z') || (ch >= L'0' && ch <= L'9') || ch == L'-' || ch == L'_';
+        if (!ok) return false;
+    }
+    return true;
+}
+
+static std::string ToUtf8(const std::wstring& text) {
+    if (text.empty()) return {};
+    int length = WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
+    std::string result(length, '\0');
+    WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), &result[0], length, nullptr, nullptr);
+    return result;
+}
+
+static std::wstring FromUtf8(const std::string& bytes) {
+    if (bytes.empty()) return {};
+    int length = MultiByteToWideChar(CP_UTF8, 0, bytes.data(), static_cast<int>(bytes.size()), nullptr, 0);
+    std::wstring result(length, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, bytes.data(), static_cast<int>(bytes.size()), &result[0], length);
+    return result;
+}
+
+// A JavaScript string literal holding the text, so it can be passed to JSON.parse
+static std::wstring JsStringLiteral(const std::wstring& text) {
+    std::wstring out = L"\"";
+    for (wchar_t ch : text) {
+        switch (ch) {
+        case L'\\': out += L"\\\\"; break;
+        case L'"': out += L"\\\""; break;
+        case L'\n': out += L"\\n"; break;
+        case L'\r': out += L"\\r"; break;
+        case L'\t': out += L"\\t"; break;
+        default:
+            if (ch < 0x20 || ch == 0x2028 || ch == 0x2029) {
+                wchar_t escaped[8];
+                swprintf_s(escaped, L"\\u%04x", static_cast<unsigned int>(ch));
+                out += escaped;
+            } else {
+                out += ch;
+            }
+        }
+    }
+    return out + L"\"";
+}
+
+// Writes a save's file. The new text goes to a temporary file first, so a crash
+// never leaves a half-written save.
+static void WriteWorld(const std::wstring& id, const std::wstring& text) {
+    std::string bytes = ToUtf8(text);
+    fs::path file = WorldFile(id);
+    fs::path temp = file;
+    temp += L".tmp";
+    std::error_code error;
+    fs::create_directories(WorldsFolder(), error);
+    HANDLE handle = CreateFileW(temp.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (handle == INVALID_HANDLE_VALUE) return;
+    DWORD written = 0;
+    BOOL ok = WriteFile(handle, bytes.data(), static_cast<DWORD>(bytes.size()), &written, nullptr);
+    FlushFileBuffers(handle);
+    CloseHandle(handle);
+    if (ok && written == bytes.size()) MoveFileExW(temp.c_str(), file.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+    else DeleteFileW(temp.c_str());
+}
+
+// Page -> launcher: "world:write:<id>:<json>". A game only writes its own save.
+static void HandleWorldWrite(const std::wstring& rest) {
+    size_t colon = rest.find(L':');
+    if (colon == std::wstring::npos) return;
+    std::wstring id = rest.substr(0, colon);
+    if (!ValidWorldId(id)) return;
+    if (g_mode == Mode::Game && id != g_worldId) return;
+    std::wstring body = rest.substr(colon + 1);
+    if (body.empty() || body[0] != L'{') return;
+    WriteWorld(id, body);
+}
+
+// Page -> launcher: "worlds:list". Sends each readable file back as "world|<id>|<json>", then "end|".
+static void HandleWorldList() {
+    if (!g_webview) return;
+    std::error_code error;
+    fs::path folder = WorldsFolder();
+    for (fs::directory_iterator it(folder, error), end; !error && it != end; it.increment(error)) {
+        const fs::path& path = it->path();
+        if (path.extension().wstring() != L".world") continue;
+        std::wstring id = path.stem().wstring();
+        if (!ValidWorldId(id)) continue;
+        std::ifstream in(path, std::ios::binary);
+        std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+        std::wstring message = L"world|" + id + L"|" + FromUtf8(bytes);
+        g_webview->PostWebMessageAsString(message.c_str());
+    }
+    g_webview->PostWebMessageAsString(L"end|");
+}
+
+// Page -> launcher: "world:play:<id>". Starts the game on that save, in a window of its own.
+static void HandleWorldPlay(const std::wstring& id) {
+    if (!ValidWorldId(id) || !fs::exists(WorldFile(id))) return;
+    wchar_t buffer[MAX_PATH * 4];
+    DWORD length = GetModuleFileNameW(nullptr, buffer, static_cast<DWORD>(std::size(buffer)));
+    std::wstring exe(buffer, length);
+    std::wstring command = L"\"" + exe + L"\" --world " + id;
+    STARTUPINFOW info = { sizeof(STARTUPINFOW) };
+    PROCESS_INFORMATION process = {};
+    if (CreateProcessW(exe.c_str(), command.data(), nullptr, nullptr, FALSE, 0, nullptr, g_gameDir.c_str(), &info, &process)) {
+        CloseHandle(process.hThread);
+        CloseHandle(process.hProcess);
+    } else {
+        Fail(L"The game couldn't be started (error " + Hex(HRESULT_FROM_WIN32(GetLastError())) + L").");
+    }
+}
+
+// Closing the game window: the game writes its save first (see world-save.js), then the
+// window goes. The two-second timer goes anyway, so a game that can't answer never blocks it.
+static void FinishQuit() {
+    if (g_quitting || !g_window) return;
+    g_quitting = true;
+    KillTimer(g_window, kQuitTimer);
+    if (g_mode == Mode::Game) SaveWindowState();
+    DestroyWindow(g_window);
+}
+
+// ---------------------------------------------------------------------
+//  Messages from the pages (window.chrome.webview.postMessage)
+//    "quit"                       close the window
+//    "fullscreen:on"  "fullscreen:off"  "fullscreen:toggle"
+//    "worlds:list"                 the saves window asks for the saves
+//    "world:write:<id>:<json>"     a save is written to its file
+//    "world:play:<id>"             the saves window starts the game on a save
+//    "world:flushed"               the game has written its save (see FinishQuit)
 // ---------------------------------------------------------------------
 static void OnGameMessage(const std::wstring& message) {
     if (message == L"quit") PostMessageW(g_window, WM_CLOSE, 0, 0);
     else if (message == L"fullscreen:on") SetFullscreen(true);
     else if (message == L"fullscreen:off") SetFullscreen(false);
     else if (message == L"fullscreen:toggle") SetFullscreen(!g_fullscreen);
+    else if (message == L"worlds:list") HandleWorldList();
+    else if (message == L"world:flushed") { if (g_flushing) PostMessageW(g_window, WM_CLOSE, 0, 0); }
+    else if (message.rfind(L"world:write:", 0) == 0) HandleWorldWrite(message.substr(12));
+    else if (message.rfind(L"world:play:", 0) == 0) HandleWorldPlay(message.substr(11));
 }
 
 static bool IsGameUrl(const std::wstring& url) {
@@ -298,11 +458,19 @@ static bool IsGameUrl(const std::wstring& url) {
     return url.rfind(prefix, 0) == 0 || url == L"about:blank";
 }
 
-// The script every page of the game sees before anything else runs
-static std::wstring LauncherScript() {
+// The script every page sees before anything else runs. In Game mode it also hands the game its
+// save (window.SNAKE_WORLD): the .world file's text, parsed by the page itself.
+static std::wstring DocumentScript(const std::wstring& worldText) {
     std::wstring version = L"1.0.0";
-    return L"window.SNAKE_LAUNCHER = Object.freeze({ launcher: '" + version + L"', modsUrl: 'https://" +
-           std::wstring(kModsHost) + L"/', dataFolder: '%APPDATA%\\\\SnakeGame' });";
+    std::wstring mode = g_mode == Mode::Game ? L"game" : L"launcher";
+    std::wstring script = L"window.SNAKE_LAUNCHER = Object.freeze({ launcher: '" + version + L"', mode: '" + mode +
+           L"', worldId: '" + g_worldId + L"', modsUrl: 'https://" + std::wstring(kModsHost) +
+           L"/', dataFolder: '%APPDATA%\\\\SnakeGame' });";
+    if (g_mode == Mode::Game) {
+        script += L"try { window.SNAKE_WORLD = JSON.parse(" + JsStringLiteral(worldText) + L"); }"
+                  L" catch (e) { window.SNAKE_WORLD_ERROR = String(e); }";
+    }
+    return script;
 }
 
 // ---------------------------------------------------------------------
@@ -552,12 +720,12 @@ static HRESULT OnControllerCreated(HRESULT result, ICoreWebView2Controller* cont
     ResizeWebView();
     g_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
 
-    // Tell the game it's running in the launcher, then open it
+    // Tell the page where it's running, then open it: the saves window, or the game on its save
     g_webview->AddScriptToExecuteOnDocumentCreated(
-        LauncherScript().c_str(),
+        g_documentScript.c_str(),
         Callback<ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler>(
             [](HRESULT, LPCWSTR) -> HRESULT {
-                g_webview->Navigate(kGameUrl);
+                g_webview->Navigate(g_mode == Mode::Game ? kGameUrl : kLauncherUrl);
                 return S_OK;
             }).Get());
     return S_OK;
@@ -610,8 +778,20 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
         if (LOWORD(wParam) != WA_INACTIVE && g_controller) g_controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
         return 0;
     case WM_CLOSE:
-        SaveWindowState();
-        DestroyWindow(hwnd);
+        // A game first writes its save; the page answers with "world:flushed" (see OnGameMessage)
+        if (g_mode == Mode::Game && g_webview && !g_flushing && !g_quitting) {
+            g_flushing = true;
+            SetTimer(hwnd, kQuitTimer, 2000, nullptr);
+            g_webview->ExecuteScript(
+                L"if (window.__worldFlush) window.__worldFlush(); else window.chrome.webview.postMessage('world:flushed');",
+                Callback<ICoreWebView2ExecuteScriptCompletedHandler>(
+                    [](HRESULT, LPCWSTR) -> HRESULT { return S_OK; }).Get());
+            return 0;
+        }
+        FinishQuit();
+        return 0;
+    case WM_TIMER:
+        if (wParam == kQuitTimer) FinishQuit();
         return 0;
     case WM_DESTROY:
         if (g_controller) g_controller->Close();
@@ -625,13 +805,32 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int showCommand) {
-    // One copy at a time: a second launch brings the first one forward
-    HANDLE single = CreateMutexW(nullptr, TRUE, L"SnakeGame.Launcher.SingleInstance");
+    // --world <id>: the game, on that save. No argument: the saves window.
+    int argc = 0;
+    LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    for (int i = 1; argv && i + 1 < argc; ++i) {
+        if (wcscmp(argv[i], L"--world") == 0) { g_mode = Mode::Game; g_worldId = argv[i + 1]; }
+    }
+    if (argv) LocalFree(argv);
+    if (g_mode == Mode::Game && !ValidWorldId(g_worldId)) {
+        MessageBoxW(nullptr, L"That save can't be opened: its name isn't valid.", L"Snake", MB_OK | MB_ICONERROR);
+        return 1;
+    }
+
+    // One copy of the saves window at a time (a second launch brings it forward), and one
+    // game window per save (two windows writing one save would overwrite each other)
+    std::wstring mutexName = (g_mode == Mode::Game) ? (L"SnakeGame.World." + g_worldId)
+                                                    : std::wstring(L"SnakeGame.Launcher.SingleInstance");
+    HANDLE single = CreateMutexW(nullptr, TRUE, mutexName.c_str());
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        HWND existing = FindWindowW(kWindowClass, nullptr);
-        if (existing) {
-            ShowWindow(existing, IsIconic(existing) ? SW_RESTORE : SW_SHOW);
-            SetForegroundWindow(existing);
+        if (g_mode == Mode::Launcher) {
+            HWND existing = FindWindowW(kWindowClass, kLauncherTitle);
+            if (existing) {
+                ShowWindow(existing, IsIconic(existing) ? SW_RESTORE : SW_SHOW);
+                SetForegroundWindow(existing);
+            }
+        } else {
+            MessageBoxW(nullptr, L"This save is already open in another game window.", L"Snake", MB_OK | MB_ICONINFORMATION);
         }
         return 0;
     }
@@ -657,6 +856,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR, 
     std::error_code error;
     fs::create_directories(g_dataDir, error);
     PrepareModsFolder();
+    fs::create_directories(WorldsFolder(), error);
+
+    // The game's save, read here and handed to the game as its first script (see DocumentScript)
+    std::wstring worldText;
+    if (g_mode == Mode::Game) {
+        std::ifstream in(WorldFile(g_worldId), std::ios::binary);
+        if (!in) {
+            MessageBoxW(nullptr, L"That save can't be found. It may have been moved or deleted.\n\nOpen Snake Saves to choose another.",
+                        L"Snake", MB_OK | MB_ICONERROR);
+            return 1;
+        }
+        std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+        worldText = FromUtf8(bytes);
+    }
+    g_documentScript = DocumentScript(worldText);
 
     HRESULT com = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     if (FAILED(com)) { Fail(L"Windows couldn't start the game's view (COM)."); return 1; }
@@ -673,9 +887,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR, 
     windowClass.lpszClassName = kWindowClass;
     RegisterClassExW(&windowClass);
 
-    // Centered at the size in launcher.ini, scaled for the screen's DPI
+    // Centered at the size in launcher.ini (the game) or the saves window's size, scaled for the screen's DPI
     UINT dpi = GetDpiForSystem();
-    int width = MulDiv(g_settings.width, dpi, 96), height = MulDiv(g_settings.height, dpi, 96);
+    bool game = g_mode == Mode::Game;
+    int width = MulDiv(game ? g_settings.width : kLauncherWidth, dpi, 96);
+    int height = MulDiv(game ? g_settings.height : kLauncherHeight, dpi, 96);
     RECT work;
     SystemParametersInfoW(SPI_GETWORKAREA, 0, &work, 0);
     width = std::min(width, static_cast<int>(work.right - work.left));
@@ -683,15 +899,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR, 
     int x = work.left + ((work.right - work.left) - width) / 2;
     int y = work.top + ((work.bottom - work.top) - height) / 2;
 
-    g_window = CreateWindowExW(0, kWindowClass, g_settings.title.c_str(), WS_OVERLAPPEDWINDOW,
+    g_window = CreateWindowExW(0, kWindowClass, game ? g_settings.title.c_str() : kLauncherTitle, WS_OVERLAPPEDWINDOW,
                                x, y, width, height, nullptr, nullptr, instance, nullptr);
-    if (!g_window) { Fail(L"The game window couldn't be created."); return 1; }
+    if (!g_window) { Fail(L"The window couldn't be created."); return 1; }
 
+    // The game remembers its window's place and full screen; the saves window opens centered
     int show = showCommand;
-    RestoreWindowState(show);
+    if (game) RestoreWindowState(show);
     ShowWindow(g_window, show);
     UpdateWindow(g_window);
-    if (g_settings.startFullscreen || IniInt(WindowStateFile(), L"window", L"fullscreen", 0)) SetFullscreen(true);
+    if (game && (g_settings.startFullscreen || IniInt(WindowStateFile(), L"window", L"fullscreen", 0))) SetFullscreen(true);
 
     fs::path browserData = g_dataDir / L"WebView2";
     HRESULT created = CreateCoreWebView2EnvironmentWithOptions(

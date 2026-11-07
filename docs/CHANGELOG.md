@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased: save files and the saves window
+
+- **Saves are files.** Each save is a `.world` file in `%APPDATA%\SnakeGame\worlds`, with the same keys the game
+  always used inside it (docs/WORLDS.md). The game writes its save every minute when something changed, and once more
+  when its window closes.
+- **Snake Saves.** Running `SnakeGame.exe` opens a small window that lists the saves, with **New** (an empty save at
+  0 Snakebucks) and **Play**, which opens the game in its own window on that save. Your old save is offered as the
+  first one, once.
+
 ## v:11.07.2026_b:52: quests on the map, bosses you can hurt
 
 - **An arcade on the title screen.** The board is the screen of an arcade machine, its marquee lit with your

@@ -123,6 +123,7 @@ function persistData(data) {
 
 /* True when progress will really survive a restart */
 function storageIsReal() {
+  if (WORLD) return true;                   // a world is written to its .world file
   try { return store === window.localStorage; } catch (e) { return false; }
 }
 

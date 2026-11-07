@@ -1,8 +1,12 @@
 # The launcher
 
-`SnakeGame.exe` is a small C++ program that gives the game its own window, using **WebView2**: the
+`SnakeGame.exe` is a small C++ program that opens its windows using **WebView2**: the
 Microsoft Edge engine that ships with Windows 11 and with Windows 10 through Windows Update. The game
 itself stays HTML, CSS and JavaScript; the launcher is its home on the desktop (and, later, on Steam).
+
+It has two windows. Run with no arguments, it shows **Snake Saves**: the list of saves, with **New** and
+**Play**. **Play** starts the game in a window of its own, on that save (`SnakeGame.exe --world <key>`).
+The saves themselves are described in [`WORLDS.md`](WORLDS.md).
 
 ## Building it
 
@@ -32,17 +36,19 @@ Either way the `.exe` has everything built in: it's the only file the launcher n
 |---|---|
 | Serves the game | the game folder is `https://game.snakegame.example/` inside the window, so the game reads `content/` straight from disk, never cached, so F5 shows every edit |
 | Serves mods | the mods folder is `https://mods.snakegame.example/` |
-| Keeps saves | in `%APPDATA%\SnakeGame\WebView2`, separate from the game folder, so updating the game never touches them |
+| Keeps saves | each save is a `.world` file in `%APPDATA%\SnakeGame\worlds` (see [`WORLDS.md`](WORLDS.md)); the browser's own data is in `%APPDATA%\SnakeGame\WebView2`. Both are separate from the game folder, so updating the game never touches them |
 | Remembers the window | size, position, maximized and full screen, in `%APPDATA%\SnakeGame\window.ini` |
 | Full screen | **F11** or **Alt+Enter**, and the game's own full screen button |
 | Developer keys | **F5** reload, **F12** developer tools (both can be turned off in `launcher.ini`) |
 | Links | anything outside the game opens in the player's browser |
 | One at a time | starting it again brings the open window forward |
 | Missing WebView2 | on an old PC without it, offers the Microsoft download page |
+| Saves window | `SnakeGame.exe` with no arguments: the list of saves, **New** and **Play** |
+| Game window | `SnakeGame.exe --world <key>`: the game on one save; closing it saves first |
 
 The game can also talk to the launcher with `window.chrome.webview.postMessage(...)`:
 `"quit"`, `"fullscreen:on"`, `"fullscreen:off"` and `"fullscreen:toggle"`. The game's Quit button
-already closes the launcher (through `window.close()`).
+already closes the game window (through `window.close()`), after saving.
 
 ## launcher.ini
 

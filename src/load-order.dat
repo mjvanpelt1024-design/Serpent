@@ -116,4 +116,5 @@ campaign/camp-menu.js
 campaign/camp-story.js
 campaign/camp-title.js
 dev/terminal/cmd-camp.js
+game/save/world-save.js
 game/start.js
