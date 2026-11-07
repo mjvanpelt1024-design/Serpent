@@ -66,12 +66,13 @@
          baked into the PNG) can land a shade or two off where the old code blended them straight onto the
          scene: pixels within 2 shades are counted as that (counts.soft) rather than failing. */
       counts.soft = 0; counts.softPictures = 0;
+      let softLimit = 2;
       const diff = (a, b) => {
         if (a.width !== b.width || a.height !== b.height) return `size ${b.width}x${b.height}, was ${a.width}x${a.height}`;
         const pa = pixels(a), pb = pixels(b);
         let n = 0, near = 0, first = "";
         for (let i = 0; i < pa.length; i += 4) if (pa[i] !== pb[i] || pa[i + 1] !== pb[i + 1] || pa[i + 2] !== pb[i + 2] || pa[i + 3] !== pb[i + 3]) {
-          if (Math.max(Math.abs(pa[i] - pb[i]), Math.abs(pa[i + 1] - pb[i + 1]), Math.abs(pa[i + 2] - pb[i + 2]), Math.abs(pa[i + 3] - pb[i + 3])) <= 2) { near++; continue; }
+          if (Math.max(Math.abs(pa[i] - pb[i]), Math.abs(pa[i + 1] - pb[i + 1]), Math.abs(pa[i + 2] - pb[i + 2]), Math.abs(pa[i + 3] - pb[i + 3])) <= softLimit) { near++; continue; }
           if (!n) first = ` (first at ${(i / 4) % a.width}, ${Math.floor(i / 4 / a.width)}: was ${[...pa.slice(i, i + 4)]}, now ${[...pb.slice(i, i + 4)]})`;
           n++;
         }
@@ -405,12 +406,14 @@
         c.getContext("2d").drawImage(ev("canvas"), box[0] * rs, box[1] * rs, c.width, c.height, 0, 0, c.width, c.height);
         return c;
       };
-      const boardCheck = (what, code, box = [60, 60, 80, 80], scales = [1, 2, 3]) => {
+      const boardCheck = (what, code, box = [60, 60, 80, 80], scales = [1, 2, 3], soft = 2) => {
+        softLimit = soft;
         for (const rs of scales) {
           const d = diff(shot(games[0], rs, code, box), shot(games[1], rs, code, box));
           if (d) problems.push(`board: ${what} at ${rs}x: ${d}`);
           counts.board++;
         }
+        softLimit = 2;
       };
       const runWas = games.map(ev => ev("campRun"));
       // the bosses' crests, every island, at moments that show every look
@@ -423,6 +426,15 @@
       for (const w of [12, 16, 20, 32]) for (const id of ["firefly", "crab", "turtle", "puffer", "seahorse"]) for (const ts of [0, 20, 100, 150, 600, 1234]) for (const shells of [0, 1]) {
         boardCheck(`familiar ${id} ${w} at ${ts}${shells ? "" : " spent"}`, `drawPetSprite(ctx, "${id}", 100, 100, ${w}, ${ts}, { shells: ${shells} })`, [80, 80, 60, 60], [1]);
       }
+      // the old engine's hazards and power-ups, in each of their states, at moments that show every frame
+      // (1x: they're drawn in fractions of a square, so bigger they differ by design)
+      const ENT = [["bramble", [0]], ["wasp", [10, 100]], ["lightning", [0, 130]], ["ice", [0]], ["ghost", [0]], ["sinkhole", [0]],
+        ["golden", [0, 300]], ["shears", [0]], ["armor", [0]], ["shield", [0]], ["hourglass", [0]], ["star", [0, 400, 1100]], ["phantom", [0, 200]], ["lodestone", [0]], ["frenzy", [0, 500]]];
+      for (const w of [19, 9]) for (const [type, times] of ENT) for (const ts of times) {
+        const e = type === "sinkhole" ? [`{ openAt: ${ts + 1000} }`, `{ openAt: ${ts - 1} }`] : ["{}"];
+        e.forEach(st => boardCheck(`${type} ${w} at ${ts} ${st}`, `ENTITY_TYPES.${type}.draw(ctx, 100, 100, ${w}, ${ts}, Object.assign({ x: 100, y: 100 }, ${st}))`, [80, 80, 60, 60], [1]));
+      }
+      for (const w of [19, 9]) for (const ts of [0, 250, 4000]) boardCheck(`bomb ${w} at ${ts}`, `ENTITY_TYPES.bomb.draw(ctx, 100, 100, ${w}, ${ts}, { x: 100, y: 100, blowAt: 5000 })`, [80, 80, 60, 60], [1]);
     }
     // ----- nothing fell back to the checkerboard while all that was drawn
     fellBack.forEach(m => { if (!problems.includes(m)) problems.push(m); });

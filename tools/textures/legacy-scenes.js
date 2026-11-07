@@ -1240,6 +1240,51 @@
       };
       Object.entries(PETS).forEach(([id, frames]) => add(`pet:${id}:${w}`, `familiars/${id}-${w}.png`, fromBoard(frames)));
     });
+    // the old engine's hazards and power-ups (entities.js), 19 pixels (a square less its gap) and 9 (a half-size
+    // square): their own drawing, with the glow under a power-up and the numbers left out (drawn live), and the
+    // few whose looks hang on the clock or a buff drawn from their old code with each look picked
+    const live = { powerDisc: window.powerDisc, glyph: window.glyph };
+    window.powerDisc = () => {}; window.glyph = () => {};
+    [19, 9].forEach(w => {
+      const E = (type, ts = 0, e = {}) => (g, x, y) => ENTITY_TYPES[type].draw(g, x, y, w, ts, Object.assign({ x, y }, e));
+      const own = draw => (g, x, y) => draw(g, x, y);
+      const LOOKS = {
+        bramble: [E("bramble")],
+        wasp: [E("wasp", 10), E("wasp", 100)],                                  // wings up, down
+        lightning: [E("lightning", 0), E("lightning", 130)],                    // the warning, dim and lit
+        ice: [E("ice")],
+        bomb: [E("bomb", 0, { blowAt: 5000 }), E("bomb", 250, { blowAt: 5250 })], // the fuse dark, sparking
+        ghost: [E("ghost", 0)],
+        spikes: ["up", "down", "warn"].map(st => own((g, x, y) => {
+          g.fillStyle = "#3a3f4a";
+          g.fillRect(x, y, w, w);
+          g.fillStyle = st === "up" ? "#e8edf5" : st === "warn" ? "#ff5a61" : "#6a707c";
+          const h = st === "up" ? w * 0.8 : w * 0.25;
+          for (let i = 0; i < 3; i++) {
+            const sx = x + w * (0.1 + i * 0.3);
+            g.beginPath();
+            g.moveTo(sx, y + w * 0.92); g.lineTo(sx + w * 0.12, y + w * 0.92 - h); g.lineTo(sx + w * 0.24, y + w * 0.92);
+            g.fill();
+          }
+        })),
+        sinkhole: [E("sinkhole", 0, { openAt: 1000 }), E("sinkhole", 0, { openAt: -1 })],   // cracking, open
+        golden: [E("golden")], shears: [E("shears")], armor: [E("armor")], shield: [E("shield")], hourglass: [E("hourglass")], lodestone: [E("lodestone")],
+        star: [own((g, x, y) => {
+          g.fillStyle = "#ff00ff";
+          g.beginPath();
+          for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? w * 0.2 : w * 0.46; g.lineTo(x + w / 2 + Math.cos(a) * r, y + w / 2 + Math.sin(a) * r); }
+          g.fill();
+        })],
+        phantom: [own((g, x, y) => { g.fillStyle = "#b36bff"; g.fillRect(x + w * 0.15, y + w * 0.3, w * 0.7, w * 0.4); }),
+          own((g, x, y) => { g.fillStyle = "#e9d5ff"; g.fillRect(x + w * 0.62, y + w * 0.38, w * 0.1, w * 0.1); })],   // its body, its eye
+        frenzy: [own((g, x, y) => {
+          g.fillStyle = "#e9fff1"; g.beginPath(); g.arc(x + w / 2, y + w / 2, w * 0.4, 0, Math.PI * 2); g.fill();
+          g.strokeStyle = "#1f8a4a"; g.lineWidth = Math.max(1, w * 0.08); g.stroke();
+        })]
+      };
+      Object.entries(LOOKS).forEach(([type, frames]) => add(`entity:${type}:${w}`, `board/entities/${type}-${w}.png`, fromBoard(frames), type === "star" ? { keys: { "#ff00ff": "star" } } : {}));
+    });
+    window.powerDisc = live.powerDisc; window.glyph = live.glyph;
     return out;
   }
 

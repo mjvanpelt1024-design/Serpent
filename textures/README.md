@@ -37,7 +37,8 @@ textures/
 ├── upgrades/             the campaign's upgrade trees, by icon name
 ├── foes/  hazards/  powerups/
 ├── board/                the goal pieces: key, door, plates, seal, shard, thief; relics/ for the relics;
-│                         crests/ for what each boss wears on its head (20 pixels to a square, below)
+│                         crests/ for what each boss wears on its head, entities/ for the old engine's
+│                         hazards and power-ups (20 pixels to a square, below)
 ├── hearts/               every heart slot the HUD shows (below)
 ├── bosses/               each island's boss face on its wanted poster
 ├── coins/                each island's coin, <island>-<tails|heads>-<12|20|32>.png (color-swap, below)
@@ -244,6 +245,13 @@ head it sits on). The game scales them up to the screen with hard edges, like ev
   the den. Repaint each one you want changed. Their frames: the crab's claw up and down, the firefly's
   wings up and down, the turtle with its shells ready and spent. The firefly's glowing body is drawn by
   the game, under its head and wings.
+- **The old engine's hazards and power-ups** (`board/entities/<type>-19.png`, and `-9` for the half-size
+  squares) are 19 pixels: a square less the line between squares. Their frames are their looks: the
+  wasp's wings up and down, the lightning's warning dim and lit, the bomb's fuse dark and sparking, the
+  spikes up, down and flashing red before they rise, the sinkhole cracking and open, the phantom's body
+  and its eye (each fades on its own). The star's `#ff00ff` is painted in its cycling colors. Still
+  drawn by the game: the glow under every power-up, the numbers and the "!", the blast, the lightning
+  strike, the gust's arrows across the board, the frenzy's turning hand.
 
 Half-covered pixels at a picture's edges (where the old drawing fell between pixels) are baked into
 these PNGs, so where they sit over a scene they can come out a shade or two off what the old code

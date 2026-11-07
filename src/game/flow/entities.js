@@ -36,6 +36,23 @@ function powerDisc(g, x, y, w, color, ts) {
   g.restore();
 }
 
+/* An entity's picture: entity:<type>:<size> in textures/board/entities/, 19 pixels (a square, less the
+   gap between squares) or 9 for half-size squares, scaled for any other size; its frames are its looks */
+function entityPic(g, type, x, y, w, frame = 0) {
+  const size = w === 9 ? 9 : 19;
+  texBoard(g, `entity:${type}:${size}`, x, y, w / size, frame);
+}
+/* ...the same painted pixel by pixel (texPaint), with an alpha over it or its key color in a color the game
+   picks (the phantom fading, the star's cycling hue) */
+function entityPaint(g, type, x, y, w, opts) {
+  const size = w === 9 ? 9 : 19, id = `entity:${type}:${size}`, r = texResolve(id), a = (r && r.e.anchor) || [0, 0], k = w / size;
+  g.save();
+  g.translate(x - a[0] * k, y - a[1] * k);
+  g.scale(k, k);
+  texPaint(g, id, 0, 0, opts);
+  g.restore();
+}
+
 function glyph(g, x, y, w, text, color) {
   g.save();
   g.fillStyle = color;
@@ -81,17 +98,7 @@ const ENTITY_TYPES = {
       if (roll(getTrackValue("thickhide"))) { showToast("Thick Hide! The thorns couldn't get through."); return false; }
       return takeHit(0.5, "bramble");
     },
-    draw(g, x, y, w) {
-      g.fillStyle = "#2d5a1e";
-      g.fillRect(x + w * 0.1, y + w * 0.15, w * 0.8, w * 0.75);
-      g.fillStyle = "#4f8f33";
-      g.fillRect(x + w * 0.2, y + w * 0.05, w * 0.35, w * 0.4);
-      g.fillRect(x + w * 0.5, y + w * 0.35, w * 0.4, w * 0.4);
-      g.fillStyle = "#e8e0c8";                                  // thorns
-      [[0.05, 0.3], [0.85, 0.2], [0.15, 0.85], [0.8, 0.85], [0.45, 0.0]].forEach(([a, b]) => g.fillRect(x + w * a, y + w * b, Math.max(1, w * 0.12), Math.max(1, w * 0.12)));
-      g.fillStyle = "#c0282e";                                  // berries
-      g.fillRect(x + w * 0.62, y + w * 0.18, Math.max(1, w * 0.14), Math.max(1, w * 0.14));
-    }
+    draw(g, x, y, w) { entityPic(g, "bramble", x, y, w); }
   },
 
   wasp: {
@@ -131,22 +138,7 @@ const ENTITY_TYPES = {
       if (roll(getTrackValue("nm_hive"))) { showToast("Netting! The sting missed."); return false; }
       return takeHit(0.5, "wasp");
     },
-    draw(g, x, y, w, ts) {
-      const flap = Math.sin(ts / 30) > 0;
-      g.fillStyle = "rgba(220,240,255,0.85)";
-      g.beginPath();
-      g.ellipse(x + w * 0.3, y + w * (flap ? 0.12 : 0.22), w * 0.22, w * 0.14, -0.4, 0, Math.PI * 2);
-      g.ellipse(x + w * 0.7, y + w * (flap ? 0.12 : 0.22), w * 0.22, w * 0.14, 0.4, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = "#ffcf33";
-      g.beginPath();
-      g.ellipse(x + w * 0.5, y + w * 0.58, w * 0.3, w * 0.36, 0, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = "#1a1410";
-      g.fillRect(x + w * 0.22, y + w * 0.5, w * 0.56, Math.max(1, w * 0.1));
-      g.fillRect(x + w * 0.26, y + w * 0.7, w * 0.48, Math.max(1, w * 0.1));
-      g.fillRect(x + w * 0.46, y + w * 0.9, w * 0.08, w * 0.12);   // the sting
-    }
+    draw(g, x, y, w, ts) { entityPic(g, "wasp", x, y, w, Math.sin(ts / 30) > 0 ? 0 : 1); }
   },
 
   lightning: {
@@ -173,12 +165,9 @@ const ENTITY_TYPES = {
     passable: true,
     draw(g, x, y, w, ts, e) {
       if (!e.struck) {
+        // the warning square, blinking (two frames), and its "!"
         const on = Math.floor(ts / 120) % 2;
-        g.strokeStyle = on ? "rgba(255,255,140,0.95)" : "rgba(160,220,255,0.7)";
-        g.lineWidth = Math.max(1, w * 0.08);
-        g.strokeRect(x + 1, y + 1, w - 2, w - 2);
-        g.fillStyle = "rgba(160,220,255,0.18)";
-        g.fillRect(x, y, w, w);
+        entityPic(g, "lightning", x, y, w, on);
         glyph(g, x, y, w, "!", on ? "#fff7a0" : "#9ad8ff");
       } else {
         g.save();
@@ -200,13 +189,7 @@ const ENTITY_TYPES = {
     kind: "hazard", color: "#bfe8ff", label: "Ice", placed: true, passable: true, floor: true,
     fact: "you can't turn on ice",
     touch() { return false; },
-    draw(g, x, y, w) {
-      g.fillStyle = "rgba(190,232,255,0.55)";
-      g.fillRect(x, y, w + 1, w + 1);
-      g.fillStyle = "rgba(255,255,255,0.7)";
-      g.fillRect(x + w * 0.15, y + w * 0.2, w * 0.4, Math.max(1, w * 0.08));
-      g.fillRect(x + w * 0.5, y + w * 0.62, w * 0.3, Math.max(1, w * 0.08));
-    }
+    draw(g, x, y, w) { entityPic(g, "ice", x, y, w); }
   },
 
   bomb: {
@@ -229,16 +212,9 @@ const ENTITY_TYPES = {
         g.restore();
         return;
       }
+      // the bomb, its fuse sparking (faster near the end), and the seconds it has left
       const left = Math.max(0, e.blowAt - ts);
-      g.fillStyle = "#2a2a30";
-      g.beginPath();
-      g.arc(x + w / 2, y + w * 0.58, w * 0.4, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = "rgba(255,255,255,0.35)";
-      g.fillRect(x + w * 0.3, y + w * 0.38, w * 0.12, w * 0.12);
-      g.fillStyle = "#8a6a3a";
-      g.fillRect(x + w * 0.48, y + w * 0.05, Math.max(1, w * 0.08), w * 0.18);
-      if (Math.floor(ts / (left < 1500 ? 80 : 200)) % 2) { g.fillStyle = "#ffd23f"; g.fillRect(x + w * 0.44, y, w * 0.16, w * 0.12); }
+      entityPic(g, "bomb", x, y, w, Math.floor(ts / (left < 1500 ? 80 : 200)) % 2);
       glyph(g, x, y + w * 0.08, w, String(Math.ceil(left / 1000)), "#ff5a61");
     }
   },
@@ -260,22 +236,7 @@ const ENTITY_TYPES = {
       if (x === snake.x && y === snake.y) haunt(e);
     },
     touch(e) { haunt(e); return gameState !== "PLAYING"; },
-    draw(g, x, y, w, ts) {
-      const bob = Math.sin(ts / 260) * w * 0.06;
-      g.save();
-      g.globalAlpha *= 0.82;
-      g.fillStyle = "#e8ecff";
-      g.beginPath();
-      g.arc(x + w / 2, y + w * 0.42 + bob, w * 0.38, Math.PI, 0);
-      g.lineTo(x + w * 0.88, y + w * 0.92 + bob);
-      for (let i = 0; i < 4; i++) g.lineTo(x + w * (0.88 - (i + 0.5) * 0.19), y + w * (i % 2 ? 0.92 : 0.8) + bob);
-      g.closePath();
-      g.fill();
-      g.fillStyle = "#2a2a40";
-      g.fillRect(x + w * 0.33, y + w * 0.36 + bob, w * 0.1, w * 0.14);
-      g.fillRect(x + w * 0.57, y + w * 0.36 + bob, w * 0.1, w * 0.14);
-      g.restore();
-    }
+    draw(g, x, y, w, ts) { entityPic(g, "ghost", x, y + Math.sin(ts / 260) * w * 0.06, w); }   // bobbing
   },
 
   spikes: {
@@ -288,17 +249,9 @@ const ENTITY_TYPES = {
       return takeHit(1, "spikes");
     },
     draw(g, x, y, w, ts) {
-      g.fillStyle = "#3a3f4a";
-      g.fillRect(x, y, w, w);
+      // frames: up, down, down and flashing red just before they rise
       const up = spikesUp(), warn = !up && spikesWarn();
-      g.fillStyle = up ? "#e8edf5" : warn ? (Math.floor(ts / 90) % 2 ? "#ff5a61" : "#6a707c") : "#6a707c";
-      const h = up ? w * 0.8 : w * 0.25;
-      for (let i = 0; i < 3; i++) {
-        const sx = x + w * (0.1 + i * 0.3);
-        g.beginPath();
-        g.moveTo(sx, y + w * 0.92); g.lineTo(sx + w * 0.12, y + w * 0.92 - h); g.lineTo(sx + w * 0.24, y + w * 0.92);
-        g.fill();
-      }
+      entityPic(g, "spikes", x, y, w, up ? 0 : warn && Math.floor(ts / 90) % 2 ? 2 : 1);
     }
   },
 
@@ -355,24 +308,7 @@ const ENTITY_TYPES = {
       endGame("sinkhole");
       return true;
     },
-    draw(g, x, y, w, ts, e) {
-      if (ts < e.openAt) {
-        g.strokeStyle = "rgba(40,24,12,0.85)";
-        g.lineWidth = Math.max(1, w * 0.06);
-        g.beginPath();
-        g.moveTo(x + w * 0.1, y + w * 0.5); g.lineTo(x + w * 0.4, y + w * 0.4); g.lineTo(x + w * 0.55, y + w * 0.65); g.lineTo(x + w * 0.9, y + w * 0.45);
-        g.moveTo(x + w * 0.4, y + w * 0.4); g.lineTo(x + w * 0.45, y + w * 0.1);
-        g.stroke();
-        return;
-      }
-      g.fillStyle = "#120c08";
-      g.beginPath();
-      g.ellipse(x + w / 2, y + w / 2, w * 0.5, w * 0.46, 0, 0, Math.PI * 2);
-      g.fill();
-      g.strokeStyle = "#5a3a20";
-      g.lineWidth = Math.max(1, w * 0.08);
-      g.stroke();
-    }
+    draw(g, x, y, w, ts, e) { entityPic(g, "sinkhole", x, y, w, ts < e.openAt ? 0 : 1); }   // cracking, then open
   },
 
   /* ---------------- Power-ups ---------------- */
@@ -390,17 +326,7 @@ const ENTITY_TYPES = {
       sfx("bigapple");
       return false;
     },
-    draw(g, x, y, w, ts) {
-      powerDisc(g, x, y, w, "#ffd23f", ts);
-      g.fillStyle = gradient(g, x, y, x + w, y + w, [[0, "#fff6c4"], [0.5, "#ffd23f"], [1, "#a8860b"]]);
-      g.beginPath();
-      g.arc(x + w / 2, y + w * 0.58, w * 0.4, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = "#5a3a1a";
-      g.fillRect(x + w * 0.47, y + w * 0.05, Math.max(1, w * 0.08), w * 0.2);
-      g.fillStyle = "#3ddc3d";
-      g.fillRect(x + w * 0.56, y + w * 0.08, w * 0.2, w * 0.1);
-    }
+    draw(g, x, y, w, ts) { powerDisc(g, x, y, w, "#ffd23f", ts); entityPic(g, "golden", x, y, w); }
   },
 
   shears: {
@@ -419,20 +345,7 @@ const ENTITY_TYPES = {
       sfx("buy");
       return false;
     },
-    draw(g, x, y, w, ts) {
-      powerDisc(g, x, y, w, "#d8dde6", ts);
-      g.strokeStyle = "#d8dde6";
-      g.lineWidth = Math.max(1, w * 0.12);
-      g.beginPath();
-      g.moveTo(x + w * 0.15, y + w * 0.15); g.lineTo(x + w * 0.8, y + w * 0.7);
-      g.moveTo(x + w * 0.85, y + w * 0.15); g.lineTo(x + w * 0.2, y + w * 0.7);
-      g.stroke();
-      g.strokeStyle = "#ff5a61";
-      g.beginPath();
-      g.arc(x + w * 0.22, y + w * 0.8, w * 0.13, 0, Math.PI * 2);
-      g.arc(x + w * 0.78, y + w * 0.8, w * 0.13, 0, Math.PI * 2);
-      g.stroke();
-    }
+    draw(g, x, y, w, ts) { powerDisc(g, x, y, w, "#d8dde6", ts); entityPic(g, "shears", x, y, w); }
   },
 
   armor: {
@@ -444,10 +357,7 @@ const ENTITY_TYPES = {
       sfx("buy");
       return false;
     },
-    draw(g, x, y, w, ts) {
-      powerDisc(g, x, y, w, "#c9ced6", ts);
-      shieldShape(g, x + w * 0.15, y + w * 0.1, w * 0.7, "#c9ced6", "#5b6470");
-    }
+    draw(g, x, y, w, ts) { powerDisc(g, x, y, w, "#c9ced6", ts); entityPic(g, "armor", x, y, w); }
   },
 
   shield: {
@@ -461,16 +371,7 @@ const ENTITY_TYPES = {
       sfx("buy");
       return false;
     },
-    draw(g, x, y, w, ts) {
-      powerDisc(g, x, y, w, "#7fe3ff", ts);
-      g.strokeStyle = "rgba(127,227,255,0.95)";
-      g.lineWidth = Math.max(1, w * 0.1);
-      g.beginPath();
-      g.arc(x + w / 2, y + w / 2, w * 0.4, 0, Math.PI * 2);
-      g.stroke();
-      g.fillStyle = "rgba(255,255,255,0.8)";
-      g.fillRect(x + w * 0.3, y + w * 0.28, w * 0.14, w * 0.1);
-    }
+    draw(g, x, y, w, ts) { powerDisc(g, x, y, w, "#7fe3ff", ts); entityPic(g, "shield", x, y, w); }
   },
 
   hourglass: {
@@ -483,19 +384,7 @@ const ENTITY_TYPES = {
       sfx("molasses");
       return false;
     },
-    draw(g, x, y, w, ts) {
-      powerDisc(g, x, y, w, "#ffcf8a", ts);
-      g.fillStyle = "#8a5a30";
-      g.fillRect(x + w * 0.2, y + w * 0.08, w * 0.6, w * 0.1);
-      g.fillRect(x + w * 0.2, y + w * 0.82, w * 0.6, w * 0.1);
-      g.fillStyle = "rgba(220,240,255,0.85)";
-      g.beginPath();
-      g.moveTo(x + w * 0.26, y + w * 0.18); g.lineTo(x + w * 0.74, y + w * 0.18); g.lineTo(x + w * 0.5, y + w * 0.5);
-      g.lineTo(x + w * 0.74, y + w * 0.82); g.lineTo(x + w * 0.26, y + w * 0.82); g.lineTo(x + w * 0.5, y + w * 0.5);
-      g.fill();
-      g.fillStyle = "#ffcf33";
-      g.fillRect(x + w * 0.38, y + w * 0.68, w * 0.24, w * 0.14);
-    }
+    draw(g, x, y, w, ts) { powerDisc(g, x, y, w, "#ffcf8a", ts); entityPic(g, "hourglass", x, y, w); }
   },
 
   star: {
@@ -510,14 +399,7 @@ const ENTITY_TYPES = {
     },
     draw(g, x, y, w, ts) {
       powerDisc(g, x, y, w, "#ff77c8", ts);
-      const hue = (ts / 6) % 360;
-      g.fillStyle = `hsl(${hue},95%,65%)`;
-      g.beginPath();
-      for (let i = 0; i < 10; i++) {
-        const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? w * 0.2 : w * 0.46;
-        g.lineTo(x + w / 2 + Math.cos(a) * r, y + w / 2 + Math.sin(a) * r);
-      }
-      g.fill();
+      entityPaint(g, "star", x, y, w, { colors: { star: `hsl(${(ts / 6) % 360},95%,65%)` } });   // its colors cycling
     }
   },
 
@@ -533,13 +415,10 @@ const ENTITY_TYPES = {
     },
     draw(g, x, y, w, ts) {
       powerDisc(g, x, y, w, "#b36bff", ts);
-      g.save();
-      g.globalAlpha *= 0.6 + 0.3 * Math.sin(ts / 150);
-      g.fillStyle = "#b36bff";
-      g.fillRect(x + w * 0.15, y + w * 0.3, w * 0.7, w * 0.4);
-      g.fillStyle = "#e9d5ff";
-      g.fillRect(x + w * 0.62, y + w * 0.38, w * 0.1, w * 0.1);
-      g.restore();
+      // fading in and out: its body, then its eye over it, each see-through (two frames)
+      const alpha = 0.6 + 0.3 * Math.sin(ts / 150);
+      entityPaint(g, "phantom", x, y, w, { alpha, frame: 0 });
+      entityPaint(g, "phantom", x, y, w, { alpha, frame: 1 });
     }
   },
 
@@ -553,17 +432,7 @@ const ENTITY_TYPES = {
       sfx("buy");
       return false;
     },
-    draw(g, x, y, w, ts) {
-      powerDisc(g, x, y, w, "#ff5a61", ts);
-      g.strokeStyle = "#ff3b3b";
-      g.lineWidth = Math.max(2, w * 0.2);
-      g.beginPath();
-      g.arc(x + w / 2, y + w * 0.45, w * 0.28, Math.PI, 0);
-      g.stroke();
-      g.fillStyle = "#ffffff";
-      g.fillRect(x + w * 0.12, y + w * 0.45, w * 0.2, w * 0.2);
-      g.fillRect(x + w * 0.68, y + w * 0.45, w * 0.2, w * 0.2);
-    }
+    draw(g, x, y, w, ts) { powerDisc(g, x, y, w, "#ff5a61", ts); entityPic(g, "lodestone", x, y, w); }
   },
 
   frenzy: {
@@ -578,13 +447,10 @@ const ENTITY_TYPES = {
     },
     draw(g, x, y, w, ts) {
       powerDisc(g, x, y, w, "#3ddc84", ts);
-      g.fillStyle = "#e9fff1";
-      g.beginPath();
-      g.arc(x + w / 2, y + w / 2, w * 0.4, 0, Math.PI * 2);
-      g.fill();
+      entityPic(g, "frenzy", x, y, w);
+      // its hand going round, and its 2x
       g.strokeStyle = "#1f8a4a";
       g.lineWidth = Math.max(1, w * 0.08);
-      g.stroke();
       const a = ts / 160;
       g.beginPath();
       g.moveTo(x + w / 2, y + w / 2); g.lineTo(x + w / 2 + Math.cos(a) * w * 0.3, y + w / 2 + Math.sin(a) * w * 0.3);
@@ -621,18 +487,6 @@ const spikeUpMs = () => SPIKE_UP * (nm.overclock ? 0.6 : 1);
 const spikesUp = () => { const b = spikeBeat(); return b.t >= b.period - spikeUpMs(); };
 const spikesWarn = () => { const b = spikeBeat(); return b.t >= b.period - spikeUpMs() - SPIKE_WARN; };
 
-function shieldShape(g, x, y, w, face, edge) {
-  g.fillStyle = face;
-  g.beginPath();
-  g.moveTo(x, y); g.lineTo(x + w, y); g.lineTo(x + w, y + w * 0.5);
-  g.quadraticCurveTo(x + w, y + w * 0.95, x + w / 2, y + w * 1.1);
-  g.quadraticCurveTo(x, y + w * 0.95, x, y + w * 0.5);
-  g.closePath();
-  g.fill();
-  g.strokeStyle = edge;
-  g.lineWidth = Math.max(1, w * 0.1);
-  g.stroke();
-}
 
 function removeEntity(e) {
   const i = entities.indexOf(e);
