@@ -370,8 +370,10 @@ the shops and workshops, the shopkeepers and home base are scenes in `textures/s
 the menus' frames are color-swap pictures in `textures/coins/` and `textures/ui/` (`src/engine/render/scene-art.js`
 draws their layers, sprite sheets, lights and color-swap pictures). The map's islands are pictures
 in `textures/map/` (the paths are drawn live; the signposts, lantern posts and stops are pictures placed live), and the story book's pages are a sky and
-layers in `textures/scenes/story/` with what moves drawn live between them. Still drawn by code for now: theme
-backdrops, snake skins, familiars on the board and the old engine's hazards.
+layers in `textures/scenes/story/` with what moves drawn live between them. The board is drawn 20 pixels to a
+square (`texBoard`): the bosses' crests, the familiars, the old engine's hazards and power-ups, the items, the
+snake's squares (color-swapped with each skin's colors) and the pattern themes' backdrops are pictures in
+`textures/board/`, `textures/familiars/` and `textures/themes/`. Still drawn by code for now: the flair.
 
 ## Build 51
 

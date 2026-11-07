@@ -48,6 +48,7 @@ textures/
 ├── map/                  each island on the map: <island>/under.png (its rock and ground, under the
 │                         paths), over.png (trees, houses, props over them), fog.png (the silhouette
 │                         you see before you reach it)
+├── themes/               each pattern theme's board: a tile that repeats, or the whole board (below)
 ├── ui/                   the menus' frames: plate, chip, window, buttons, tab (color-swap, below), the
 │                         wanted poster's parchment, the board's brass corners, the scroll
 ├── scenes/
@@ -258,6 +259,14 @@ head it sits on). The game scales them up to the screen with hard edges, like ev
   from its `.skin` file), `shine-19.png` over it (the light top, the dark bottom, the darker rim) and
   `shadow-19.png` under it. The `-square` ones are the look with Extras off; `-9` ones are for Treasure's
   half-size squares. A boss's body squares are drawn the same way.
+- **The pattern themes** (`themes/<painter>.png`, the name a theme file gives as its `painter`) are the
+  board as it looks under that theme in its own colors: a tile that repeats across the board from its
+  top left corner (a 40 x 40 brick, a check, a polka dot) or the whole 400 x 400 board (stars, circuits,
+  honeycomb). A theme file's colors still color the page around the board and the checks that keep
+  apples visible; to recolor the pattern, repaint its picture. The sunset and the ocean are smooth
+  gradients the game paints from the theme file's colors, and the twilight, synthwave and nebula
+  pictures (stars, the sun and grid) sit over a gradient the game paints first. A new pattern theme is a
+  picture, its line in `index.json`, and a theme file with `painter =` its name.
 - **The items** (`board/items/<type>-19.png`: apple, XP, rock, popsicle, flea, fire, molasses; `-39` for
   two-square ones, `-9` for small ones) are their full look, with their hard drop shadow painted in (the
   see-through black under them). The XP's and the fire's glow are drawn by the game around the picture.

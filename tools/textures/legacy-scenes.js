@@ -1324,9 +1324,58 @@
     return out;
   }
 
+  /* ----- The themes' patterns (theme-painters.js): each pattern theme's board as its painter painted it, in
+     its own colors, 400 x 400; cut to a tile where it repeats (checked); over a gradient, only what's over it ----- */
+  const THEME_TILE = { lawn: [40, 40], blueprint: [100, 100], notebook: [400, 20], polka: [40, 40], brick: [40, 40], waves: [40, 20], tartan: [80, 80], chess: [80, 80], diamondplate: [40, 40], chevron: [40, 40] };
+  const THEME_OVER = {
+    twilight(g, w, h) {
+      const rand = seededRandom(99);
+      g.fillStyle = "#ffffff";
+      for (let i = 0; i < (w * h) / 3000; i++) { g.globalAlpha = 0.3 + rand() * 0.5; g.fillRect(Math.floor(rand() * w), Math.floor(rand() * h * 0.6), 1, 1); }
+      g.globalAlpha = 1;
+    },
+    synthwave(g, w, h) {
+      const horizon = h * 0.35;
+      g.fillStyle = "rgba(255, 120, 60, 0.18)";
+      g.beginPath(); g.arc(w / 2, horizon, w * 0.2, Math.PI, 0); g.fill();
+      g.strokeStyle = "rgba(255, 42, 109, 0.35)";
+      g.lineWidth = 1;
+      for (let i = 1; i < 14; i++) { const y = horizon + (h - horizon) * Math.pow(i / 13, 2); g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+      for (let i = -10; i <= 10; i++) { g.beginPath(); g.moveTo(w / 2 + i * (w / 20) * 0.3, horizon); g.lineTo(w / 2 + i * (w / 10), h); g.stroke(); }
+    },
+    nebula(g, w, h) {
+      const rand = seededRandom(44);
+      g.fillStyle = "#ffffff";
+      for (let i = 0; i < (w * h) / 2200; i++) { g.globalAlpha = 0.3 + rand() * 0.6; g.fillRect(Math.floor(rand() * w), Math.floor(rand() * h), 1, 1); }
+      g.globalAlpha = 1;
+    }
+  };
+  function themeList() {
+    const out = [];
+    backdrops.filter(b => b.kind === "pattern" && b.draw).forEach(bd => {
+      const name = Object.keys(THEME_PAINTERS).find(n => THEME_PAINTERS[n] === bd.draw);
+      if (name === "sunsetsky" || name === "oceandeep") return;   // nothing but a gradient
+      const c = canvasOf(400, 400), g = c.getContext("2d");
+      (THEME_OVER[name] || bd.draw).call(bd, g, 400, 400);
+      let pic = c;
+      const t = THEME_TILE[name];
+      if (t) {
+        const tile = canvasOf(t[0], t[1]); tile.getContext("2d").drawImage(c, 0, 0);
+        const back = canvasOf(400, 400), bg = back.getContext("2d");
+        for (let y = 0; y < 400; y += t[1]) for (let x = 0; x < 400; x += t[0]) bg.drawImage(tile, x, y);
+        const a = pixels(c), b = pixels(back);
+        let same = true;
+        for (let i = 0; i < a.length && same; i++) if (a[i] !== b[i]) same = false;
+        if (same) pic = tile;
+      }
+      out.push({ id: "theme:" + name, file: `themes/${name}.png`, canvas: pic });
+    });
+    return out;
+  }
+
   window.LEGACY_SCENES = {
     sets: { rooms: { list: roomList, backdrop: roomBackdrop, times: ROOM_TIMES, rooms: () => Object.keys(PIC_ROOMS) }, shops: { list: shopList }, keepers: { list: keeperList, moments: keeperMoments, roles: KEEPER_ROLES },
-      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList }, stops: { list: stopList }, tree: { list: treeList }, npc: { list: npcList }, story: { list: storyList }, board: { list: boardList } },
+      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList }, stops: { list: stopList }, tree: { list: treeList }, npc: { list: npcList }, story: { list: storyList }, board: { list: boardList }, themes: { list: themeList } },
     record, split
   };
 })();

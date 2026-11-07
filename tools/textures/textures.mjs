@@ -50,7 +50,7 @@ const flag = name => args.includes(name);
 const opt = name => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : null; };
 
 if (!["export", "check"].includes(cmd)) {
-  console.log("usage: node tools/textures/textures.mjs export [icons|rooms|shops|keepers|home|coins|frames|map|emblems|stops|tree|npc|story|board] [--force] | check [--legacy]   (see the top of this file)");
+  console.log("usage: node tools/textures/textures.mjs export [icons|rooms|shops|keepers|home|coins|frames|map|emblems|stops|tree|npc|story|board|themes] [--force] | check [--legacy]   (see the top of this file)");
   process.exit(2);
 }
 
@@ -155,7 +155,7 @@ async function run(legacyDir, pagePath, pageScripts, timeoutSec = 300) {
 }
 
 /* ----- export ----- */
-const SETS = ["icons", "rooms", "shops", "keepers", "home", "coins", "frames", "map", "emblems", "stops", "tree", "npc", "story", "board"];
+const SETS = ["icons", "rooms", "shops", "keepers", "home", "coins", "frames", "map", "emblems", "stops", "tree", "npc", "story", "board", "themes"];
 const fileOf = v => (typeof v === "string" ? v : v.file);
 /* index.json, one entry a line, grouped by folder */
 function writeIndex(textures) {

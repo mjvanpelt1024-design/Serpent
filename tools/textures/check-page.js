@@ -448,6 +448,13 @@
           `cell = ${c}; save.settings.extras = ${extras}; { const [size, sq] = snakeLook(); texBoard(ctx, "snake:shadow" + sq + ":" + size, 100, 100, (cell - 1) / size); } cell = 20`], [90, 90, 40, 40], [1]);
       }
       gEval("save.settings.details = true; save.settings.extras = true"); W.eval("save.settings.details = true; save.settings.extras = true");
+      // the themes' patterns: every pattern theme's board, its old painter against its picture (and gradient), at 1x
+      for (const id of W.eval("backdrops").filter(b => b.kind === "pattern").map(b => b.id)) {
+        const paint = ev => ev(`(() => { const c = document.createElement("canvas"); c.width = c.height = 400; paintBackdrop(c.getContext("2d"), backdrops.find(b => b.id === "${id}"), 400, 400); return c; })()`);
+        const d = diff(paint(games[0]), paint(games[1]));
+        if (d) problems.push(`board: theme ${id}: ${d}`);
+        counts.board++;
+      }
       // the board's items, in their full look, at each size (with the game's own settings on and its own colors)
       for (const [span, small] of [[1, false], [2, false], [1, true]]) for (const type of ["apple", "xp", "rock", "popsicle", "flea", "fire", "molasses"]) {
         boardCheck(`item ${type} ${span}${small ? " small" : ""}`, `save.settings.details = true; save.settings.extras = true; drawItem(ctx, "${type}", 100, 100, ${span}, ${small}, 1, 0, 20)`, [80, 80, 70, 70], [1]);

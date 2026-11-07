@@ -27,7 +27,10 @@
   tree screen's background are pictures too, and so are the story book's pages (a sky and layers each, the
   relics, the night over a nightmare, the tortoise, raccoon and beetle as sprite sheets, the clouds, birds and
   ghosts); and the Tailor's theme emblems
-  are color-swap pictures in each theme's colors. Lights and glows pulse over their PNGs; the rarity
+  are color-swap pictures in each theme's colors. The board itself is drawn 20 pixels to a square: the
+  bosses' crests, the familiars, the hazards and power-ups, apples and the other items, the snake's
+  squares (in each skin's colors) and the pattern themes are pictures too, a touch crisper-edged on big
+  screens. Lights and glows pulse over their PNGs; the rarity
   pip and ribbon are color-swap pictures. They look exactly as before, checked pixel by pixel at many moments
   (`node tools/textures/textures.mjs check --legacy`). How to: `textures/README.md`.
 
