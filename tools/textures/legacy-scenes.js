@@ -1198,9 +1198,38 @@
     return out;
   }
 
+  /* ----- The board, 20 pixels to a square: the old drawing code itself, run on the old game's own board
+     canvas at 1x round 200, 200 (one frame per call), cut to the box its frames share; the anchor is 200, 200 ----- */
+  function fromBoard(frames, cols = frames.length) {
+    const O = 200, N = boardSize;
+    const shots = frames.map(draw => {
+      RS = 1; sizeCanvas(boardSize); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, N, N);
+      ctx.save(); draw(ctx, O, O); ctx.restore();
+      const c = canvasOf(N, N); c.getContext("2d").drawImage(canvas, 0, 0); return c;
+    });
+    let x0 = N, y0 = N, x1 = -1, y1 = -1;
+    shots.forEach(c => { const p = pixels(c); for (let i = 0; i < N * N; i++) if (p[i * 4 + 3]) { const x = i % N, y = Math.floor(i / N); x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); } });
+    if (x1 < 0 || x0 === 0 || y0 === 0 || x1 === N - 1 || y1 === N - 1) throw new Error("a board picture is empty or doesn't fit the board");
+    const w = x1 - x0 + 1, h = y1 - y0 + 1, out = canvasOf(w * cols, h * Math.ceil(shots.length / cols)), og = out.getContext("2d");
+    shots.forEach((c, i) => og.drawImage(c, x0, y0, w, h, (i % cols) * w, Math.floor(i / cols) * h, w, h));
+    return { canvas: out, anchor: [O - x0, O - y0], frames: shots.length };
+  }
+  function boardList() {
+    const out = [];
+    const add = (id, file, s, extra = {}) => out.push(Object.assign({ id, file, canvas: s.canvas, anchor: s.anchor }, s.frames > 1 ? { frames: s.frames } : {}, extra));
+    // the bosses' crests: the moments that show each of its looks (the Keep's plume low, level, up, at its
+    // very top; the Spire's star dull and twinkling; the Crown's horns dark and glowing)
+    const runWas = campRun;
+    const CREST_TS = { keep: [600, 0, 200, 60 * Math.PI], spire: [700, 100], hollow: [0], reef: [0], crown: [600, 100] };
+    Object.entries(CREST_TS).forEach(([isl, times]) => add(`crest:${isl}`, `board/crests/${isl}.png`,
+      fromBoard(times.map(ts => (g, x, y) => { campRun = { isl }; drawBossCrest(x, y, 1, 0, ts); }))));
+    campRun = runWas;
+    return out;
+  }
+
   window.LEGACY_SCENES = {
     sets: { rooms: { list: roomList, backdrop: roomBackdrop, times: ROOM_TIMES, rooms: () => Object.keys(PIC_ROOMS) }, shops: { list: shopList }, keepers: { list: keeperList, moments: keeperMoments, roles: KEEPER_ROLES },
-      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList }, stops: { list: stopList }, tree: { list: treeList }, npc: { list: npcList }, story: { list: storyList } },
+      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList }, stops: { list: stopList }, tree: { list: treeList }, npc: { list: npcList }, story: { list: storyList }, board: { list: boardList } },
     record, split
   };
 })();

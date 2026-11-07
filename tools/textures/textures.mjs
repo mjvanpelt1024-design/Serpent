@@ -50,7 +50,7 @@ const flag = name => args.includes(name);
 const opt = name => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : null; };
 
 if (!["export", "check"].includes(cmd)) {
-  console.log("usage: node tools/textures/textures.mjs export [icons|rooms|shops|keepers|home|coins|frames|map|emblems|stops|tree|npc|story] [--force] | check [--legacy]   (see the top of this file)");
+  console.log("usage: node tools/textures/textures.mjs export [icons|rooms|shops|keepers|home|coins|frames|map|emblems|stops|tree|npc|story|board] [--force] | check [--legacy]   (see the top of this file)");
   process.exit(2);
 }
 
@@ -155,7 +155,7 @@ async function run(legacyDir, pagePath, pageScripts, timeoutSec = 300) {
 }
 
 /* ----- export ----- */
-const SETS = ["icons", "rooms", "shops", "keepers", "home", "coins", "frames", "map", "emblems", "stops", "tree", "npc", "story"];
+const SETS = ["icons", "rooms", "shops", "keepers", "home", "coins", "frames", "map", "emblems", "stops", "tree", "npc", "story", "board"];
 const fileOf = v => (typeof v === "string" ? v : v.file);
 /* index.json, one entry a line, grouped by folder */
 function writeIndex(textures) {
@@ -213,7 +213,7 @@ async function check() {
   const answer = await run(legacyDir, `/index.html?tool=check${legacy ? "&legacy=1" : ""}`, ["/tools/textures/check-page.js"]);
   if (answer.error) { console.error("Check failed:\n" + answer.error); process.exit(1); }
   const c = answer.counts;
-  console.log(`  ${c.files} files loaded` + (answer.legacy ? `; compared ${c.flat} flat pictures, ${c.menu} menu pictures, ${c.html} hearts, faces, cursors, stickers and rune stones, ${c.scenes || 0} scene pictures (rooms at many moments, marks)` : ""));
+  console.log(`  ${c.files} files loaded` + (answer.legacy ? `; compared ${c.flat} flat pictures, ${c.menu} menu pictures, ${c.html} hearts, faces, cursors, stickers and rune stones, ${c.scenes || 0} scene pictures (rooms at many moments, marks), ${c.board || 0} board pictures (at 1x, 2x and 3x)` : ""));
   if (answer.ok) { console.log("All pictures OK" + (answer.legacy ? ": every one matches the old game pixel for pixel." : ".")); return; }
   console.log(`${answer.problems.length} problem(s):`);
   answer.problems.forEach(p => console.log("  " + p));

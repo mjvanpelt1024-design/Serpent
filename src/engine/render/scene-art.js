@@ -17,6 +17,8 @@
                        it is
 
    texDraw(g, id, x, y, frame)   a picture or one frame of it, as it is
+   texBoard(g, id, x, y, k, frame) a board picture (20 pixels to a square) scaled
+                                 k board units to the pixel, hard-edged
    texPaint(g, id, x, y, opts)   the same picture painted pixel by pixel
                                  the way the game's own drawing code
                                  paints: with an alpha over it (lights
@@ -129,4 +131,15 @@ function texLayer(g, id, x, y) {
   }
   g.drawImage(L.solid, x, y);
   for (const [rx, ry, n, fill] of L.runs) { g.fillStyle = fill; g.fillRect(x + rx, y + ry, n, 1); }
+}
+
+/* A picture on the board, drawn 20 pixels to a square (textures/board/...): one picture pixel is one
+   board unit, k units when the squares are smaller or bigger (k = cell / 20), hard-edged at any size.
+   Its anchor, if it has one, is the pixel that sits on x, y (a crest's anchor is the head's corner). */
+function texBoard(g, id, x, y, k = 1, frame = 0) {
+  const b = texFrameBox(id, frame), r = texResolve(id), a = (r && r.e.anchor) || [0, 0];
+  const was = g.imageSmoothingEnabled;
+  g.imageSmoothingEnabled = false;
+  g.drawImage(b.c, b.sx, b.sy, b.w, b.h, x - a[0] * k, y - a[1] * k, b.w * k, b.h * k);
+  g.imageSmoothingEnabled = was;
 }

@@ -5,6 +5,11 @@
     "An entry can also be an object: { \"file\": ..., \"keep\": [colors menus don't light], \"ink\": [colors that count as outline], \"menu\": a file shown in menus instead, \"badge\": a corner mark, \"light\": false, \"frames\": frames side by side in a sprite sheet, \"keys\": { \"#ff00ff\": \"name\" } colors the game swaps }."
   ],
   "textures": {
+    "crest:crown": { "file": "board/crests/crown.png", "frames": 2, "anchor": [2, 10] },
+    "crest:hollow": { "file": "board/crests/hollow.png", "anchor": [-2, 13] },
+    "crest:keep": { "file": "board/crests/keep.png", "frames": 4, "anchor": [-1, 10] },
+    "crest:reef": { "file": "board/crests/reef.png", "anchor": [-2, 9] },
+    "crest:spire": { "file": "board/crests/spire.png", "frames": 2, "anchor": [-1, 16] },
     "board:door": "board/door.png",
     "board:key": "board/key.png",
     "board:plate-on": "board/plate-on.png",

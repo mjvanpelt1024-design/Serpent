@@ -447,33 +447,18 @@ function drawBoss(view, ts) {
   }
 }
 
-/* Each island's boss wears something of its island on its head */
+/* Each island's boss wears something of its island on its head: crest:<island>, a picture in
+   textures/board/crests/ (20 pixels to a square, its anchor on the head's top left corner). The Keep's
+   knight waves its plume (four heights), the Spire's hat twinkles at its tip, the Crown's wyrm glows
+   between its horns; the Hollow's bib and fork and the Reef's fins hold still. */
+const CREST_FRAME = {
+  keep: ts => Math.round(Math.sin(ts / 120) * 1.5) + 1,
+  spire: ts => Math.sin(ts / 200) > 0 ? 1 : 0,
+  crown: ts => Math.sin(ts / 150) > 0.3 ? 1 : 0
+};
 function drawBossCrest(x, y, fx, fy, ts) {
-  const k = cell / 20, isl = campRun.isl;
-  const R = (a, b, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x + a * k, y + b * k, w * k, h * k); };
-  if (isl === "keep") {
-    // a black knight's helm with a red plume
-    R(1, -3, 17, 7, "#2a2a34"); R(2, -4, 15, 2, "#7a808c"); R(2, -2, 15, 4, "#5a606c"); R(2, -2, 3, 4, "#8a909c"); R(3, 1, 13, 1, "#14141a"); R(9, -4, 1, 6, "#9aa0ac");
-    const wave = Math.round(Math.sin(ts / 120) * 1.5);
-    R(8, -8 + wave, 3, 6, "#c0392b"); R(10, -9 + wave, 4, 3, "#e74c3c"); R(13, -8 + wave, 3, 2, "#c0392b");
-  } else if (isl === "spire") {
-    // a tall, crooked wizard's hat with stars
-    R(1, -2, 17, 3, "#2a1a5a"); R(4, -6, 11, 4, "#3a2a7a"); R(6, -10, 7, 4, "#3a2a7a"); R(8, -14, 4, 4, "#3a2a7a"); R(11, -16, 3, 2, "#3a2a7a");
-    R(6, -5, 2, 2, "#ffd23f"); R(10, -9, 1, 1, "#ffd23f"); R(12, -15, 1, 1, Math.sin(ts / 200) > 0 ? "#ffffff" : "#ffd23f");
-  } else if (isl === "hollow") {
-    // a glutton's bib and a fork stuck in its hat
-    R(3, -3, 14, 4, "#f0f0f0"); R(4, -6, 12, 3, "#e8e8e8"); R(2, -5, 4, 3, "#f0f0f0"); R(14, -5, 4, 3, "#f0f0f0");
-    R(16, -12, 1, 8, "#c8ced6"); R(15, -13, 1, 2, "#c8ced6"); R(17, -13, 1, 2, "#c8ced6");
-  } else if (isl === "reef") {
-    // a crown of fins and a coral spike
-    for (let i = 0; i < 4; i++) R(2 + i * 4, -4 - (i % 2) * 2, 3, 5 + (i % 2) * 2, i % 2 ? "#3a8ac0" : "#2a6a9a");
-    R(9, -9, 2, 5, "#ff7a8a"); R(7, -8, 1, 2, "#ff7a8a"); R(12, -7, 1, 2, "#ff7a8a");
-  } else {
-    // a wyrm's horns, glowing at the tips
-    R(1, -3, 4, 4, "#2a1a1a"); R(-1, -7, 4, 4, "#2a1a1a"); R(-2, -10, 3, 3, "#ff8a1a");
-    R(15, -3, 4, 4, "#2a1a1a"); R(17, -7, 4, 4, "#2a1a1a"); R(19, -10, 3, 3, "#ff8a1a");
-    if (Math.sin(ts / 150) > 0.3) R(8, -4, 4, 2, "#ffb020");
-  }
+  const isl = campRun.isl;
+  texBoard(ctx, "crest:" + isl, x, y, cell / 20, CREST_FRAME[isl] ? CREST_FRAME[isl](ts) : 0);
 }
 
 function shade(hex, amt) {

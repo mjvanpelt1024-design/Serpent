@@ -389,6 +389,30 @@
             g => { back(g); things().forEach(([n, x, y]) => W["drawHome" + n](g, x, y, t)); W.drawHomeCarving(g, t); }, `${isl} things (${st.name}) at ${t.toFixed(3)} s`);
         }
       }
+
+      // ----- the board, 20 pixels to a square: old drawing against new on each game's own board canvas, at
+      // 1x, 2x and 3x, on whole squares (in between, the old smooth drawing and the hard-edged pictures differ)
+      const games = [code => W.eval(code), gEval];
+      counts.board = 0;
+      const shot = (ev, rs, code, box) => {
+        ev(`RS = ${rs}; sizeCanvas(boardSize); ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.clearRect(0, 0, boardSize, boardSize); ctx.save(); ${code}; ctx.restore();`);
+        const c = document.createElement("canvas"); c.width = box[2] * rs; c.height = box[3] * rs;
+        c.getContext("2d").drawImage(ev("canvas"), box[0] * rs, box[1] * rs, c.width, c.height, 0, 0, c.width, c.height);
+        return c;
+      };
+      const boardCheck = (what, code, box = [60, 60, 80, 80]) => {
+        for (const rs of [1, 2, 3]) {
+          const d = diff(shot(games[0], rs, code, box), shot(games[1], rs, code, box));
+          if (d) problems.push(`board: ${what} at ${rs}x: ${d}`);
+          counts.board++;
+        }
+      };
+      const runWas = games.map(ev => ev("campRun"));
+      // the bosses' crests, every island, at moments that show every look
+      for (const I of CAMP.islands) for (const ts of [0, 100, 200, 300, 600, 700, 1000, 1700, 60 * Math.PI]) {
+        boardCheck(`crest ${I.id} at ${ts.toFixed(1)}`, `campRun = { isl: "${I.id}" }; drawBossCrest(100, 100, 1, 0, ${ts})`);
+      }
+      games.forEach((ev, i) => { window.__was = runWas[i]; W.__was = runWas[i]; ev("campRun = __was"); });
     }
     // ----- nothing fell back to the checkerboard while all that was drawn
     fellBack.forEach(m => { if (!problems.includes(m)) problems.push(m); });

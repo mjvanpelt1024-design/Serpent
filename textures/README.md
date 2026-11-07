@@ -36,7 +36,8 @@ textures/
 │   ├── trinkets/  parts/ what the workbench makes from junk
 ├── upgrades/             the campaign's upgrade trees, by icon name
 ├── foes/  hazards/  powerups/
-├── board/                the goal pieces: key, door, plates, seal, shard, thief; relics/ for the relics
+├── board/                the goal pieces: key, door, plates, seal, shard, thief; relics/ for the relics;
+│                         crests/ for what each boss wears on its head (20 pixels to a square, below)
 ├── hearts/               every heart slot the HUD shows (below)
 ├── bosses/               each island's boss face on its wanted poster
 ├── coins/                each island's coin, <island>-<tails|heads>-<12|20|32>.png (color-swap, below)
@@ -227,6 +228,16 @@ its grass and the grass's lit edge, `#ff00ff` and `#800080` its rock and the roc
 
 Money shows tails at 12 pixels (20 in the top bar); click the coin in the top bar and it flips to heads,
 with a 32-pixel heads on its card.
+
+## The board, 20 pixels to a square
+
+The board is 20 squares across, and its own pictures are drawn 20 pixels to a square: one pixel in the
+file is one unit of the board, so a picture 20 wide is one square wide (a crest sticks out above the
+head it sits on). The game scales them up to the screen with hard edges, like everything else.
+
+- **The bosses' crests** (`board/crests/<island>.png`): each one's anchor is the boss's head's top
+  left corner. The Keep's knight is a sheet of four frames, its plume at four heights; the Spire's hat
+  has its tip dull and twinkling, the Crown's horns dark and glowing.
 
 ## The map's islands
 
