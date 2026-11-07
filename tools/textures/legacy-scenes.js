@@ -660,6 +660,11 @@
       out.push({ id: `map:${key}:under`, file: `map/${key}/under.png`, canvas: under, extra: { tips: body.tips } });
       out.push({ id: `map:${key}:over`, file: `map/${key}/over.png`, canvas: over });
       out.push({ id: `map:${key}:fog`, file: `map/${key}/fog.png`, canvas: fog.c, extra: { tips: fog.tips } });
+      // the islets floating near it, each anchored where it sits on its spot
+      (ISLE_SHAPE[key].islets || []).forEach((_, k) => {
+        const art = isletArt(key, k);
+        out.push({ id: `map:${key}:islet-${k + 1}`, file: `map/${key}/islet-${k + 1}.png`, canvas: art.c, anchor: [art.ox, art.oy] });
+      });
     });
     return out;
   }

@@ -366,54 +366,12 @@ function paintIsleBody(g, key, cx, cy, fog, haze) {
   return { tips: tips.filter(t => t[1] > 0) };
 }
 
-/* ----- The islets: little rocks floating near each island, bobbing on their own ----- */
-const isletCache = {};
+/* ----- The islets: little rocks floating near each island, bobbing on their own -----
+   Pictures, textures/map/<island>/islet-<n>.png (map:<island>:islet-<n>), each with its anchor: the
+   point that sits on its spot in ISLE_SHAPE */
 function isletArt(key, k) {
-  const id = key + ":" + k;
-  if (isletCache[id]) return isletCache[id];
-  const [, , w, kind] = ISLE_SHAPE[key].islets[k];
-  const isl = ISLANDS[key], seed = isl.n * 53 + k * 7 + 3;
-  const hw = w / 2, th = Math.max(3, Math.round(w * 0.2)), depth = Math.round(w * 0.95);
-  const W = w + 14, H = 22 + th * 2 + depth + 6;
-  const c = document.createElement("canvas");
-  c.width = W; c.height = H;
-  const g = c.getContext("2d");
-  const cx = Math.floor(W / 2), cy = 22 + th;
-  const buf = isleBuffer(W, H);
-  const rim = xr => { const u = Math.abs(xr) / hw; if (u >= 1) return null; const e = Math.pow(1 - Math.pow(u, 2.3), 1 / 2.3); return [-th * e, th * e + (mapHash(Math.round(xr) + 60, k, seed) - 0.5) * 0.8]; };
-  isleFill(buf, { x: cx, y: cy, half: [hw, hw], rim, depth, taper: zn => Math.pow(1 - zn, 1.05), lean: (mapHash(k, 1, seed) - 0.5) * 0.4, rag: 0.3, seed, z0: 0 }, 0);
-  const sand = kind === "palm", T = ISLE_THEME[key];
-  const [a, b, edge] = sand ? ["#f0e2ae", "#e8d8a0", "#c8b07a"] : MAP_BIOME[key];
-  const { Z, U } = buf;
-  const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? -1 : Z[y * W + x];
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const z = Z[y * W + x];
-    if (z < 0) continue;
-    const dy = y - cy, xr = x - cx, sp = rim(xr);
-    let col;
-    if (sp && dy <= sp[1]) {
-      col = ((x + y) & 1) ? b : a;
-      if (dy >= sp[1] - 1) col = edge;
-      if (dy <= Math.ceil(sp[0]) || at(x - 1, y) < 0) col = isleShade(a, 0.2);
-    } else {
-      col = z <= 1 ? T.lip[(x + z) & 1] : isleRockColor(key, x, z, z * 2.6 + 6, depth * 2.6, seed);
-      const u = U[y * W + x];
-      if (at(x + 1, y) < 0 || u > 0.8) col = isleShade(col, -0.4);
-      else if (at(x - 1, y) < 0 || u < -0.7) col = isleShade(col, 0.18);
-      if (at(x, y + 1) < 0) col = isleShade(col, -0.3);
-    }
-    isleSet(buf, x, y, col);
-  }
-  g.putImageData(buf.img, 0, 0);
-  const R = (x, y, ww, hh, cc) => mapRect(g, x, y, ww, hh, cc);
-  const top = cy - 1;
-  if (kind === "meadow") { isleTree(g, cx - 3, top + 1, "#3f8a3a", "#2f6a24", "#ff3b3b", 4); isleTuft(g, cx + 6, top + 1, "#4f8f3a"); R(cx + 3, top, 1, 1, "#ffe066"); R(cx - 9, top + 1, 1, 1, "#ff9ad5"); }
-  else if (kind === "rocks") { isleRock(g, cx - 1, top + 2, 2, key === "crown" ? "#4a3a3a" : "#9a9a9a"); if (key !== "crown") isleTuft(g, cx + 3, top + 1, isleShade(a, -0.3)); }
-  else if (kind === "crystal") { [[-3, 6, "#7fe3ff"], [0, 9, "#b36bff"], [3, 5, "#7fe3ff"]].forEach(([dx, hh, cc]) => { R(cx + dx, top - hh + 1, 2, hh, cc); R(cx + dx, top - hh + 1, 1, hh, isleShade(cc, 0.4)); R(cx + dx + 1, top - hh + 1, 1, 1, "#ffffff"); }); }
-  else if (kind === "hay") { R(cx - 4, top - 3, 8, 4, "#e8c860"); R(cx - 3, top - 4, 6, 1, "#f8e090"); R(cx - 4, top - 1, 8, 1, "#c8a040"); R(cx + 5, top - 1, 3, 2, "#ff8c1a"); R(cx + 6, top - 2, 1, 1, "#3a6a1a"); }
-  else if (kind === "palm") { R(cx, top - 8, 1, 9, "#8a6a3a"); R(cx + 1, top - 5, 1, 2, "#8a6a3a"); R(cx - 4, top - 9, 4, 1, "#3a9a4a"); R(cx + 1, top - 9, 4, 1, "#3a9a4a"); R(cx - 5, top - 8, 1, 1, "#2a7a3a"); R(cx + 5, top - 8, 1, 1, "#2a7a3a"); R(cx - 1, top - 10, 3, 1, "#5aba5a"); R(cx + 3, top, 2, 1, "#fff0e0"); }
-  else if (kind === "cinder") { R(cx - 2, top - 1, 5, 2, "#1a1418"); R(cx - 1, top - 2, 3, 1, "#2e2428"); R(cx, top - 1, 1, 1, "#ff6a1a"); }
-  return (isletCache[id] = { c, ox: cx, oy: cy });
+  const id = `map:${key}:islet-${k + 1}`, e = TextureLoader.entry(id), a = (e && e.anchor) || [0, 0];
+  return { c: texCanvas(id), ox: a[0], oy: a[1] };
 }
 
 /* ----- The rock under each island ----- */

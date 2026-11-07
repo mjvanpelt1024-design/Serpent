@@ -252,6 +252,13 @@
         }
       }
       W.eval(`camp = ${campNow}`); gEval(`camp = ${campNow}`);
+      // the islets beside each island, and where each is anchored
+      for (const key of Object.keys(gEval("ISLANDS"))) (gEval("ISLE_SHAPE")[key].islets || []).forEach((_, k) => {
+        const a = W.isletArt(key, k), b = isletArt(key, k), d = diff(a.c, b.c);
+        if (d) problems.push(`islet ${key} ${k + 1}: ${d}`);
+        if (a.ox !== b.ox || a.oy !== b.oy) problems.push(`islet ${key} ${k + 1}: anchored at ${b.ox}, ${b.oy}, was ${a.ox}, ${a.oy}`);
+        counts.scenes++;
+      });
 
       // ----- the Tailor's theme emblems: every theme's, at the sizes the Tailor shows
       for (const bd of gEval("backdrops")) for (const size of [56, 40, 28]) {

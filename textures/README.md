@@ -198,7 +198,8 @@ with a 32-pixel heads on its card.
 Each island on the map is three pictures in `map/<island>/`. The game lays `under.png`, then the paths
 you've opened, then `over.png`, then the signposts and lanterns (they change as you open shops and
 paths, so they're still drawn by the game). An island you haven't reached shows `fog.png` instead.
-Under each island hang spikes that drip water, sparkles, sand or lava: the drips fall from the points
+The small islets floating near each one are `islet-<n>.png`, each with an `"anchor"` (the point that
+sits on its spot); they bob on their own. Under each island hang spikes that drip water, sparkles, sand or lava: the drips fall from the points
 listed in the picture's entry, `"tips": [[x, y], ...]`, so if you repaint the spikes, move the points.
 The stops (stones, lairs, the home tree, stalls), the water, birds and smoke are still drawn live.
 
