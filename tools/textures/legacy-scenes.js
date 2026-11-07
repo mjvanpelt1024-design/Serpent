@@ -1285,6 +1285,21 @@
       Object.entries(LOOKS).forEach(([type, frames]) => add(`entity:${type}:${w}`, `board/entities/${type}-${w}.png`, fromBoard(frames), type === "star" ? { keys: { "#ff00ff": "star" } } : {}));
     });
     window.powerDisc = live.powerDisc; window.glyph = live.glyph;
+    // the board's items (renderer.js drawItem) in their full look (details and extras on, their own colors) on
+    // the 20-unit board: 19 (a square), 39 (two), 9 (small), anchored on the square's corner, their hard drop
+    // shadow baked in; the XP's and the fire's glow left out (drawn live)
+    const S = save.settings, was = { details: S.details, extras: S.extras }, vis = window.visibleColor;
+    S.details = true; S.extras = true; window.visibleColor = c => c;
+    const glowless = (g, draw) => {
+      Object.defineProperty(g, "shadowColor", { configurable: true, get: () => "rgba(0, 0, 0, 0)", set() {} });
+      try { draw(); } finally { delete g.shadowColor; }
+    };
+    [[1, false, 19], [2, false, 39], [1, true, 9]].forEach(([span, small, w]) => ["apple", "xp", "rock", "popsicle", "flea", "fire", "molasses"].forEach(type =>
+      add(`item:${type}:${w}`, `board/items/${type}-${w}.png`, fromBoard([(g, x, y) => {
+        const draw = () => drawItem(g, type, x, y, span, small, 1, 0, 20);
+        if (type === "xp" || type === "fire") glowless(g, draw); else draw();
+      }]))));
+    S.details = was.details; S.extras = was.extras; window.visibleColor = vis;
     return out;
   }
 

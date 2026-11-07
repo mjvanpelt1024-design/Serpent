@@ -38,6 +38,20 @@ function drawItem(g, type, x, y, span, small, alpha = 1, ts = 0, unit = cell) {
   const plain = color !== base || !save.settings.details;   // swapped for visibility = keep it plain
   const extras = save.settings.extras;
 
+  // In its full look (details and extras on, its own color) on the 20-unit board, an item is a picture:
+  // item:<type>:<size> in textures/board/items/ (19 a square, 39 two, 9 small), its hard drop shadow baked
+  // in; the XP's and the fire's glow are drawn here. Other looks and sizes are drawn below.
+  const pic = `item:${type}:${w}`;
+  if (unit === 20 && extras && !plain && TextureLoader.has(pic)) {
+    g.save();
+    g.globalAlpha = alpha;
+    if (type === "xp") { g.shadowColor = color; g.shadowBlur = Math.max(4, w * 0.7); }
+    if (type === "fire") { g.shadowColor = "#ff8a00"; g.shadowBlur = Math.max(5, w * 0.9); }
+    texBoard(g, pic, x, y);
+    g.restore();
+    return;
+  }
+
   g.save();
   g.globalAlpha = alpha;
   if (save.settings.details) {

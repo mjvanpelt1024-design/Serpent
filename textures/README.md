@@ -38,7 +38,8 @@ textures/
 ├── foes/  hazards/  powerups/
 ├── board/                the goal pieces: key, door, plates, seal, shard, thief; relics/ for the relics;
 │                         crests/ for what each boss wears on its head, entities/ for the old engine's
-│                         hazards and power-ups (20 pixels to a square, below)
+│                         hazards and power-ups, items/ for apples, XP, rocks and the rest (20 pixels to
+│                         a square, below)
 ├── hearts/               every heart slot the HUD shows (below)
 ├── bosses/               each island's boss face on its wanted poster
 ├── coins/                each island's coin, <island>-<tails|heads>-<12|20|32>.png (color-swap, below)
@@ -252,6 +253,12 @@ head it sits on). The game scales them up to the screen with hard edges, like ev
   and its eye (each fades on its own). The star's `#ff00ff` is painted in its cycling colors. Still
   drawn by the game: the glow under every power-up, the numbers and the "!", the blast, the lightning
   strike, the gust's arrows across the board, the frenzy's turning hand.
+- **The items** (`board/items/<type>-19.png`: apple, XP, rock, popsicle, flea, fire, molasses; `-39` for
+  two-square ones, `-9` for small ones) are their full look, with their hard drop shadow painted in (the
+  see-through black under them). The XP's and the fire's glow are drawn by the game around the picture.
+  The game still draws the plainer looks itself: with Details or Extras off in the settings, when a
+  theme's colors would hide an item (it's drawn in a plain color that shows up), and on the half-size
+  squares of Treasure.
 
 Half-covered pixels at a picture's edges (where the old drawing fell between pixels) are baked into
 these PNGs, so where they sit over a scene they can come out a shade or two off what the old code

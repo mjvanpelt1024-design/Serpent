@@ -434,6 +434,10 @@
         const e = type === "sinkhole" ? [`{ openAt: ${ts + 1000} }`, `{ openAt: ${ts - 1} }`] : ["{}"];
         e.forEach(st => boardCheck(`${type} ${w} at ${ts} ${st}`, `ENTITY_TYPES.${type}.draw(ctx, 100, 100, ${w}, ${ts}, Object.assign({ x: 100, y: 100 }, ${st}))`, [80, 80, 60, 60], [1]));
       }
+      // the board's items, in their full look, at each size (with the game's own settings on and its own colors)
+      for (const [span, small] of [[1, false], [2, false], [1, true]]) for (const type of ["apple", "xp", "rock", "popsicle", "flea", "fire", "molasses"]) {
+        boardCheck(`item ${type} ${span}${small ? " small" : ""}`, `save.settings.details = true; save.settings.extras = true; drawItem(ctx, "${type}", 100, 100, ${span}, ${small}, 1, 0, 20)`, [80, 80, 70, 70], [1]);
+      }
       for (const w of [19, 9]) for (const ts of [0, 250, 4000]) boardCheck(`bomb ${w} at ${ts}`, `ENTITY_TYPES.bomb.draw(ctx, 100, 100, ${w}, ${ts}, { x: 100, y: 100, blowAt: 5000 })`, [80, 80, 60, 60], [1]);
     }
     // ----- nothing fell back to the checkerboard while all that was drawn
