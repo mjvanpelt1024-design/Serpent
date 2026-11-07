@@ -794,9 +794,35 @@
     return out;
   }
 
+  /* ----- The upgrade tree screen (camp-tree.js): its sky and the island under the tree ----- */
+  function treeList() {
+    return CAMP.islands.map(I => {
+      const isl = I.id, c = canvasOf(TREE_W, TREE_H), g = c.getContext("2d");
+      g.drawImage(campTreeSky(isl), 0, 0);
+      const R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), w, h); };
+      const iy = 122, iw = 150, cx = 100;
+      const [ga, gb, ge] = MAP_BIOME[isl];
+      for (let r = 0; r < 34; r++) {
+        const half = (iw / 2) * Math.pow(1 - r / 34, 0.8) + (mapHash(r, 5, 9) - 0.5) * 3;
+        if (half < 1) break;
+        for (let x = -Math.round(half); x <= Math.round(half); x++) R(cx + x, iy + 6 + r, 1, 1, x === Math.round(half) ? "#2e2420" : isleRockColor(isl, x, r, r, 34, 9));
+      }
+      for (let dy = -7; dy <= 7; dy++) {
+        const half = (iw / 2) * Math.sqrt(1 - Math.pow(dy / 7.5, 2));
+        for (let x = -Math.round(half); x <= Math.round(half); x++) {
+          let col = ((x + dy) & 1) && mapHash(x, dy, 8) > 0.45 ? gb : ga;
+          if (dy >= 6) col = ge;
+          if (dy === -7) col = shadeHex(ga, 0.2);
+          R(cx + x, iy + dy, 1, 1, col);
+        }
+      }
+      return { id: "tree:" + isl, file: `scenes/tree/${isl}.png`, canvas: c };
+    });
+  }
+
   window.LEGACY_SCENES = {
     sets: { rooms: { list: roomList, backdrop: roomBackdrop, times: ROOM_TIMES, rooms: () => Object.keys(PIC_ROOMS) }, shops: { list: shopList }, keepers: { list: keeperList, moments: keeperMoments, roles: KEEPER_ROLES },
-      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList }, stops: { list: stopList } },
+      home: { list: homeList, stars: homeStarsOld, drift: homeDriftOld, step: HOME_STEP }, coins: { list: coinList, sizes: COIN_SIZES }, frames: { list: frameList }, map: { list: mapList }, emblems: { list: emblemList }, stops: { list: stopList }, tree: { list: treeList } },
     record, split
   };
 })();

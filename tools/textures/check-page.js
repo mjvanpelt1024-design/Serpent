@@ -287,6 +287,21 @@
         }
       }
 
+      // ----- the upgrade tree screen: the whole picture, old against new, at many moments and growths
+      for (const I of CAMP.islands) {
+        const total = I.tree.upgrades.reduce((s, u) => s + u.values.length - 1, 0);
+        for (const have of [0, Math.floor(total / 2), total]) {
+          toBoth(`camp.upgrades = ${tierSave(I.id, have)}`);
+          for (const t of stopMoments) {
+            const a = canvasOf(gEval("TREE_W"), gEval("TREE_H")), b = canvasOf(gEval("TREE_W"), gEval("TREE_H"));
+            W.drawCampTree(a, I.id, t); drawCampTree(b, I.id, t);
+            const d = diff(a, b);
+            if (d) problems.push(`tree screen ${I.id} (${have} tiers) at ${t.toFixed(3)} s: ${d}`);
+            counts.scenes++;
+          }
+        }
+      }
+
       // ----- the Tailor's theme emblems: every theme's, at the sizes the Tailor shows
       for (const bd of gEval("backdrops")) for (const size of [56, 40, 28]) {
         const old = W.eval("backdrops").find(x => x.id === bd.id);

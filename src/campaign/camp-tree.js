@@ -17,7 +17,6 @@ const CTREE_LEAVES = {
   keep: ["#2f7d2a", "#3f9a3a", "#5ab046", "#ff3b3b"], spire: ["#3a3a9a", "#5a5ac8", "#8a8af0", "#7fe3ff"], hollow: ["#a8501a", "#d87a2a", "#f0a840", "#ff3b3b"],
   reef: ["#1a7a6a", "#2a9a8a", "#5acaba", "#ff9ab0"], crown: ["#6a1a1a", "#a82a1a", "#e85a1a", "#ffd23f"]
 };
-const ctreeSkyCache = {};
 
 function openCampTree(isl, sel) {
   campTreeIsl = isl;
@@ -27,28 +26,9 @@ function openCampTree(isl, sel) {
   openScreen("tree");
 }
 
-function campTreeSky(isl) {
-  if (ctreeSkyCache[isl]) return ctreeSkyCache[isl];
-  const c = document.createElement("canvas");
-  c.width = TREE_W;
-  c.height = TREE_H;
-  const g = c.getContext("2d");
-  // the sky at the island's height on the map: dawn for the first, stars for the last
-  const y = ISLANDS[isl].y;
-  const top = skyAt(y - 120), bottom = skyAt(y + 40);
-  for (let yy = 0; yy < TREE_H; yy++) for (let x = 0; x < TREE_W; x++) {
-    const k = Math.min(1, Math.max(0, yy / TREE_H + (BAYER[(yy % 4) * 4 + (x % 4)] / 16 - 0.5) * 0.1));
-    const q = Math.round(k * 7) / 7;
-    g.fillStyle = `rgb(${top.map((v, i) => Math.round(v + (bottom[i] - v) * q)).join(",")})`;
-    g.fillRect(x, yy, 1, 1);
-  }
-  const night = ISLANDS[isl].n >= 2;
-  for (let i = 0; i < (night ? 50 : 14); i++) {
-    g.fillStyle = `rgba(255,255,255,${0.3 + mapHash(i, 3, 61) * 0.5})`;
-    g.fillRect(Math.round(mapHash(i, 3, 61) * TREE_W), Math.round(mapHash(i, 4, 61) * TREE_H * 0.5), 1, 1);
-  }
-  return (ctreeSkyCache[isl] = c);
-}
+/* The sky at the island's height on the map (dawn for the first, stars for the last) and the island the
+   tree stands on: one picture per island, textures/scenes/tree/<island>.png */
+const campTreeSky = isl => texCanvas("tree:" + isl);
 
 function drawCampTree(c, isl, t) {
   const g = c.getContext("2d");
@@ -64,23 +44,8 @@ function drawCampTree(c, isl, t) {
     const w = 26 + i * 8, x = ((i * 90 + t * (2 + i)) % 260) - 40, y = 12 + i * 22;
     R(x, y, w, 4, "rgba(255,255,255,0.4)"); R(x + 6, y - 3, w * 0.45, 3, "rgba(255,255,255,0.4)");
   }
-  // the island, in its own colors
-  const iy = 122, iw = 150, cx = 100;
-  const [ga, gb, ge] = MAP_BIOME[isl];
-  for (let r = 0; r < 34; r++) {
-    const half = (iw / 2) * Math.pow(1 - r / 34, 0.8) + (mapHash(r, 5, 9) - 0.5) * 3;
-    if (half < 1) break;
-    for (let x = -Math.round(half); x <= Math.round(half); x++) R(cx + x, iy + 6 + r, 1, 1, x === Math.round(half) ? "#2e2420" : isleRockColor(isl, x, r, r, 34, 9));
-  }
-  for (let dy = -7; dy <= 7; dy++) {
-    const half = (iw / 2) * Math.sqrt(1 - Math.pow(dy / 7.5, 2));
-    for (let x = -Math.round(half); x <= Math.round(half); x++) {
-      let col = ((x + dy) & 1) && mapHash(x, dy, 8) > 0.45 ? gb : ga;
-      if (dy >= 6) col = ge;
-      if (dy === -7) col = shadeHex(ga, 0.2);
-      R(cx + x, iy + dy, 1, 1, col);
-    }
-  }
+  // (the island under the tree is part of the sky's picture)
+  const iy = 122, cx = 100;
   // ----- the tree: one trunk from the roots to the crown, boughs curving out to each upgrade,
   // a canopy that's always there and fills out tier by tier -----
   const total = tiers.reduce((a, b) => a + b, 0), most = maxes.reduce((a, b) => a + b, 0) || 1;

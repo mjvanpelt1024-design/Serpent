@@ -52,6 +52,8 @@ textures/
 │   │                     on things (the away tag, a wax seal, a trinket's dot, the rarity pip)
 │   ├── home/             home base: <island>/sky.png and ground.png (320 wide), tree.png, far islands
 │   │                     and the falling leaf; the sun, moon, stars, clouds and everything around the tree
+│   ├── tree/             the upgrade tree screen's sky and island, one per island (the tree itself
+│   │                     is still grown by the game from your six upgrades)
 │   ├── keepers/          the fifteen shopkeepers, <island>-<role>.png, as sprite sheets (below)
 │   └── shops/            each island's shop and workshop: <island>/back.png (the walls),
 │                         middle.png (the workshop and the shop's shelf), the things that move in that
@@ -246,5 +248,5 @@ boots the game in a headless Chrome or Edge and makes sure every file in `index.
 `--legacy` to also compare every picture with the game from before textures/ (from git), pixel by pixel,
 the rooms at sixty moments each, every shop with and without stock and orders, and every keeper in
 every one of its looks, and home base piece by piece; that only passes for pictures that haven't been repainted.
-`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`, `map`, `emblems`, `stops`) writes a set from that old game into this folder and its index: it's
+`export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`, `map`, `emblems`, `stops`, `tree`) writes a set from that old game into this folder and its index: it's
 how the folder was made, and with `--force` it overwrites files, repaints and all.
