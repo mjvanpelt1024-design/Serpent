@@ -1,74 +1,1329 @@
 {
   "_about": "Build 53: nightmare mode (src/campaign/camp-nightmare.js, docs/CAMPAIGN.md 'Nightmare'). Unlocked by winning the last island's last level. The Maw's body is the Coil; under each island, from the top down, a tunnel is dug: 10 levels and the Maw. The roots of the Great Tree hang into every tunnel (global nightmare upgrades, one set per island), and after level 5 a shop sells nightmare-only things for the island's money at nightmare prices. ALL NUMBERS ARE PLACEHOLDERS FOR PLAYTESTING.",
-  "unlock": {"island": "crown", "level": 15},
-  "order": ["crown", "spire", "reef", "hollow", "keep"],
+  "unlock": {
+    "island": "crown",
+    "level": 15
+  },
+  "order": [
+    "crown",
+    "spire",
+    "reef",
+    "hollow",
+    "keep"
+  ],
   "levels": 10,
   "shopAfter": 5,
   "_economy": "payMult: a nightmare win pays this many times a normal one (on a base of a level 15 + n); priceMult: nightmare shop prices against the merchant's for that family and rarity; rootCost: each root's tiers, times the tunnel's depth (1 for the first tunnel ... 5).",
   "payMult": 4,
   "priceMult": 6,
-  "harder": {"speed": 1.12, "need": 1.35, "spawns": 1.5, "perTunnel": 0.06},
+  "harder": {
+    "speed": 1.12,
+    "need": 1.35,
+    "spawns": 1.5,
+    "perTunnel": 0.06
+  },
   "_base": "Which of the island's own levels each tunnel level is built on: its goal, spawns and board (turned a quarter turn, in content/levels/nightmare/).",
-  "base": [1, 2, 3, 4, 6, 7, 8, 9, 11, 14],
+  "base": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8,
+    9,
+    11,
+    14
+  ],
   "tunnels": {
-    "crown": {"name": "The Cinder Gullet", "twist": "dark", "names": ["Ashfall Throat", "Clinker Steps", "The Smolder Run", "Bellows Deep", "Slag Chapel", "Furnace Ribs", "The Glowing Vein", "Charcoal Choir", "Tongue of Embers", "The Last Breath"]},
-    "spire": {"name": "The Hexed Spine", "twist": "starve", "names": ["Ink Hollow", "Spellbone Stair", "The Whispering Duct", "Runic Marrow", "Candle Crypt", "The Folded Hall", "Glyph Rot", "Archive Under", "The Blind Library", "Vertebra Gate"]},
-    "reef": {"name": "The Drowned Belly", "twist": "avalanche", "names": ["Brine Pit", "Barnacle Bend", "The Sunk Choir", "Kelp Gut", "Wreck Hollow", "Pearl Teeth", "The Undertow", "Abyss Lantern", "Salt Rot", "The Black Tide"]},
-    "hollow": {"name": "The Root Gizzard", "twist": "sugar", "names": ["Grub Warren", "Thorn Gut", "The Rotten Furrow", "Mulch Halls", "Scarecrow Bones", "The Hungry Barn", "Root Knot", "Maggot Mill", "Harvest Rot", "The Sickle Deep"]},
-    "keep": {"name": "The Iron Tail", "twist": "noMercy", "names": ["Rust Moat", "Chain Gut", "The Gaol Below", "Gallows Root", "Old Keep Bones", "The Portcullis", "Ironmaw Hall", "Torture Stair", "The Black Vault", "The Tail's End"]}
+    "crown": {
+      "name": "The Cinder Gullet",
+      "twist": "dark",
+      "names": [
+        "Ashfall Throat",
+        "Clinker Steps",
+        "The Smolder Run",
+        "Bellows Deep",
+        "Slag Chapel",
+        "Furnace Ribs",
+        "The Glowing Vein",
+        "Charcoal Choir",
+        "Tongue of Embers",
+        "The Last Breath"
+      ]
+    },
+    "spire": {
+      "name": "The Hexed Spine",
+      "twist": "starve",
+      "names": [
+        "Ink Hollow",
+        "Spellbone Stair",
+        "The Whispering Duct",
+        "Runic Marrow",
+        "Candle Crypt",
+        "The Folded Hall",
+        "Glyph Rot",
+        "Archive Under",
+        "The Blind Library",
+        "Vertebra Gate"
+      ]
+    },
+    "reef": {
+      "name": "The Drowned Belly",
+      "twist": "avalanche",
+      "names": [
+        "Brine Pit",
+        "Barnacle Bend",
+        "The Sunk Choir",
+        "Kelp Gut",
+        "Wreck Hollow",
+        "Pearl Teeth",
+        "The Undertow",
+        "Abyss Lantern",
+        "Salt Rot",
+        "The Black Tide"
+      ]
+    },
+    "hollow": {
+      "name": "The Root Gizzard",
+      "twist": "sugar",
+      "names": [
+        "Grub Warren",
+        "Thorn Gut",
+        "The Rotten Furrow",
+        "Mulch Halls",
+        "Scarecrow Bones",
+        "The Hungry Barn",
+        "Root Knot",
+        "Maggot Mill",
+        "Harvest Rot",
+        "The Sickle Deep"
+      ]
+    },
+    "keep": {
+      "name": "The Iron Tail",
+      "twist": "noMercy",
+      "names": [
+        "Rust Moat",
+        "Chain Gut",
+        "The Gaol Below",
+        "Gallows Root",
+        "Old Keep Bones",
+        "The Portcullis",
+        "Ironmaw Hall",
+        "Torture Stair",
+        "The Black Vault",
+        "The Tail's End"
+      ]
+    }
   },
   "_maw": "The Maw, fought at the end of every tunnel (its last-stand fight). Its numbers grow by 'perTunnel' for each tunnel down. Once beaten it turns from 'body' to 'slainBody' on the map.",
-  "maw": {"name": "The Maw", "body": "#3a1030", "belly": "#8a2050", "eye": "#ff3a3a", "slainBody": "#4a4a5a", "slainBelly": "#9a9aaa",
-    "hearts": 7, "armor": 6, "length": 14, "speed": 0.85, "stamina": 46, "drain": [1.0, 1.8, 1.4],
-    "perTunnel": {"hearts": 1, "armor": 1, "length": 1, "speed": 0.04},
-    "rules": {"venom.resistance": 50, "fire.resistance": 25},
-    "traits": []},
+  "maw": {
+    "name": "The Maw",
+    "body": "#3a1030",
+    "belly": "#8a2050",
+    "eye": "#ff3a3a",
+    "slainBody": "#4a4a5a",
+    "slainBelly": "#9a9aaa",
+    "hearts": 7,
+    "armor": 6,
+    "length": 14,
+    "speed": 0.85,
+    "stamina": 46,
+    "drain": [
+      1,
+      1.8,
+      1.4
+    ],
+    "perTunnel": {
+      "hearts": 1,
+      "armor": 1,
+      "length": 1,
+      "speed": 0.04
+    },
+    "rules": {
+      "venom.resistance": 50,
+      "fire.resistance": 25
+    },
+    "traits": []
+  },
   "_snakes": "The enemy snakes of the deep. from: the first level (counting every tunnel's levels in a row, 1 to 50) where it turns up. Each level brings the newest three it can. bite: hearts; hit: its damage tags. go: head (chases you), cut (gets in front of you), loot (takes keys, pouches, relics, trinkets and apples). pace: its step against yours (higher = slower).",
   "snakes": [
-    {"id": "nm_cutter", "name": "Cutthroat Adder", "from": 1, "len": 5, "go": "cut", "pace": 1.25, "bite": 1, "hit": {"tags": ["slashing"], "family": "edge"}, "color": "#b0403a", "belly": "#e08a60"},
-    {"id": "nm_thief", "name": "Pilfer Snake", "from": 3, "len": 4, "go": "loot", "pace": 1.1, "bite": 0.5, "hit": {"tags": ["piercing"], "family": "barb"}, "color": "#6a5a9a", "belly": "#b0a0e0"},
-    {"id": "nm_viper", "name": "Gloom Viper", "from": 6, "len": 4, "go": "head", "pace": 1.45, "bite": 0.5, "venom": 0.5, "hit": {"tags": ["venom"], "family": "toxin"}, "color": "#3a7a2a", "belly": "#a0e060"},
-    {"id": "nm_swarm", "name": "Hatchling Swarm", "from": 11, "len": 2, "count": 3, "go": "head", "pace": 1.6, "bite": 0.5, "hit": {"tags": ["piercing"]}, "color": "#8a6a3a", "belly": "#e0c080"},
-    {"id": "nm_rime", "name": "Rime Asp", "from": 21, "len": 5, "go": "head", "pace": 1.35, "bite": 0.5, "chill": 2.5, "hit": {"tags": ["ice"], "family": "rime"}, "color": "#4a8ab0", "belly": "#c0e8ff"},
-    {"id": "nm_spark", "name": "Storm Racer", "from": 31, "len": 6, "go": "cut", "pace": 0.95, "bite": 1, "hit": {"tags": ["electricity"], "family": "spark"}, "color": "#c0a020", "belly": "#fff080"}
+    {
+      "id": "nm_cutter",
+      "name": "Cutthroat Adder",
+      "from": 1,
+      "len": 5,
+      "go": "cut",
+      "pace": 1.25,
+      "bite": 1,
+      "hit": {
+        "tags": [
+          "slashing"
+        ],
+        "family": "edge"
+      },
+      "color": "#b0403a",
+      "belly": "#e08a60"
+    },
+    {
+      "id": "nm_thief",
+      "name": "Pilfer Snake",
+      "from": 3,
+      "len": 4,
+      "go": "loot",
+      "pace": 1.1,
+      "bite": 0.5,
+      "hit": {
+        "tags": [
+          "piercing"
+        ],
+        "family": "barb"
+      },
+      "color": "#6a5a9a",
+      "belly": "#b0a0e0"
+    },
+    {
+      "id": "nm_viper",
+      "name": "Gloom Viper",
+      "from": 6,
+      "len": 4,
+      "go": "head",
+      "pace": 1.45,
+      "bite": 0.5,
+      "venom": 0.5,
+      "hit": {
+        "tags": [
+          "venom"
+        ],
+        "family": "toxin"
+      },
+      "color": "#3a7a2a",
+      "belly": "#a0e060"
+    },
+    {
+      "id": "nm_swarm",
+      "name": "Hatchling Swarm",
+      "from": 11,
+      "len": 2,
+      "count": 3,
+      "go": "head",
+      "pace": 1.6,
+      "bite": 0.5,
+      "hit": {
+        "tags": [
+          "piercing"
+        ]
+      },
+      "color": "#8a6a3a",
+      "belly": "#e0c080"
+    },
+    {
+      "id": "nm_rime",
+      "name": "Rime Asp",
+      "from": 21,
+      "len": 5,
+      "go": "head",
+      "pace": 1.35,
+      "bite": 0.5,
+      "chill": 2.5,
+      "hit": {
+        "tags": [
+          "ice"
+        ],
+        "family": "rime"
+      },
+      "color": "#4a8ab0",
+      "belly": "#c0e8ff"
+    },
+    {
+      "id": "nm_spark",
+      "name": "Storm Racer",
+      "from": 31,
+      "len": 6,
+      "go": "cut",
+      "pace": 0.95,
+      "bite": 1,
+      "hit": {
+        "tags": [
+          "electricity"
+        ],
+        "family": "spark"
+      },
+      "color": "#c0a020",
+      "belly": "#fff080"
+    }
   ],
-  "_roots": "The Great Tree's roots in each tunnel: upgrades that work in every nightmare level, never above ground. stat: a stat the level reads (the rune stats, the damage stats, and nmSnakeSlow: % slower snakes); v: per tier; cost: per tier, in that tunnel's money, times its depth.",
+  "_roots": "The Great Tree's roots in each tunnel, six like each island's tree: upgrades that work in every nightmare level, never above ground. stat: a stat the level reads (the rune stats, the damage stats, and nmSnakeSlow: % slower snakes); icon: its picture (cu:<icon>); v: per tier; cost: per tier, in that tunnel's money, times its depth.",
   "roots": {
-    "crown": {"name": "Cinder Roots", "upgrades": [
-      {"id": "nr_ember", "name": "Emberbark", "stat": "fire.resistance", "v": [10, 20, 30, 40, 50], "cost": [400, 900, 1800, 3500, 6000], "text": "Fire Resistance in the deep."},
-      {"id": "nr_heart", "name": "Heartwood", "stat": "hearts", "v": [1, 1, 2, 2, 3], "cost": [600, 1400, 2800, 5000, 9000], "text": "More hearts in the deep."},
-      {"id": "nr_greed", "name": "Gold Sap", "stat": "money", "v": [10, 20, 30, 40, 50], "cost": [500, 1100, 2200, 4200, 7500], "text": "Nightmare levels pay more."}]},
-    "spire": {"name": "Arcane Roots", "upgrades": [
-      {"id": "nr_spark", "name": "Grounding Root", "stat": "electricity.resistance", "v": [10, 20, 30, 40, 50], "cost": [400, 900, 1800, 3500, 6000], "text": "Electricity Resistance in the deep."},
-      {"id": "nr_casts", "name": "Wellspring", "stat": "freeCasts", "v": [1, 1, 2, 2, 3], "cost": [600, 1400, 2800, 5000, 9000], "text": "Free spell casts every nightmare level."},
-      {"id": "nr_calm", "name": "Slow Sap", "stat": "speed", "v": [-3, -6, -9, -12, -15], "cost": [500, 1100, 2200, 4200, 7500], "text": "The deep's levels run slower."}]},
-    "reef": {"name": "Tidal Roots", "upgrades": [
-      {"id": "nr_rime", "name": "Coldwater Root", "stat": "ice.resistance", "v": [10, 20, 30, 40, 50], "cost": [400, 900, 1800, 3500, 6000], "text": "Ice Resistance in the deep."},
-      {"id": "nr_armor", "name": "Shellbark", "stat": "armor", "v": [1, 1, 2, 2, 3], "cost": [600, 1400, 2800, 5000, 9000], "text": "More armor in the deep."},
-      {"id": "nr_loot", "name": "Drift Roots", "stat": "loot", "v": [15, 30, 45, 60, 80], "cost": [500, 1100, 2200, 4200, 7500], "text": "More loot in the deep."}]},
-    "hollow": {"name": "Bramble Roots", "upgrades": [
-      {"id": "nr_venom", "name": "Bitter Root", "stat": "venom.resistance", "v": [10, 20, 30, 40, 50], "cost": [400, 900, 1800, 3500, 6000], "text": "Venom Resistance in the deep."},
-      {"id": "nr_snare", "name": "Snarl Roots", "stat": "nmSnakeSlow", "v": [6, 12, 18, 24, 30], "cost": [600, 1400, 2800, 5000, 9000], "text": "The deep's snakes are slower."},
-      {"id": "nr_points", "name": "Rich Loam", "stat": "points", "v": [10, 20, 30, 40, 50], "cost": [500, 1100, 2200, 4200, 7500], "text": "More points in the deep."}]},
-    "keep": {"name": "Iron Roots", "upgrades": [
-      {"id": "nr_mail", "name": "Ironbark", "stat": "slashing.resistance", "v": [10, 20, 30, 40, 50], "cost": [400, 900, 1800, 3500, 6000], "text": "Slashing Resistance in the deep."},
-      {"id": "nr_spike", "name": "Spikeroot", "stat": "piercing.resistance", "v": [10, 20, 30, 40, 50], "cost": [600, 1400, 2800, 5000, 9000], "text": "Piercing Resistance in the deep."},
-      {"id": "nr_hazard", "name": "Deep Hush", "stat": "hazards", "v": [-5, -10, -15, -20, -25], "cost": [500, 1100, 2200, 4200, 7500], "text": "Fewer hazards in the deep."}]}
+    "crown": {
+      "name": "Cinder Roots",
+      "upgrades": [
+        {
+          "id": "nr_ember",
+          "name": "Emberbark",
+          "icon": "ward",
+          "stat": "fire.resistance",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            400,
+            900,
+            1800,
+            3500,
+            6000
+          ],
+          "text": "Fire Resistance {v}% in the deep."
+        },
+        {
+          "id": "nr_heart",
+          "name": "Heartwood",
+          "icon": "heart",
+          "stat": "hearts",
+          "v": [
+            1,
+            1,
+            2,
+            2,
+            3
+          ],
+          "cost": [
+            600,
+            1400,
+            2800,
+            5000,
+            9000
+          ],
+          "text": "+{v} hearts in every nightmare level."
+        },
+        {
+          "id": "nr_greed",
+          "name": "Gold Sap",
+          "icon": "wanted",
+          "stat": "money",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            500,
+            1100,
+            2200,
+            4200,
+            7500
+          ],
+          "text": "Nightmare wins pay +{v}%."
+        },
+        {
+          "id": "nr_drain",
+          "name": "Smoulder Root",
+          "icon": "stamina",
+          "stat": "bossDrain",
+          "v": [
+            8,
+            16,
+            24,
+            32,
+            40
+          ],
+          "cost": [
+            500,
+            1100,
+            2200,
+            4200,
+            7500
+          ],
+          "text": "The Maw tires {v}% faster."
+        },
+        {
+          "id": "nr_gems",
+          "name": "Geode Knot",
+          "icon": "gem",
+          "stat": "gemChance",
+          "v": [
+            3,
+            6,
+            9,
+            12,
+            15
+          ],
+          "cost": [
+            600,
+            1400,
+            2800,
+            5000,
+            9000
+          ],
+          "text": "{v}% chance a nightmare win also pays a gem."
+        },
+        {
+          "id": "nr_blaze",
+          "name": "Blazing Tap",
+          "icon": "star",
+          "stat": "points",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            400,
+            900,
+            1800,
+            3500,
+            6000
+          ],
+          "text": "+{v}% points in the deep."
+        }
+      ]
+    },
+    "spire": {
+      "name": "Arcane Roots",
+      "upgrades": [
+        {
+          "id": "nr_spark",
+          "name": "Grounding Root",
+          "icon": "ward",
+          "stat": "electricity.resistance",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            400,
+            900,
+            1800,
+            3500,
+            6000
+          ],
+          "text": "Electricity Resistance {v}% in the deep."
+        },
+        {
+          "id": "nr_casts",
+          "name": "Wellspring",
+          "icon": "potion",
+          "stat": "freeCasts",
+          "v": [
+            1,
+            1,
+            2,
+            2,
+            3
+          ],
+          "cost": [
+            600,
+            1400,
+            2800,
+            5000,
+            9000
+          ],
+          "text": "{v} free spell casts in every nightmare level."
+        },
+        {
+          "id": "nr_calm",
+          "name": "Slow Sap",
+          "icon": "snail",
+          "stat": "speed",
+          "v": [
+            -3,
+            -6,
+            -9,
+            -12,
+            -15
+          ],
+          "cost": [
+            500,
+            1100,
+            2200,
+            4200,
+            7500
+          ],
+          "text": "Nightmare levels run {v}% faster (a minus is slower)."
+        },
+        {
+          "id": "nr_focus",
+          "name": "Ley Line",
+          "icon": "focus",
+          "stat": "castCooldown",
+          "v": [
+            -10,
+            -20,
+            -30,
+            -40,
+            -50
+          ],
+          "cost": [
+            500,
+            1100,
+            2200,
+            4200,
+            7500
+          ],
+          "text": "Spells recharge {v}% sooner in the deep (a minus is sooner)."
+        },
+        {
+          "id": "nr_orchard",
+          "name": "Buried Orchard",
+          "icon": "orchard",
+          "stat": "apples",
+          "v": [
+            1,
+            1,
+            1,
+            2,
+            2
+          ],
+          "cost": [
+            600,
+            1400,
+            2800,
+            5000,
+            9000
+          ],
+          "text": "+{v} apples on the board in the deep."
+        },
+        {
+          "id": "nr_juice",
+          "name": "Sweet Sap",
+          "icon": "juicy",
+          "stat": "applePoints",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            400,
+            900,
+            1800,
+            3500,
+            6000
+          ],
+          "text": "Apples are worth +{v}% in the deep."
+        }
+      ]
+    },
+    "reef": {
+      "name": "Tidal Roots",
+      "upgrades": [
+        {
+          "id": "nr_rime",
+          "name": "Coldwater Root",
+          "icon": "ward",
+          "stat": "ice.resistance",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            400,
+            900,
+            1800,
+            3500,
+            6000
+          ],
+          "text": "Ice Resistance {v}% in the deep."
+        },
+        {
+          "id": "nr_armor",
+          "name": "Shellbark",
+          "icon": "plate",
+          "stat": "armor",
+          "v": [
+            1,
+            1,
+            2,
+            2,
+            3
+          ],
+          "cost": [
+            600,
+            1400,
+            2800,
+            5000,
+            9000
+          ],
+          "text": "+{v} armor in every nightmare level."
+        },
+        {
+          "id": "nr_loot",
+          "name": "Drift Roots",
+          "icon": "chest",
+          "stat": "loot",
+          "v": [
+            15,
+            30,
+            45,
+            60,
+            80
+          ],
+          "cost": [
+            500,
+            1100,
+            2200,
+            4200,
+            7500
+          ],
+          "text": "+{v}% loot in the deep."
+        },
+        {
+          "id": "nr_bite",
+          "name": "Barnacle Teeth",
+          "icon": "fang",
+          "stat": "bite",
+          "v": [
+            1,
+            1,
+            2,
+            2,
+            3
+          ],
+          "cost": [
+            500,
+            1100,
+            2200,
+            4200,
+            7500
+          ],
+          "text": "Your bites on a tired Maw hit +{v} harder."
+        },
+        {
+          "id": "nr_sting",
+          "name": "Urchin Root",
+          "icon": "wardbee",
+          "stat": "stingGuard",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            600,
+            1400,
+            2800,
+            5000,
+            9000
+          ],
+          "text": "{v}% chance a sting or bite in the deep misses."
+        },
+        {
+          "id": "nr_grace",
+          "name": "Kelp Cradle",
+          "icon": "zzz",
+          "stat": "graceSecs",
+          "v": [
+            0.2,
+            0.4,
+            0.6,
+            0.8,
+            1
+          ],
+          "cost": [
+            400,
+            900,
+            1800,
+            3500,
+            6000
+          ],
+          "text": "+{v} seconds safe after a hit in the deep."
+        }
+      ]
+    },
+    "hollow": {
+      "name": "Bramble Roots",
+      "upgrades": [
+        {
+          "id": "nr_venom",
+          "name": "Bitter Root",
+          "icon": "ward",
+          "stat": "venom.resistance",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            400,
+            900,
+            1800,
+            3500,
+            6000
+          ],
+          "text": "Venom Resistance {v}% in the deep."
+        },
+        {
+          "id": "nr_snare",
+          "name": "Snarl Roots",
+          "icon": "snail",
+          "stat": "nmSnakeSlow",
+          "v": [
+            6,
+            12,
+            18,
+            24,
+            30
+          ],
+          "cost": [
+            600,
+            1400,
+            2800,
+            5000,
+            9000
+          ],
+          "text": "The deep's snakes are {v}% slower."
+        },
+        {
+          "id": "nr_points",
+          "name": "Rich Loam",
+          "icon": "star",
+          "stat": "points",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            500,
+            1100,
+            2200,
+            4200,
+            7500
+          ],
+          "text": "+{v}% points in the deep."
+        },
+        {
+          "id": "nr_thief",
+          "name": "Tangleguard",
+          "icon": "scales",
+          "stat": "thiefGuard",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            500,
+            1100,
+            2200,
+            4200,
+            7500
+          ],
+          "text": "Thieves in the deep take {v}% less."
+        },
+        {
+          "id": "nr_feast",
+          "name": "Root Cellar",
+          "icon": "food",
+          "stat": "applePoints",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            600,
+            1400,
+            2800,
+            5000,
+            9000
+          ],
+          "text": "Apples are worth +{v}% in the deep."
+        },
+        {
+          "id": "nr_crop",
+          "name": "Deep Crop",
+          "icon": "orchard",
+          "stat": "apples",
+          "v": [
+            1,
+            1,
+            1,
+            2,
+            2
+          ],
+          "cost": [
+            400,
+            900,
+            1800,
+            3500,
+            6000
+          ],
+          "text": "+{v} apples on the board in the deep."
+        }
+      ]
+    },
+    "keep": {
+      "name": "Iron Roots",
+      "upgrades": [
+        {
+          "id": "nr_mail",
+          "name": "Ironbark",
+          "icon": "ironscales",
+          "stat": "slashing.resistance",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            400,
+            900,
+            1800,
+            3500,
+            6000
+          ],
+          "text": "Slashing Resistance {v}% in the deep."
+        },
+        {
+          "id": "nr_spike",
+          "name": "Spikeroot",
+          "icon": "plate",
+          "stat": "piercing.resistance",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            600,
+            1400,
+            2800,
+            5000,
+            9000
+          ],
+          "text": "Piercing Resistance {v}% in the deep."
+        },
+        {
+          "id": "nr_hazard",
+          "name": "Deep Hush",
+          "icon": "ward",
+          "stat": "hazards",
+          "v": [
+            -5,
+            -10,
+            -15,
+            -20,
+            -25
+          ],
+          "cost": [
+            500,
+            1100,
+            2200,
+            4200,
+            7500
+          ],
+          "text": "Hazards in the deep {v}% (a minus is fewer)."
+        },
+        {
+          "id": "nr_heart2",
+          "name": "Oak Heart",
+          "icon": "heart",
+          "stat": "hearts",
+          "v": [
+            1,
+            1,
+            2,
+            2,
+            3
+          ],
+          "cost": [
+            600,
+            1400,
+            2800,
+            5000,
+            9000
+          ],
+          "text": "+{v} hearts in every nightmare level."
+        },
+        {
+          "id": "nr_wage",
+          "name": "Old Coin Root",
+          "icon": "wanted",
+          "stat": "money",
+          "v": [
+            10,
+            20,
+            30,
+            40,
+            50
+          ],
+          "cost": [
+            500,
+            1100,
+            2200,
+            4200,
+            7500
+          ],
+          "text": "Nightmare wins pay +{v}%."
+        },
+        {
+          "id": "nr_blow",
+          "name": "Ram Root",
+          "icon": "anvil",
+          "stat": "bite",
+          "v": [
+            1,
+            1,
+            2,
+            2,
+            3
+          ],
+          "cost": [
+            400,
+            900,
+            1800,
+            3500,
+            6000
+          ],
+          "text": "Your bites on a tired Maw hit +{v} harder."
+        }
+      ]
+    }
   },
   "_items": "Things only the deep sells. They work like the item named in 'acts' (or are data like any rune), go in the same slots, and can be fitted, trained and cooked in the normal workshops. 'look': the item whose picture they're drawn from (textures/items/nightmare/). sold: the rarities the nightmare shop offers.",
-  "sold": ["rare", "legendary"],
+  "sold": [
+    "rare",
+    "legendary"
+  ],
   "items": [
-    {"id": "nm_mawfang", "family": "gear", "piece": "weapon", "acts": "sword", "look": "dagger", "name": "Mawfang", "uses": [2, 4, 6, 6], "hit": {"tags": ["piercing", "venom"], "family": "toxin"}, "damage": [1, 2, 2, 3], "traits": ["toxin", "pierce"], "stats": [{"stat": "venom.resistance", "v": 15}, {"stat": "toxin.resistance", "v": 10}, {"stat": "loot", "v": 10}, {"stat": "toxin.immunity", "v": 1}], "does": "A tooth pried from the Maw. Kills what you run into, poisons bosses and slips through their armor.", "strong": "Bosses, venomous foes", "weak": "Heavy to swing: it wears out on hazards like any blade.", "legend": "Its blows land twice as hard."},
-    {"id": "nm_cleaver", "family": "gear", "piece": "weapon", "acts": "sword", "look": "axe", "name": "Gullet Cleaver", "uses": [2, 4, 6, 6], "hit": {"tags": ["slashing", "fire"], "family": "ember"}, "damage": [1, 2, 2, 3], "traits": ["cleave", "burn"], "stats": [{"stat": "fire.resistance", "v": 15}, {"stat": "slashing.resistance", "v": 10}, {"stat": "money", "v": 10}, {"stat": "ember.immunity", "v": 1}], "does": "Forged in the Cinder Gullet. Cuts down what you hit and the ones beside it, and leaves bosses burning.", "strong": "Swarms, fire-born bosses", "weak": "Ice-born things shrug off the burn.", "legend": "Its blows land twice as hard."},
-    {"id": "nm_rootlash", "family": "spell", "acts": "frost", "look": "frost", "name": "Rootlash", "charges": [2, 2, 3, 4], "power": [3, 4, 5, 7], "unit": "s", "hit": {"tags": ["piercing"]}, "does": "Roots burst from the walls and hold every hazard, enemy and boss where it is for a few seconds.", "strong": "Swarms, cutters, a boss on the charge", "weak": "Doesn't stop walls closing in.", "legend": "Holds bosses twice as long."},
-    {"id": "nm_gloomfire", "family": "spell", "acts": "fireball", "look": "fireball", "name": "Gloomfire", "charges": [2, 3, 3, 4], "power": [1, 1, 2, 2], "unit": "hits", "hit": {"tags": ["fire", "venom"], "family": "ember"}, "does": "A ball of black fire that burns and poisons whatever it hits.", "strong": "Bosses that shrug off plain fire", "weak": "Flies straight: walls stop it.", "legend": "Hits twice."},
-    {"id": "nm_ashcake", "family": "food", "acts": "stew", "look": "bread", "name": "Ash Cake", "charges": [1, 2, 3, 4], "power": [1, 2, 2, 3], "unit": "hearts", "does": "Baked in a buried oven. Heals more than a stew.", "strong": "The Maw's fights", "weak": "Can't heal past your full hearts.", "legend": "Heals three hearts."},
-    {"id": "nm_duskberry", "family": "food", "acts": "jelly", "look": "glowberry", "name": "Duskberry", "charges": [1, 2, 2, 3], "power": [5, 6, 8, 10], "unit": "s", "does": "The deep's snakes and enemies lose your scent for a while.", "strong": "Levels full of snakes", "weak": "Hazards don't care.", "legend": "Enemies that touch you are stunned."},
-    {"id": "nm_grub", "family": "pet", "acts": "firefly", "look": "firefly", "name": "Lantern Grub", "power": [7, 5, 4, 3], "range": [2, 3, 3, 4], "unit": "s", "stats": [{"stat": "venom.resistance", "v": 10}, {"stat": "applePoints", "v": 8}, {"stat": "loot", "v": 8}, {"stat": "toxin.immunity", "v": 1}], "does": "A glowing grub from the roots: fetches apples, lights the dark.", "strong": "Dark tunnels, apple goals", "weak": "Can't fight anything.", "legend": "Fetched apples count double, and Toxin Immunity."},
-    {"id": "nm_rootling", "family": "pet", "acts": "turtle", "look": "hedgehog", "name": "Rootling", "power": [30, 24, 18, 12], "unit": "s", "stats": [{"stat": "piercing.resistance", "v": 10}, {"stat": "slashing.resistance", "v": 8}, {"stat": "stingGuard", "v": 10}, {"stat": "barb.immunity", "v": 1}], "does": "A knot of living root that takes a hit for you, then grows back.", "strong": "Any one hit", "weak": "Slow to grow back; no help against walls.", "legend": "Starts every level ready, plus one extra."},
-    {"id": "nm_rune_maw", "family": "rune", "look": "fury", "name": "Rune of the Maw", "color": "#c02050", "good": [{"stat": "money", "v": [20, 30, 40, 60]}, {"stat": "damage", "v": [10, 15, 20, 30]}], "bad": [{"stat": "hearts", "v": [-1, -1, -1, -1]}], "does": "Hunger carved in stone: far more money and harder blows, for a heart.", "strong": "Confident runs, boss fights", "weak": "One heart fewer."},
-    {"id": "nm_rune_dusk", "family": "rune", "look": "calm", "name": "Rune of Dusk", "color": "#5a3a9a", "good": [{"stat": "hazards", "v": [-15, -20, -25, -35]}, {"stat": "loot", "v": [10, 15, 20, 30]}], "bad": [{"stat": "speed", "v": [8, 7, 6, 5]}], "does": "Quiet in the dark: fewer hazards and more finds, but everything moves faster.", "strong": "Hazard-heavy levels", "weak": "A faster level."}
+    {
+      "id": "nm_mawfang",
+      "family": "gear",
+      "piece": "weapon",
+      "acts": "sword",
+      "look": "dagger",
+      "name": "Mawfang",
+      "uses": [
+        2,
+        4,
+        6,
+        6
+      ],
+      "hit": {
+        "tags": [
+          "piercing",
+          "venom"
+        ],
+        "family": "toxin"
+      },
+      "damage": [
+        1,
+        2,
+        2,
+        3
+      ],
+      "traits": [
+        "toxin",
+        "pierce"
+      ],
+      "stats": [
+        {
+          "stat": "venom.resistance",
+          "v": 15
+        },
+        {
+          "stat": "toxin.resistance",
+          "v": 10
+        },
+        {
+          "stat": "loot",
+          "v": 10
+        },
+        {
+          "stat": "toxin.immunity",
+          "v": 1
+        }
+      ],
+      "does": "A tooth pried from the Maw. Kills what you run into, poisons bosses and slips through their armor.",
+      "strong": "Bosses, venomous foes",
+      "weak": "Heavy to swing: it wears out on hazards like any blade.",
+      "legend": "Its blows land twice as hard."
+    },
+    {
+      "id": "nm_cleaver",
+      "family": "gear",
+      "piece": "weapon",
+      "acts": "sword",
+      "look": "axe",
+      "name": "Gullet Cleaver",
+      "uses": [
+        2,
+        4,
+        6,
+        6
+      ],
+      "hit": {
+        "tags": [
+          "slashing",
+          "fire"
+        ],
+        "family": "ember"
+      },
+      "damage": [
+        1,
+        2,
+        2,
+        3
+      ],
+      "traits": [
+        "cleave",
+        "burn"
+      ],
+      "stats": [
+        {
+          "stat": "fire.resistance",
+          "v": 15
+        },
+        {
+          "stat": "slashing.resistance",
+          "v": 10
+        },
+        {
+          "stat": "money",
+          "v": 10
+        },
+        {
+          "stat": "ember.immunity",
+          "v": 1
+        }
+      ],
+      "does": "Forged in the Cinder Gullet. Cuts down what you hit and the ones beside it, and leaves bosses burning.",
+      "strong": "Swarms, fire-born bosses",
+      "weak": "Ice-born things shrug off the burn.",
+      "legend": "Its blows land twice as hard."
+    },
+    {
+      "id": "nm_rootlash",
+      "family": "spell",
+      "acts": "frost",
+      "look": "frost",
+      "name": "Rootlash",
+      "charges": [
+        2,
+        2,
+        3,
+        4
+      ],
+      "power": [
+        3,
+        4,
+        5,
+        7
+      ],
+      "unit": "s",
+      "hit": {
+        "tags": [
+          "piercing"
+        ]
+      },
+      "does": "Roots burst from the walls and hold every hazard, enemy and boss where it is for a few seconds.",
+      "strong": "Swarms, cutters, a boss on the charge",
+      "weak": "Doesn't stop walls closing in.",
+      "legend": "Holds bosses twice as long."
+    },
+    {
+      "id": "nm_gloomfire",
+      "family": "spell",
+      "acts": "fireball",
+      "look": "fireball",
+      "name": "Gloomfire",
+      "charges": [
+        2,
+        3,
+        3,
+        4
+      ],
+      "power": [
+        1,
+        1,
+        2,
+        2
+      ],
+      "unit": "hits",
+      "hit": {
+        "tags": [
+          "fire",
+          "venom"
+        ],
+        "family": "ember"
+      },
+      "does": "A ball of black fire that burns and poisons whatever it hits.",
+      "strong": "Bosses that shrug off plain fire",
+      "weak": "Flies straight: walls stop it.",
+      "legend": "Hits twice."
+    },
+    {
+      "id": "nm_ashcake",
+      "family": "food",
+      "acts": "stew",
+      "look": "bread",
+      "name": "Ash Cake",
+      "charges": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "power": [
+        1,
+        2,
+        2,
+        3
+      ],
+      "unit": "hearts",
+      "does": "Baked in a buried oven. Heals more than a stew.",
+      "strong": "The Maw's fights",
+      "weak": "Can't heal past your full hearts.",
+      "legend": "Heals three hearts."
+    },
+    {
+      "id": "nm_duskberry",
+      "family": "food",
+      "acts": "jelly",
+      "look": "glowberry",
+      "name": "Duskberry",
+      "charges": [
+        1,
+        2,
+        2,
+        3
+      ],
+      "power": [
+        5,
+        6,
+        8,
+        10
+      ],
+      "unit": "s",
+      "does": "The deep's snakes and enemies lose your scent for a while.",
+      "strong": "Levels full of snakes",
+      "weak": "Hazards don't care.",
+      "legend": "Enemies that touch you are stunned."
+    },
+    {
+      "id": "nm_grub",
+      "family": "pet",
+      "acts": "firefly",
+      "look": "firefly",
+      "name": "Lantern Grub",
+      "power": [
+        7,
+        5,
+        4,
+        3
+      ],
+      "range": [
+        2,
+        3,
+        3,
+        4
+      ],
+      "unit": "s",
+      "stats": [
+        {
+          "stat": "venom.resistance",
+          "v": 10
+        },
+        {
+          "stat": "applePoints",
+          "v": 8
+        },
+        {
+          "stat": "loot",
+          "v": 8
+        },
+        {
+          "stat": "toxin.immunity",
+          "v": 1
+        }
+      ],
+      "does": "A glowing grub from the roots: fetches apples, lights the dark.",
+      "strong": "Dark tunnels, apple goals",
+      "weak": "Can't fight anything.",
+      "legend": "Fetched apples count double, and Toxin Immunity."
+    },
+    {
+      "id": "nm_rootling",
+      "family": "pet",
+      "acts": "turtle",
+      "look": "hedgehog",
+      "name": "Rootling",
+      "power": [
+        30,
+        24,
+        18,
+        12
+      ],
+      "unit": "s",
+      "stats": [
+        {
+          "stat": "piercing.resistance",
+          "v": 10
+        },
+        {
+          "stat": "slashing.resistance",
+          "v": 8
+        },
+        {
+          "stat": "stingGuard",
+          "v": 10
+        },
+        {
+          "stat": "barb.immunity",
+          "v": 1
+        }
+      ],
+      "does": "A knot of living root that takes a hit for you, then grows back.",
+      "strong": "Any one hit",
+      "weak": "Slow to grow back; no help against walls.",
+      "legend": "Starts every level ready, plus one extra."
+    },
+    {
+      "id": "nm_rune_maw",
+      "family": "rune",
+      "look": "fury",
+      "name": "Rune of the Maw",
+      "color": "#c02050",
+      "good": [
+        {
+          "stat": "money",
+          "v": [
+            20,
+            30,
+            40,
+            60
+          ]
+        },
+        {
+          "stat": "damage",
+          "v": [
+            10,
+            15,
+            20,
+            30
+          ]
+        }
+      ],
+      "bad": [
+        {
+          "stat": "hearts",
+          "v": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        }
+      ],
+      "does": "Hunger carved in stone: far more money and harder blows, for a heart.",
+      "strong": "Confident runs, boss fights",
+      "weak": "One heart fewer."
+    },
+    {
+      "id": "nm_rune_dusk",
+      "family": "rune",
+      "look": "calm",
+      "name": "Rune of Dusk",
+      "color": "#5a3a9a",
+      "good": [
+        {
+          "stat": "hazards",
+          "v": [
+            -15,
+            -20,
+            -25,
+            -35
+          ]
+        },
+        {
+          "stat": "loot",
+          "v": [
+            10,
+            15,
+            20,
+            30
+          ]
+        }
+      ],
+      "bad": [
+        {
+          "stat": "speed",
+          "v": [
+            8,
+            7,
+            6,
+            5
+          ]
+        }
+      ],
+      "does": "Quiet in the dark: fewer hazards and more finds, but everything moves faster.",
+      "strong": "Hazard-heavy levels",
+      "weak": "A faster level."
+    }
   ],
   "_posters": "Title screen (camp-title.js): the Maw's wanted poster once nightmare is open, crossed out after the fifth Maw; its sticker for each Maw beaten. 'stickerSlots' are the spots kept free for the quest bosses' stickers to come (no posters for those).",
-  "stickerSlots": [[214, 140, -6, "wall"], [-28, 190, 12, "wall"], [70, 300, -10, "machine"], [196, 284, 9, "machine"], [130, 4, -4, "wall"]]
+  "stickerSlots": [
+    [
+      214,
+      140,
+      -6,
+      "wall"
+    ],
+    [
+      -28,
+      190,
+      12,
+      "wall"
+    ],
+    [
+      70,
+      300,
+      -10,
+      "machine"
+    ],
+    [
+      196,
+      284,
+      9,
+      "machine"
+    ],
+    [
+      130,
+      4,
+      -4,
+      "wall"
+    ]
+  ]
 }

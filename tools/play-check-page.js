@@ -111,9 +111,12 @@
       check(deepBackArt(top).art.width > 0 && deepBackArt(N.order[2]).tag === "sealed", "nightmare: the underside is painted, and a sealed one for an island not dug yet");
     }
     const money0 = camp.wallet[cur];
-    // level 1: its pin opens its card, Start plays it
+    // level 1, just like a level up top: its pin brings it up close, a second click opens its card, Start plays it
     pin(1).click();
-    check(mapGoalEl.classList.contains("open") && !!mapGoalEl.querySelector(".nm-card") && mapGoalEl.textContent.includes(N.tunnels[top].names[0]), "nightmare: level 1's pin opens its card on the map");
+    check(!!mapPop && mapPop.focus && mapPop.key === top && mapPop.j === "n1" && nodeScrollEl.textContent.includes(N.tunnels[top].names[0]), "nightmare: level 1's pin brings it up close, its name on the scroll");
+    check(nodeLinksNow.some(l => l.to.id === "nup" && l.role === "back") && nodeLinksNow.some(l => l.to.id === "n2"), "nightmare: up close, the screen's edges walk back to the hole and on to level 2");
+    pin(1).click();
+    check(mapGoalEl.classList.contains("open") && !!mapGoalEl.querySelector(".nm-card") && mapGoalEl.textContent.includes(N.tunnels[top].names[0]), "nightmare: a second click opens its card");
     mapGoalEl.querySelector('[data-mg="go"]').click();
     check(!!campRun && campRun.nmRun && campRun.board === `nm-${top}-1`, "nightmare: Start plays level 1 on its own board");
     check(!!nm[N.tunnels[top].twist], `nightmare: the tunnel's twist (${N.tunnels[top].twist}) is on`);
@@ -123,15 +126,17 @@
       let want = 0; F.board.forEach(r => { want += (r.match(/[#P13]/g) || []).length; });
       check(walls.size <= want && walls.size >= want - 4, `nightmare: the board's walls come from its file (${walls.size} of ${want})`);
     }
-    const report = async () => { await wait(() => currentScreen === "modes" && mapGoalEl.classList.contains("open") && !!mapGoalEl.querySelector(".nm-card.won, .nm-card.lost"), 30); return mapGoalEl; };
+    // after a run: like the 75, back on the map up close on the next stop, the run at the side
+    const report = async k => { await wait(() => currentScreen === "modes" && !!mapPop && mapPop.j === "n" + k && mapFlip, 30); };
+    const playStop = k => { actOnNode(top, "n" + k); const go = mapGoalEl.querySelector('[data-mg="go"]'); if (go) go.click(); };
     campWinLevel();
-    await report();
+    await report(2);
     check(camp.nm.levels[`${top}:1`] === 1 && camp.wallet[cur] > money0, "nightmare: a win is recorded and paid in the island's money");
-    check(!campRun && currentScreen === "modes" && mapSel === top && mapFlip && !!mapGoalEl.querySelector(".nm-card.won"), "nightmare: after a win, back on the turned-over map with the report");
-    check(!!mapGoalEl.querySelector('[data-mg="next"]'), "nightmare: the report offers the next level");
-    // levels 2-10 through the report's Next button
+    check(!campRun && currentScreen === "modes" && mapSel === top && mapFlip && mapPop.j === "n2", "nightmare: after a win, back around the back of the island, up close on level 2");
+    check(nodeSideEl.classList.contains("open") && nodeSideEl.textContent.includes(N.tunnels[top].names[0]), "nightmare: with the run at the side, like the 75");
+    // levels 2-10, each from its stop up close
     for (let k = 2; k <= N.levels; k++) {
-      mapGoalEl.querySelector('[data-mg="next"]').click();
+      playStop(k);
       if (!check(!!campRun && campRun.n === k, `nightmare: Next starts level ${k}`)) break;
       if (k === 6) {
         // the deep's snakes: level 6 of the first tunnel brings the cutter, the thief and the viper
@@ -155,20 +160,19 @@
         }
       }
       campWinLevel();
-      await report();
+      await report(k + 1);
     }
     check(nmShopOpen(top) && !pin("shop").classList.contains("locked"), "nightmare: the shop opens after level 5, on the map too");
     // the Maw
-    mapGoalEl.querySelector('[data-mg="next"]').click();
+    playStop(11);
     check(!!campRun && campRun.n === N.levels + 1 && !!boss && boss.maw && boss.name === "The Maw", "nightmare: level 11 is the Maw");
     check(boss.hearts === N.maw.hearts && boss.armor === 0, "nightmare: the Maw's last stand (no armor, its hearts)");
     campWinLevel();
-    await report();
+    await report(11);
     check(camp.nm.maw.includes(top) && nmTunnelOpen(N.order[1]), "nightmare: beating the Maw opens the next tunnel down");
     check(pin(11).classList.contains("slain"), "nightmare: the Maw's pin shows it beaten");
-    // closing the report digs the next island down
-    mapGoalEl.querySelector('[data-mg="back"]').click();
-    await wait(() => mapSel === N.order[1] && deepReveal[N.order[1]] !== undefined, 30);
+    // a moment later the next island down is dug
+    await wait(() => mapSel === N.order[1] && deepReveal[N.order[1]] !== undefined, 50);
     await wait(() => mapFlip && mapSel === N.order[1] && !deepFlipping(), 40);
     check(mapSel === N.order[1] && mapFlip && !!mapPinsEl.querySelector(`[data-key="nm-${N.order[1]}-1"]`) && !mapPinsEl.querySelector(`[data-key="nm-${N.order[1]}-1"]`).hidden, "nightmare: then the map flies down, digs the next island and turns over again");
     // back up, and down again by the hole
@@ -179,20 +183,35 @@
     check(mapFlip, "nightmare: the hole in the grass turns them over again");
     await wait(() => !deepFlipping(), 30);
     try { coilCache = null; coilArt(); check(coilCache.tag.includes(top), "nightmare: the Coil redraws with the beaten Maw's stretch in bone"); } catch (e) { problems.push("nightmare: the Coil: " + e.message); }
-    // the roots, from their pin
+    // the roots: their stop branches off between the hole and level 1, and opens their tree, hung upside down
+    check(deepNodeLinks(top, "nup").some(l => l.to.id === "nroots") && deepNodeLinks(top, "nroots").some(l => l.to.id === "nup"), "nightmare: the roots branch off the way from the hole to level 1");
     camp.wallet[cur] = 1e6;
     pin("roots").click();
-    check(nmEl.classList.contains("active") && !!nmEl.querySelector('[data-nm="root"]'), "nightmare: the roots' pin opens their panel");
-    nmEl.querySelectorAll('[data-nm="root"]')[1].click();
-    check(camp.nm.roots.nr_heart === 1, "nightmare: a root upgrade can be bought");
+    check(currentScreen === "tree" && treeArea === "roots" && treePinsEl.querySelectorAll(".tree-pin").length === 6 && document.getElementById("tree-title").textContent === N.roots[top].name, "nightmare: the roots' stop opens their tree screen, six roots like the six branches");
+    treePinsEl.querySelectorAll(".tree-pin")[1].click();
+    treeCardEl.querySelector("[data-buy]").click();
+    check(camp.nm.roots.nr_heart === 1, "nightmare: a root grows like a branch does");
     check(camp.wallet[cur] === 1e6 - N.roots[top].upgrades[1].cost[0], "nightmare: it costs its first tier (times the tunnel's depth, 1)");
-    closeNmPanel();
+    goBack();
+    await wait(() => currentScreen === "modes" && mapFlip, 30);
+    check(currentScreen === "modes" && mapFlip, `nightmare: back from the roots, still around the back (screen ${currentScreen}, flip ${mapFlip}, ret ${nmShopReturn})`);
     nmStart(top, 1);
     check(campRun.extra.hearts >= 1 && currentHearts >= CAMP.rules.snake.hearts + 1, "nightmare: the roots' Heartwood adds a heart in the deep");
     stop();
     campStart("keep", 1);
     check(!(campRun.extra && campRun.extra.hearts), "nightmare: the roots do nothing above ground");
     stop();
+    // the console: play a tunnel level, and unlock all takes in nightmare
+    runConsole("dev nightmare.play spire 4");
+    check(!!campRun && campRun.nmRun && campRun.isl === "spire" && campRun.n === 4, "console: dev nightmare.play plays any tunnel level");
+    runConsole("dev run.win");
+    await wait(() => currentScreen === "modes" && !campRun, 30);
+    check(camp.nm.levels["spire:4"] >= 1, "console: dev run.win wins a tunnel level too");
+    const nmSaved = JSON.stringify(camp.nm);
+    runConsole("dev everything.unlock");
+    check(N.order.every(k => camp.nm.maw.includes(k) && camp.nm.levels[`${k}:11`] >= 1) && Object.values(N.roots).every(R => R.upgrades.every(u => camp.nm.roots[u.id] === u.v.length)), "console: dev everything.unlock includes nightmare (every tunnel, Maw and root)");
+    camp.nm = JSON.parse(nmSaved);
+    if (currentScreen === "console" && typeof leaveConsole === "function") leaveConsole();
     // the shops: every merchant's five spots, three of the usual and two of the deep's
     for (const I of CAMP.islands) {
       const m = merchantStock(I.id, true), nmo = m.stock.filter(nmOffer), plain = m.stock.filter(o => !nmOffer(o));

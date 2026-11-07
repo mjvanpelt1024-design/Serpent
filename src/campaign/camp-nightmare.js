@@ -108,8 +108,9 @@ function nmRootStats() {
   return out;
 }
 
-function nmStart(isl, k) {
-  if (!nmTunLevelOpen(isl, k)) return false;
+/* force: the terminal plays any tunnel level, open or not (dev nightmare.play) */
+function nmStart(isl, k, force = false) {
+  if (!force && !nmTunLevelOpen(isl, k)) return false;
   closeNmPanel();
   closeMapGoal();
   campStart(isl, k, -1, nmLevelDef(isl, k));
@@ -435,15 +436,22 @@ function openNmGoal(key, k, report = null) {
 }
 
 /* After a run: back to the map on its island, with the run in the level's card */
+/* After a run, just like the 75 above (map.js campBackToMap): back on the map, around the back of the
+   island, up close on the next stop to play (the same one after a loss), with the run at the side */
 function nmBackToMap(isl, report) {
+  const k = report.k;
+  campLastReport = { won: report.won, title: report.title, isl, n: k, name: report.name, score: report.score, best: false, lines: report.lines, notes: report.notes, line: report.line };
   mapReturnTo = isl;
-  lastPlayed = { key: isl, j: report.k, nm: true };
-  if (report.won && report.k === NM_MAW) { const next = NM_ORDER[nmDepth(isl) + 1]; if (next && nmTunnelOpen(next)) nmPendingDig = next; }
+  lastPlayed = { key: isl, j: "n" + k, nm: true };
+  if (report.won && k === NM_MAW) { const next = NM_ORDER[nmDepth(isl) + 1]; if (next && nmTunnelOpen(next)) nmPendingDig = next; }
   openScreen("modes");
   setTimeout(() => {
     if (currentScreen !== "modes") return;
-    enterUnder(isl);
-    openNmGoal(isl, report.k, report);
+    enterUnder(isl, true);
+    const to = report.won && k < NM_MAW && nmTunLevelOpen(isl, k + 1) ? k + 1 : k;
+    openLevelPop(isl, "n" + to, false, mapPinsEl.querySelector(`[data-key="nm-${isl}-${to}"]`));
+    // a Maw beaten: a moment to read it, then the next island down is dug open
+    if (nmPendingDig) setTimeout(nmDigPending, 2600);
   }, 90);
 }
 /* A Maw beaten: once its report is closed, the next island down is dug open */
@@ -460,7 +468,7 @@ function nmDigPending() {
   window.renderModes = function () {
     const r = orig.apply(this, arguments);
     // back from the tunnel's shop: the world turns around again
-    if (nmShopReturn) { const k = nmShopReturn; nmShopReturn = null; setTimeout(() => { if (currentScreen === "modes") enterUnder(k); }, 60); }
+    if (nmShopReturn) { const k = nmShopReturn; nmShopReturn = null; setTimeout(() => { if (currentScreen === "modes") enterUnder(k, true); }, 60); }
     if (camp && camp.nm && !camp.nm.open && nmUnlocked()) {
       camp.nm.open = true;
       saveCamp();

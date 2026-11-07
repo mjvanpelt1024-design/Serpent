@@ -559,9 +559,10 @@ gives way and a hole is dug in its grass at the far end; then **the whole world 
 looking at it from behind, so everything, the Coil (the Maw's body) and the islands, is mirrored left to right under a
 darker sky, and every island shows its back side. An island whose tunnel is open has it carved into its back: the hole you came through (daylight), ten levels in two rows, the Great Tree's roots poking through,
 the shop of the deep, and along the back a trench where the Maw lies, crimson and awake, bone once beaten there.
-An island whose tunnel isn't open is plain, sealed stone. The stops are map pins (`nm-<island>-<id>`); a
-level's opens its card (objective, twist, snakes, pay, Start), the roots and the shop open a panel over the map,
-and after a run the world is turned around again with the run in the same card. The hole's pin (a moon) turns
+An island whose tunnel isn't open is plain, sealed stone. The stops are in the map's own stop system (ids `n1`-`n11`, `nroots`, `nshop`, `nup`),
+so they work just like the 75 above: a stop's pin brings it up close with its name on the scroll, the screen's edges
+walk the path, a second click opens its card (objective, twist, snakes, pay, Start), the roots and the shop walk
+straight in, and after a run you're back around the back, up close on the next stop with the run at the side. The hole's pin (a moon) turns
 the world around, the daylight's pin, Back or the moon in the legend turns it back. Pins keep their world x
 (`pin._x`) and `mapMirrorX` puts them where they show.
 
@@ -570,8 +571,9 @@ kind, rare or legendary, at nightmare prices: `nmPrice`) beside its three of the
 opens that island's merchant, and coming back the world is still turned around. The Maw's body is the Coil; under each island, from the top down
 (`order`: the Cinder Crown first, Grimscale's Keep last), a tunnel:
 
-- **The roots** (the tree at the top of the shaft): upgrades that work in every nightmare level and never
-  above ground, one set of three per island (`roots`), paid in that island's money. Each is a stat the
+- **The roots** (their stop branches off the way from the hole to level 1): the roots of the island's tree,
+  six like its six branches (`roots`), on the same tree screen, hung upside down into the dark earth (`camp-roots.js`):
+  they grow and fruit the same way, work in every nightmare level and never above ground, paid in that island's money. Each is a stat the
   level reads: the rune stats, the damage stats, and `nmSnakeSlow`. Costs are times the tunnel's depth.
 - **Levels 1 to 10**: the island's own levels (`base`: 1-4, 6-9, 11 and 14), on their boards turned a
   quarter turn (`content/levels/nightmare/`, written by `tools/bake-campaign-levels.js`), faster, needing
@@ -620,5 +622,8 @@ own skin and theme don't carry over; a level with no kit plays the old way, with
 up for the run (`sbKitNow` stands in for your equipment in `campEquipped`; no snacks), and nothing of the run
 reaches your save: no pay, records, finds or achievements, and the save is put back as it was when it ends.
 A kit is kept in the level's `.level` file (`[kit]`) and its share code.
+- The terminal: `dev nightmare.play <island> <1-11> [hold]`, `dev nightmare.open [island]`, `dev nightmare.win <island> [level|all]`,
+  `dev nightmare.roots [max|reset]`, `dev nightmare.reset`; `dev run.win` / `run.end` work in a tunnel; `dev everything.unlock`
+  and `level everything.unlock` take in every tunnel level, Maw and root.
 - Headless tests: `node --test tools/tests/*.test.js` (data and formats) and `node tools/play-check.mjs` (the game
   itself, in headless Chrome or Edge).

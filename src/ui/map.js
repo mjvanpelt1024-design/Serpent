@@ -50,6 +50,7 @@ const NODE_BRANCH = [[5, "merchant"], [10, "challenger"], [15, "banker"]];
 const NPC_KINDS = ["merchant", "challenger", "banker"];
 
 function nodeAt(key, id) {
+  if (typeof isDeepId === "function" && isDeepId(id)) return deepNodeAt(key, id);     // build 53: a tunnel's stop (map-deep.js)
   const I = ISLANDS[key];
   const [f, dy] = NODE_SPOTS[id];
   return { x: Math.round(I.x + I.dir * f), y: Math.round(I.y + dy) };
@@ -57,6 +58,7 @@ function nodeAt(key, id) {
 
 /* What a stop is doing: done, open, next (the one to play), locked */
 function nodeState(key, id) {
+  if (typeof isDeepId === "function" && isDeepId(id)) return deepNodeState(key, id);
   if (!campIslandOpen(key)) return "locked";
   if (id === "home") return "open";
   if (typeof id === "number") {
@@ -295,7 +297,7 @@ function paintMapWorld(g, t, turn = null) {
 /* Where your snake waits: the last level you played, or the next one to play */
 function travelerSpot() {
   const key = campIslandOpen(camp.at) ? camp.at : CAMP.islands[0].id;
-  if (lastPlayed && lastPlayed.key === key) return { key, id: lastPlayed.j };
+  if (lastPlayed && lastPlayed.key === key && !isDeepId(lastPlayed.j)) return { key, id: lastPlayed.j };
   return { key, id: campNextLevel(key) || "home" };
 }
 
@@ -600,7 +602,7 @@ const CROWN_SVG = '<svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><pa
 const NODE_LABEL = { home: "Home", merchant: "Merchant", challenger: "Challenger", banker: "Bank", bridge: "Bridge" };
 const nodeLabel = (key, id) => (NPC_KINDS.includes(id) ? CAMP.islandById[key].npcs[id].shop : NODE_LABEL[id]);
 const NODE_PIN_LIFT = { home: 22, merchant: 24, challenger: 28, banker: 32, bridge: 24 };
-const nodeKey = (key, id) => (typeof id === "number" ? `lv-${key}-${id}` : `np-${key}-${id}`);
+const nodeKey = (key, id) => (typeof id === "number" ? `lv-${key}-${id}` : typeof isDeepId === "function" && isDeepId(id) ? `nm-${key}-${deepRaw(id)}` : `np-${key}-${id}`);
 
 function renderModes(justUnlocked) {
   document.getElementById("map-hint").textContent = isTouchDevice() ? "Drag to explore, pinch to zoom" : "Drag to explore, scroll to zoom";
@@ -662,9 +664,9 @@ function renderModes(justUnlocked) {
     // the hole in the grass (go down), and the top of the shaft (back up)
     const h = deepStop(key, "hole"), u = deepStop(key, "up");
     add("prop node nmhole open", `nm-${key}-hole`, key, h.x, h.y - 12, `<img class="pi" src="${iconUrl("moon", 2)}" alt=""><span class="lbl">${escapeAttr(T.name)}</span>`,
-      `Turn the islands over: ${T.name}`, () => enterUnder(key));
-    add("prop node nm nmup open", `nm-${key}-up`, key, u.x, u.y - 10, `<span class="up-arrow" aria-hidden="true">&#8634;</span><span class="lbl">Turn the islands back over</span>`,
-      "Turn the islands back over", () => leaveUnder());
+      `Turn the world around: ${T.name}`, () => enterUnder(key));
+    add("prop node nm nmup open", `nm-${key}-up`, key, u.x, u.y - 10, `<span class="up-arrow" aria-hidden="true">&#8634;</span><span class="lbl">The hole</span>`,
+      "Turn the world back around", pin => openLevelPop(key, "nup", false, pin));
     DEEP_IDS.forEach(id => {
       const p = deepStop(key, id);
       if (typeof id === "number") {
@@ -672,13 +674,14 @@ function renderModes(justUnlocked) {
         const name = maw ? "The Maw" : T.names[id - 1];
         add(`level nm ${open ? "open" : "locked"} ${won ? "done" : open ? "next" : "locked"}${maw ? " boss" : ""}${maw && nmMawSlain(key) ? " slain" : ""}`, `nm-${key}-${id}`, key, p.x, p.y - (maw ? 12 : 5),
           (maw ? SKULL_SVG : `<span class="n">${id}</span>`) + `<span class="lbl">${escapeAttr(name)}</span>`,
-          `Nightmare ${id === 11 ? "lair" : "level " + id}: ${name}${open ? "" : ", locked"}`, () => { if (open) openNmGoal(key, id); else sfx("bad"); });
+          `Nightmare ${id === 11 ? "lair" : "level " + id}: ${name}${open ? "" : ", locked"}`, pin => openLevelPop(key, "n" + id, false, pin));
       } else {
         const open = id === "roots" || nmShopOpen(key);
         const name = id === "roots" ? CAMP.nightmare.roots[key].name : `${CAMP.islandById[key].npcs.merchant.shop}: the deep's stock`;
         add(`prop node nm ${id} ${open ? "open" : "locked"}`, `nm-${key}-${id}`, key, p.x, p.y - 10,
           `<img class="pi" src="${iconUrl(id === "roots" ? "tree" : "chest", 2)}" alt="">${open ? "" : `<span class="nlock">${LOCK_SVG}</span>`}<span class="lbl">${escapeAttr(name)}</span>`,
-          `${name}${open ? "" : ", opens after level " + (CAMP.nightmare.shopAfter || 5)}`, () => { if (!open) sfx("bad"); else if (id === "shop") nmOpenShop(key); else openNmPanel(key, id); });
+          `${name}${open ? "" : ", opens after level " + (CAMP.nightmare.shopAfter || 5)}`, // like home and the shops on the surface: a click walks straight in (a locked one flies close to say why)
+          pin => { if (!open) openLevelPop(key, "n" + id, false, pin); else if (id === "shop") nmOpenShop(key); else openRootsTree(key); });
       }
     });
   });
@@ -911,7 +914,8 @@ function nodeLinks(key, id) {
   const out = [];
   const add = (to, role) => { if (to) out.push({ to, role }); };
   const other = d => { const k = MAP_ORDER[MAP_ORDER.indexOf(key) + d]; return k && placeState(k) !== "fog" ? k : null; };
-  if (id === "home") { const k = other(-1); if (k) add({ key: k, id: "bridge" }, "back"); add({ key, id: 1 }, "next"); }
+  if (typeof isDeepId === "function" && isDeepId(id)) out.push(...deepNodeLinks(key, id));
+  else if (id === "home") { const k = other(-1); if (k) add({ key: k, id: "bridge" }, "back"); add({ key, id: 1 }, "next"); }
   else if (typeof id === "number") {
     add({ key, id: id === 1 ? "home" : id - 1 }, "back");
     add({ key, id: id === LEVEL_COUNT ? "bridge" : id + 1 }, "next");
@@ -920,7 +924,7 @@ function nodeLinks(key, id) {
   else if (id === "bridge") { add({ key, id: LEVEL_COUNT }, "back"); const k = other(1); if (k) add({ key: k, id: "home" }, "next"); }
   // on a quest: from the challenger or any trial, straight on to the next trial (or back to claim)
   const Q = questFor(key);
-  if (Q && (id === "challenger" || Q.levels.includes(id))) {
+  if (Q && !isDeepId(id) && (id === "challenger" || Q.levels.includes(id))) {
     const nq = questNextFrom(key, id);
     if (nq && nq.id !== id) {
       const same = out.find(l => l.to.key === nq.key && l.to.id === nq.id);
@@ -940,6 +944,9 @@ function nodeLinks(key, id) {
 
 function goNode(to) {
   if (!mapPop || !mapPop.focus) return;
+  // a tunnel's roots and shop are like home: walking toward one walks in
+  if (to.id === "nroots") { openRootsTree(to.key); return; }
+  if (to.id === "nshop" && nodeState(to.key, to.id) !== "locked") { nmOpenShop(to.key); return; }
   if (to.id === "home") { openNode(to.key, "home"); return; }
   // the shops are like home: walking toward one walks in
   if (NPC_KINDS.includes(to.id) && nodeState(to.key, to.id) !== "locked") { openNode(to.key, to.id); return; }
@@ -948,6 +955,7 @@ function goNode(to) {
 }
 
 function nodeTitle(key, id) {
+  if (isDeepId(id)) return deepNodeTitle(key, id);
   if (typeof id === "number") return `${id}. ${campLevelDef(key, id).name}`;
   const I = CAMP.islandById[key];
   if (NPC_KINDS.includes(id)) return I.npcs[id].shop;
@@ -962,6 +970,10 @@ function arrowLabel(from, to, d, role) {
   const sub = nodeTitle(to.key, to.id);
   if (to.key !== from.key) return { word: d > 0 ? "Next island" : "Island below", sub: CAMP.islandById[to.key].name, cls: "island" };
   if (to.id === "home") return { word: "Home", sub: "", cls: "home" };
+  if (to.id === "n11") return { word: "The Maw", sub: "", cls: "boss" };
+  if (to.id === "nroots") return { word: "The roots", sub: CAMP.nightmare.roots[to.key].name, cls: "home" };
+  if (to.id === "nshop") return { word: CAMP.islandById[to.key].npcs.merchant.shop, sub: "Two of the deep's things", cls: "shop" };
+  if (to.id === "nup") return { word: "The hole", sub: "Turn back around", cls: "island" };
   if (typeof to.id === "number" && isBossLevel(to.id)) return { word: "Boss", sub, cls: "boss" };
   if (role === "quest") {
     const Q = questFor(to.key), qi = Q ? Q.levels.indexOf(to.id) : -1;
@@ -1007,11 +1019,26 @@ function renderNodeFocus() {
   const p = nodeAt(key, j);
   nodeHereEl.style.left = p.x * 2 + "px";
   // the caption hangs just under the stop's pin (side stops' pins stand higher, over their buildings)
-  const lift = typeof j === "number" ? (isBossLevel(j) ? 19 : 5) : (NODE_PIN_LIFT[j] || 20) - 12;
+  const deepJ = isDeepId(j), dr = deepJ ? deepRaw(j) : null;
+  const lift = deepJ ? (dr === 11 ? 12 : typeof dr === "number" ? 5 : 10) : typeof j === "number" ? (isBossLevel(j) ? 19 : 5) : (NODE_PIN_LIFT[j] || 20) - 12;
   nodeHereEl.style.top = (p.y - lift + 6) * 2 + "px";
   nodeHereEl.style.setProperty("--m", I.colors.accent);
   let title = nodeTitle(key, j), sub = "", line = "", why = "", go = "", tag = "";
-  if (typeof j === "number") {
+  if (deepJ) {
+    // build 53: a tunnel's stop (map-deep.js, camp-nightmare.js)
+    const T = CAMP.nightmare.tunnels[key];
+    if (typeof dr === "number") {
+      const def = nmLevelDef(key, dr);
+      sub = `${T.name} · ${goalText(def.goal)}`;
+      line = `Snakes: ${nmSnakeKinds(key, dr).kinds.map(s => s.name).join(", ")}`;
+      if (st === "locked") why = dr === 1 ? "Sealed" : `Win ${dr - 1}. ${T.names[dr - 2]} first`;
+      go = st === "done" ? "Play again" : "Play";
+      const w = camp.nm.levels[`${key}:${dr}`];
+      if (w) tag = `Won ${w}`;
+    } else if (dr === "roots") { sub = "Upgrades for every nightmare level"; line = "The roots of the tree above"; go = "Visit"; }
+    else if (dr === "shop") { sub = "Two of the deep's things on the shelf"; if (st === "locked") why = "Win level 5 first"; go = "Visit"; }
+    else { sub = "Daylight"; line = "Back to the front of the world"; go = "Turn around"; }
+  } else if (typeof j === "number") {
     const def = campLevelDef(key, j);
     const rec = camp.levels[campLevelId(key, j)];
     sub = `${levelKindText(def)} · ${goalText(def.goal)}`;
@@ -1042,11 +1069,11 @@ function renderNodeFocus() {
       go = "Cross";
     }
   }
-  nodeScrollEl.innerHTML = `<h3 class="ns-title">${typeof j === "number" && isBossLevel(j) ? SKULL_SVG : ""}${escapeAttr(title)}</h3>`;
+  nodeScrollEl.innerHTML = `<h3 class="ns-title">${(typeof j === "number" && isBossLevel(j)) || j === "n11" ? SKULL_SVG : ""}${escapeAttr(title)}</h3>`;
   nodeScrollEl.title = [I.name, sub, line].filter(Boolean).join("\n");
   nodeScrollEl.classList.add("open");
   const locked = st === "locked";
-  nodeHereEl.className = "node-here open" + (typeof j === "number" ? " level" : " side") + (locked ? " locked" : "") + (ISLANDS[key].dir < 0 ? " flip" : "");
+  nodeHereEl.className = "node-here open" + (typeof j === "number" || (deepJ && typeof dr === "number") ? " level" : " side") + (locked ? " locked" : "") + (ISLANDS[key].dir < 0 ? " flip" : "");
   // no button and no rules sign: the stop's own pin is what you click; a caption under it says so
   nodeHereEl.innerHTML = "";
   // the caption hangs off the pin itself, so it's always right under it
@@ -1136,6 +1163,14 @@ document.addEventListener("keydown", e => {
 /* The stop up close was clicked: a level shows its objective first; the others walk in */
 function actOnNode(key, j) {
   if (nodeState(key, j) === "locked") { sfx("bad"); return; }
+  if (isDeepId(j)) {
+    const r = deepRaw(j);
+    if (typeof r === "number") openNmGoal(key, r);
+    else if (r === "roots") openRootsTree(key);
+    else if (r === "shop") nmOpenShop(key);
+    else leaveUnder();
+    return;
+  }
   if (typeof j === "number") openMapGoal(key, j);
   else openNode(key, j);
 }

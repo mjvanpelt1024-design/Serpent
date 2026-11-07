@@ -138,6 +138,56 @@ CR("dev", "run", "end", "[cause]", "Lose the level in progress as if that killed
   return "quiet";
 }, { examples: ["dev run.end wall"] });
 
+/* ----- Nightmare mode (build 53): the tunnels under the islands ----- */
+const nmLevelArg = x => { const k = Number(String(x || "").replace(/^n/i, "")); if (!Number.isInteger(k) || k < 1 || k > 11) fail("a tunnel level goes from 1 to 11 (11 is the Maw)"); return k; };
+CR("dev", "nightmare", "play", "<island> <level 1-11> [hold]", "Play any nightmare tunnel level, open or not (11 is the Maw). Wins count like any other.", a => {
+  const isl = islandOr(a[0]);
+  const k = nmLevelArg(a[1]);
+  if (campRun) campLeaveRun();
+  clearPauseState();
+  if (!nmStart(isl, k, true)) fail("that level wouldn't start");
+  if (a.slice(2).map(x => x.toLowerCase()).includes("hold")) {
+    reviveCountdown = 0;
+    document.getElementById("countdown").hidden = true;
+    paused = true; pauseStartedAt = performance.now(); pauseDetour = true;
+    openScreen("console");
+    consolePrint(`[ok] ${CAMP.nightmare.tunnels[isl].name} ${k}. ${campRun.def.name} is held. spawn and set things, then: dev run.resume`);
+  }
+  return "quiet";
+}, { examples: ["dev nightmare.play crown 3", "dev nightmare.play spire 11 hold"] });
+/* Opens nightmare: every level of the five islands won (the last one's last boss opens it) */
+function devNightmareOpen() {
+  CAMP.islands.forEach(I => { for (let n = 1; n <= LEVEL_COUNT; n++) if (!campWon(I.id, n)) winRec(I.id, n); });
+  camp.nm.open = true;
+}
+CR("dev", "nightmare", "open", "[island]", "Open nightmare (wins every island's levels if they aren't yet), and every tunnel down to the island named (its Maws above beaten). Default: the first tunnel.", a => {
+  devNightmareOpen();
+  const order = CAMP.nightmare.order, to = a[0] ? islandOr(a[0]) : order[0];
+  order.slice(0, order.indexOf(to)).forEach(k => { if (!camp.nm.maw.includes(k)) camp.nm.maw.push(k); camp.nm.levels[`${k}:11`] = Math.max(1, camp.nm.levels[`${k}:11`] || 0); });
+  campChanged();
+  say(`[ok] nightmare is open, down to ${CAMP.nightmare.tunnels[to].name} under ${CAMP.islandById[to].name}`);
+}, { examples: ["dev nightmare.open", "dev nightmare.open keep"] });
+CR("dev", "nightmare", "win", "<island> [level|all]", "Win tunnel levels: one, or all eleven (the Maw too).", a => {
+  devNightmareOpen();
+  const isl = islandOr(a[0]);
+  const list = !a[1] || a[1].toLowerCase() === "all" ? Array.from({ length: 11 }, (_, i) => i + 1) : [nmLevelArg(a[1])];
+  list.forEach(k => { camp.nm.levels[`${isl}:${k}`] = Math.max(1, camp.nm.levels[`${isl}:${k}`] || 0); });
+  if (list.includes(11) && !camp.nm.maw.includes(isl)) camp.nm.maw.push(isl);
+  campChanged();
+  say(`[ok] ${CAMP.nightmare.tunnels[isl].name}: won ${list.length === 11 ? "all eleven" : "level " + list[0]}`);
+}, { examples: ["dev nightmare.win crown 5", "dev nightmare.win spire all"] });
+CR("dev", "nightmare", "roots", "[max|reset]", "Grow every root of every tunnel to the top (max), or back to nothing.", a => {
+  const max = (a[0] || "max").toLowerCase() !== "reset";
+  Object.values(CAMP.nightmare.roots).forEach(R => R.upgrades.forEach(u => { camp.nm.roots[u.id] = max ? u.v.length : 0; }));
+  campChanged();
+  say(`[ok] every root ${max ? "fully grown" : "cut back"}`);
+});
+CR("dev", "nightmare", "reset", "", "Forget nightmare: no tunnel won, no Maw beaten, no roots. (It opens again the next time the map shows, if the last island is won.)", () => {
+  camp.nm = { open: false, levels: {}, maw: [], roots: {} };
+  campChanged();
+  say("[ok] nightmare forgotten");
+});
+
 /* ----- Spawning and clearing ----- */
 CR("dev", "spawn", slot("<thing>", SPAWN_LIST), "[count] [small|large]", "Drop anything into the level in progress: apples, rocks, every enemy, hazard and power-up (data list.spawns), loot, or the rival snake.", (a, ctx) => {
   needLevel();
@@ -242,8 +292,12 @@ CR("dev", "everything", "unlock", "", "100%: every level won flawlessly with its
   Object.keys(CAMP.recipeById).forEach(id => { if (!camp.recipes.includes(id)) camp.recipes.push(id); });
   CONTENT.skins.forEach(s => { if (!camp.skins.includes(s.id)) camp.skins.push(s.id); });
   CONTENT.themes.forEach(s => { if (!camp.themes.includes(s.id)) camp.themes.push(s.id); });
+  // build 53: nightmare too: every tunnel open and won, every Maw beaten, every root fully grown
+  camp.nm.open = true;
+  CAMP.nightmare.order.forEach(k => { for (let n = 1; n <= 11; n++) camp.nm.levels[`${k}:${n}`] = Math.max(1, camp.nm.levels[`${k}:${n}`] || 0); if (!camp.nm.maw.includes(k)) camp.nm.maw.push(k); });
+  Object.values(CAMP.nightmare.roots).forEach(R => R.upgrades.forEach(u => { camp.nm.roots[u.id] = u.v.length; }));
   campChanged();
-  say(`[ok] 100%: ${won} levels won flawlessly, ${Object.keys(CAMP.upgradeById).length} upgrades maxed, ${CAMP.rules.achievements.length} achievements (+${gems} gems), ${camp.recipes.length} recipes, ${camp.skins.length} skins, ${camp.themes.length} themes`);
+  say(`[ok] 100%: ${won} levels won flawlessly, ${Object.keys(CAMP.upgradeById).length} upgrades maxed, ${CAMP.rules.achievements.length} achievements (+${gems} gems), ${camp.recipes.length} recipes, ${camp.skins.length} skins, ${camp.themes.length} themes, all ${CAMP.nightmare.order.length * 11} nightmare levels and every root`);
   note("want a full kit too? item everything.give legendary");
 }, { aliases: ["100", "complete"] });
 
@@ -515,7 +569,13 @@ CR("level", slot("<island>", termIslandIds, resolveIsland), "go", "", "Fly to th
   openScreen("modes");
   return "quiet";
 });
-CR("level", "everything", "unlock", "", "Win every level on every island.", () => { CAMP.islands.forEach(I => { for (let n = 1; n <= LEVEL_COUNT; n++) winRec(I.id, n); }); campChanged(); say("[ok] all 75 levels won"); }, { aliases: ["all"] });
+CR("level", "everything", "unlock", "", "Win every level on every island, and every nightmare tunnel level (the Maws too).", () => {
+  CAMP.islands.forEach(I => { for (let n = 1; n <= LEVEL_COUNT; n++) winRec(I.id, n); });
+  camp.nm.open = true;
+  CAMP.nightmare.order.forEach(k => { for (let n = 1; n <= 11; n++) camp.nm.levels[`${k}:${n}`] = Math.max(1, camp.nm.levels[`${k}:${n}`] || 0); if (!camp.nm.maw.includes(k)) camp.nm.maw.push(k); });
+  campChanged();
+  say(`[ok] all 75 levels won, and all ${CAMP.nightmare.order.length * 11} nightmare levels`);
+}, { aliases: ["all"] });
 CR("level", "challenges", "earn", "[island|all]", "Mark every level's one-time challenge reward as earned.", a => {
   const isls = (a[0] || "all").toLowerCase() === "all" ? termIslandIds() : [islandOr(a[0])];
   isls.forEach(isl => { for (let n = 1; n <= LEVEL_COUNT; n++) { winRec(isl, n); camp.levels[campLevelId(isl, n)].bonus = true; } });

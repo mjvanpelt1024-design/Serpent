@@ -24,9 +24,41 @@
 const DEEP_IDS = ["roots", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "shop", 11];
 /* Where the stops are on the back face, from the island's middle: [along its flow (+ = the far end), dy] */
 const DEEP_SPOTS = {
-  up: [140, -10], 1: [104, 17], 2: [66, 17], 3: [28, 17], 4: [-10, 17], 5: [-48, 17], shop: [-92, 22], roots: [-134, 12],
+  up: [140, -10], roots: [124, 14], 1: [96, 17], 2: [58, 17], 3: [20, 17], 4: [-18, 17], 5: [-56, 17], shop: [-98, 22],
   6: [-74, -4], 7: [-36, -4], 8: [2, -4], 9: [40, -4], 10: [78, -4], 11: [-20, -24]
 };
+
+/* ----- The tunnel's stops in the map's own stop system (map.js nodeAt, nodeState, nodeLinks...):
+   ids "n1" to "n11" (the levels, 11 the Maw), "nroots", "nshop", "nup" (the hole, seen from behind).
+   The path runs nup, n1 ... n11; the roots branch off between the hole and level 1, the shop off level 5. */
+const isDeepId = id => typeof id === "string" && /^n(\d+|roots|shop|up)$/.test(id);
+const deepRaw = id => { const r = id.slice(1); return /^\d+$/.test(r) ? Number(r) : r; };
+const deepNodeAt = (key, id) => { const p = deepStop(key, deepRaw(id)); return { x: mapMirrorX(p.x), y: p.y }; };
+function deepNodeState(key, id) {
+  const r = deepRaw(id);
+  if (r === "up" || r === "roots") return "open";
+  if (r === "shop") return nmShopOpen(key) ? "open" : "locked";
+  return nmLevelWon(key, r) ? "done" : nmTunLevelOpen(key, r) ? "next" : "locked";
+}
+function deepNodeLinks(key, id) {
+  const r = deepRaw(id), out = [], add = (to, role) => out.push({ to: { key, id: to }, role });
+  if (r === "up") { add("n1", "next"); add("nroots", "shop"); }
+  else if (r === "roots") add("nup", "back");
+  else if (r === "shop") add("n5", "back");
+  else {
+    add(r === 1 ? "nup" : "n" + (r - 1), "back");
+    if (r < 11) add("n" + (r + 1), "next");
+    if (r === 5) add("nshop", "shop");
+  }
+  return out;
+}
+function deepNodeTitle(key, id) {
+  const r = deepRaw(id), T = CAMP.nightmare.tunnels[key];
+  if (r === "up") return "The hole";
+  if (r === "roots") return CAMP.nightmare.roots[key].name;
+  if (r === "shop") return CAMP.islandById[key].npcs.merchant.shop;
+  return r === 11 ? "The Maw" : `${r}. ${T.names[r - 1]}`;
+}
 const deepCache = {};
 const deepReveal = {};       // island -> the time its hole was dug (for the dig)
 let mapFlip = false;         // the world seen from behind: mirrored, every island's back side
@@ -155,7 +187,9 @@ function deepBackArt(key) {
     leg(spot("up"), spot(1), true);
     for (let k = 1; k < 11; k++) leg(spot(k), spot(k + 1), nmLevelWon(key, k));
     leg(spot(5), spot("shop"), nmShopOpen(key));
-    leg(spot("shop"), spot("roots"), true);
+    // the roots branch off the way down, between the hole and level 1
+    const mid = [Math.round((spot("up")[0] + spot(1)[0]) / 2), Math.round((spot("up")[1] + spot(1)[1]) / 2)];
+    leg(mid, spot("roots"), true);
     // the roots of the Great Tree, poking through all over
     for (let i = 0; i < 26; i++) {
       const f = -140 + mapHash(i, 4, seed) * 280, dy = -20 + mapHash(i, 5, seed) * 42;
@@ -213,9 +247,11 @@ function drawDeepHole(g, key, t, by) {
 }
 
 /* Turning the map over, and back. key: the island to look at once it's over. */
-function enterUnder(key) {
+function enterUnder(key, instant = false) {
   if (typeof nmTunnelOpen !== "function" || !nmTunnelOpen(key)) return;
   if (mapSel !== key) selectPlace(key);
+  // coming back from a level (or a shop, or the roots): already around the back, no turn to watch
+  if (!mapFlip && instant) { mapFlip = true; deepFlipAnim = null; mapEl.classList.add("flipped"); }
   if (!mapFlip) {
     // turn about the island in view, where it shows now (the world isn't mirrored yet)
     deepFlipAnim = { to: true, at: null, pivot: ISLANDS[key].x };

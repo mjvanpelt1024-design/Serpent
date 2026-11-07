@@ -30,17 +30,20 @@ function openCampTree(isl, sel) {
    tree stands on: one picture per island, textures/scenes/tree/<island>.png */
 const campTreeSky = isl => texCanvas("tree:" + isl);
 
-function drawCampTree(c, isl, t) {
+/* over (build 53, the roots in a nightmare tunnel: camp-roots.js): { tiers, maxes, leaves, bark, background(g), flip }
+   draws the same tree from other numbers and colors, hung upside down when flip is set */
+function drawCampTree(c, isl, t, over = null) {
   const g = c.getContext("2d");
   g.imageSmoothingEnabled = false;
-  g.drawImage(campTreeSky(isl), 0, 0);
+  if (over && over.background) over.background(g); else g.drawImage(campTreeSky(isl), 0, 0);
+  if (over && over.flip) { g.save(); g.translate(0, TREE_H); g.scale(1, -1); }
   const R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), w, h); };
-  const ups = CAMP.islandById[isl].tree.upgrades;
-  const tiers = ups.map(u => upTier(u.id));
-  const maxes = ups.map(u => u.values.length - 1);
-  const leaves = CTREE_LEAVES[isl];
+  const ups = over ? null : CAMP.islandById[isl].tree.upgrades;
+  const tiers = over ? over.tiers : ups.map(u => upTier(u.id));
+  const maxes = over ? over.maxes : ups.map(u => u.values.length - 1);
+  const leaves = over ? over.leaves : CTREE_LEAVES[isl];
   const sway = i => Math.sin(t * 1.1 + i * 1.7) * (i ? 1.2 : 0.4);
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < (over && over.flip ? 0 : 3); i++) {          // no clouds under the ground
     const w = 26 + i * 8, x = ((i * 90 + t * (2 + i)) % 260) - 40, y = 12 + i * 22;
     R(x, y, w, 4, "rgba(255,255,255,0.4)"); R(x + 6, y - 3, w * 0.45, 3, "rgba(255,255,255,0.4)");
   }
@@ -51,7 +54,7 @@ function drawCampTree(c, isl, t) {
   const total = tiers.reduce((a, b) => a + b, 0), most = maxes.reduce((a, b) => a + b, 0) || 1;
   const grown = total / most;
   const nodes = CTREE_NODES.map((n, i) => ({ x: n.x + (i ? sway(i) : 0), y: n.y }));
-  const bark = ["#3a2414", "#5a3a20", "#7a5232", "#9a6a40"];        // shadow, body, lit, shine
+  const bark = (over && over.bark) || ["#3a2414", "#5a3a20", "#7a5232", "#9a6a40"];        // shadow, body, lit, shine
   // a brush that paints a round dab of bark, lit on its left
   const dab = (x, y, w) => {
     const r = w / 2;
@@ -127,6 +130,7 @@ function drawCampTree(c, isl, t) {
     const ph = (t * 0.12 + k / 4) % 1;
     R(60 + k * 25 + Math.sin(t + k * 2) * 6, 30 + ph * 85, 1, 1, leaves[k % 3]);
   }
+  if (over && over.flip) g.restore();
 }
 
 function renderCampTree() {
