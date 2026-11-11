@@ -24,6 +24,10 @@ const CAMP = (() => {
   // build 52: a trinket's major line also answers to .stat and .v (the workshop's code asks for those),
   // and armor pieces cost what their set's tier says
   ((C.crafting || {}).trinkets || []).forEach(t => { if (t.major && t.stat === undefined) { t.stat = t.major.stat; t.v = t.major.v; } });
+  // build 53: a trinket's name is its major stat's first name and its minor stat's second name
+  // (crafting.json trinketWords); the rarity goes in front of it on each one made (trinketTitle)
+  const TW = (C.crafting || {}).trinketWords || {};
+  ((C.crafting || {}).trinkets || []).forEach(t => { if (t.major && t.minor && TW[t.major.stat] && TW[t.minor.stat]) t.name = `${TW[t.major.stat][0]} ${TW[t.minor.stat][1]}`; });
   const sets = C.items.armorSets || [], tiers = C.items.armorTiers || [];
   items.forEach(it => {
     const s = it.set && sets.find(x => x.id === it.set);

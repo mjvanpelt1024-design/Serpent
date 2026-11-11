@@ -138,6 +138,7 @@ const ITEM_RULE = S.obj({
   // a rune's exact condition (0-7: broken to legendary; -1 = from its rarity), a fresh snack
   parts: S.list(S.oneOf(craftIds, "p_materials"), 2),
   trinket: S.str(24, ""),
+  trinketR: S.oneOf(rarityIds, "common"),   // the fitted trinket's rarity (build 53)
   lv: S.int(0, 10, 0),
   seal: S.bool(false),
   train: S.int(0, 3, 0),

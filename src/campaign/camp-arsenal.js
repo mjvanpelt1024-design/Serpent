@@ -80,10 +80,10 @@ function itemStatLines(id, rarity) {
   const d = campItemDef(id);
   return d && d.stats ? d.stats.slice(0, statCount(rarity)) : [];
 }
-/* A trinket's two lines: major first, then minor */
-function trinketLines(t) {
+/* A trinket's two lines at a rarity: major first, then minor (build 53: the rarity scales the numbers) */
+function trinketLines(t, rarity = "common") {
   if (!t) return [];
-  return [t.major || { stat: t.stat, v: t.v }].concat(t.minor ? [t.minor] : []);
+  return [t.major || { stat: t.stat, v: t.v }].concat(t.minor ? [t.minor] : []).map(l => ({ stat: l.stat, v: trinketVal(l.stat, l.v, rarity) }));
 }
 const armorSetOf = id => { const d = campItemDef(id); return d && d.set ? CAMP.armorSetById[d.set] || null : null; };
 const armorTierName = tier => (CAMP.armorTiers.find(t => t.tier === tier) || { name: "" }).name;
@@ -105,7 +105,7 @@ function kitStats() {
     const it = campEquipped(slot);
     if (!it || itemAway(it.uid)) return;
     add(itemStatLines(it.id, it.rarity));
-    if (slot !== "pet") add(trinketLines(trinketDef(it)));
+    if (slot !== "pet") add(trinketLines(trinketDef(it), it.trinketR));
   });
   const set = wornSet();
   if (set) { add(set.bonus); add(set.bad); }
@@ -271,10 +271,13 @@ function spellBoost(it) {
     return html + bits.join("");
   });
   // a trinket's words: both lines
-  wrap("craftFacts", orig => function (def) {
+  wrap("craftFacts", orig => function (def, rarity) {
     if (!def || !def.major) return orig.apply(this, arguments);
-    const [a, b] = trinketLines(def);
-    return `${CAMP.rarities[Math.max(0, Math.min(3, (def.tier || 1) - 1))].name} trinket, +1 hit absorbed on gear. Major: ${arsStatLine(a.stat, a.v, "long")}. Minor: ${arsStatLine(b.stat, b.v, "long")}.`;
+    // a made one: its own rarity's numbers; a recipe: what each rarity it can come out as gives
+    if (rarity) return `${trinketSummary(def, rarity)}. +1 hit absorbed on the piece it's fitted to.`;
+    const w = (((CRAFT.armory || {}).trinketRarity) || [])[(def.tier || 1) - 1] || [1, 0, 0, 0];
+    const can = CAMP.rarities.filter((r, i) => w[i] > 0);
+    return `Comes out ${can.map(r => r.name.toLowerCase()).join(", ")}. ${can.map(r => `${r.name}: ${trinketSummary(def, r.id)}`).join(". ")}. +1 hit absorbed on the piece it's fitted to.`;
   });
   // armor sets cost what their tier says; a merchant's price
   wrap("offerPrice", orig => function (isl, o) {

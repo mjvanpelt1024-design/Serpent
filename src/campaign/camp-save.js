@@ -261,7 +261,8 @@ function campGive(id, rarity = "common", extra = null) {
   const slot = campItemSlot(id);
   // junk and crafted pieces stack; everything else is its own piece
   if (slot === "loot" || slot === "craft") {
-    const have = camp.satchel.find(it => it.id === id);
+    // (build 53: trinkets stack by rarity too: a rare one isn't a common one)
+    const have = camp.satchel.find(it => it.id === id && (slot === "loot" || it.rarity === rarity));
     if (have) { have.qty = Math.min(999, have.qty + 1); return have; }
   }
   const it = { uid: camp.nextUid++, id, rarity, uses: 0, qty: 1, parts: slot === "gear" ? builtInParts(id, rarity) : [], trinket: "", lv: 0, seal: false, train: 0, grade: -1, fresh: false };
@@ -282,6 +283,7 @@ function campDrop(uid) {
 
 function campItemName(it) {
   const d = campItemDef(it.id);
+  if (!d && CAMP.craftById[it.id] && CAMP.craftById[it.id].major) return trinketTitle(CAMP.craftById[it.id], it.rarity);
   if (!d) return (CAMP.lootById[it.id] || CAMP.craftById[it.id] || { name: it.id }).name;
   if (d.family === "rune") return `${(CAMP.craft.forge || {}).grades ? CAMP.craft.forge.grades[runeGrade(it)] : campGradeName(it.id, it.rarity)} ${d.name}`;
   const lv = d.family === "spell" && it.lv ? ` +${it.lv}` : "";
@@ -300,7 +302,7 @@ function campSellPrice(it) {
   if (!d) {
     // a crafted piece is worth what went into it
     const c = CAMP.craftById[it.id];
-    if (c) return Math.max(1, Math.round(c.needs.reduce((a, id) => a + (CAMP.lootById[id] || { value: 1 }).value, 0) * 0.8 * bonus));
+    if (c) return Math.max(1, Math.round(c.needs.reduce((a, id) => a + (CAMP.lootById[id] || { value: 1 }).value, 0) * 0.8 * bonus * (c.major ? (((CRAFT.armory || {}).trinketScale || {})[it.rarity] || 1) : 1)));
     return Math.round((CAMP.lootById[it.id] || { value: 1 }).value * bonus);
   }
   const P = CAMP.families[d.family].price;

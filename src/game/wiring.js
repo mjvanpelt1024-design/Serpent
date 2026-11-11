@@ -218,7 +218,6 @@ document.getElementById("ach-book").addEventListener("click", openBook);
   board.addEventListener("pointercancel", () => { sbPainting = false; });
   document.getElementById("sb-name").addEventListener("input", e => { sbLevel.n = e.target.value.slice(0, 24); });
   document.getElementById("sb-rules-btn").addEventListener("click", openRules);
-  document.getElementById("rules-done").addEventListener("click", closeRules);
   document.getElementById("sb-new").addEventListener("click", () => openConfirm({ title: "Start a new level?", text: "Anything you haven't saved will be lost.", ok: "New level", onOk: () => { openSandbox(null); } }));
   document.getElementById("sb-save").addEventListener("click", saveCurrentLevel);
   document.getElementById("sb-play").addEventListener("click", () => playCustom(sbLevel, true));

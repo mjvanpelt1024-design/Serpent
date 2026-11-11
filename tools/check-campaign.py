@@ -38,8 +38,6 @@ FAMILIES = {"gear", "spell", "food", "pet", "rune"}     # sold by merchants, fiv
 # build 52: damage types (src/game/damage/damage.js, docs/DAMAGE.md). Each tag has a broad word and a narrow word.
 DAMAGE_WORDS = {"piercing": ("piercing", "barb"), "slashing": ("slashing", "edge"), "fire": ("fire", "ember"),
                 "ice": ("ice", "rime"), "electricity": ("electricity", "spark"), "venom": ("venom", "toxin")}
-DISPLAY_WORD = {"piercing": "Piercing", "barb": "Barb", "slashing": "Slashing", "edge": "Edge", "fire": "Fire", "ember": "Ember",
-                "ice": "Ice", "rime": "Rime", "electricity": "Electric", "spark": "Spark", "venom": "Venom", "toxin": "Toxin"}
 TAGS = set(DAMAGE_WORDS)
 NARROW = {n for _, n in DAMAGE_WORDS.values()}
 DAMAGE_STATS = {f"{w}.{k}" for pair in DAMAGE_WORDS.values() for w in pair for k in ("resistance", "weakness", "immunity")}
@@ -310,18 +308,33 @@ def check_crafting(cr, items):
     loot = {l["id"]: l.get("grade") for l in items.get("loot", [])}
     food = {i["id"] for i in items.get("items", []) if i.get("family") == "food"}
     seen = set()
+    # build 53: a trinket is named by its stats: its major stat's first name, its minor stat's second name
+    names = set()
+    tw = cr.get("trinketWords", {})
+    for k, w in tw.items():
+        check(k in TRINKET_STATS, f"{rel} trinketWords", f"\"{k}\" isn't a stat the game knows")
+        check(isinstance(w, list) and len(w) == 2 and all(isinstance(x, str) and x for x in w), f"{rel} trinketWords", f"\"{k}\" needs [first name, second name]")
+    arm = cr.get("armory") or {}
+    check(set(arm.get("trinketScale", {})) == {"common", "uncommon", "rare", "legendary"}, f"{rel} armory", "trinketScale needs a number for each rarity")
+    rw = arm.get("trinketRarity", [])
+    check(len(rw) == 4 and all(isinstance(r, list) and len(r) == 4 and sum(r) > 0 for r in rw), f"{rel} armory", "trinketRarity needs four chances for each of the four tiers")
     for t in cr.get("trinkets", []):
         where = f"{rel} trinket {t.get('id')}"
         check(t.get("id") not in seen, where, "id used twice"); seen.add(t.get("id"))
-        # build 52: two lines, a major one and a minor one; one named after its damage stats says them in that order
+        # two lines, a major one and a minor one
         mj, mn = t.get("major") or {}, t.get("minor") or {}
         check(mj.get("stat") in TRINKET_STATS and mn.get("stat") in TRINKET_STATS, where, f"needs a major and a minor line with stats the game knows ({mj.get('stat')}, {mn.get('stat')})")
         check(mj.get("stat") != mn.get("stat"), where, "its major and minor lines must be different stats")
         check(num(mj.get("v"), -1000, 1000) and num(mn.get("v"), -1000, 1000), where, "major and minor need numbers")
-        words = [x.get("stat", "").split(".")[0] for x in (mj, mn)]
-        if all("." in x.get("stat", "") for x in (mj, mn)):
-            want = f"{DISPLAY_WORD.get(words[0], words[0])} {DISPLAY_WORD.get(words[1], words[1])} "
-            check(str(t.get("name", "")).startswith(want), where, f"a trinket of two damage stats is named first name then second name: \"{want}...\"")
+        check(mj.get("stat") in tw and mn.get("stat") in tw, where, f"both its stats need a first and a second name in trinketWords ({mj.get('stat')}, {mn.get('stat')})")
+        check("name" not in t, where, "a trinket's name comes from its stats (trinketWords): drop \"name\"")
+        if mj.get("stat") in tw and mn.get("stat") in tw:
+            nm = f"{tw[mj['stat']][0]} {tw[mn['stat']][1]}"
+            check(nm not in names, where, f"its name \"{nm}\" is another trinket's too: change a stat or a word")
+            names.add(nm)
+        for line in (mj, mn):
+            if str(line.get("stat", "")).endswith(".immunity"):
+                check(line.get("v") == 1, where, "an immunity is on or off: give it v 1")
         m = t.get("needs", [])
         check(all(x in loot for x in m), where, "needs a material that isn't in items.json loot")
         g = [loot.get(x) for x in m]

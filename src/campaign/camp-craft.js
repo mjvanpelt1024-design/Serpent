@@ -34,6 +34,8 @@ CAMP_REPAIRS.push(c => {
     const d = CAMP.itemById[it.id];
     if (!Array.isArray(it.parts)) it.parts = [];
     ["trinket"].forEach(k => { if (typeof it[k] !== "string") it[k] = ""; });
+    // build 53: a fitted trinket keeps its rarity (older saves' trinkets are common)
+    if (!CAMP.rarities.some(r => r.id === it.trinketR)) it.trinketR = "common";
     ["lv", "train"].forEach(k => { if (typeof it[k] !== "number") it[k] = 0; });
     if (typeof it.grade !== "number") it.grade = -1;
     if (!d) return;
@@ -71,6 +73,35 @@ function gearUses(it) {
   return base + parts + (it && it.trinket ? 1 : 0) + upVal("sturdy");
 }
 const trinketDef = it => (it && it.trinket ? CAMP.craftById[it.trinket] : null);
+
+/* ----- Trinkets (build 53): named by their two stats, their numbers set by their rarity -----
+   Every stat has a first name and a second name (crafting.json trinketWords). A trinket is called
+   by its major stat's first name and its minor stat's second name, after its rarity:
+   Ember Immunity then Fire Resistance, rare = "Rare Cooling Body Fan". The recipe's numbers are the
+   common ones; armory.trinketScale multiplies them for the rarer ones. An immunity is on or off. */
+const isTrinketDef = def => !!(def && def.major);
+function trinketBaseName(def) {
+  const W = CRAFT.trinketWords || {}, a = W[def.major.stat], b = W[def.minor.stat];
+  return a && b ? `${a[0]} ${b[1]}` : def.id;
+}
+const trinketTitle = (def, rarity) => `${rarityName(rarity || "common")} ${trinketBaseName(def)}`;
+const TRINKET_WHOLE = ["armor", "freeCasts", "spellCharges"], TRINKET_HALVES = ["hearts", "graceSecs", "echo"];
+function trinketVal(stat, v, rarity) {
+  if (DAMAGE_STATS[stat] && DAMAGE_STATS[stat].kind === "immunity") return 1;
+  const x = v * ((((CRAFT.armory || {}).trinketScale) || {})[rarity || "common"] || 1);
+  if (TRINKET_WHOLE.includes(stat)) return Math.sign(x) * Math.max(1, Math.floor(Math.abs(x)));
+  if (TRINKET_HALVES.includes(stat)) return Math.round(x * 2) / 2;
+  return Math.round(x);
+}
+/* "Ember Immunity - Fire Resistance 20%" */
+const trinketSummary = (def, rarity) => trinketLines(def, rarity).map(l => arsStatLine(l.stat, l.v)).join(" - ");
+/* A finished order's rarity: the better the recipe (its tier), the better the odds */
+function rollTrinketRarity(def) {
+  const w = (((CRAFT.armory || {}).trinketRarity) || [])[(def.tier || 1) - 1] || [1, 0, 0, 0];
+  let r = Math.random() * w.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < w.length; i++) { r -= w[i]; if (r < 0) return CAMP.rarities[i].id; }
+  return CAMP.rarities[0].id;
+}
 /* What the worn gear's trinket adds to the level's stats (the rune table's names) */
 function gearExtras() {
   const it = campEquipped("gear"), t = trinketDef(it);
@@ -85,6 +116,7 @@ function campFit(gearUid, craftUid) {
   if (def.stat) {
     if (g.trinket) return "This piece already has a trinket. Trinkets are fitted for good.";
     g.trinket = p.id;
+    g.trinketR = p.rarity || "common";
   } else {
     if (def.fits !== gearClass(g.id)) return `${def.name} is for ${def.fits === "weapon" ? "weapons" : "armor"}.`;
     if (g.parts.includes(p.id)) return `This piece already has ${def.name}.`;
@@ -209,7 +241,11 @@ function campCollect(n) {
   if (!o || !orderReady(o)) return "";
   camp.orders = camp.orders.filter(x => x !== o);
   let said = "";
-  if (o.kind === "craft") { const it = campGive(o.what); said = `${CAMP.craftById[o.what].name} is ready. Fit it to your gear at the workbench.`; void it; }
+  if (o.kind === "craft") {
+    const def = CAMP.craftById[o.what];
+    const it = campGive(o.what, isTrinketDef(def) ? rollTrinketRarity(def) : "common");
+    said = `${campItemName(it)} is ready${isTrinketDef(def) ? ` (${trinketSummary(def, it.rarity)})` : ""}. Fit it to your gear at the workbench.`;
+  }
   else if (o.kind === "seal") { const it = satchelItem(o.uid); if (it) { it.seal = true; it.uses = freshUses(it.id, it.rarity, it); said = `Your ${campItemName(it)} is sealed.`; } }
   else if (o.kind === "cook") {
     const r = CAMP.recipeById[o.what];

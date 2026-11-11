@@ -240,3 +240,17 @@
 .bk-to:hover { opacity: 0.85; }
 .bk-to.on { opacity: 1; box-shadow: 0 0 0 var(--px, 2px) #ffd23f; background: rgba(255, 210, 63, 0.12); }
 .bk-to img.coin { width: 2.2em; height: 2.2em; }
+
+/* ---------- Build 53 review: one kind of name plate everywhere, a scroll ----------
+   The island's name on the map (and the tunnel's), the shops', the sandbox level's: the same parchment
+   scroll as a stop's and home's, so the only words at the top of a screen are a name on a scroll. */
+#map-banner.open { border: 0; border-image: none; background: none; box-shadow: none; padding: 0; width: auto; left: 50%; margin-left: 0; transform: translateX(-50%); }
+#map-banner:not(.open) { transform: translate(-50%, -140%); }
+#map-banner { margin-left: 0; }
+#map-banner .mbn-row { gap: 0.8em; }
+#map-banner .mbn-title.scroll-frame { display: inline-block; max-width: 22em; padding: 0.12em 0.8em 0.2em; font-size: 1.6em; color: #3a2410; text-shadow: 0 1px 0 rgba(255, 245, 210, 0.6); }
+#cs-title.cs-scroll { font-family: var(--title); font-weight: 400; padding: 0.12em 0.8em 0.2em; justify-self: center; }
+/* the shop's bell, crate and workshop things: their names on hover, like the map's */
+.ss-tag.gems, .ss-tag.sell, .ss-tag.ws { opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+.ss-spot:hover .ss-tag, .ss-spot:focus-visible .ss-tag { opacity: 1; }
+.ss-tag.empty { opacity: 0; transition: opacity 0.15s; pointer-events: none; }

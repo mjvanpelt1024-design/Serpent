@@ -1,5 +1,5 @@
 # Made by tools/sign-content.py. Don't edit: change the data and run it again.
-crafting.json 9b0ddb89f3cae153
+crafting.json 707c04f2d5d280fc
 foes.json 0f883fd9996ab9f3
 islands/crown.json 09cfcbf2fc499e38
 islands/hollow.json 06be3242e0275bd8
@@ -10,4 +10,4 @@ items.json 2b12722c12454892
 nightmare.json 6002838d9bf74a7f
 rules.json 65b26f10730446c6
 upgrades.json d71ed00e8cc1cc14
-seal ab474d897dc757c7
+seal 9d24dd25046edabb

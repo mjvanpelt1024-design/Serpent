@@ -50,11 +50,6 @@ function handleKeyDown(e) {
     return;
   }
 
-  if (document.getElementById("sb-rules").classList.contains("active")) {
-    if (e.key === "Escape") { e.preventDefault(); closeRules(); }
-    return;
-  }
-
   if (sceneOpen) {
     if (e.code === "Space" || e.key === "Enter") { e.preventDefault(); advanceScene(); }
     else if (e.key === "Escape") { e.preventDefault(); closeScene(); }

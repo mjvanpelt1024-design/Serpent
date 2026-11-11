@@ -19,8 +19,8 @@ const SB_INDEX_OF_GRADE = [1, 0, 2];
 Object.entries(SB_ITEMS).forEach(([type, chars]) => chars.forEach((ch, i) => { SB_CHAR[ch] = { type, grade: SB_GRADE_OF_INDEX[i] }; }));
 const SB_CATS = [
   { id: "walls", label: "Walls", tools: [
-    { id: "#", label: "Red block" }, { id: "P", label: "Portal block" },
-    { id: "pr", label: "Red panel", panel: "r" }, { id: "pp", label: "Portal panel", panel: "p" }] },
+    { id: "#", label: "Barrier block" }, { id: "P", label: "Mirror block" },
+    { id: "pr", label: "Barrier", panel: "r" }, { id: "pp", label: "Mirror", panel: "p" }] },
   { id: "food", label: "Food", sized: true, tools: [{ id: "apple", label: "Apple" }, { id: "xp", label: "XP" }] },
   { id: "hazards", label: "Hazards", sized: true, toggles: true, tools: [
     { id: "rock", label: "Rock" }, { id: "popsicle", label: "Popsicle" }, { id: "flea", label: "Flea" },

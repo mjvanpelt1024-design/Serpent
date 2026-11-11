@@ -94,11 +94,13 @@ The campaign adds one more kind of stat beside these 36: **spell stats**, `<word
 words ("Fire Spells", "Ember Spells"), plus `spellPower` and `spellCharges`. They make spells stronger and live in
 `src/campaign/camp-arsenal.js`, not in `damage.js`.
 
-**Trinket names.** A trinket gives two stats, a major one and then a minor one. One made of two damage (or spell)
-stats is named after them in that order: its first name is its major stat's word and its second name its minor
-stat's, so a *Fire Ember Locket* (Fire Resistance, then Ember Resistance) and an *Ember Fire Locket* (Ember
-Resistance, then Fire Resistance) are different trinkets. `tools/check-campaign.py` and
-`tools/tests/arsenal.test.js` hold the content to this.
+**Trinket names.** A trinket gives two stats, a major one and then a minor one, and is named by them. Every stat has
+a first name and a second name (`crafting.json` `trinketWords`: Fire Resistance is *Fireproof* / *Body Fan*, Ember
+Immunity *Cooling* / *Snow Globe*...). A trinket is called by its rarity, its major stat's first name and its minor
+stat's second name: Ember Immunity then Fire Resistance is a *Rare Cooling Body Fan: Ember Immunity - Fire
+Resistance 20%*, and Slashing then Piercing Resistance a *Dense Chainmail Plating*. So Fire then Ember (*Fireproof
+Ash Cloak*) and Ember then Fire (*Sooty Body Fan*) are different trinkets. Its rarity scales its numbers
+(`armory.trinketScale`). `tools/check-campaign.py` and `tools/tests/arsenal.test.js` hold the content to this.
 
 **In play** (`camp-arsenal.js`): your worn pieces' stat lines, their trinkets, the set bonus, your familiar's
 lines, your rune and any power-up you picked up add up into one target; `takeHit` resolves each hit's tags

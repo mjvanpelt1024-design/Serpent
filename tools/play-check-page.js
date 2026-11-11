@@ -312,6 +312,41 @@
       check(!campRun && currentModeKey === "custom", "sandbox: a level with no kit plays as before");
     }
 
+    // ----- build 53 review: the editor is laid out like the play screen
+    {
+      openScreen("main");
+      document.getElementById("menu-sandbox").click();
+      document.getElementById("shelf-new").click();
+      const box = id => document.getElementById(id).getBoundingClientRect();
+      const L = box("sb-palette"), M = box("sb-board"), R = box("sb-rules");
+      check(currentScreen === "sandbox" && L.right <= M.left && M.right <= R.left, "sandbox: tools on the left, the board in the middle, the loadout on the right");
+      check(document.querySelectorAll("#rules-list select[data-kit][data-part=id]").length === 6, "sandbox: the loadout is open beside the board, no pop-up");
+      check(SB_CATS[0].tools.map(t => t.label).join(",") === "Barrier block,Mirror block,Barrier,Mirror", "sandbox: the walls are barriers and mirrors");
+      openScreen("main");
+    }
+
+    // ----- build 53 review: a trinket is named by its two stats, its rarity sets its numbers
+    {
+      const cool = CAMP.craftById.t_cooling;
+      check(trinketTitle(cool, "rare") === "Rare Cooling Body Fan" && trinketSummary(cool, "rare") === "Ember Immunity - Fire Resistance 20%",
+        `trinkets: the brief's example, "Rare Cooling Body Fan: Ember Immunity - Fire Resistance 20%" (got ${trinketTitle(cool, "rare")}: ${trinketSummary(cool, "rare")})`);
+      const fe = CAMP.craftById.t_fire_ember, ef = CAMP.craftById.t_ember_fire;
+      check(fe.name !== ef.name, `trinkets: Fire then Ember isn't Ember then Fire (${fe.name} / ${ef.name})`);
+      const o = campOrder("armory", "t_cooling", 0.001);
+      o.readyAt = 0;
+      campCollect(o.n);
+      const it = camp.satchel.find(x => x.id === "t_cooling");
+      const g = campGive("sword", "common");
+      campFit(g.uid, it.uid);
+      camp.equip.gear = g.uid;
+      const ks = kitStats();
+      check(g.trinketR === it.rarity && ks["ember.immunity"] === 1 && ks["fire.resistance"] === trinketVal("fire.resistance", 10, it.rarity),
+        `trinkets: a made one keeps its rarity when fitted and its numbers count (${it.rarity}, ${JSON.stringify(ks)})`);
+      const v = validateSave(JSON.parse(JSON.stringify(camp)));
+      const g2 = v.data.satchel.find(x => x.uid === g.uid);
+      check(g2 && g2.trinketR === it.rarity, "trinkets: the save check keeps a fitted trinket's rarity");
+    }
+
     check(errors.length === 0, "no errors in the console" + (errors.length ? ": " + errors.slice(0, 5).join(" | ") : ""));
   } catch (e) {
     problems.push("the check stopped: " + (e.stack || e.message));

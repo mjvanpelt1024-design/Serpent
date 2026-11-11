@@ -125,7 +125,9 @@ function renderStage() {
   const I = CAMP.islandById[shopIsl];
   const ws = workshopOf(shopIsl);
   document.getElementById("ss-track").style.transform = ssSide === "shop" ? "translateX(-50%)" : "translateX(0)";
-  ssGo.innerHTML = ssSide === "shop" ? `&#9664; ${escapeAttr(WORKSHOP_NAME[ws])}` : `${escapeAttr(I.npcs.merchant.shop)} &#9654;`;
+  ssGo.innerHTML = ssSide === "shop" ? "&#9664;" : "&#9654;";
+  ssGo.title = ssSide === "shop" ? WORKSHOP_NAME[ws] : I.npcs.merchant.shop;
+  ssGo.setAttribute("aria-label", ssGo.title);
   ssGo.classList.toggle("right", ssSide === "work");
   ssEl.style.setProperty("--isl", I.colors.accent);
   const pct = (v, of) => (v / of * 100) + "%";
@@ -374,11 +376,11 @@ const SS_PANELS = {
     let html = ssHead("The fitting stand", "Fit a trinket or a part to a piece of gear, for good. One trinket per piece; each part once.") +
       `<p class="ss-step">1. The gear</p><div class="ss-tiles">${gear.map(it => ssTile(it, { on: it === g, data: `data-ss="pickg" data-uid="${it.uid}"`, title: campItemName(it), badge: it.trinket ? "★" : "" })).join("")}</div>`;
     if (g) {
-      html += `<p class="ss-p"><b>${escapeAttr(campItemName(g))}</b>: ${escapeAttr(campItemLeft(g))}. Parts: ${partsFor(g.id).map(p => `<span class="pi-tag${g.parts.includes(p.id) ? " on" : ""}">${escapeAttr(p.name)}</span>`).join(" ")} · Trinket: ${g.trinket ? `<span class="pi-tag on">${escapeAttr(CAMP.craftById[g.trinket].name)}</span>` : "none"}</p>`;
+      html += `<p class="ss-p"><b>${escapeAttr(campItemName(g))}</b>: ${escapeAttr(campItemLeft(g))}. Parts: ${partsFor(g.id).map(p => `<span class="pi-tag${g.parts.includes(p.id) ? " on" : ""}">${escapeAttr(p.name)}</span>`).join(" ")} · Trinket: ${g.trinket ? `<span class="pi-tag on" title="${escapeAttr(trinketSummary(CAMP.craftById[g.trinket], g.trinketR))}">${escapeAttr(trinketTitle(CAMP.craftById[g.trinket], g.trinketR))}</span>` : "none"}</p>`;
       const fits = pieces.filter(p => { const c = CAMP.craftById[p.id]; return c.stat ? !g.trinket : campItemSlot(g.id) === "gear" && c.fits === gearClass(g.id) && !g.parts.includes(p.id); });
-      html += `<p class="ss-step">2. What to fit</p>` + (fits.length ? `<div class="ss-tiles">${fits.map(p => ssTile(p, { on: p.uid === ssPick.piece, data: `data-ss="pickp" data-uid="${p.uid}"`, title: CAMP.craftById[p.id].name, badge: p.qty > 1 ? "x" + p.qty : "" })).join("")}</div>` : `<p class="ss-p">Nothing you've made fits this piece. Make trinkets and parts at the workbench.</p>`);
+      html += `<p class="ss-step">2. What to fit</p>` + (fits.length ? `<div class="ss-tiles">${fits.map(p => ssTile(p, { on: p.uid === ssPick.piece, data: `data-ss="pickp" data-uid="${p.uid}"`, title: campItemName(p), badge: p.qty > 1 ? "x" + p.qty : "" })).join("")}</div>` : `<p class="ss-p">Nothing you've made fits this piece. Make trinkets and parts at the workbench.</p>`);
       const p = satchelItem(ssPick.piece);
-      if (p && fits.includes(p)) html += `<div class="ss-sel"><p class="ss-p">${escapeAttr(CAMP.craftById[p.id].name)}: ${escapeAttr(craftFacts(CAMP.craftById[p.id]))} It can never come off.</p><button class="btn btn-gold" data-ss="fit">Fit it for good</button></div>`;
+      if (p && fits.includes(p)) html += `<div class="ss-sel"><p class="ss-p">${escapeAttr(campItemName(p))}: ${escapeAttr(craftFacts(CAMP.craftById[p.id], CAMP.craftById[p.id].major ? p.rarity : undefined))} It can never come off.</p><button class="btn btn-gold" data-ss="fit">Fit it for good</button></div>`;
     }
     return html;
   },

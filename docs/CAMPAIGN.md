@@ -468,8 +468,12 @@ Everything here is data; the numbers are placeholders until playtesting. The dam
   a kill zaps the next enemy), toxin (venom: the boss tires half again as fast), pierce (piercing: one more piece
   of armor off in fight 2), cleave (slashing: a kill takes the enemies beside your head).
 - **Spells**: `hit` tags too, and `spellPower`, `spellCharges` and `<word>.spells` stats make them stronger.
-- **Trinkets** (`crafting.json`): a `major` and a `minor` line; the tier is the rarity. Named after their two
-  damage stats, first name then second name. One fits on any gear or armor piece.
+- **Trinkets** (`crafting.json`): a `major` and a `minor` line, no name of their own. Every stat has a first name
+  and a second name (`trinketWords`); a trinket is its rarity, its major stat's first name and its minor stat's
+  second name: Ember Immunity then Fire Resistance, rare, is a *Rare Cooling Body Fan: Ember Immunity - Fire
+  Resistance 20%*. Its rarity is rolled when its order is picked up (`armory.trinketRarity`, by the recipe's tier)
+  and scales the recipe's common numbers (`armory.trinketScale`; an immunity is on or off). One fits on any gear
+  or armor piece, and keeps its rarity there.
 
 ### What hits you
 

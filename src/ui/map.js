@@ -805,7 +805,7 @@ function renderBanner() {
   }
   b.innerHTML = `<div class="mbn-row">
       <button class="btn btn-small mb-nav" data-step="-1" aria-label="The island below" title="The island below" ${i === 0 ? "disabled" : ""}>&#9660;</button>
-      <div class="mbn-mid" title="${escapeAttr(note)}"><span class="mbn-title">${st === "locked" ? LOCK_SVG : ""}${escapeAttr(title)}</span></div>
+      <div class="mbn-mid" title="${escapeAttr(note)}"><span class="mbn-title scroll-frame">${st === "locked" ? LOCK_SVG : ""}${escapeAttr(title)}</span></div>
       <button class="btn btn-small mb-nav" data-step="1" aria-label="The island above" title="The island above" ${MAP_ORDER.slice(i + 1).every(k => placeState(k) === "fog") ? "disabled" : ""}>&#9650;</button>
     </div>`;
   b.classList.add("open");

@@ -252,10 +252,10 @@ function renderPicInfo() {
       <p class="pi-desc">Cook it in the kitchen behind ${escapeAttr(CAMP.islands.find(I => I.merchantFamily === "food").npcs.merchant.shop)}.</p>`;
   } else {
     const d = campItemDef(it.id), slot = campItemSlot(it.id);
-    const color = d ? rarityColor(it.rarity) : CAMP.lootById[it.id] ? LOOT_GRADE_COLOR()[lootGrade(it.id)] : "#ffd23f";
+    const color = d || (CAMP.craftById[it.id] && CAMP.craftById[it.id].major) ? rarityColor(it.rarity) : CAMP.lootById[it.id] ? LOOT_GRADE_COLOR()[lootGrade(it.id)] : "#ffd23f";
     let sub = "", body = "";
     if (d) { sub = `${CAMP.slots.find(s => s.id === slot).name} · ${campItemLeft(it)}`; body = itemFacts(it.id, it.rarity, it); }
-    else if (CAMP.craftById[it.id]) { const c = CAMP.craftById[it.id]; sub = c.stat ? "Trinket: fit one to a piece of gear, for good" : `Part for ${c.fits === "weapon" ? "weapons" : "armor"}: fitted for good`; body = `<p class="pi-desc">${escapeAttr(craftFacts(c))}</p><p class="pi-meta">Fit it at the workbench behind ${escapeAttr(CAMP.islands[0].npcs.merchant.shop)}.</p>`; }
+    else if (CAMP.craftById[it.id]) { const c = CAMP.craftById[it.id]; sub = c.stat ? "Trinket: fit one to a piece of gear, for good" : `Part for ${c.fits === "weapon" ? "weapons" : "armor"}: fitted for good`; body = `<p class="pi-desc">${escapeAttr(craftFacts(c, c.major ? it.rarity : undefined))}</p><p class="pi-meta">Fit it at the workbench behind ${escapeAttr(CAMP.islands[0].npcs.merchant.shop)}.</p>`; }
     else { const l = CAMP.lootById[it.id]; sub = `Junk · ${lootGrade(it.id)} · found on ${escapeAttr(CAMP.islands[l.island - 1].name)}`; body = `<p class="pi-desc">Sells for ${coinHtml(campItemIsland(it.id))} ${fmtInt(campSellPrice(it))} at any merchant, or goes into a trinket at the workbench.</p>${junkUsedIn(it.id)}`; }
     html = `<div class="pi-head">${campItemIconHtml(it)}<div><div class="pi-name" style="color:${color}">${escapeAttr(campItemName(it))}${it.qty > 1 ? ` x${it.qty}` : ""}</div><div class="pi-sub">${sub}</div></div></div>${body}${picItemState(it)}`;
     const away = itemAway(it.uid);
@@ -285,7 +285,7 @@ function picItemState(it) {
   if (d.family === "gear") {
     const parts = partsFor(it.id).map(p => `<span class="pi-tag${(it.parts || []).includes(p.id) ? " on" : ""}">${escapeAttr(p.name)}</span>`).join("");
     const t = trinketDef(it);
-    return `<p class="pi-meta">Parts: ${parts}</p><p class="pi-meta">Trinket: ${t ? `<span class="pi-tag on">${escapeAttr(t.name)}</span> ${escapeAttr(craftFacts(t))}` : "<span class='pi-tag'>none</span>"}</p>`;
+    return `<p class="pi-meta">Parts: ${parts}</p><p class="pi-meta">Trinket: ${t ? `<span class="pi-tag on">${escapeAttr(trinketTitle(t, it.trinketR))}</span> ${escapeAttr(craftFacts(t, it.trinketR || "common"))}` : "<span class='pi-tag'>none</span>"}</p>`;
   }
   if (d.family === "spell") {
     let pips = "";

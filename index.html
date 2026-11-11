@@ -158,33 +158,32 @@
   </section>
 
   <!-- Sandbox editor -->
+  <!-- Like the play screen: the tools down the left, the board in the middle, the loadout down the right -->
   <section id="screen-sandbox" class="overlay" aria-label="Sandbox level editor">
     <div class="sb-head">
       <button class="btn btn-small" data-back>Back</button>
-      <input id="sb-name" class="text-input sb-name" type="text" maxlength="24" autocomplete="off" spellcheck="false" aria-label="Level name">
-      <button class="btn btn-small" id="sb-rules-btn">Loadout</button>
+      <input id="sb-name" class="text-input sb-name scroll-frame" type="text" maxlength="24" autocomplete="off" spellcheck="false" aria-label="Level name">
+      <button class="btn btn-small" id="sb-rules-btn" title="Loadout">&#9881;</button>
     </div>
-    <div id="sb-cats" class="subtabs sb-cats" role="tablist" aria-label="Tool categories"></div>
-    <div id="sb-palette" class="sb-palette" role="toolbar" aria-label="Tools"></div>
-    <div id="sb-extra" class="sb-extra"></div>
-    <div id="sb-sizes" class="subtabs sb-sizes" aria-label="Item size"></div>
-    <canvas id="sb-board" class="sb-board" width="300" height="300" aria-label="Level grid. Tap or drag to paint."></canvas>
-    <p id="sb-hint" class="sb-hint"></p>
-    <div class="sb-row">
-      <button class="btn btn-small" id="sb-new">New</button>
-      <button class="btn btn-small" id="sb-save">Save</button>
-      <button class="btn btn-small btn-primary" id="sb-play">Play</button>
+    <aside class="sb-left" aria-label="Tools">
+      <div id="sb-cats" class="subtabs sb-cats" role="tablist" aria-label="Tool categories"></div>
+      <div id="sb-extra" class="sb-extra"></div>
+      <div id="sb-sizes" class="subtabs sb-sizes" aria-label="Item size"></div>
+      <div id="sb-palette" class="sb-palette" role="toolbar" aria-label="Tools"></div>
+      <p id="sb-hint" class="sb-hint"></p>
+    </aside>
+    <div class="sb-mid">
+      <canvas id="sb-board" class="sb-board" width="300" height="300" aria-label="Level grid. Tap or drag to paint."></canvas>
+      <div class="sb-row">
+        <button class="btn btn-small" id="sb-new">New</button>
+        <button class="btn btn-small" id="sb-save">Save</button>
+        <button class="btn btn-small btn-primary" id="sb-play">Play</button>
+      </div>
     </div>
-  </section>
-
-  <!-- Sandbox rules -->
-  <div id="sb-rules" class="modal" role="dialog" aria-modal="true" aria-labelledby="rules-title2">
-    <div class="modal-box rules-box">
-      <h3 id="rules-title2">Loadout</h3>
+    <aside id="sb-rules" class="sb-right" aria-label="Loadout">
       <div id="rules-list"></div>
-      <div class="row-buttons"><button class="btn btn-primary" id="rules-done">Done</button></div>
-    </div>
-  </div>
+    </aside>
+  </section>
 
   <!-- Sandbox home: My Levels and Community -->
   <section id="screen-shelf" class="overlay list" aria-label="Sandbox">
@@ -412,7 +411,7 @@
     <div class="sticky">
       <div class="screen-head">
         <button class="btn btn-small" data-back>Back</button>
-        <h2 id="cs-title">Shop</h2>
+        <h2 id="cs-title" class="scroll-frame cs-scroll">Shop</h2>
         <span id="cs-wallet" class="cs-wallet"></span>
       </div>
     </div>

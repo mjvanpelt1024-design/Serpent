@@ -8,7 +8,7 @@
    Screens and navigation
    ========================================================= */
 /* Screens that live on the board itself; every other screen fills the window */
-const BOARD_SCREENS = ["gameover", "sandbox", "rules"];
+const BOARD_SCREENS = ["gameover", "rules"];   // (the sandbox editor fills the window, build 53)
 function showScreen(name) {
   if (typeof closeBubble === "function") closeBubble();
   Object.entries(screenEls).forEach(([key, el]) => el.classList.toggle("active", key === name));
@@ -72,7 +72,7 @@ function openScreen(name) {
   if (name === "tree") renderTree();
   if (name === "inventory") renderInventory();
   if (name === "story") renderStoryList();
-  if (name === "sandbox") { if (!sbLevel) sbLevel = newLevel(); renderSandbox(); }
+  if (name === "sandbox") { if (!sbLevel) sbLevel = newLevel(); renderSandbox(); renderRules(); }
   if (name === "shelf") renderShelf();
   if (save.named && !tutorial && !guide && !sceneOpen) {
     if (VISIT_PAGES[name]) sceneForUnlock(VISIT_PAGES[name]);

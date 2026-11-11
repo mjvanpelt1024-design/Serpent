@@ -52,34 +52,51 @@ test("every trinket gives two stats: a major one and a minor one, both known, ne
   }
 });
 
-test("a trinket of damage stats is named first name then second name, and the order matters", () => {
-  const dmg = CRAFT.trinkets.filter(t => (D.DAMAGE_STATS[t.major.stat] || SPELL_STATS.has(t.major.stat)) && (D.DAMAGE_STATS[t.minor.stat] || SPELL_STATS.has(t.minor.stat)));
-  assert.ok(dmg.length >= 12, "at least two trinkets per damage tag");
-  for (const t of dmg) {
-    const want = `${firstWord(t.major.stat)} ${firstWord(t.minor.stat)} `;
-    assert.ok(t.name.startsWith(want), `${t.id} "${t.name}" should start with "${want}"`);
-  }
-  // Fire Resistance + Ember Resistance is a different trinket from Ember Resistance + Fire Resistance
-  const fe = dmg.find(t => t.major.stat === "fire.resistance" && t.minor.stat === "ember.resistance");
-  const ef = dmg.find(t => t.major.stat === "ember.resistance" && t.minor.stat === "fire.resistance");
-  assert.ok(fe && ef && fe.id !== ef.id && fe.name !== ef.name);
-  assert.equal(fe.name.split(" ").slice(0, 2).join(" "), "Fire Ember");
-  assert.equal(ef.name.split(" ").slice(0, 2).join(" "), "Ember Fire");
-  // every tag has both orders
-  for (const tag of D.DAMAGE_TAGS) {
-    const narrow = D.DAMAGE_NAMES[tag].narrow.toLowerCase();
-    assert.ok(dmg.some(t => t.major.stat === `${tag}.resistance` && t.minor.stat === `${narrow}.resistance`), `${tag}: broad-first trinket`);
-    assert.ok(dmg.some(t => t.major.stat === `${narrow}.resistance` && t.minor.stat === `${tag}.resistance`), `${tag}: narrow-first trinket`);
+// Build 53: a trinket has no name of its own. Every stat has a first name and a second name
+// (crafting.json trinketWords); a trinket is its major stat's first name + its minor stat's second name,
+// after its rarity, and its rarity scales its numbers (armory.trinketScale). Same rule as camp-craft.js.
+const W = CRAFT.trinketWords;
+const tName = t => `${W[t.major.stat][0]} ${W[t.minor.stat][1]}`;
+const SCALE = CRAFT.armory.trinketScale;
+
+test("every stat on a trinket has a first name and a second name, and every trinket's name is its own", () => {
+  const names = new Set();
+  for (const t of CRAFT.trinkets) {
+    assert.ok(W[t.major.stat] && W[t.minor.stat], `${t.id}: both stats need words`);
+    assert.ok(!("name" in t), `${t.id}: the name comes from the stats`);
+    assert.ok(!names.has(tName(t)), `${t.id}: "${tName(t)}" is taken`);
+    names.add(tName(t));
   }
 });
 
-test("a trinket's numbers rise with its rarity (tier)", () => {
+test("the order of the stats is the name: Fire then Ember isn't Ember then Fire", () => {
+  const fe = CRAFT.trinkets.find(t => t.major.stat === "fire.resistance" && t.minor.stat === "ember.resistance");
+  const ef = CRAFT.trinkets.find(t => t.major.stat === "ember.resistance" && t.minor.stat === "fire.resistance");
+  assert.ok(fe && ef);
+  assert.equal(tName(fe), `${W["fire.resistance"][0]} ${W["ember.resistance"][1]}`);
+  assert.equal(tName(ef), `${W["ember.resistance"][0]} ${W["fire.resistance"][1]}`);
+  assert.notEqual(tName(fe), tName(ef));
+  // the brief's own examples
+  const cool = CRAFT.trinkets.find(t => t.major.stat === "ember.immunity" && t.minor.stat === "fire.resistance");
+  assert.equal(tName(cool), "Cooling Body Fan");
+  assert.equal(`${W["slashing.resistance"][0]} ${W["piercing.resistance"][1]}`, "Dense Chainmail Plating");
+  // every tag has both orders of its two resistances
   for (const tag of D.DAMAGE_TAGS) {
     const narrow = D.DAMAGE_NAMES[tag].narrow.toLowerCase();
-    const a = CRAFT.trinkets.find(t => t.major.stat === `${tag}.resistance` && t.minor.stat === `${narrow}.resistance`);
-    const b = CRAFT.trinkets.find(t => t.major.stat === `${narrow}.resistance` && t.minor.stat === `${tag}.resistance`);
-    assert.ok(b.tier > a.tier && b.major.v > a.major.v && b.minor.v > a.minor.v, tag);
+    assert.ok(CRAFT.trinkets.some(t => t.major.stat === `${tag}.resistance` && t.minor.stat === `${narrow}.resistance`), `${tag}: broad-first trinket`);
+    assert.ok(CRAFT.trinkets.some(t => t.major.stat === `${narrow}.resistance` && t.minor.stat === `${tag}.resistance`), `${tag}: narrow-first trinket`);
   }
+});
+
+test("a trinket's numbers rise with its rarity; a legendary beats a common of the same recipe", () => {
+  const order = ["common", "uncommon", "rare", "legendary"];
+  for (let i = 1; i < order.length; i++) assert.ok(SCALE[order[i]] > SCALE[order[i - 1]], order[i]);
+  assert.equal(CRAFT.armory.trinketRarity.length, 4);
+  // a better recipe has better odds of a rare one
+  const rareOdds = w => (w[2] + w[3]) / w.reduce((a, b) => a + b, 0);
+  for (let i = 1; i < 4; i++) assert.ok(rareOdds(CRAFT.armory.trinketRarity[i]) > rareOdds(CRAFT.armory.trinketRarity[i - 1]), `tier ${i + 1}`);
+  // immunities are on or off
+  for (const t of CRAFT.trinkets) for (const l of [t.major, t.minor]) if (/\.immunity$/.test(l.stat)) assert.equal(l.v, 1, t.id);
 });
 
 test("armor: about ten sets, each a helmet and a body piece, okay to great", () => {

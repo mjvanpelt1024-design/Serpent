@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased: the build 53 review
+
+- **Trinkets are named by their stats.** Every stat has a first name and a second name; a trinket is its rarity,
+  its major stat's first name and its minor stat's second name: *Rare Cooling Body Fan: Ember Immunity - Fire
+  Resistance 20%*, *Common Dense Chainmail Plating*. Each one made rolls a rarity (better recipes, better odds),
+  and the rarity sets its numbers. Six new trinkets with an immunity as their major stat.
+- **The sandbox editor is laid out like the play screen**: the tools down the left (categories, their switches on
+  top, then the pieces, named on hover), the board in the middle, and the loadout (kit, skin, theme, rules) open down
+  the right instead of in a pop-up. Walls are barriers and mirrors: barrier block, mirror block, barrier, mirror. A
+  rune in the kit is picked by its condition (Broken to Pristine).
+- **One kind of name plate**: the island's (and tunnel's) name on the map and every shop's name are on the same
+  parchment scroll as a stop's and home's. In a shop, the bell, the crate and the workshop's things say what they
+  are on hover; the way to the workshop is an arrow.
+
 ## Unreleased: an arsenal, damage types on the board, champions
 
 - **Nightmare mode.** Win the Cinder Crown's last level and the Maw opens up: under each island, from the

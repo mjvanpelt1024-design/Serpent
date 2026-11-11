@@ -243,7 +243,10 @@ function renderSandbox() {
     const off = cat.toggles && sbLevel.off.includes(t.id);
     if (off) b.classList.add("off");
     const chips = cat.chips ? (sbLevel.sc[t.id] || []).length : 0;
-    b.append(c, Object.assign(document.createElement("span"), { textContent: t.label + (off ? " (off)" : chips ? " ×" + chips : "") }));
+    b.title = t.label + (off ? " (off)" : "");
+    b.setAttribute("aria-label", b.title);
+    b.append(c);
+    if (chips) b.append(Object.assign(document.createElement("span"), { className: "sb-badge", textContent: "×" + chips }));
     b.addEventListener("click", () => { sbTool = t.id; sfx("click"); renderSandbox(); });
     pal.appendChild(b);
   });
@@ -253,7 +256,7 @@ function renderSandbox() {
   sizes.querySelectorAll("[data-sbsize]").forEach(b => b.addEventListener("click", () => { sbSize = Number(b.dataset.sbsize); sfx("click"); renderSandbox(); }));
   renderSbExtra(cat);
   const hint = document.getElementById("sb-hint");
-  hint.textContent = cat.chips ? "Tap an edge square to place a chip. Tap a chip to take it off."
+  hint.textContent = cat.chips ? "Tap an edge square to place a chip: more chips, more often. Tap a chip to take it off."
     : cat.id === "walls" && sbTool.length === 2 ? "Tap the line between two squares to place a panel." : sbTool === "." ? "Tap a square to clear it, or a line to remove a panel." : cat.sized && sbSize === 2 ? "Large items fill 2 x 2 squares." : "";
   drawSandbox();
 }
@@ -263,7 +266,7 @@ function renderSbExtra(cat) {
   const box = document.getElementById("sb-extra");
   box.innerHTML = "";
   if (cat.id === "walls") {
-    box.innerHTML = `<div class="set-row"><div><div class="set-label">Disappearing walls</div><div class="set-help">Red walls vanish for a while, then come back.</div></div><button class="btn btn-small" data-sbx="vanish">${sbLevel.vn ? sbLevel.vn + " s" : "Off"}</button></div>`;
+    box.innerHTML = `<div class="set-row" title="Disappearing: barriers vanish for this many seconds, then come back"><div class="set-label">Disappearing</div><button class="btn btn-small" data-sbx="vanish">${sbLevel.vn ? sbLevel.vn + " s" : "Off"}</button></div>`;
     box.querySelector('[data-sbx="vanish"]').addEventListener("click", () => {
       const i = SB_VANISH_STEPS.indexOf(sbLevel.vn);
       sbLevel.vn = SB_VANISH_STEPS[(i + 1) % SB_VANISH_STEPS.length];
@@ -279,8 +282,7 @@ function renderSbExtra(cat) {
       renderSandbox();
     }));
   } else if (cat.chips) {
-    box.innerHTML = `<p class="set-help">More chips of one enemy make it turn up more often. Edge squares only.</p>` +
-      cat.tools.map(t => `<div class="set-row"><div class="set-label">${t.label}</div><div>${(sbLevel.sc[t.id] || []).length} chip${(sbLevel.sc[t.id] || []).length === 1 ? "" : "s"}</div></div>`).join("");
+    // (each tool's badge counts its chips; the hint under the tools says how they work)
   }
 }
 
@@ -495,13 +497,14 @@ function downloadLevelFile(L) {
 }
 
 /* ----- Rules panel ----- */
+/* The loadout is always open down the editor's right side (build 53); on a narrow window it sits
+   under the board, and the gear button in the head scrolls to it */
 function openRules() {
   renderRules();
-  document.getElementById("sb-rules").classList.add("active");
-  document.getElementById("rules-done").focus({ preventScroll: true });
+  const el = document.getElementById("sb-rules");
+  if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) el.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 function closeRules() {
-  document.getElementById("sb-rules").classList.remove("active");
   drawSandbox();
 }
 function renderRules() {
@@ -568,10 +571,10 @@ function sbKitRulesHtml() {
   const rows = SBK_SLOTS.map(([slot, label]) => {
     const k = kit[slot];
     const items = sbKitChoices(slot).map(d => `<option value="${d.id}"${k && k.id === d.id ? " selected" : ""}>${escapeAttr(d.name)}${d.nightmare ? " (nightmare)" : ""}</option>`).join("");
-    const rar = k ? `<select class="sb-kit-r" data-kit="${slot}" data-part="r" aria-label="${label} rarity">${CAMP.rarities.map(r => `<option value="${r.id}"${k.r === r.id ? " selected" : ""}>${escapeAttr(r.name)}</option>`).join("")}</select>` : "";
+    const rar = k ? `<select class="sb-kit-r" data-kit="${slot}" data-part="r" aria-label="${label} rarity">${CAMP.rarities.map(r => `<option value="${r.id}"${k.r === r.id ? " selected" : ""}>${escapeAttr(typeof campGradeName === "function" ? campGradeName(k.id, r.id) : r.name)}</option>`).join("")}</select>` : "";
     return `<div class="set-row sb-kit-row"><div class="set-label">${label}</div><div class="sb-kit-pick"><select class="sb-kit" data-kit="${slot}" data-part="id" aria-label="${label}"><option value="">None</option>${items}</select>${rar}</div></div>`;
   }).join("");
-  return `<h4 class="rules-head">Kit</h4><p class="set-help sb-kit-help">Wear anything in the game. A level with a kit plays like a campaign level: its walls, start, spawners, boss, hearts and twists, but not its food squares, panels or disappearing walls.</p>${rows}`;
+  return `<h4 class="rules-head" title="Wear anything in the game. A level with a kit plays like a campaign level: its walls, start, spawners, boss, hearts and twists, but not its food squares, panels or disappearing walls.">Kit</h4>${rows}`;
 }
 
 /* ----- Playing a custom level: no XP, stats or badges, so the sandbox can't be farmed ----- */
