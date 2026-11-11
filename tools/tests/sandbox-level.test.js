@@ -51,3 +51,16 @@ test("bad files are refused", () => {
 function levelRows(fn) {
   return Array.from({ length: 20 }, () => Array.from({ length: 20 }, fn).join("")).join("\n");
 }
+
+// The save reads your sandbox levels back on boot (save-data.js sanitizeSave, run from badges.js), so the
+// level-code functions must load before it: a save with a level in it once stopped the game from starting.
+test("the level codes load before the save that reads them", () => {
+  const fs = require("node:fs"), path = require("node:path");
+  const src = path.join(__dirname, "..", "..", "src");
+  const order = fs.readFileSync(path.join(src, "load-order.dat"), "utf8").split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith("#"));
+  const at = f => order.indexOf(f);
+  assert.ok(at("game/sandbox/level-code.js") >= 0 && at("game/sandbox/level-code.js") < at("game/progress/badges.js"));
+  const code = fs.readFileSync(path.join(src, "game", "sandbox", "level-code.js"), "utf8");
+  for (const fn of ["levelCode", "parseLevelCode", "normalizeLevel", "newLevel", "chipsFor"]) assert.ok(code.includes(`function ${fn}(`), fn);
+  assert.doesNotMatch(code, /CONSUMABLE_KEYS|CONSUMABLES\[/, "items.js loads after the save");
+});

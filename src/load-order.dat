@@ -12,6 +12,7 @@ game/damage/damage.js
 engine/render/color.js
 game/sandbox/sandbox-tools.js
 game/sandbox/level-file.js
+game/sandbox/level-code.js
 game/world/islands.js
 game/world/levels.js
 game/economy/upgrades.js
