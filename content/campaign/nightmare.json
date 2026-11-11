@@ -6,9 +6,9 @@
   },
   "order": [
     "crown",
-    "spire",
     "reef",
     "hollow",
+    "spire",
     "keep"
   ],
   "levels": 10,

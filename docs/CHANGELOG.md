@@ -2,6 +2,18 @@
 
 ## Unreleased: the build 53 review
 
+- **Nightmare on the map, round two.** One hole, in the Cinder Crown's grass; further down, each tunnel starts
+  where the Maw's body comes through from the one above, and beating a Maw takes you straight down. The moon down
+  the side of the map turns the world around wherever you are. The map opens on the last island you were at,
+  underground again if you left it there. The tunnels go backwards through the islands (Cinder Crown, Tidecoil Reef,
+  Feastwood Hollow, Arcanum Spire, Brightscale Keep); they used to skip about.
+- **The tunnels are dressed.** Each in its island's own stuff: lava and obsidian, coral and pearls, roots and amber,
+  crystals and runes, iron ore, mine timbers and lanterns; carved through the rock with a trodden path, stepping
+  stones, pennants, torches and the merchant's stall, like the paths above. New pictures in `textures/map/deep/`.
+- **The roots are roots**: a slice of the island's ground with six roots under the trunk that reach further, thicken
+  and sprout rootlets as they're grown, and glow when they're full; their pins are root bulbs riding the tips.
+- **Fewer empty plates**: no quest plate when you haven't got a quest, no challenge plate on a level without one.
+
 - **Trinkets are named by their stats.** Every stat has a first name and a second name; a trinket is its rarity,
   its major stat's first name and its minor stat's second name: *Rare Cooling Body Fan: Ember Immunity - Fire
   Resistance 20%*, *Common Dense Chainmail Plating*. Each one made rolls a rarity (better recipes, better odds),

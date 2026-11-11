@@ -570,14 +570,26 @@ straight in, and after a run you're back around the back, up close on the next s
 the world around, the daylight's pin, Back or the moon in the legend turns it back. Pins keep their world x
 (`pin._x`) and `mapMirrorX` puts them where they show.
 
+**Build 53 review.** Only the top island (the first in `order`) has a hole in its grass. Further down, a tunnel
+starts where the Maw's body comes through from the tunnel above (its first stop, `nup`, climbs back up to that
+lair; a beaten Maw's stop leads on down), and beating a Maw takes you straight down there, no hole dug. The moon
+in the map's legend turns the world around on the island you're on (or back). The save keeps whether you were
+around the back and on which island (`camp.nm.under`, `camp.at`): the map always opens on the last island you were
+at, underground again if that's where you left it, in a later session too. Each tunnel is dressed in its island's
+own stuff (`DEEP_LOOK` in map-deep.js, pictures in `textures/map/deep/` from `tools/textures/deep-art.py`): the
+Cinder Gullet's lava and obsidian, the Drowned Belly's coral, pools and pearls, the Root Gizzard's roots, amber and
+toadstools, the Hexed Spine's crystals and runes, the Iron Tail's ore, timbers and lanterns; carved out of the rock
+stop to stop, with a trodden path, stepping stones, pennants and torches like the paths above, and its own air.
+
 **The shops:** once nightmare is open, every merchant's shelf of five has **two of the deep's things** (its own
 kind, rare or legendary, at nightmare prices: `nmPrice`) beside its three of the usual. The tunnel's shop stop
 opens that island's merchant, and coming back the world is still turned around. The Maw's body is the Coil; under each island, from the top down
-(`order`: the Cinder Crown first, Grimscale's Keep last), a tunnel:
+(`order`: backwards through the islands, the Cinder Crown, Tidecoil Reef, Feastwood Hollow, Arcanum Spire, then Brightscale Keep), a tunnel:
 
 - **The roots** (their stop branches off the way from the hole to level 1): the roots of the island's tree,
-  six like its six branches (`roots`), on the same tree screen, hung upside down into the dark earth (`camp-roots.js`):
-  they grow and fruit the same way, work in every nightmare level and never above ground, paid in that island's money. Each is a stat the
+  six like its six branches (`roots`), on the same tree screen, drawn as real roots in a slice of the island's
+  ground (`camp-roots.js`): each reaches further, thickens and sprouts rootlets as it's grown (its pin rides its
+  tip), and bears glowing nodules once it's full, work in every nightmare level and never above ground, paid in that island's money. Each is a stat the
   level reads: the rune stats, the damage stats, and `nmSnakeSlow`. Costs are times the tunnel's depth.
 - **Levels 1 to 10**: the island's own levels (`base`: 1-4, 6-9, 11 and 14), on their boards turned a
   quarter turn (`content/levels/nightmare/`, written by `tools/bake-campaign-levels.js`), faster, needing

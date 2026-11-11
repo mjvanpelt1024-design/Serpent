@@ -254,8 +254,11 @@ function campHudUpdate() {
   setHtml(ex, extra.join(""));
   ex.hidden = !extra.length;
 
+  // no quest on, no challenge on this level: no plate saying so (build 53 review: fewer words)
   setHtml($(".cp-trials"), campQuestHtml(campRun.challenge >= 0 ? isl : null));
+  $(".cp-trials").hidden = !campActiveQuest();
   setHtml($(".cp-bonus"), campBonusHtml());
+  $(".cp-bonus").hidden = !campRun.bonus;
 
   // the bounty on the next boss: just its name and where it waits, until you face it
   const bounty = $(".cp-bounty");

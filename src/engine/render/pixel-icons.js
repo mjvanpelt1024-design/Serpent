@@ -138,7 +138,9 @@ const FRUIT_SHAPES = {
   orange: "M16 4.5C9.4 4.5 4 9.6 4 16.3S9.4 28 16 28s12-5 12-11.7S22.6 4.5 16 4.5z",
   plum: "M16 5c-5.8 0-11 4.6-11 11.4C5 23 10 28 16 28s11-5 11-11.6C27 9.6 21.8 5 16 5zM16 6.5c-.6 4-.6 15 0 21",
   lemon: "M16 6c-5 0-9.6 3.2-11.4 7.4-.6 1.4-1.6 2.2-2.6 2.6 1 .4 2 1.2 2.6 2.6C6.4 22.8 11 26 16 26s9.6-3.2 11.4-7.4c.6-1.4 1.6-2.2 2.6-2.6-1-.4-2-1.2-2.6-2.6C25.6 9.2 21 6 16 6z",
-  berry: "M16 7.5c-3.4-2-9.6-1.6-11 3-1.6 5.2 4 13.6 11 17.5 7-3.9 12.6-12.3 11-17.5-1.4-4.6-7.6-5-11-3z"
+  berry: "M16 7.5c-3.4-2-9.6-1.6-11 3-1.6 5.2 4 13.6 11 17.5 7-3.9 12.6-12.3 11-17.5-1.4-4.6-7.6-5-11-3z",
+  // a root's bulb, for the roots under the islands (camp-roots.js): round, tapering to a tail, rootlets on top
+  tuber: "M16 5C9.4 5 4.6 9.6 4.6 15.2c0 5.2 4.2 9 8.8 11.8L16 31l2.6-4c4.6-2.8 8.8-6.6 8.8-11.8C27.4 9.6 22.6 5 16 5z"
 };
 const ITEM_FRUIT = Object.fromEntries(CONTENT.items.map(it => [it.id, String(it.fruit || "apple")]));
 const ITEM_COLOR = Object.fromEntries(CONTENT.items.map(it => [it.id, String(it.color || "#ffffff")]));
@@ -147,7 +149,8 @@ const ITEM_COLOR = Object.fromEntries(CONTENT.items.map(it => [it.id, String(it.
 function fruitSvg(shape) {
   const stem = shape === "apple" || shape === "pear"
     ? `<path class="fr-stem" d="M16 7.5c0-2 .4-3.6 1.6-5"/><path class="fr-leaf" d="M17.4 4.4c1.6-2.2 4.6-2.8 6.6-1.8-1 2.4-3.8 3.6-6.6 1.8z"/>`
-    : shape === "orange" ? `<path class="fr-leaf" d="M16 5.2c1.2-2 3.8-2.8 5.8-2-1 2-3.4 3-5.8 2z"/>` : "";
+    : shape === "orange" ? `<path class="fr-leaf" d="M16 5.2c1.2-2 3.8-2.8 5.8-2-1 2-3.4 3-5.8 2z"/>`
+    : shape === "tuber" ? `<path class="fr-stem" d="M12.5 5.6C11.8 3.8 10.4 2.6 9 2M19.5 5.6c.7-1.8 2.1-3 3.5-3.6M16 5V1.4"/>` : "";
   return `<svg class="fr-shape" viewBox="0 0 32 32" aria-hidden="true"><path class="fr-body" d="${FRUIT_SHAPES[shape]}"/><path class="fr-shine" d="M9 11.5c.6-2 2-3.2 3.6-3.6"/>${stem}</svg>`;
 }
 function fruitInner(shape, icon) {

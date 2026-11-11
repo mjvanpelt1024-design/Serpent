@@ -58,11 +58,20 @@ function openScreen(name) {
       setTimeout(() => {
         if (currentScreen !== "modes") return;
         selectPlace(k);
+        if (typeof deepResume === "function") deepResume(k);
         // Coming back from a run: the level just played is ready to go again
         if (lastPlayed && lastPlayed.key === k) setTimeout(() => {
           const pin = mapPinsEl.querySelector(`[data-key="${lastPlayed.nm ? "nm" : "lv"}-${k}-${lastPlayed.j}"]`);
           if (pin && currentScreen === "modes" && mapSel === k) setKbdFocus(pin);
         }, 120);
+      }, 0);
+    } else if (camp && campIslandOpen(camp.at)) {
+      // Opening the map: back on the last island you were at, underground if that's where you left it
+      const k = camp.at;
+      setTimeout(() => {
+        if (currentScreen !== "modes" || mapSel) return;
+        selectPlace(k);
+        if (typeof deepResume === "function") deepResume(k);
       }, 0);
     }
   }

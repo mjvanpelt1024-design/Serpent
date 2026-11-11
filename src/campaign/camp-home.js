@@ -163,7 +163,7 @@ function placeHomeTag(sp) {
 /* The notice board beside the tree: the bounty on the island's next boss, and your quest */
 function renderHomeNotes() {
   const bounty = campBountyHtml(homeIsl);
-  homeNotesEl.innerHTML = (bounty ? `<div class="plate cp-bounty">${bounty}</div>` : "") + `<div class="plate cp-trials">${campQuestHtml(null)}</div>`;
+  homeNotesEl.innerHTML = (bounty ? `<div class="plate cp-bounty">${bounty}</div>` : "") + (campActiveQuest() ? `<div class="plate cp-trials">${campQuestHtml(null)}</div>` : "");
 }
 
 function openHomeThing(id) {

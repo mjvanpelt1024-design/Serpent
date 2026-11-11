@@ -663,10 +663,11 @@ function renderModes(justUnlocked) {
     const T = CAMP.nightmare.tunnels[key];
     // the hole in the grass (go down), and the top of the shaft (back up)
     const h = deepStop(key, "hole"), u = deepStop(key, "up");
-    add("prop node nmhole open", `nm-${key}-hole`, key, h.x, h.y - 12, `<img class="pi" src="${iconUrl("moon", 2)}" alt=""><span class="lbl">${escapeAttr(T.name)}</span>`,
+    if (key === deepTop()) add("prop node nmhole open", `nm-${key}-hole`, key, h.x, h.y - 12, `<img class="pi" src="${iconUrl("moon", 2)}" alt=""><span class="lbl">${escapeAttr(T.name)}</span>`,
       `Turn the world around: ${T.name}`, () => enterUnder(key));
-    add("prop node nm nmup open", `nm-${key}-up`, key, u.x, u.y - 10, `<span class="up-arrow" aria-hidden="true">&#8634;</span><span class="lbl">The hole</span>`,
-      "Turn the world back around", pin => openLevelPop(key, "nup", false, pin));
+    const top = key === deepTop();
+    add("prop node nm nmup open", `nm-${key}-up`, key, u.x, u.y - 10, `<span class="up-arrow" aria-hidden="true">${top ? "&#8634;" : "&#9650;"}</span><span class="lbl">${top ? "The hole" : "The Maw's body"}</span>`,
+      top ? "Turn the world back around" : "Up the Maw's body to the tunnel above", pin => openLevelPop(key, "nup", false, pin));
     DEEP_IDS.forEach(id => {
       const p = deepStop(key, id);
       if (typeof id === "number") {
@@ -742,6 +743,8 @@ function selectPlace(key) {
   const switching = key !== mapSel;
   closeLevelPop(true);
   mapSel = key;
+  // the map opens on the last island you were at (build 53 review)
+  if (camp && campIslandOpen(key) && camp.at !== key) { camp.at = key; saveCamp(); }
   mapNight = false;
   if (switching) sfx("whoosh");
   mapEl.classList.add("zoomed");
@@ -838,7 +841,7 @@ function renderLegend() {
   const Q = questFor(key), qs = questNextStop(key);
   if (Q && qs) items.push({ k: "quest", icon: iconUrl("scroll", 2), tip: qs.id === "challenger" ? "Quest done: claim your reward" : `Quest: trial ${Q.done.filter(Boolean).length + 1} of ${Q.levels.length}`, cls: "quest" });
   // build 53: nightmare mode, once the last island is won (camp-nightmare.js)
-  if (typeof nmUnlocked === "function" && nmUnlocked()) items.push({ k: "nightmare", icon: iconUrl("moon", 2), tip: `Nightmare: ${CAMP.nightmare.tunnels[nmCurrentTunnel()].name}`, cls: "nightmare" });
+  if (typeof nmUnlocked === "function" && nmUnlocked()) items.push({ k: "nightmare", icon: iconUrl("moon", 2), tip: mapFlip ? "Turn the world back around" : `Turn the world around: ${CAMP.nightmare.tunnels[nmTunnelOpen(key) ? key : nmCurrentTunnel()].name}`, cls: "nightmare" + (mapFlip ? " under" : "") });
   mapLegendEl.style.setProperty("--isl", I.colors.accent);
   mapLegendEl.setAttribute("aria-label", `Places on ${I.name}`);
   const html = `<span class="lg-isl" title="${escapeAttr(I.name)}">${coinHtml(key)}</span>` + items.map(it => `<button class="lg-btn ${it.cls}" data-lg="${it.k}" aria-label="${escapeAttr(it.tip)}" ${it.off ? "disabled" : ""}>` +
@@ -856,7 +859,7 @@ function legendGo(key, k) {
   if (k === "home") { openNode(key, "home"); return; }
   if (NPC_KINDS.includes(k)) { mapFlyTo(key, k, () => openNode(key, k)); return; }
   if (k === "next") { const n = campNextLevel(key); if (n) mapFlyTo(key, n); return; }
-  if (k === "nightmare") { if (mapFlip) leaveUnder(); else enterUnder(nmCurrentTunnel()); return; }
+  if (k === "nightmare") { deepToggle(); return; }
   if (k === "quest") {
     const qs = questNextStop(key);
     if (qs) mapFlyTo(key, qs.id, qs.id === "challenger" ? () => openNode(key, "challenger") : null);
@@ -973,7 +976,7 @@ function arrowLabel(from, to, d, role) {
   if (to.id === "n11") return { word: "The Maw", sub: "", cls: "boss" };
   if (to.id === "nroots") return { word: "The roots", sub: CAMP.nightmare.roots[to.key].name, cls: "home" };
   if (to.id === "nshop") return { word: CAMP.islandById[to.key].npcs.merchant.shop, sub: "Two of the deep's things", cls: "shop" };
-  if (to.id === "nup") return { word: "The hole", sub: "Turn back around", cls: "island" };
+  if (to.id === "nup") return to.key === deepTop() ? { word: "The hole", sub: "Turn back around", cls: "island" } : { word: "Down the Maw", sub: CAMP.nightmare.tunnels[to.key].name, cls: "island" };
   if (typeof to.id === "number" && isBossLevel(to.id)) return { word: "Boss", sub, cls: "boss" };
   if (role === "quest") {
     const Q = questFor(to.key), qi = Q ? Q.levels.indexOf(to.id) : -1;
@@ -1037,7 +1040,8 @@ function renderNodeFocus() {
       if (w) tag = `Won ${w}`;
     } else if (dr === "roots") { sub = "Upgrades for every nightmare level"; line = "The roots of the tree above"; go = "Visit"; }
     else if (dr === "shop") { sub = "Two of the deep's things on the shelf"; if (st === "locked") why = "Win level 5 first"; go = "Visit"; }
-    else { sub = "Daylight"; line = "Back to the front of the world"; go = "Turn around"; }
+    else if (key === deepTop()) { sub = "Daylight"; line = "Back to the front of the world"; go = "Turn around"; }
+    else { sub = `Down from ${CAMP.nightmare.tunnels[deepAbove(key)].name}`; line = "Where the Maw's body goes on down"; go = "Climb back up"; }
   } else if (typeof j === "number") {
     const def = campLevelDef(key, j);
     const rec = camp.levels[campLevelId(key, j)];
@@ -1168,7 +1172,7 @@ function actOnNode(key, j) {
     if (typeof r === "number") openNmGoal(key, r);
     else if (r === "roots") openRootsTree(key);
     else if (r === "shop") nmOpenShop(key);
-    else leaveUnder();
+    else deepUpAct(key);
     return;
   }
   if (typeof j === "number") openMapGoal(key, j);

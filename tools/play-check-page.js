@@ -325,6 +325,37 @@
       openScreen("main");
     }
 
+    // ----- build 53 review: nightmare on the map: one hole, it remembers where you were, the side button turns it
+    {
+      const N = CAMP.nightmare, order = N.order;
+      check(order.join(",") === CAMP.islands.map(I => I.id).reverse().join(","), `nightmare: the tunnels go backwards through the islands (${order.join(", ")})`);
+      runConsole("dev nightmare.open " + order[order.length - 1]);
+      document.querySelectorAll(".modal.active").forEach(m => m.classList.remove("active"));
+      openScreen("modes");
+      const holes = [...mapPinsEl.querySelectorAll(".map-pin.nmhole")].map(p => p.dataset.area);
+      check(holes.length === 1 && holes[0] === order[0], `nightmare: only the top island has a hole (${holes.join(", ")})`);
+      selectPlace(order[2]);
+      legendGo(order[2], "nightmare");
+      await wait(() => !deepFlipping(), 40);
+      check(mapFlip && camp.nm.under && camp.at === order[2], "nightmare: the side button turns the world around where you are");
+      openScreen("main");
+      openScreen("modes");
+      await wait(() => mapSel === order[2] && mapFlip, 30);
+      check(mapSel === order[2] && mapFlip, `nightmare: the map opens again around the back, on the island you left (${mapSel}, ${mapFlip})`);
+      const up = nodeLinks(order[2], "nup").find(l => l.to.key === order[1]);
+      check(!!up && up.to.id === "n11", "nightmare: further down, the tunnel's start leads back up the Maw's body to the lair above");
+      legendGo(order[2], "nightmare");
+      await wait(() => !deepFlipping(), 40);
+      openScreen("main");
+      openScreen("modes");
+      await wait(() => mapSel === order[2], 30);
+      check(!mapFlip && !camp.nm.under && mapSel === order[2], "nightmare: turned back, it opens on the front, still on that island");
+      const tips = rootTips([0, 0, 0, 0, 0, 0], [5, 5, 5, 5, 5, 5]), full = rootTips([5, 5, 5, 5, 5, 5], [5, 5, 5, 5, 5, 5]);
+      check([1, 2, 3, 4, 5].every(i => Math.hypot(full[i][0] - ROOT_TRUNK.x, full[i][1] - ROOT_TRUNK.y) > Math.hypot(tips[i][0] - ROOT_TRUNK.x, tips[i][1] - ROOT_TRUNK.y) + 10),
+        "roots: each root reaches further as it grows");
+      openScreen("main");
+    }
+
     // ----- build 53 review: a trinket is named by its two stats, its rarity sets its numbers
     {
       const cool = CAMP.craftById.t_cooling;

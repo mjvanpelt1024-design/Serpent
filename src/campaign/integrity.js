@@ -223,6 +223,7 @@ const SAVE_SCHEMA = S.obj({
   // the tunnels whose Maw is beaten, and the roots' upgrade tiers
   nm: S.obj({
     open: S.bool(false),
+    under: S.bool(false),         // left the map around the back (build 53 review): it opens there again
     levels: S.map(/^[a-z]+:(1[01]|[1-9])$/, S.int(0, 1e7, 0), 60),
     maw: S.list(S.oneOf(islandIds, "crown"), 5),
     roots: S.map(() => Object.values((CAMP.nightmare || {}).roots || {}).flatMap(r => r.upgrades.map(u => u.id)), S.int(0, 5, 0), 40)
