@@ -66,7 +66,7 @@ SnakeGame/
 │   └── scenes/              painted scenes: backgrounds, layers, sprite sheets, lights (rooms, shops, keepers, home, story book...)
 │
 ├── styles/              CSS, in the order index.html links them
-├── assets/              the fonts (with their licenses) and icons
+├── assets/              the fonts (with their licenses), icons, and three.js (vendor/three, MIT) for the title's 3D arcade
 ├── mods/                the example mod (copied to Documents\SnakeGame\mods on first run)
 ├── tools/               check-campaign.py, sign-content.py, check-content.py, bundle-content.py, serve.py,
 │                        textures/textures.mjs (check or export the pictures)

@@ -118,7 +118,7 @@ function layoutHome() {
   if (!vw || !vh) return;
   const w = Math.max(184, Math.min(320, Math.round(HOME_H * vw / vh)));
   if (w !== HOME_W || homeCanvas.width !== w) { HOME_W = w; homeCanvas.width = w; homeCanvas.height = HOME_H; renderHomePins(); }
-  const s = Math.max(vw / HOME_W, vh / HOME_H);
+  const s = Math.max(vw / HOME_W, vh / HOME_H) * 1.05;      // (5% over: room to look around, look-around.js)
   homeWorldEl.style.width = HOME_W + "px";
   homeWorldEl.style.height = HOME_H + "px";
   homeWorldEl.style.transform = `translate(${(vw - HOME_W * s) / 2}px, ${(vh - HOME_H * s) / 2}px) scale(${s})`;

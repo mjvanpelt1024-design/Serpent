@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased: the arcade machine in 3D, and looking around
+
+- **The title screen's arcade machine is 3D** (three.js, in `assets/vendor/three/`, src/art/arcade-3d.js): side
+  panels with their art, a lit marquee with your money in its readout, the bezel, a speaker grille, a sloped
+  control panel and the coin door, all casting shadows on the wall. The board and the menu are still the game's
+  own page, warped into the machine's screen every frame, so Play and the rest work as before.
+- **Its controls work.** The joystick steers the snake that plays on the screen (it plays by itself again a few
+  seconds after you let go; steer it into itself and it starts over), red is turbo, yellow drops apples, blue a
+  golden orb, 1P starts a new snake, 2P hands it back.
+- **Papers and stickers where they belong**: your numbers are posters taped either side of the coin door (and one
+  on the side panel), each with a band, a picture, a pen line and the odd coffee ring; the bosses' wanted posters
+  are nailed to the wall; stickers come in all sizes and are stuck all over the machine and the wall. One over a
+  number lifts when you point at it.
+- **Look around the machine** the same amount in every direction: the view turns and pans toward the mouse (only a
+  little while it's over the screen, so the menu holds still).
+- **Look around everywhere else too**: the map (the islands and a stop up close), home and the shops drift toward
+  the mouse, the same amount every way, the sky behind the islands less (src/ui/look-around.js).
+- Without WebGL the title screen keeps the flat arcade.
+
 ## Unreleased: the build 53 review
 
 - **Nightmare on the map, round two.** One hole, in the Cinder Crown's grass; further down, each tunnel starts

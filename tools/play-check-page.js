@@ -239,7 +239,8 @@
     check(!back.issues.length, "nightmare: the saved file passes the save check" + (back.issues.length ? ": " + back.issues.slice(0, 3).join("; ") : ""));
     // the title screen: the Maw's poster
     renderTitleDeco();
-    check(/td-poster maw/.test(titleDeco.innerHTML + titleWall.innerHTML), "nightmare: the Maw's wanted poster is on the title screen");
+    // (on the flat arcade a poster on the wall; on the 3D machine, src/art/arcade-3d.js, one of its wall's posters)
+    check(/td-poster maw/.test(titleDeco.innerHTML + titleWall.innerHTML) || !!(typeof A3D !== "undefined" && A3D.data && A3D.data.posters.some(p => p.name === "The Maw")), "nightmare: the Maw's wanted poster is on the title screen");
     await log("nightmare: first tunnel played end to end");
 
     // ----- 3a. the top bar: every island's money, always; the legend: the island in the middle of the map
@@ -353,6 +354,37 @@
       const tips = rootTips([0, 0, 0, 0, 0, 0], [5, 5, 5, 5, 5, 5]), full = rootTips([5, 5, 5, 5, 5, 5], [5, 5, 5, 5, 5, 5]);
       check([1, 2, 3, 4, 5].every(i => Math.hypot(full[i][0] - ROOT_TRUNK.x, full[i][1] - ROOT_TRUNK.y) > Math.hypot(tips[i][0] - ROOT_TRUNK.x, tips[i][1] - ROOT_TRUNK.y) + 10),
         "roots: each root reaches further as it grows");
+      openScreen("main");
+    }
+
+    // ----- build 54: the title's arcade machine in 3D, its controls on the snake, and looking around
+    if (typeof A3_OK !== "undefined" && A3_OK && arcadeFits()) {
+      openScreen("main");
+      await wait(() => A3D.on && A3D.base, 30);
+      check(A3D.on && document.body.classList.contains("arcade3d") && /matrix3d/.test(stageEl.style.transform), "title: the machine is 3D and the board sits in its screen");
+      const at = (m, dx, dy, dz) => { const v = new THREE.Vector3(dx, dy, dz); m.localToWorld(v); v.project(A3D.camera); return [(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight]; };
+      const click = ([x, y]) => { window.dispatchEvent(new PointerEvent("pointerdown", { clientX: x, clientY: y, button: 0 })); window.dispatchEvent(new PointerEvent("pointerup", { clientX: x, clientY: y })); };
+      demo.dir = { x: 0, y: 1 };
+      click(at(A3D.joy.group, -12, 2, 0));
+      check(demo.want && demo.want.x === -1 && demo.handsOn > performance.now(), "title: pushing the joystick left turns the snake left");
+      const apples = demo.apples.length;
+      click(at(A3D.buttons.find(b => b.kind === "feed").cap, 0, 1.5, 0));
+      check(demo.apples.length > apples, "title: the yellow button drops apples");
+      demo.body = [{ x: 5, y: 5 }, { x: 6, y: 5 }, { x: 6, y: 6 }, { x: 5, y: 6 }, { x: 4, y: 6 }]; demo.dir = { x: 0, y: -1 }; demo.want = { x: 0, y: 1 }; demo.handsOn = performance.now() + 5000;
+      demoStep();
+      check(demo.body.length === 4 && !(demo.handsOn > performance.now()), "title: steered into itself, the snake starts over and plays by itself");
+      storyQueue = []; storyThen = null; storyEl.classList.remove("open");          // (a story page left open by the checks above)
+      document.querySelectorAll(".modal.active").forEach(m => m.classList.remove("active"));
+      const play = document.querySelector("#screen-main button"), r = play.getBoundingClientRect(), hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      check(!!hit && (hit === play || play.contains(hit)), `title: the menu in the machine's screen still takes clicks (${play.id || play.textContent.trim()} -> ${hit ? (hit.id || hit.className || hit.tagName) : "nothing"})`);
+    }
+    {
+      openScreen("modes");
+      window.dispatchEvent(new MouseEvent("mousemove", { clientX: 0, clientY: 0 }));
+      await wait(() => Math.abs(parseFloat(document.documentElement.style.getPropertyValue("--mx")) || 0) > 0.3, 40);
+      const mx = parseFloat(document.documentElement.style.getPropertyValue("--mx")) || 0, my = parseFloat(document.documentElement.style.getPropertyValue("--my")) || 0;
+      check(mx < -0.3 && Math.abs(mx - my) < 0.05, `look-around: the map drifts toward the mouse, as far up as across (${mx}, ${my})`);
+      window.dispatchEvent(new MouseEvent("mousemove", { clientX: innerWidth / 2, clientY: innerHeight / 2 }));
       openScreen("main");
     }
 

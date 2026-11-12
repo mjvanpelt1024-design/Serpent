@@ -51,9 +51,14 @@ function campUnpin(isl, id) {
 }
 
 /* ----- The stickers: an island's mark (textures/icons/stickers/<island>.png) in a white die-cut border ----- */
-const stickerCache = {};
+const stickerCache = {}, stickerCanvasCache = {};
 function stickerUrl(isl) {
   if (stickerCache[isl]) return stickerCache[isl];
+  return (stickerCache[isl] = stickerCanvas(isl).toDataURL());
+}
+/* The sticker itself, 18 x 18 (the 3D machine, src/art/arcade-3d.js, uses it too) */
+function stickerCanvas(isl) {
+  if (stickerCanvasCache[isl]) return stickerCanvasCache[isl];
   const src = texCanvas("sticker:" + isl);
   const c = document.createElement("canvas");
   c.width = c.height = 18;
@@ -68,7 +73,7 @@ function stickerUrl(isl) {
   g.drawImage(src, 3, 3);
   // a glossy streak
   g.fillStyle = "rgba(255,255,255,0.35)"; g.fillRect(5, 4, 3, 1); g.fillRect(4, 5, 1, 2);
-  return (stickerCache[isl] = c.toDataURL());
+  return (stickerCanvasCache[isl] = c);
 }
 
 /* ----- What it all says ----- */
@@ -127,7 +132,18 @@ function renderTitleDeco() {
   }).join("") + mawPoster();
   // build 53: the Maw's sticker, once it's beaten in every tunnel (it goes in the first of nightmare.json's sticker slots)
   if (mawDone()) done.push({ id: "maw", name: "The Maw" });
-  if (arcadeFits()) { renderArcade(coins, gems, titleStats(), done, posters); placeTitleDeco(); return; }
+  if (arcadeFits()) {
+    // build 54: the machine in 3D (src/art/arcade-3d.js) where WebGL works; the flat one otherwise
+    if (typeof arcade3dFits === "function" && arcade3dFits() && arcade3dShow(titleStats(), done)) {
+      document.body.classList.add("arcade");
+      titleWall.innerHTML = ""; titleMachine.innerHTML = "";
+      titleDeco.classList.remove("narrow", "compact", "coins-side");
+      // (the numbers, for screen readers: on the machine they're pictures)
+      titleDeco.innerHTML = `<div class="sr-only">${titleStats().map(([l, v]) => `${escapeAttr(l)}: ${escapeAttr(v)}. `).join("")}</div>`;
+      return;
+    }
+    renderArcade(coins, gems, titleStats(), done, posters); placeTitleDeco(); return;
+  }
   arcadeOff();
   titleDeco.innerHTML = `<div class="td-top">${coins}${gems}</div>
     <div class="td-left plate"><p class="td-head">${escapeAttr(camp.name)}'s adventure</p>${rows}</div>
@@ -140,6 +156,7 @@ function placeTitleDeco() {
   if (!titleDeco.classList.contains("open")) return;
   // the arcade, while it fits the window (and back and forth as the window changes)
   if (document.body.classList.contains("arcade") !== arcadeFits()) { renderTitleDeco(); return; }
+  if (document.body.classList.contains("arcade3d")) { a3Layout(); return; }
   if (document.body.classList.contains("arcade")) { placeArcade(); return; }
   const r = stageEl.getBoundingClientRect();
   const vw = window.innerWidth, vh = window.innerHeight;
@@ -265,6 +282,7 @@ function placeArcade() {
 const look = { x: 0, y: 0, tx: 0, ty: 0, up: 0, down: 0, side: 0, base: 0, rest: null, mouse: null, raf: 0 };
 const lookStill = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 function lookAt(px, py) {
+  if (document.body.classList.contains("arcade3d")) { a3Look(px, py); return; }
   if (!document.body.classList.contains("arcade") || !look.rest || lookStill()) { look.tx = 0; look.ty = look.base; return lookGo(); }
   look.mouse = { x: px, y: py };
   const r = look.rest, vw = window.innerWidth, vh = window.innerHeight;
@@ -291,8 +309,9 @@ function lookStep() {
   document.body.style.setProperty("--ly", look.y.toFixed(1) + "px");
 }
 window.addEventListener("mousemove", e => { if (document.body.classList.contains("arcade")) lookAt(e.clientX, e.clientY); });
-document.addEventListener("mouseleave", () => { if (document.body.classList.contains("arcade")) { look.mouse = null; look.tx = 0; look.ty = look.base; lookGo(); } });
+document.addEventListener("mouseleave", () => { if (document.body.classList.contains("arcade3d")) { a3Look(null, null); return; } if (document.body.classList.contains("arcade")) { look.mouse = null; look.tx = 0; look.ty = look.base; lookGo(); } });
 function arcadeOff() {
+  if (typeof arcade3dOff === "function") arcade3dOff();
   document.body.classList.remove("arcade");
   look.x = look.y = look.tx = look.ty = look.base = 0;
   look.mouse = null;

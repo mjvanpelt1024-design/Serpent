@@ -129,6 +129,7 @@ function renderStage() {
   ssGo.title = ssSide === "shop" ? WORKSHOP_NAME[ws] : I.npcs.merchant.shop;
   ssGo.setAttribute("aria-label", ssGo.title);
   ssGo.classList.toggle("right", ssSide === "work");
+  ssEl.classList.toggle("on-work", ssSide === "work");
   ssEl.style.setProperty("--isl", I.colors.accent);
   const pct = (v, of) => (v / of * 100) + "%";
   const spot = (x, y, w, h, label, fn, cls = "", inner = "") => {

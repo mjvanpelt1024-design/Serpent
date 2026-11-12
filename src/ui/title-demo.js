@@ -107,12 +107,42 @@ function demoBurst(x, y, colors, n = 12) {
   }
 }
 
+/* Build 54: the arcade machine's controls (src/art/arcade-3d.js) play with it. The joystick steers it
+   for a while (it goes on the way you pointed it, then plays by itself again); steered into itself, it
+   pops and a new one starts. Turbo runs it fast for a bit, the yellow buttons drop apples, the blue a
+   golden orb; 1P starts a new snake, 2P lets it play by itself straight away. */
+const DEMO_HANDS_OFF = 6000;          // how long it keeps to your steering before it plays by itself again
+function demoControl(kind, dir) {
+  if (!demo) return;
+  const now = performance.now();
+  if (kind === "joy" && dir) {
+    // never straight back into its own neck
+    if (dir.x === -demo.dir.x && dir.y === -demo.dir.y && demo.body.length > 1) return;
+    demo.want = { x: dir.x, y: dir.y };
+    demo.handsOn = now + DEMO_HANDS_OFF;
+  } else if (kind === "turbo") demo.turboUntil = now + 2500;
+  else if (kind === "feed") { for (let i = 0; i < 2; i++) demoSpawn("apples"); }
+  else if (kind === "orb") demoSpawn("orbs");
+  else if (kind === "start") { const h = demo.body[0]; demoBurst(h.x * DEMO_CELL + 10, h.y * DEMO_CELL + 10, ["#ffd23f", "#ffffff", "#3ddc84"], 18); const parts = demo.parts; demoReset(); demo.parts = parts; demo.fade = 1; }
+  else if (kind === "auto") demo.handsOn = 0;
+}
+
 function demoStep() {
-  const d = demoThink();
+  const steered = demo.handsOn > performance.now();
+  const d = steered ? (demo.want || demo.dir) : demoThink();
   if (!d) { demoBurst(demo.body[0].x * DEMO_CELL + 10, demo.body[0].y * DEMO_CELL + 10, ["#ffffff", "#cccccc"], 20); demoReset(); return; }
   demo.dir = d;
   demo.prev = demo.body.map(c => ({ ...c }));
   const head = { x: demoWrap(demo.body[0].x + d.x, demo.cols), y: demoWrap(demo.body[0].y + d.y, demo.rows) };
+  // steered into itself: it pops, and a new one starts by itself
+  if (steered && demo.body.slice(0, -1).some(c => c.x === head.x && c.y === head.y)) {
+    demoBurst(head.x * DEMO_CELL + 10, head.y * DEMO_CELL + 10, ["#ff3b3b", "#ffffff", "#ffd23f"], 26);
+    const parts = demo.parts;
+    demoReset();
+    demo.parts = parts;
+    sfx("hit");
+    return;
+  }
   demo.body.unshift(head);
   const ai = demo.apples.findIndex(a => a.x === head.x && a.y === head.y);
   const oi = demo.orbs.findIndex(a => a.x === head.x && a.y === head.y);
@@ -141,10 +171,10 @@ function drawDemo(ts) {
   demo.fade = Math.min(1, demo.fade + dt * 1.5);
   if (!still) {
     demo.acc += dt;
-    const stepT = 1 / DEMO_SPEED;
+    const stepT = 1 / (DEMO_SPEED * (demo.turboUntil > ts ? 2.2 : 1));
     while (demo.acc >= stepT) { demo.acc -= stepT; demoStep(); }
   }
-  const lerp = still ? 1 : Math.min(1, demo.acc * DEMO_SPEED);
+  const lerp = still ? 1 : Math.min(1, demo.acc * DEMO_SPEED * (demo.turboUntil > ts ? 2.2 : 1));
   const keepCell = cell;
   cell = DEMO_CELL;
   ctx.save();

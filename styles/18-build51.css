@@ -425,3 +425,12 @@ body.arcade.menu-full #stage > #screen-main { --side: max(1em, calc((100% - 38em
 }
 #title-wall .td-poster::before { top: calc(var(--s) * -1); left: calc(50% - var(--s)); width: calc(var(--s) * 2); height: calc(var(--s) * 2); }
 #title-wall .td-face { width: 2.4em; height: 2.4em; }
+
+/* ---------- Build 54: the arcade machine in 3D (src/art/arcade-3d.js) ----------
+   Behind the page; the board is warped into its screen by script (an inline transform), so the flat
+   machine's pieces stay hidden. Its pictures keep their hard pixels up close. */
+#title-3d { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: -1; display: none; pointer-events: none; }
+body.arcade3d #title-3d { display: block; }
+body.arcade3d #title-wall, body.arcade3d #title-machine { display: none; }
+body.arcade3d #stage { will-change: transform; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
