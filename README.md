@@ -12,7 +12,7 @@ shopkeepers, upgrade trees, and a narrator with opinions.
 1. **Extract** the zip somewhere you own, such as `C:\Projects\SnakeGame` or `Documents\Projects\SnakeGame`.
    Avoid `Program Files`: Windows blocks programs from writing there.
 2. **The launcher is ready:** `SnakeGame.exe` sits right next to `index.html`. To change the launcher
-   itself, rebuild it from `launcher\SnakeGame.sln` in Visual Studio 2022 (details: [`docs/LAUNCHER.md`](docs/LAUNCHER.md)).
+   itself, run `launcher\build-msvc.cmd`, or rebuild it from `launcher\SnakeGame.sln` in Visual Studio (details: [`docs/LAUNCHER.md`](docs/LAUNCHER.md)).
 3. **Make a shortcut.** Right-click `SnakeGame.exe` > *Send to* > *Desktop (create shortcut)*, or pin it to Start.
 4. **Play.** Edit any file under `content/`, press **F5** in the game, and the change is live.
 
@@ -67,7 +67,7 @@ SnakeGame/
 │
 ├── styles/              CSS, in the order index.html links them
 ├── assets/              the fonts (with their licenses), icons, and three.js (vendor/three, MIT) for the title's 3D arcade
-├── mods/                the example mod (copied to Documents\SnakeGame\mods on first run)
+├── mods/                mods that come with the game: content\ and cosmetic\ (copied to Documents\SnakeGame\mods)
 ├── tools/               check-campaign.py, sign-content.py, check-content.py, bundle-content.py, serve.py,
 │                        textures/textures.mjs (check or export the pictures)
 ├── launcher/            the C++ launcher: Visual Studio solution and source

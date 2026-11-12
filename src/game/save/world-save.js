@@ -13,16 +13,20 @@
 const WORLD_AUTOSAVE_MS = 60000;
 
 // The file's text, as the launcher stores it
+// (Its picture and its mods are the saves window's: they're written back as they came.)
 function worldFileText() {
-  return JSON.stringify({
+  const file = {
     format: "snakegame-world",
     version: 1,
     id: WORLD.id,
     title: WORLD.title,
     created: WORLD.created,
-    saved: Date.now(),
-    data: store.snapshot()
-  });
+    saved: Date.now()
+  };
+  if (WORLD.icon) file.icon = WORLD.icon;
+  if (Array.isArray(WORLD.mods)) file.mods = WORLD.mods;
+  file.data = store.snapshot();
+  return JSON.stringify(file);
 }
 
 // Asks the launcher to write the file. Returns false when there is no launcher to write it.
@@ -42,6 +46,12 @@ function writeWorldFile() {
 if (!WORLD && window.SNAKE_WORLD_ERROR) {
   // The launcher's file couldn't be read: the game can't save to it, so say so
   setTimeout(() => { if (typeof showToast === "function") showToast("This save file can't be read, so nothing is written to it. Open Snake Saves to choose another."); }, 1500);
+}
+
+// A mod this save was made with isn't in the mods folder any more: it plays without it, and says so
+if (typeof CONTENT !== "undefined" && (CONTENT.modsMissing || []).length) {
+  const names = CONTENT.modsMissing.map(p => p.split("/").pop());
+  setTimeout(() => { if (typeof showToast === "function") showToast(`Playing without ${names.join(", ")}: ${names.length === 1 ? "that mod isn't" : "those mods aren't"} in the mods folder.`); }, 2000);
 }
 
 if (WORLD) {

@@ -1,0 +1,40 @@
+# ==================================================================
+#  The screen filter (drawn by src/ui/mod-filter.js)
+#  Every line is optional: leave one out, or set it to 0, and that
+#  part of the effect is off. Copy this mod and turn the numbers down
+#  for a gentler TV.
+# ==================================================================
+
+# the glass
+#   auto: the full glass (real bulge, color split and glow), unless this PC's
+#         graphics can't keep 50 frames a second with it: then the light glass
+#   full: always the full glass (it can cost two thirds of the frame rate on
+#         laptop graphics)
+#   light: always the light glass (flat, with the split and glow faked)
+glass      = auto
+curve      = 0.16      # how much the screen bulges (0 = flat, 0.3 = a fishbowl)
+corner     = 34         # how round the screen's corners are, in pixels
+vignette   = 0.9        # dark edges (0 to 1)
+reflection = 0.10       # a glare across the glass (0 to 1)
+
+# the picture
+scanlines  = 0.55       # how dark the lines between rows are (0 to 1)
+lineGap    = 3          # pixels from one scanline to the next
+mask       = 0.35       # the red-green-blue phosphor stripes (0 to 1)
+aberration = 2.5        # how far the colors drift apart, in pixels
+bloom      = 0.65       # glow around bright things (0 to 1)
+tint       = #c8ffd8    # the phosphor's color
+tintAmount = 0.10       # how much of it (0 to 1)
+saturation = 1.35
+contrast   = 1.18
+brightness = 1.06
+
+# the signal (all still when Windows asks for less motion)
+noise      = 0.16       # static (0 to 1)
+flicker    = 0.05       # brightness flicker, kept gentle (0 to 0.1)
+roll       = 0.22       # the bar that rolls down the screen (0 to 1)
+rollSecs   = 7          # how long the bar takes to cross
+jitter     = 0.8        # the picture's sideways wobble, in pixels
+
+# switch it off and on while you play
+toggleKey  = F4

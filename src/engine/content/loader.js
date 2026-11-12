@@ -166,8 +166,97 @@ const ContentLoader = (() => {
     return C;
   }
 
-  /* ----- Mods: folders that add to or change the base content ----- */
+  /* ----- Mods: folders that add to or change the base content -----
+     Two kinds (docs/MODDING.md), by the folder they're in, mods/content/ or mods/cosmetic/:
+       content   skins, themes, avatars, story, upgrades, prices, campaign items and armor sets,
+                 pictures, music. Chosen when a save is made, and kept with it for good.
+       cosmetic  how the game looks and sounds: the screen filter (filter.txt), the stats overlay
+                 (overlay.txt), pictures, music. Switched on and off whenever you like.
+     Which mods load: the save's own list (the .world file's "mods", set in the saves window), or,
+     with no launcher, mods/_enabled.dat. Content mods load first, then cosmetic ones; later wins. */
   const MOD_COLLECTIONS = [["skins", "skin"], ["themes", "theme"], ["avatars", "avatar"], ["story", "story"]];
+  const MOD_PATH = /^(?:(content|cosmetic)\/)?([A-Za-z0-9][A-Za-z0-9 ._-]{0,63})$/;
+  const modKind = (path, info) => {
+    const m = MOD_PATH.exec(path);
+    if (m && m[1]) return m[1];
+    return String(info.type || "").toLowerCase() === "cosmetic" ? "cosmetic" : "content";
+  };
+
+  /* JSON from a mod, with the names that reach into the game's own objects taken out */
+  function cleanJson(v) {
+    if (Array.isArray(v)) return v.map(cleanJson);
+    if (v && typeof v === "object") {
+      const out = {};
+      Object.keys(v).forEach(k => { if (k !== "__proto__" && k !== "constructor" && k !== "prototype") out[k] = cleanJson(v[k]); });
+      return out;
+    }
+    return v;
+  }
+
+  /* campaign/items.json in a content mod: new weapons, armor and other merchants' things ("items"),
+     and new armor sets ("armorSets"). A new id adds; an existing id changes only the fields given. */
+  const MOD_ITEM_ID = /^[a-z][a-z0-9_]{1,31}$/;
+  function mergeCampaignItems(C, mod, name) {
+    const I = C.campaign.items;
+    const at = `mods/${name}/campaign/items.json`;
+    const families = I.families || {};
+    (Array.isArray(mod.armorSets) ? mod.armorSets : []).forEach(set => {
+      if (!set || !MOD_ITEM_ID.test(set.id || "")) { warn(at, 0, `an armor set needs an id of small letters (got "${set && set.id}")`); return; }
+      const i = I.armorSets.findIndex(x => x.id === set.id);
+      const tier = Number(set.tier);
+      if (i < 0 && !(I.armorTiers || []).some(t => t.tier === tier)) { warn(at, 0, `armor set "${set.id}": tier ${set.tier} isn't one of armorTiers`); return; }
+      set._mod = name;
+      if (i >= 0) I.armorSets[i] = Object.assign({}, I.armorSets[i], set); else I.armorSets.push(Object.assign({ bonus: [], bad: [] }, set));
+    });
+    (Array.isArray(mod.items) ? mod.items : []).forEach(it => {
+      if (!it || !MOD_ITEM_ID.test(it.id || "")) { warn(at, 0, `an item needs an id of small letters (got "${it && it.id}")`); return; }
+      const i = I.items.findIndex(x => x.id === it.id);
+      it._mod = name;
+      if (i >= 0) { I.items[i] = Object.assign({}, I.items[i], it); return; }
+      if (!families[it.family]) { warn(at, 0, `item "${it.id}": there's no family "${it.family}"`); return; }
+      if (it.piece && !["weapon", "helmet", "body"].includes(it.piece)) { warn(at, 0, `item "${it.id}": piece is weapon, helmet or body`); return; }
+      if (it.set && !I.armorSets.some(x => x.id === it.set)) { warn(at, 0, `item "${it.id}": there's no armor set "${it.set}"`); return; }
+      if (it.acts && !I.items.some(x => x.id === it.acts)) { warn(at, 0, `item "${it.id}": acts like "${it.acts}", which isn't an item`); return; }
+      if (!it.name) { warn(at, 0, `item "${it.id}" has no name`); return; }
+      I.items.push(it);
+    });
+  }
+
+  /* textures/index.json in a mod: pictures, like the game's own (textures/index.json); a file is
+     found in the mod's textures/ folder. An id the game has already is drawn with the mod's picture. */
+  function mergeTextures(C, index, root, name) {
+    const list = (index && index.textures) || {};
+    Object.entries(list).forEach(([id, e]) => {
+      const entry = typeof e === "string" ? { file: e } : Object.assign({}, e);
+      if (!entry.file || /^[a-z]+:|^\/|\.\./i.test(entry.file) || (entry.menu && /^[a-z]+:|^\/|\.\./i.test(entry.menu))) {
+        warn(`mods/${name}/textures/index.json`, 0, `"${id}": a file is a path inside the mod's textures folder`);
+        return;
+      }
+      entry.file = root + "textures/" + entry.file;
+      if (entry.menu) entry.menu = root + "textures/" + entry.menu;
+      entry.mod = name;
+      C.modTextures[id] = entry;
+    });
+  }
+
+  /* The mods this game loads, in order: the save's list (launcher), or, in a browser, _enabled.dat */
+  async function modList(base) {
+    const world = window.SNAKE_WORLD;
+    let names;
+    // a save from the launcher has its own list (none, for a save made before saves had mods)
+    if (world) names = Array.isArray(world.mods) ? world.mods.map(String) : [];
+    else {
+      const enabled = await read("_enabled.dat", base);
+      if (enabled === null) return [];
+      names = Formats.list(enabled).map(String);
+    }
+    const seen = new Set();
+    return names.filter(n => {
+      if (!MOD_PATH.test(n) || seen.has(n)) { if (!MOD_PATH.test(n)) warn("mods", 0, `"${n}" isn't a mod folder name`); return false; }
+      seen.add(n);
+      return true;
+    });
+  }
 
   function mergeById(list, extra, modName) {
     extra.forEach(rec => {
@@ -187,14 +276,49 @@ const ContentLoader = (() => {
   }
 
   async function loadMods(C) {
+    C.cosmetics = { filter: null, overlay: null };
+    C.modTextures = {};
     if (state.mode !== "live") return;
     const base = (window.SNAKE_LAUNCHER && window.SNAKE_LAUNCHER.modsUrl) || "mods/";
-    const enabled = await read("_enabled.dat", base);
-    if (enabled === null) return;
-    for (const name of Formats.list(enabled)) {
+    const found = [];
+    for (const name of await modList(base)) {
       const root = base + name + "/";
-      const info = Formats.values((await read("mod.txt", root)) || "", warnIn(`mods/${name}/mod.txt`));
+      const text = await read("mod.txt", root);
+      if (text === null) { warn(`mods/${name}/mod.txt`, 0, "this mod isn't installed (no mod.txt), so it's skipped"); C.modsMissing = (C.modsMissing || []).concat(name); continue; }
+      const info = Formats.values(text, warnIn(`mods/${name}/mod.txt`));
+      found.push({ name, root, info, kind: modKind(name, info) });
+    }
+    // content first, then cosmetic: a cosmetic mod's pictures win over a content mod's
+    found.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "content" ? -1 : 1));
+    for (const { name, root, info, kind } of found) {
+      const pics = await read("textures/index.json", root);
+      if (pics !== null) {
+        try { mergeTextures(C, cleanJson(JSON.parse(pics)), root, name); }
+        catch (e) { warn(`mods/${name}/textures/index.json`, 0, "isn't valid JSON: " + e.message); }
+      }
+      const music = await read("music/music.dat", root);
+      if (music !== null) {
+        Formats.table(music).forEach(row => {
+          const at = C.music.findIndex(r => r[0] === row[0]);
+          row._base = root + "music/";
+          if (at >= 0) C.music[at] = row; else C.music.push(row);
+        });
+      }
+      if (kind === "cosmetic") {
+        // how the game looks: the screen filter and the stats overlay (src/ui/mod-filter.js, mod-overlay.js)
+        for (const what of ["filter", "overlay"]) {
+          const t = await read(what + ".txt", root);
+          if (t !== null) C.cosmetics[what] = Object.assign(C.cosmetics[what] || {}, Formats.values(t, warnIn(`mods/${name}/${what}.txt`)), { _mod: name });
+        }
+        C.mods.push({ id: name, kind, name: info.name || name, version: info.version || "", author: info.author || "" });
+        continue;
+      }
       for (const [dir, ext] of MOD_COLLECTIONS) mergeById(C[dir], await records(dir + "/", ext, root, true), name);
+      const items = await read("campaign/items.json", root);
+      if (items !== null) {
+        try { mergeCampaignItems(C, cleanJson(JSON.parse(items)), name); }
+        catch (e) { warn(`mods/${name}/campaign/items.json`, 0, "isn't valid JSON: " + e.message); }
+      }
       const econ = await read("economy.txt", root);
       if (econ !== null) deepMerge(C.economy, Formats.values(econ, warnIn(`mods/${name}/economy.txt`)));
       // Upgrade changes: any upgrade, by id, wherever it grows
@@ -205,15 +329,7 @@ const ContentLoader = (() => {
         if (target) Object.assign(target, u, { _mod: name });
         else warn(`mods/${name}/upgrades/${u.id}.upg`, 0, "there's no upgrade with this id to change");
       });
-      const music = await read("music/music.dat", root);
-      if (music !== null) {
-        Formats.table(music).forEach(row => {
-          const at = C.music.findIndex(r => r[0] === row[0]);
-          row._base = root + "music/";
-          if (at >= 0) C.music[at] = row; else C.music.push(row);
-        });
-      }
-      C.mods.push({ id: name, name: info.name || name, version: info.version || "", author: info.author || "" });
+      C.mods.push({ id: name, kind, name: info.name || name, version: info.version || "", author: info.author || "" });
     }
   }
 

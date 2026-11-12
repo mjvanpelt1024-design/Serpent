@@ -18,6 +18,8 @@
     --accent: #f2c14e;
     --accent-ink: #1a1405;
     --danger: #e06c5a;
+    --content: #6fb7ff;
+    --cosmetic: #d58cff;
     color-scheme: dark;
   }
 
@@ -33,6 +35,7 @@
     -webkit-user-select: none;
     overflow: hidden;
   }
+  [hidden] { display: none !important; }
 
   header {
     padding: 14px 18px 12px;
@@ -69,9 +72,9 @@
   }
   #list li {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto 1fr auto;
     gap: 2px 12px;
-    padding: 9px 14px;
+    padding: 9px 14px 9px 12px;
     border-bottom: 1px solid var(--line);
     cursor: default;
     position: relative;
@@ -86,10 +89,24 @@
     width: 3px;
     background: var(--accent);
   }
-  .title { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #list li .pic { grid-row: 1 / span 2; align-self: center; }
+  .title { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .bucks { font-variant-numeric: tabular-nums; color: var(--accent); text-align: right; white-space: nowrap; align-self: center; }
   .bucks small { color: var(--muted); font-size: 11px; margin-left: 3px; }
-  .meta { color: var(--muted); font-size: 12px; grid-column: 1 / -1; }
+  .meta { color: var(--muted); font-size: 12px; grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+  .tag { font-size: 11px; padding: 0 6px; border-radius: 9px; border: 1px solid currentColor; line-height: 16px; white-space: nowrap; }
+  .tag.content { color: var(--content); }
+  .tag.cosmetic { color: var(--cosmetic); }
+  .tag.missing { color: var(--danger); }
+
+  /* a save's picture: an avatar from the game (content/avatars), on its color */
+  .pic {
+    width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center;
+    background: var(--pb, #1f4d3b); box-shadow: inset 0 0 0 2px rgba(0,0,0,0.35), inset 0 -4px 0 rgba(0,0,0,0.2);
+  }
+  .pic img { width: 28px; height: 28px; image-rendering: pixelated; }
+  .pic.big { width: 36px; height: 36px; border-radius: 8px; }
+  .pic.big img { width: 26px; height: 26px; }
 
   .empty {
     margin: auto;
@@ -99,6 +116,43 @@
     max-width: 380px;
   }
   .empty strong { color: var(--text); display: block; margin-bottom: 6px; font-size: 15px; }
+
+  /* ----- the Edit view ----- */
+  #edit {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    padding: 14px 18px 16px;
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 12px 16px;
+    align-content: start;
+  }
+  #edit h2 { grid-column: 1 / -1; margin: 0; font: 14px "Silkscreen", monospace; color: var(--accent); letter-spacing: 0.04em; display: flex; align-items: center; gap: 12px; }
+  #edit .label { color: var(--muted); font-size: 12px; padding-top: 9px; text-align: right; }
+  #edit .label.mods-label { padding-top: 6px; }
+  #edit input[type=text] {
+    width: 100%;
+    padding: 8px 10px;
+    font: 15px "Segoe UI", system-ui, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+  }
+  #edit input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+  .field-error { color: var(--danger); font-size: 12px; min-height: 16px; margin: 3px 0 0; }
+  #icons { display: grid; grid-template-columns: repeat(auto-fill, 34px); gap: 6px; }
+  #icons button { min-width: 0; padding: 0; border: 0; border-radius: 7px; background: none; }
+  #icons button .pic { width: 34px; height: 34px; border-radius: 7px; }
+  #icons button .pic img { width: 24px; height: 24px; }
+  #icons button[aria-checked="true"] { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #icons button:hover .pic { filter: brightness(1.15); }
+  .mods-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 4px; }
+  #mod-summary { color: var(--muted); font-size: 13px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
 
   footer {
     display: flex;
@@ -125,6 +179,7 @@
   button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   button.primary:hover { filter: brightness(1.08); }
   button:disabled { opacity: 0.45; cursor: default; filter: none; }
+  button.small { min-width: 0; padding: 5px 12px; font-size: 13px; }
   button.danger { color: var(--danger); border-color: transparent; min-width: 0; padding: 8px 14px; }
   button.danger:hover:not(:disabled) { border-color: var(--danger); }
   button.danger-fill { background: var(--danger); border-color: var(--danger); color: #1b0805; }
@@ -145,19 +200,35 @@
   dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
   dialog h2 { margin: 0 0 6px; font: 14px "Silkscreen", monospace; color: var(--accent); letter-spacing: 0.04em; }
   dialog p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
-  dialog input {
-    width: 100%;
-    padding: 9px 10px;
-    font: 15px "Segoe UI", system-ui, sans-serif;
-    color: var(--text);
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 5px;
-    margin-bottom: 4px;
+  .dialog-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 6px; }
+  .dialog-actions .grow { flex: 1; }
+
+  /* ----- the mods dialog ----- */
+  #mods-dialog { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 40px); padding: 0; }
+  #mods-dialog form { display: flex; flex-direction: column; max-height: calc(100vh - 42px); }
+  #mods-dialog .mods-head { padding: 16px 20px 6px; }
+  #mods-dialog .mods-head p { margin: 0; }
+  #mods-list { overflow-y: auto; padding: 4px 20px 8px; min-height: 80px; }
+  #mods-dialog .dialog-actions { padding: 10px 20px 16px; border-top: 1px solid var(--line); margin: 0; }
+  .kind { margin: 12px 0 4px; display: flex; align-items: baseline; gap: 10px; }
+  .kind h3 { margin: 0; font: 12px "Silkscreen", monospace; letter-spacing: 0.04em; }
+  .kind.content h3 { color: var(--content); }
+  .kind.cosmetic h3 { color: var(--cosmetic); }
+  .kind span { color: var(--muted); font-size: 12px; }
+  .mod {
+    display: grid; grid-template-columns: auto 1fr; gap: 1px 10px; padding: 8px 10px; margin: 0 0 6px;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--bg); cursor: pointer;
   }
-  dialog input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
-  .field-error { color: var(--danger); font-size: 12px; min-height: 16px; margin: 0 0 10px; }
-  .dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+  .mod:hover { border-color: var(--muted); }
+  .mod.locked { cursor: default; opacity: 0.85; }
+  .mod.locked:hover { border-color: var(--line); }
+  .mod input { grid-row: 1 / span 2; margin: 3px 0 0; width: 16px; height: 16px; accent-color: var(--accent); }
+  .mod b { font-weight: 600; }
+  .mod b small { color: var(--muted); font-weight: 400; margin-left: 6px; font-size: 12px; }
+  .mod .about { color: var(--muted); font-size: 12px; grid-column: 2; }
+  .mod .lock { color: var(--accent); font-size: 11px; grid-column: 2; }
+  .mod.missing b { color: var(--danger); }
+  .none { color: var(--muted); font-size: 13px; padding: 4px 0 8px; }
 
   .notice { margin: auto; padding: 24px; text-align: center; color: var(--muted); }
 </style>
@@ -173,29 +244,60 @@
   <ul id="list" role="listbox" aria-label="Saves" hidden></ul>
   <div id="empty" class="empty" hidden>
     <strong>No saves yet</strong>
-    Press <b>New</b> to start a save. Every save keeps its own snake, bucks and progress.
+    Press <b>New</b> to start a save. Every save keeps its own snake, bucks, progress and mods.
   </div>
   <div id="notice" class="notice" hidden>
     Open this window from SnakeGame.exe to see your saves.
   </div>
+
+  <form id="edit" hidden autocomplete="off">
+    <h2><span class="pic big" id="edit-pic" aria-hidden="true"></span><span id="edit-title">EDIT SAVE</span></h2>
+    <label class="label" for="edit-name">Name</label>
+    <div>
+      <input id="edit-name" type="text" maxlength="40" spellcheck="false">
+      <div class="field-error" id="edit-error"></div>
+    </div>
+    <div class="label" id="icons-label">Picture</div>
+    <div id="icons" role="radiogroup" aria-labelledby="icons-label"></div>
+    <div class="label mods-label">Mods</div>
+    <div>
+      <div class="mods-line">
+        <div id="mod-summary"></div>
+        <button type="button" class="small" id="edit-mods">Choose mods…</button>
+      </div>
+      <div class="hint" id="mods-hint"></div>
+    </div>
+    <button type="submit" hidden></button>
+  </form>
 </main>
 
 <footer>
-  <button id="delete" type="button" class="danger" disabled title="Delete the selected save (Del)">Delete</button>
+  <button id="delete" type="button" class="danger" hidden title="Delete this save (Del)">Delete</button>
   <div id="status" role="status" aria-live="polite"></div>
-  <button id="new" type="button">New</button>
-  <button id="play" type="button" class="primary" disabled>Play</button>
+  <!-- nothing picked -->
+  <button id="quit" type="button" data-on="list-none">Quit</button>
+  <button id="new" type="button" class="primary" data-on="list-none" title="Start a new save (N)">New</button>
+  <!-- a save picked -->
+  <button id="cancel" type="button" data-on="list-picked" title="Esc">Cancel</button>
+  <button id="edit-btn" type="button" data-on="list-picked" title="Rename it, change its picture or its mods (E)">Edit</button>
+  <!-- the Edit view -->
+  <button id="edit-cancel" type="button" data-on="edit" title="Esc">Cancel</button>
+  <button id="edit-save" type="button" data-on="edit">Save</button>
+  <!-- both -->
+  <button id="play" type="button" class="primary" data-on="list-picked edit" title="Enter">Play</button>
 </footer>
 
-<dialog id="new-dialog" aria-labelledby="new-title">
-  <form method="dialog" id="new-form">
-    <h2 id="new-title">NEW SAVE</h2>
-    <p>Name it. You can start playing as soon as it's made.</p>
-    <input id="new-name" type="text" maxlength="40" autocomplete="off" spellcheck="false" aria-label="Save title">
-    <div class="field-error" id="new-error"></div>
+<dialog id="mods-dialog" aria-labelledby="mods-title">
+  <form method="dialog" id="mods-form">
+    <div class="mods-head">
+      <h2 id="mods-title">MODS</h2>
+      <p id="mods-sub"></p>
+    </div>
+    <div id="mods-list"></div>
     <div class="dialog-actions">
-      <button type="button" id="new-cancel">Cancel</button>
-      <button type="submit" class="primary" id="new-create">Create</button>
+      <button type="button" class="small" id="mods-folder" title="Add a mod by putting its folder in content or cosmetic here">Open mods folder</button>
+      <span class="grow"></span>
+      <button type="submit" class="primary" id="mods-done">Done</button>
     </div>
   </form>
 </dialog>
@@ -221,39 +323,46 @@
    and this page talks to it through the WebView2 message bridge.
    Protocol (docs/WORLDS.md):
      page -> launcher   "worlds:list"   "world:write:<id>:<json>"   "world:play:<id>"   "world:delete:<id>"
+                        "mods:list"     "mods:open"   "quit"
      launcher -> page   "world|<id>|<json>" (one per file), then "end|"
-                        "deleted|<id>|ok" (or "|open": a game has it open, "|failed")
+                        "written|<id>|ok" (or "|open": a game has it open)
+                        "deleted|<id>|ok" (or "|open", "|failed")
+                        "mod|<path>|<mod.txt>" (one per installed mod), then "modsend|"
+
+   The window has two views. The list: Quit and New until a save is
+   picked, then Cancel, Edit and Play. The Edit view (also where New
+   goes): the save's name, its picture, its mods, and Play.
+
+   A save's mods are kept in its file ("mods": folder paths like
+   "content/wandering-smith"). Content mods change what's in the game,
+   so they're chosen when the save is made and stay with it; cosmetic
+   mods only change how it looks, so they come and go any time.
    ========================================================= */
 
 const bridge = window.chrome && window.chrome.webview;
 const IMPORT_FLAG = "snakeWorldsImported_v1";   // set once the old single save has been offered as a world
+const $ = id => document.getElementById(id);
 
 const els = {
-  list: document.getElementById("list"),
-  empty: document.getElementById("empty"),
-  notice: document.getElementById("notice"),
-  count: document.getElementById("count"),
-  status: document.getElementById("status"),
-  play: document.getElementById("play"),
-  new: document.getElementById("new"),
-  dialog: document.getElementById("new-dialog"),
-  form: document.getElementById("new-form"),
-  name: document.getElementById("new-name"),
-  error: document.getElementById("new-error"),
-  cancel: document.getElementById("new-cancel"),
-  del: document.getElementById("delete"),
-  delDialog: document.getElementById("delete-dialog"),
-  delForm: document.getElementById("delete-form"),
-  delName: document.getElementById("delete-name"),
-  delMeta: document.getElementById("delete-meta"),
-  delCancel: document.getElementById("delete-cancel")
+  list: $("list"), empty: $("empty"), notice: $("notice"), count: $("count"), status: $("status"),
+  quit: $("quit"), new: $("new"), cancel: $("cancel"), editBtn: $("edit-btn"), play: $("play"), del: $("delete"),
+  edit: $("edit"), editTitle: $("edit-title"), editPic: $("edit-pic"), name: $("edit-name"), error: $("edit-error"),
+  icons: $("icons"), modSummary: $("mod-summary"), modsHint: $("mods-hint"), editMods: $("edit-mods"),
+  editCancel: $("edit-cancel"), editSave: $("edit-save"),
+  modsDialog: $("mods-dialog"), modsForm: $("mods-form"), modsList: $("mods-list"), modsSub: $("mods-sub"), modsFolder: $("mods-folder"),
+  delDialog: $("delete-dialog"), delForm: $("delete-form"), delName: $("delete-name"), delMeta: $("delete-meta"), delCancel: $("delete-cancel")
 };
 
-let worlds = [];            // { id, title, created, saved, bucks }
+let worlds = [];            // { id, title, created, saved, bucks, icon, mods, file }
 let selectedId = null;
 let loading = null;         // the worlds collected for the list being read
+let modsLoading = null;     // the mods collected for the list being read
+let installed = [];         // { path, kind, name, version, author, about }
 let playTimer = 0;
 let deletingId = null;      // the save the confirmation dialog is asking about
+let draft = null;           // the Edit view: { id, isNew, title, icon, mods: Set }
+let avatars = [];           // { id, name, src, bg }
+const waiting = {};         // writes waiting for the launcher's answer, by save id
 
 /* ---------- helpers ---------- */
 
@@ -271,6 +380,18 @@ function bucksOf(data) {
   const meta = parseJson((data && data.snakeMeta_v1) || "null");
   const n = meta && Number(meta.snakebucks);
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
+// A save made before saves had pictures shows its active profile's avatar
+function profileAvatarOf(data) {
+  try {
+    const active = parseJson(data.snakeActive_v1);
+    const raw = parseJson(data["snakeProfile_" + (active && active.slot !== undefined ? active.slot : active)]);
+    const p = raw && (raw.data ? (typeof raw.data === "string" ? parseJson(raw.data) : raw.data) : raw);
+    return p && typeof p.avatar === "string" ? p.avatar : "";
+  } catch (e) {
+    return "";
+  }
 }
 
 function formatDate(ms) {
@@ -296,16 +417,102 @@ function newId() {
   return "w" + Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
 }
 
-function fileText(id, title, created, saved, data) {
-  return JSON.stringify({
-    format: "snakegame-world",
-    version: 1,
-    id,
-    title,
-    created,
-    saved,
-    data: data || {}
+function fileText(id, title, created, saved, data, icon, mods) {
+  const file = { format: "snakegame-world", version: 1, id, title, created, saved };
+  if (icon) file.icon = icon;
+  file.mods = mods || [];
+  file.data = data || {};
+  return JSON.stringify(file);
+}
+
+/* ---------- mods ---------- */
+
+// A mod's path is "content/<folder>", "cosmetic/<folder>" or, from before the two folders, "<folder>"
+const MOD_PATH = /^(?:(content|cosmetic)\/)?([A-Za-z0-9][A-Za-z0-9 ._-]{0,63})$/;
+
+// mod.txt: "key = value" lines (docs/CONTENT-FORMATS.md), read just enough for its name and about
+function readModTxt(text) {
+  const out = {};
+  String(text || "").split(/\r?\n/).forEach(line => {
+    if (/^\s*(#|\/\/)/.test(line)) return;
+    const eq = line.indexOf("=");
+    if (eq < 0) return;
+    const key = line.slice(0, eq).trim();
+    let v = line.slice(eq + 1).replace(/\s#\s.*$/, "").trim();
+    if (v.length >= 2 && v[0] === '"' && v[v.length - 1] === '"') v = v.slice(1, -1);
+    if (/^[A-Za-z]\w*$/.test(key)) out[key] = v;
   });
+  return out;
+}
+
+function kindOf(path, info) {
+  const m = MOD_PATH.exec(path);
+  if (m && m[1]) return m[1];
+  return String((info && info.type) || "").toLowerCase() === "cosmetic" ? "cosmetic" : "content";
+}
+
+function finishMods(list) {
+  installed = list.filter(m => MOD_PATH.test(m.path)).map(m => {
+    const info = readModTxt(m.text);
+    return { path: m.path, kind: kindOf(m.path, info), name: info.name || m.path.split("/").pop(), version: info.version || "", author: info.author || "", about: info.about || "" };
+  }).sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === "content" ? -1 : 1));
+  render();
+  if (draft) renderDraftMods();
+  if (els.modsDialog.open) renderModsDialog();
+}
+
+const modInfo = path => installed.find(m => m.path === path) || { path, kind: kindOf(path), name: path.split("/").pop(), version: "", author: "", about: "", missing: true };
+
+function modTags(paths) {
+  const frag = document.createDocumentFragment();
+  paths.forEach(p => {
+    const m = modInfo(p);
+    const t = document.createElement("span");
+    t.className = "tag " + (m.missing ? "missing" : m.kind);
+    t.textContent = m.name + (m.missing ? " (not installed)" : "");
+    t.title = m.missing ? "This mod isn't in the mods folder any more" : (m.kind === "content" ? "Content mod" : "Cosmetic mod") + (m.about ? ": " + m.about : "");
+    frag.appendChild(t);
+  });
+  return frag;
+}
+
+/* ---------- pictures: the game's avatars (content/avatars) ---------- */
+
+async function loadAvatars() {
+  try {
+    const [indexText, texText] = await Promise.all([
+      fetch("../content/avatars/_index.dat", { cache: "no-store" }).then(r => r.text()),
+      fetch("../textures/index.json", { cache: "no-store" }).then(r => r.text())
+    ]);
+    const tex = (parseJson(texText) || {}).textures || {};
+    const ids = indexText.split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith("#"));
+    const texts = await Promise.all(ids.map(id => fetch("../content/avatars/" + id + ".avatar", { cache: "no-store" }).then(r => (r.ok ? r.text() : "")).catch(() => "")));
+    avatars = ids.map((id, i) => {
+      const v = readModTxt(texts[i]);
+      const e = tex[v.picture];
+      const file = e && (typeof e === "string" ? e : e.file);
+      return file ? { id, name: v.name || id, src: "../textures/" + file, bg: /^#[0-9a-f]{3,8}$/i.test(v.background || "") ? v.background : "#1f4d3b" } : null;
+    }).filter(Boolean);
+  } catch (e) {
+    avatars = [];
+  }
+  render();
+  if (draft) renderIcons();
+}
+
+function picEl(iconId, big) {
+  const span = document.createElement("span");
+  span.className = "pic" + (big ? " big" : "");
+  const a = avatars.find(x => x.id === iconId) || avatars[0];
+  if (a) {
+    span.style.setProperty("--pb", a.bg);
+    const img = document.createElement("img");
+    img.src = a.src;
+    img.alt = "";
+    img.draggable = false;
+    span.appendChild(img);
+  }
+  return span;
 }
 
 /* ---------- reading the list ---------- */
@@ -314,6 +521,12 @@ function refresh() {
   if (!bridge) return;
   loading = [];
   bridge.postMessage("worlds:list");
+}
+
+function refreshMods() {
+  if (!bridge) return;
+  modsLoading = [];
+  bridge.postMessage("mods:list");
 }
 
 function finishList(list) {
@@ -327,12 +540,15 @@ function finishList(list) {
       title: typeof file.title === "string" && file.title.trim() ? file.title : "Untitled save",
       created: Number(file.created) || 0,
       saved: Number(file.saved) || 0,
-      bucks: bucksOf(file.data)
+      bucks: bucksOf(file.data),
+      icon: typeof file.icon === "string" ? file.icon : profileAvatarOf(file.data || {}),
+      mods: Array.isArray(file.mods) ? file.mods.filter(p => typeof p === "string" && MOD_PATH.test(p)) : [],
+      file
     });
   });
   worlds.sort((a, b) => (b.saved - a.saved) || a.title.localeCompare(b.title));
   if (damaged) setStatus(damaged + (damaged === 1 ? " save file can't be read." : " save files can't be read."), true);
-  if (!worlds.some(w => w.id === selectedId)) selectedId = worlds.length ? worlds[0].id : null;
+  if (!worlds.some(w => w.id === selectedId)) selectedId = null;
   render();
 }
 
@@ -358,6 +574,17 @@ function offerOldSave() {
 
 /* ---------- drawing ---------- */
 
+// Which buttons the footer shows: "list-none" (Quit, New), "list-picked" (Cancel, Edit, Play) or "edit"
+function footerFor() {
+  return draft ? "edit" : selectedId ? "list-picked" : "list-none";
+}
+function renderFooter() {
+  const at = bridge ? footerFor() : "none";
+  document.querySelectorAll("footer [data-on]").forEach(b => { b.hidden = !b.dataset.on.split(" ").includes(at); });
+  els.del.hidden = !(draft && !draft.isNew);
+  els.editSave.textContent = draft && draft.isNew ? "Create" : "Save";
+}
+
 function render() {
   els.list.textContent = "";
   worlds.forEach(w => {
@@ -380,27 +607,205 @@ function render() {
 
     const meta = document.createElement("div");
     meta.className = "meta";
-    meta.textContent = "Last played " + timeAgo(w.saved) + " · Created " + formatDate(w.created);
+    const when = document.createElement("span");
+    when.textContent = "Last played " + timeAgo(w.saved) + " · Created " + formatDate(w.created);
+    meta.append(when, modTags(w.mods));
 
-    li.append(title, bucks, meta);
+    li.append(picEl(w.icon), title, bucks, meta);
     els.list.appendChild(li);
   });
 
   const any = worlds.length > 0;
-  els.list.hidden = !any;
-  els.empty.hidden = any;
-  els.count.textContent = any ? worlds.length + (worlds.length === 1 ? " save" : " saves") : "";
-  els.play.disabled = !selectedId;
-  els.del.disabled = !selectedId;
+  els.list.hidden = !any || !!draft;
+  els.empty.hidden = any || !!draft;
+  els.edit.hidden = !draft;
+  els.count.textContent = draft ? "" : any ? worlds.length + (worlds.length === 1 ? " save" : " saves") : "";
+  renderFooter();
 }
 
 function select(id) {
   selectedId = id;
   els.list.querySelectorAll("li").forEach(li => li.setAttribute("aria-selected", li.dataset.id === id ? "true" : "false"));
-  const li = document.getElementById("w-" + id);
+  const li = id && document.getElementById("w-" + id);
   if (li) li.scrollIntoView({ block: "nearest" });
-  els.play.disabled = !id;
-  els.del.disabled = !id;
+  renderFooter();
+}
+
+/* ---------- the Edit view ---------- */
+
+function openEdit(id) {
+  if (!bridge) return;
+  const w = id && worlds.find(x => x.id === id);
+  if (id && !w) return;
+  draft = w
+    ? { id: w.id, isNew: false, title: w.title, icon: w.icon || (avatars[0] && avatars[0].id) || "apple", mods: new Set(w.mods), startMods: new Set(w.mods) }
+    : { id: newId(), isNew: true, title: "Save " + (worlds.length + 1), icon: avatars.length ? avatars[Math.floor(Math.random() * avatars.length)].id : "apple", mods: new Set(), startMods: new Set() };
+  els.editTitle.textContent = draft.isNew ? "NEW SAVE" : "EDIT SAVE";
+  els.name.value = draft.title;
+  els.error.textContent = "";
+  setStatus(draft.isNew ? "Name it, pick a picture, and choose its mods: content mods can only be added now." : "");
+  renderIcons();
+  renderDraftMods();
+  render();
+  refreshMods();
+  els.name.focus();
+  els.name.select();
+}
+
+function closeEdit() {
+  const id = draft && !draft.isNew ? draft.id : selectedId;
+  draft = null;
+  setStatus("");
+  render();
+  select(worlds.some(w => w.id === id) ? id : null);
+}
+
+function renderIcons() {
+  els.icons.textContent = "";
+  avatars.forEach(a => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("role", "radio");
+    b.setAttribute("aria-checked", draft && draft.icon === a.id ? "true" : "false");
+    b.tabIndex = draft && draft.icon === a.id ? 0 : -1;      // one stop for the whole grid; arrows move in it
+    b.setAttribute("aria-label", a.name);
+    b.title = a.name;
+    b.dataset.icon = a.id;
+    b.appendChild(picEl(a.id));
+    els.icons.appendChild(b);
+  });
+  els.editPic.replaceWith(Object.assign(picEl(draft && draft.icon, true), { id: "edit-pic" }));
+  els.editPic = $("edit-pic");
+}
+
+function renderDraftMods() {
+  els.modSummary.textContent = "";
+  const paths = Array.from(draft.mods);
+  if (!paths.length) {
+    const none = document.createElement("span");
+    none.textContent = "No mods: the game as it comes.";
+    els.modSummary.appendChild(none);
+  } else {
+    els.modSummary.appendChild(modTags(paths));
+  }
+  const missing = paths.filter(p => modInfo(p).missing);
+  els.modsHint.textContent = missing.length
+    ? "A mod this save uses isn't installed: put its folder back in the mods folder, or the game plays without it."
+    : draft.isNew ? "Content mods (new things in the game) can only be chosen now. Cosmetic mods can be changed any time."
+      : "Its content mods were chosen when it was made. Cosmetic mods can be switched on and off.";
+}
+
+function draftTitle() {
+  return els.name.value.trim().replace(/\s+/g, " ");
+}
+
+function checkDraft() {
+  const title = draftTitle();
+  if (!title) { els.error.textContent = "Give the save a name."; els.name.focus(); return false; }
+  if (worlds.some(w => w.id !== draft.id && w.title.toLowerCase() === title.toLowerCase())) {
+    els.error.textContent = "There is already a save with that name.";
+    els.name.focus();
+    return false;
+  }
+  return true;
+}
+
+/* Writes the draft to its file; then(answer) with "ok" or "open" (a game has it open) */
+function writeDraft(then) {
+  if (!checkDraft()) return;
+  const title = draftTitle();
+  const mods = installedOrder(Array.from(draft.mods));
+  let text;
+  if (draft.isNew) {
+    // An empty save: no progress yet, at 0 Snakebucks. The game starts it fresh when it opens.
+    text = fileText(draft.id, title, Date.now(), 0, {}, draft.icon, mods);
+  } else {
+    const w = worlds.find(x => x.id === draft.id);
+    if (!w) return;
+    const file = Object.assign({}, w.file, { title, icon: draft.icon, mods });
+    text = JSON.stringify(file);
+  }
+  const id = draft.id;
+  const was = draft.isNew ? title : (worlds.find(x => x.id === id) || { title }).title;
+  setStatus("Saving…");
+  waiting[id] = answer => {
+    if (answer === "open") { setStatus("“" + was + "” is open in a game. Close that game first, then change it here.", true); return; }
+    then(answer);
+  };
+  // an older launcher doesn't answer: carry on after a moment
+  setTimeout(() => { if (waiting[id]) { const f = waiting[id]; delete waiting[id]; f("ok"); } }, 1500);
+  bridge.postMessage("world:write:" + id + ":" + text);
+}
+
+// content mods first, then cosmetic, each in the order they're listed (later ones win in the game)
+function installedOrder(paths) {
+  const rank = p => { const m = modInfo(p); return (m.kind === "content" ? 0 : 1000) + (m.missing ? 999 : installed.indexOf(m)); };
+  return paths.slice().sort((a, b) => rank(a) - rank(b));
+}
+
+function saveDraft(andPlay) {
+  const isNew = draft.isNew, id = draft.id, title = draftTitle();
+  writeDraft(() => {
+    draft = null;
+    selectedId = id;
+    setStatus(isNew ? "Created “" + title + "”." : "Saved “" + title + "”.");
+    render();
+    refresh();
+    if (andPlay) play(id);
+  });
+}
+
+/* ---------- the mods dialog ---------- */
+
+function openMods() {
+  if (!draft) return;
+  renderModsDialog();
+  els.modsDialog.showModal();
+  refreshMods();
+}
+
+function renderModsDialog() {
+  const title = draftTitle() || "this save";
+  els.modsSub.textContent = draft.isNew ? "Choose the mods “" + title + "” starts with." : "The mods on “" + title + "”.";
+  els.modsList.textContent = "";
+  const shown = installed.slice();
+  // mods the save has that aren't installed any more still show, so they can be seen (and cosmetic ones dropped)
+  Array.from(draft.mods).forEach(p => { if (!installed.some(m => m.path === p)) shown.push(modInfo(p)); });
+  [["content", "Content", draft.isNew ? "New things in the game. Only when a save is made: they stay with it." : "Chosen when this save was made. They stay with it."],
+   ["cosmetic", "Cosmetic", "How the game looks. On or off whenever you like."]].forEach(([kind, name, help]) => {
+    const head = document.createElement("div");
+    head.className = "kind " + kind;
+    head.innerHTML = "<h3></h3><span></span>";
+    head.querySelector("h3").textContent = name.toUpperCase();
+    head.querySelector("span").textContent = help;
+    els.modsList.appendChild(head);
+    const mods = shown.filter(m => m.kind === kind);
+    if (!mods.length) {
+      const none = document.createElement("div");
+      none.className = "none";
+      none.textContent = "None installed. Put a mod's folder in mods\\" + kind + " and open this again.";
+      els.modsList.appendChild(none);
+    }
+    mods.forEach(m => {
+      const locked = kind === "content" && !draft.isNew;
+      const row = document.createElement("label");
+      row.className = "mod" + (locked ? " locked" : "") + (m.missing ? " missing" : "");
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = draft.mods.has(m.path);
+      box.disabled = locked || (m.missing && !box.checked);
+      box.dataset.path = m.path;
+      const b = document.createElement("b");
+      b.textContent = m.name;
+      const small = document.createElement("small");
+      small.textContent = m.missing ? "not installed" : [m.version && "v" + m.version, m.author && "by " + m.author].filter(Boolean).join(" · ");
+      b.appendChild(small);
+      row.append(box, b);
+      if (m.about) { const a = document.createElement("div"); a.className = "about"; a.textContent = m.about; row.appendChild(a); }
+      if (locked) { const l = document.createElement("div"); l.className = "lock"; l.textContent = box.checked ? "On this save for good" : "Can only be added to a new save"; row.appendChild(l); }
+      els.modsList.appendChild(row);
+    });
+  });
 }
 
 /* ---------- actions ---------- */
@@ -408,36 +813,12 @@ function select(id) {
 function play(id) {
   if (!id || !bridge) return;
   const world = worlds.find(w => w.id === id);
-  setStatus("Starting " + (world ? "“" + world.title + "”" : "save") + "…");
+  const missing = world ? world.mods.filter(p => modInfo(p).missing && modInfo(p).kind === "content") : [];
+  setStatus("Starting " + (world ? "“" + world.title + "”" : "save") + "…" + (missing.length ? " (without " + missing.map(p => modInfo(p).name).join(", ") + ", which isn't installed)" : ""));
   els.play.disabled = true;
   bridge.postMessage("world:play:" + id);
   clearTimeout(playTimer);
-  playTimer = setTimeout(() => { els.play.disabled = !selectedId; setStatus(""); }, 4000);
-}
-
-function openNew() {
-  els.error.textContent = "";
-  els.name.value = "Save " + (worlds.length + 1);
-  els.dialog.showModal();
-  els.name.select();
-}
-
-function createFromDialog() {
-  const title = els.name.value.trim().replace(/\s+/g, " ");
-  if (!title) { els.error.textContent = "Give the save a name."; els.name.focus(); return; }
-  if (worlds.some(w => w.title.toLowerCase() === title.toLowerCase())) {
-    els.error.textContent = "There is already a save with that name.";
-    els.name.focus();
-    return;
-  }
-  const id = newId();
-  const created = Date.now();
-  // An empty save: no progress yet, at 0 Snakebucks. The game starts it fresh when it opens.
-  bridge.postMessage("world:write:" + id + ":" + fileText(id, title, created, 0, {}));
-  els.dialog.close();
-  selectedId = id;
-  setStatus("Created “" + title + "”.");
-  refresh();
+  playTimer = setTimeout(() => { els.play.disabled = false; setStatus(""); }, 4000);
 }
 
 /* Deleting asks first, naming the save; Cancel has the focus, so Enter alone never deletes. */
@@ -465,10 +846,9 @@ function onDeleted(id, answer) {
   const world = worlds.find(w => w.id === id);
   const name = world ? "“" + world.title + "”" : "The save";
   if (answer === "ok") {
-    // The next save down (or up, at the end of the list) is selected in its place
-    const i = worlds.findIndex(w => w.id === id);
     worlds = worlds.filter(w => w.id !== id);
-    if (selectedId === id) selectedId = worlds.length ? worlds[Math.min(i, worlds.length - 1)].id : null;
+    if (selectedId === id) selectedId = null;
+    if (draft && draft.id === id) draft = null;
     render();
     setStatus(name + " was moved to the Recycle Bin.");
     refresh();
@@ -489,28 +869,74 @@ els.list.addEventListener("dblclick", e => {
   const li = e.target.closest("li");
   if (li) { select(li.dataset.id); play(li.dataset.id); }
 });
-els.play.addEventListener("click", () => play(selectedId));
-els.new.addEventListener("click", openNew);
-els.del.addEventListener("click", () => openDelete(selectedId));
+// a click on the empty part of the list lets go of the save
+els.list.parentElement.addEventListener("click", e => { if (!draft && !e.target.closest("li") && e.target.closest("main")) select(null); });
+
+els.quit.addEventListener("click", () => bridge && bridge.postMessage("quit"));
+els.new.addEventListener("click", () => openEdit(null));
+els.cancel.addEventListener("click", () => select(null));
+els.editBtn.addEventListener("click", () => openEdit(selectedId));
+els.play.addEventListener("click", () => (draft ? saveDraft(true) : play(selectedId)));
+els.editCancel.addEventListener("click", closeEdit);
+els.editSave.addEventListener("click", () => saveDraft(false));
+els.edit.addEventListener("submit", e => { e.preventDefault(); saveDraft(false); });
+els.name.addEventListener("input", () => { els.error.textContent = ""; });
+els.del.addEventListener("click", () => draft && openDelete(draft.id));
+els.icons.addEventListener("click", e => {
+  const b = e.target.closest("button[data-icon]");
+  if (!b || !draft) return;
+  draft.icon = b.dataset.icon;
+  renderIcons();
+  els.icons.querySelector(`[data-icon="${CSS.escape(draft.icon)}"]`).focus();
+});
+// arrows pick the next picture, like any set of radio buttons
+els.icons.addEventListener("keydown", e => {
+  const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+  if (!step || !draft || !avatars.length) return;
+  const per = Math.max(1, Math.round(els.icons.clientWidth / 40));
+  const i = avatars.findIndex(a => a.id === draft.icon);
+  const next = avatars[(i + (e.key === "ArrowDown" || e.key === "ArrowUp" ? step * per : step) + avatars.length * 4) % avatars.length];
+  draft.icon = next.id;
+  renderIcons();
+  els.icons.querySelector(`[data-icon="${CSS.escape(draft.icon)}"]`).focus();
+  e.preventDefault();
+});
+els.editMods.addEventListener("click", openMods);
+els.modsList.addEventListener("change", e => {
+  const box = e.target.closest("input[data-path]");
+  if (!box || !draft) return;
+  if (box.checked) draft.mods.add(box.dataset.path); else draft.mods.delete(box.dataset.path);
+  renderDraftMods();
+});
+els.modsForm.addEventListener("submit", e => { e.preventDefault(); els.modsDialog.close(); });
+els.modsFolder.addEventListener("click", () => bridge && bridge.postMessage("mods:open"));
+els.modsDialog.addEventListener("close", () => { if (draft) renderDraftMods(); });
 els.delCancel.addEventListener("click", () => { deletingId = null; els.delDialog.close(); });
 els.delForm.addEventListener("submit", e => { e.preventDefault(); confirmDelete(); });
 els.delDialog.addEventListener("close", () => { deletingId = null; });
-els.cancel.addEventListener("click", () => els.dialog.close());
-els.form.addEventListener("submit", e => { e.preventDefault(); createFromDialog(); });
-els.name.addEventListener("input", () => { els.error.textContent = ""; });
 
 document.addEventListener("keydown", e => {
-  if (els.dialog.open || els.delDialog.open) return;
+  if (els.modsDialog.open || els.delDialog.open) return;
+  if (draft) {
+    if (e.key === "Escape") { closeEdit(); e.preventDefault(); }
+    return;
+  }
   if (e.key === "ArrowDown" || e.key === "ArrowUp") {
     if (!worlds.length) return;
     const i = worlds.findIndex(w => w.id === selectedId);
-    const next = Math.min(worlds.length - 1, Math.max(0, i + (e.key === "ArrowDown" ? 1 : -1)));
+    const next = i < 0 ? 0 : Math.min(worlds.length - 1, Math.max(0, i + (e.key === "ArrowDown" ? 1 : -1)));
     select(worlds[next].id);
     e.preventDefault();
   } else if (e.key === "Enter") {
-    play(selectedId);
+    if (selectedId) play(selectedId);
+  } else if (e.key === "Escape") {
+    select(null);
   } else if (e.key === "n" || e.key === "N") {
-    openNew();
+    openEdit(null);
+    e.preventDefault();
+  } else if ((e.key === "e" || e.key === "E") && selectedId) {
+    openEdit(selectedId);
+    e.preventDefault();
   } else if (e.key === "Delete" && selectedId) {
     openDelete(selectedId);
     e.preventDefault();
@@ -529,25 +955,34 @@ if (bridge) {
       finishList(list);
       return;
     }
-    if (msg.startsWith("deleted|")) {
-      const parts = msg.split("|");
-      onDeleted(parts[1], parts[2]);
+    if (msg === "modsend|") {
+      if (!modsLoading) return;
+      const list = modsLoading;
+      modsLoading = null;
+      finishMods(list);
       return;
     }
-    if (msg.startsWith("world|") && loading) {
-      const first = msg.indexOf("|");
-      const second = msg.indexOf("|", first + 1);
-      if (second > first) loading.push({ id: msg.slice(first + 1, second), text: msg.slice(second + 1) });
+    const first = msg.indexOf("|");
+    const second = msg.indexOf("|", first + 1);
+    const kind = msg.slice(0, first);
+    if (kind === "deleted") { onDeleted(msg.slice(first + 1, second), msg.slice(second + 1)); return; }
+    if (kind === "written") {
+      const id = msg.slice(first + 1, second), f = waiting[id];
+      if (f) { delete waiting[id]; f(msg.slice(second + 1)); }
+      return;
     }
+    if (second <= first) return;
+    if (kind === "world" && loading) loading.push({ id: msg.slice(first + 1, second), text: msg.slice(second + 1) });
+    else if (kind === "mod" && modsLoading) modsLoading.push({ path: msg.slice(first + 1, second), text: msg.slice(second + 1) });
   });
   refresh();
+  refreshMods();
+  loadAvatars();
 } else {
   els.notice.hidden = false;
   els.list.hidden = true;
   els.empty.hidden = true;
-  els.new.disabled = true;
-  els.play.disabled = true;
-  els.del.disabled = true;
+  renderFooter();
 }
 </script>
 </body>

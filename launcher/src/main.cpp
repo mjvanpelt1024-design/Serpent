@@ -3,8 +3,8 @@
 //
 //  A small Windows program that opens its windows with WebView2 (the Edge
 //  engine built into Windows 10 and 11). Run with no arguments it shows the
-//  saves window (list, New, Play); with "--world <id>" it opens the game on
-//  that save. It:
+//  saves window (list, New, Edit, Play, the mods on each save); with
+//  "--world <id>" it opens the game on that save. It:
 //    - serves the game folder at https://game.snakegame.example/ so the
 //      game can read its content files straight from disk
 //    - serves the mods folder at https://mods.snakegame.example/
@@ -104,8 +104,8 @@ static const wchar_t* kAppFolder = L"SnakeGame";
 static const wchar_t* kWorldsFolder = L"worlds";      // %APPDATA%\SnakeGame\worlds\<id>.world
 static const wchar_t* kWindowClass = L"SnakeGameLauncherWindow";
 static const wchar_t* kLauncherTitle = L"Snake Saves";
-static const int kLauncherWidth = 640;                // the saves window, at 96 DPI
-static const int kLauncherHeight = 440;
+static const int kLauncherWidth = 760;                // the saves window, at 96 DPI
+static const int kLauncherHeight = 540;
 static const COLORREF kBackground = RGB(10, 28, 22);  // matches the game's loading screen
 static const UINT_PTR kQuitTimer = 1;                 // gives the game a moment to write its save on close
 
@@ -198,6 +198,9 @@ static void OpenInBrowser(const std::wstring& url) {
     ShellExecuteW(nullptr, L"open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 
+static std::string ToUtf8(const std::wstring& text);
+static std::wstring FromUtf8(const std::string& bytes);
+
 static std::wstring Hex(HRESULT value) {
     wchar_t buffer[16];
     swprintf_s(buffer, L"0x%08X", static_cast<unsigned int>(value));
@@ -210,9 +213,50 @@ static void Fail(const std::wstring& message) {
 
 // ---------------------------------------------------------------------
 //  The mods folder: Documents\SnakeGame\mods by default. On first run it
-//  is created with a copy of the game's own mods folder (the example mod
-//  and an empty _enabled.dat).
+//  is created with a copy of the game's own mods folder. Mods live in two
+//  folders there, content\ and cosmetic\ (docs\MODDING.md).
+//
+//  A mod that comes with a later version of the game is copied in too, once:
+//  %APPDATA%\SnakeGame\mods-offered.dat remembers each one offered, so a mod
+//  the player deleted stays deleted.
 // ---------------------------------------------------------------------
+static const wchar_t* kModKinds[] = { L"content", L"cosmetic" };
+
+static void OfferBundledMods(const fs::path& bundled) {
+    std::error_code error;
+    fs::path offeredFile = g_dataDir / L"mods-offered.dat";
+    std::wstring offered;
+    {
+        std::ifstream in(offeredFile, std::ios::binary);
+        std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+        offered = L"\n" + FromUtf8(bytes) + L"\n";
+    }
+    std::wstring added;
+    for (const wchar_t* kind : kModKinds) {
+        for (fs::directory_iterator it(bundled / kind, error), end; !error && it != end; it.increment(error)) {
+            if (!it->is_directory()) continue;
+            std::wstring name = it->path().filename().wstring();
+            std::wstring key = std::wstring(kind) + L"/" + name;
+            if (offered.find(L"\n" + key + L"\n") != std::wstring::npos) continue;
+            std::error_code e2;
+            // already there (or there from before the two folders, at the top)
+            if (!fs::exists(g_modsDir / kind / name, e2) && !fs::exists(g_modsDir / name, e2)) {
+                fs::create_directories(g_modsDir / kind, e2);
+                fs::copy(it->path(), g_modsDir / kind / name, fs::copy_options::recursive | fs::copy_options::skip_existing, e2);
+            }
+            added += key + L"\n";
+        }
+        error.clear();
+    }
+    // the folder's guide is the game's own: keep it current
+    fs::copy_file(bundled / L"README.md", g_modsDir / L"README.md", fs::copy_options::overwrite_existing, error);
+    if (!added.empty()) {
+        std::ofstream out(offeredFile, std::ios::binary | std::ios::app);
+        std::string bytes = ToUtf8(added);
+        out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+    }
+}
+
 static void PrepareModsFolder() {
     if (g_settings.modsFolder == L"game") {
         g_modsDir = g_gameDir / L"mods";
@@ -222,13 +266,14 @@ static void PrepareModsFolder() {
     if (documents.empty()) { g_modsDir = g_gameDir / L"mods"; return; }
     g_modsDir = documents / kAppFolder / L"mods";
     std::error_code error;
+    fs::path starter = g_gameDir / L"mods";
     if (!fs::exists(g_modsDir, error)) {
         fs::create_directories(g_modsDir, error);
-        fs::path starter = g_gameDir / L"mods";
         if (fs::exists(starter, error)) {
             fs::copy(starter, g_modsDir, fs::copy_options::recursive | fs::copy_options::skip_existing, error);
         }
     }
+    if (fs::exists(starter, error)) OfferBundledMods(starter);
 }
 
 // ---------------------------------------------------------------------
@@ -376,7 +421,17 @@ static void WriteWorld(const std::wstring& id, const std::wstring& text) {
     else DeleteFileW(temp.c_str());
 }
 
-// Page -> launcher: "world:write:<id>:<json>". A game only writes its own save.
+// Is a game window open on this save? (Each one holds a mutex named for it.)
+static bool WorldIsOpen(const std::wstring& id) {
+    HANDLE open = OpenMutexW(SYNCHRONIZE, FALSE, (L"SnakeGame.World." + id).c_str());
+    if (!open) return false;
+    CloseHandle(open);
+    return true;
+}
+
+// Page -> launcher: "world:write:<id>:<json>". A game only writes its own save. The saves window
+// (making a save, or renaming one, its picture, its mods) never writes a save that is open in a
+// game, which would write over it again; it's answered "written|<id>|ok" or "|open".
 static void HandleWorldWrite(const std::wstring& rest) {
     size_t colon = rest.find(L':');
     if (colon == std::wstring::npos) return;
@@ -385,7 +440,60 @@ static void HandleWorldWrite(const std::wstring& rest) {
     if (g_mode == Mode::Game && id != g_worldId) return;
     std::wstring body = rest.substr(colon + 1);
     if (body.empty() || body[0] != L'{') return;
+    if (g_mode == Mode::Launcher && WorldIsOpen(id)) {
+        if (g_webview) g_webview->PostWebMessageAsString((L"written|" + id + L"|open").c_str());
+        return;
+    }
     WriteWorld(id, body);
+    if (g_mode == Mode::Launcher && g_webview) g_webview->PostWebMessageAsString((L"written|" + id + L"|ok").c_str());
+}
+
+// ---------------------------------------------------------------------
+//  Installed mods: each folder in mods\content and mods\cosmetic with a
+//  mod.txt (and, from before those two folders, any at the top).
+//  Page -> launcher: "mods:list". Answers "mod|<path>|<mod.txt>" for each,
+//  path being "content/<folder>", "cosmetic/<folder>" or "<folder>", then "modsend|".
+// ---------------------------------------------------------------------
+static std::wstring ReadSmallText(const fs::path& file, size_t limit) {
+    std::ifstream in(file, std::ios::binary);
+    if (!in) return {};
+    std::string bytes(limit, '\0');
+    in.read(&bytes[0], static_cast<std::streamsize>(limit));
+    bytes.resize(static_cast<size_t>(in.gcount()));
+    return FromUtf8(bytes);
+}
+
+static void HandleModsList() {
+    if (!g_webview) return;
+    std::error_code error;
+    auto send = [](const std::wstring& path, const fs::path& folder) {
+        std::wstring message = L"mod|" + path + L"|" + ReadSmallText(folder / L"mod.txt", 16384);
+        g_webview->PostWebMessageAsString(message.c_str());
+    };
+    for (fs::directory_iterator it(g_modsDir, error), end; !error && it != end; it.increment(error)) {
+        if (!it->is_directory()) continue;
+        std::wstring name = it->path().filename().wstring();
+        bool kindFolder = false;
+        for (const wchar_t* kind : kModKinds) if (_wcsicmp(name.c_str(), kind) == 0) kindFolder = true;
+        if (kindFolder) {
+            std::error_code e2;
+            for (fs::directory_iterator m(it->path(), e2), mend; !e2 && m != mend; m.increment(e2)) {
+                std::error_code e3;
+                if (m->is_directory() && fs::exists(m->path() / L"mod.txt", e3)) send(name + L"/" + m->path().filename().wstring(), m->path());
+            }
+        } else {
+            std::error_code e3;
+            if (fs::exists(it->path() / L"mod.txt", e3)) send(name, it->path());
+        }
+    }
+    g_webview->PostWebMessageAsString(L"modsend|");
+}
+
+// Page -> launcher: "mods:open". Shows the mods folder in Explorer.
+static void HandleModsOpen() {
+    std::error_code error;
+    fs::create_directories(g_modsDir, error);
+    ShellExecuteW(nullptr, L"open", g_modsDir.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 
 // Page -> launcher: "worlds:list". Sends each readable file back as "world|<id>|<json>", then "end|".
@@ -430,9 +538,7 @@ static void HandleWorldDelete(const std::wstring& id) {
     if (g_mode != Mode::Launcher || !g_webview || !ValidWorldId(id)) return;
     std::wstring answer = L"failed";
     fs::path file = WorldFile(id);
-    HANDLE open = OpenMutexW(SYNCHRONIZE, FALSE, (L"SnakeGame.World." + id).c_str());
-    if (open) {
-        CloseHandle(open);
+    if (WorldIsOpen(id)) {
         answer = L"open";
     } else if (fs::exists(file)) {
         // SHFileOperation wants a list ending in two nulls
@@ -471,6 +577,8 @@ static void FinishQuit() {
 //    "world:play:<id>"             the saves window starts the game on a save
 //    "world:delete:<id>"           the saves window deletes a save (to the Recycle Bin)
 //    "world:flushed"               the game has written its save (see FinishQuit)
+//    "mods:list"                   the saves window asks for the installed mods
+//    "mods:open"                   the saves window shows the mods folder in Explorer
 // ---------------------------------------------------------------------
 static void OnGameMessage(const std::wstring& message) {
     if (message == L"quit") PostMessageW(g_window, WM_CLOSE, 0, 0);
@@ -478,6 +586,8 @@ static void OnGameMessage(const std::wstring& message) {
     else if (message == L"fullscreen:off") SetFullscreen(false);
     else if (message == L"fullscreen:toggle") SetFullscreen(!g_fullscreen);
     else if (message == L"worlds:list") HandleWorldList();
+    else if (message == L"mods:list" && g_mode == Mode::Launcher) HandleModsList();
+    else if (message == L"mods:open" && g_mode == Mode::Launcher) HandleModsOpen();
     else if (message == L"world:flushed") { if (g_flushing) PostMessageW(g_window, WM_CLOSE, 0, 0); }
     else if (message.rfind(L"world:write:", 0) == 0) HandleWorldWrite(message.substr(12));
     else if (message.rfind(L"world:play:", 0) == 0) HandleWorldPlay(message.substr(11));
@@ -496,7 +606,7 @@ static std::wstring DocumentScript(const std::wstring& worldText) {
     std::wstring mode = g_mode == Mode::Game ? L"game" : L"launcher";
     std::wstring script = L"window.SNAKE_LAUNCHER = Object.freeze({ launcher: '" + version + L"', mode: '" + mode +
            L"', worldId: '" + g_worldId + L"', modsUrl: 'https://" + std::wstring(kModsHost) +
-           L"/', dataFolder: '%APPDATA%\\\\SnakeGame' });";
+           L"/', dataFolder: '%APPDATA%\\\\SnakeGame', modsFolder: " + JsStringLiteral(g_modsDir.wstring()) + L" });";
     if (g_mode == Mode::Game) {
         script += L"try { window.SNAKE_WORLD = JSON.parse(" + JsStringLiteral(worldText) + L"); }"
                   L" catch (e) { window.SNAKE_WORLD_ERROR = String(e); }";

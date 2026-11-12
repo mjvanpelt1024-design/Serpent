@@ -76,6 +76,10 @@ const TextureLoader = (() => {
       if (!entry.file) { warn("textures/index.json", `"${id}" has no file`); return; }
       state.entries[id] = entry;
     });
+    // mods' pictures (src/engine/content/loader.js): their files are whole paths, in the mod's folder
+    const modPics = (window.CONTENT && window.CONTENT.modTextures) || {};
+    Object.entries(modPics).forEach(([id, e]) => { state.entries[id] = Object.assign({}, e, { whole: true }); });
+    const whole = new Set(Object.values(modPics).flatMap(e => (e.menu ? [e.file, e.menu] : [e.file])));
     // each file once, however many pictures point at it
     const files = [...new Set(Object.values(state.entries).flatMap(e => (e.menu ? [e.file, e.menu] : [e.file])))];
     // a dozen at a time, and a second try for any that fail, so a busy local server can't drop one
@@ -83,8 +87,8 @@ const TextureLoader = (() => {
     let next = 0;
     const worker = async () => {
       while (next < files.length) {
-        const i = next++, path = "textures/" + files[i];
-        const src = fromDisk ? await ContentLoader.read(path) : path;
+        const i = next++, path = whole.has(files[i]) ? files[i] : "textures/" + files[i];
+        const src = whole.has(files[i]) ? path : fromDisk ? await ContentLoader.read(path) : path;
         let pic = src ? await loadImage(src) : null;
         if (!pic && src && !fromDisk) pic = await loadImage(src);
         if (pic) state.files++;
@@ -93,7 +97,7 @@ const TextureLoader = (() => {
       }
     };
     await Promise.all(Array.from({ length: Math.min(12, files.length) }, worker));
-    files.forEach((file, i) => { state.pics[file] = pics[i] ? { canvas: pics[i], url: fromDisk ? null : "textures/" + file } : null; });
+    files.forEach((file, i) => { state.pics[file] = pics[i] ? { canvas: pics[i], url: whole.has(file) ? file : fromDisk ? null : "textures/" + file } : null; });
     return { files: state.files, warnings: state.warnings };
   }
 

@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased: the saves window, and mods on each save
+
+- **The saves window, reworked.** Quit and New at the bottom; pick a save and it's Cancel, Edit and Play. **Edit**
+  renames a save, gives it a picture (any of the game's avatars, shown in the list) and chooses its mods; **New**
+  opens the same view, so a save can start with mods. Play from Edit saves first. A save that's open in a game
+  can't be changed (the launcher refuses, and says to close that game).
+- **Mods on each save, in two kinds** (`mods\content`, `mods\cosmetic`, docs/MODDING.md). Content mods change
+  what's in the game, so they're chosen when the save is made and stay with it; cosmetic mods change how it looks,
+  and come and go any time. **Choose mods…** lists every installed mod with what it says about itself, and opens
+  the mods folder. A save whose mod has gone says so, and plays without it.
+- **Three new mods.** *The Wandering Smith* (content): six weapons and four armor sets of two pieces each, with
+  their own pictures, in the Armory's stock. *Extreme CRT* (cosmetic): bent glass, scanlines, a phosphor grille,
+  bleeding colors, glow, static, a rolling bar and wobble; it keeps to lighter glass on a PC that can't hold the
+  frame rate, and F4 switches it off. *Dev Stats* (cosmetic): an overlay of frame rate and a frame graph, slow
+  frames, the run, the snake, the save, mods, content, the screen, the graphics card, the PC, memory, sound,
+  input, storage, network, battery and warnings; F3 shows and hides it.
+- Content mods can now add campaign things (`campaign/items.json`) and pictures (`textures/index.json`).
+- The launcher copies a mod that comes with a newer game into Documents\SnakeGame\mods once, and can be built
+  with `launcher\build-msvc.cmd` (Visual Studio's compiler, nothing to download).
+
 ## Unreleased: the arcade machine in 3D, and looking around
 
 - **The title screen's arcade machine is 3D** (three.js, in `assets/vendor/three/`, src/art/arcade-3d.js): side

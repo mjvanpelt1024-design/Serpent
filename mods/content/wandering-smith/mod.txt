@@ -1,0 +1,7 @@
+# A mod is a folder that adds to, or changes, the game's content (docs/MODDING.md).
+# It's in mods/content/, so it's a content mod: chosen when a save is made, kept with it for good.
+name    = The Wandering Smith
+version = "1.0"
+author  = Mark
+type    = content
+about   = Six new weapons and four new armor sets (eight pieces) in the Armory merchants' stock: a rapier, a glacier halberd, a sun sickle, a trident, a bone scythe and a greatsword, and Duelist's, Tidewarden, Ossuary and Sunforged armor.

@@ -1,6 +1,13 @@
 # ==================================================================
-#  ENABLED MODS, loaded in this order (later ones win)
-#  One mod folder name per line. Remove the # in front of a name to
-#  turn that mod on, put it back to turn it off. Reload the game (F5).
+#  MODS FOR PLAYING WITHOUT THE LAUNCHER (index.html in a browser)
+#  With SnakeGame.exe, each save has its own mods: choose them in the
+#  saves window (Edit > Mods), and this file isn't read.
+#
+#  One mod per line, as its folder inside mods/: content/<name> or
+#  cosmetic/<name>. Remove the # in front to turn one on, put it back
+#  to turn it off, then reload (F5).
 # ==================================================================
-# example-pack
+# content/example-pack
+# content/wandering-smith
+# cosmetic/crt-extreme
+# cosmetic/dev-stats

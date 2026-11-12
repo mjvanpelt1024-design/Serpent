@@ -1,0 +1,618 @@
+{
+  "_about": "The Wandering Smith's stock: new weapons and armor for the Armory merchants. Same fields as the game's content/campaign/items.json; a new id adds, an existing one changes only the fields given (docs/MODDING.md).",
+  "armorSets": [
+    {
+      "id": "duelist",
+      "name": "Duelist's",
+      "tier": 2,
+      "bonus": [
+        {
+          "stat": "graceSecs",
+          "v": 0.25
+        },
+        {
+          "stat": "points",
+          "v": 2
+        }
+      ],
+      "bad": [
+        {
+          "stat": "fire.weakness",
+          "v": 20
+        }
+      ]
+    },
+    {
+      "id": "tidewarden",
+      "name": "Tidewarden",
+      "tier": 3,
+      "bonus": [
+        {
+          "stat": "electricity.resistance",
+          "v": 10
+        }
+      ],
+      "bad": [
+        {
+          "stat": "fire.weakness",
+          "v": 25
+        }
+      ]
+    },
+    {
+      "id": "ossuary",
+      "name": "Ossuary",
+      "tier": 4,
+      "bonus": [
+        {
+          "stat": "hearts",
+          "v": 0.5
+        }
+      ],
+      "bad": [
+        {
+          "stat": "fire.weakness",
+          "v": 30
+        }
+      ]
+    },
+    {
+      "id": "sunforged",
+      "name": "Sunforged",
+      "tier": 5,
+      "bonus": [
+        {
+          "stat": "hearts",
+          "v": 0.5
+        },
+        {
+          "stat": "fire.resistance",
+          "v": 10
+        }
+      ],
+      "bad": []
+    }
+  ],
+  "items": [
+    {
+      "family": "gear",
+      "piece": "weapon",
+      "acts": "sword",
+      "uses": [
+        1,
+        3,
+        5,
+        5
+      ],
+      "id": "rapier",
+      "name": "Duelist's Rapier",
+      "hit": {
+        "tags": [
+          "piercing"
+        ],
+        "family": "barb"
+      },
+      "damage": [
+        1,
+        1,
+        2,
+        2
+      ],
+      "traits": [
+        "pierce"
+      ],
+      "stats": [
+        {
+          "stat": "piercing.resistance",
+          "v": 8
+        },
+        {
+          "stat": "graceSecs",
+          "v": 0.25
+        },
+        {
+          "stat": "points",
+          "v": 3
+        },
+        {
+          "stat": "loot",
+          "v": 8
+        }
+      ],
+      "does": "A long, thin blade that finds the gap in any armor. Kills what you run into; against a boss each blow takes an extra piece of armor off.",
+      "strong": "Knightlings, crabs, the Black Knight",
+      "weak": "Barbed foes (urchins, thistle-beasts) shrug it off.",
+      "legend": "Three harder on every blow, and the lunge."
+    },
+    {
+      "family": "gear",
+      "piece": "weapon",
+      "acts": "sword",
+      "uses": [
+        1,
+        3,
+        5,
+        5
+      ],
+      "id": "halberd",
+      "name": "Glacier Halberd",
+      "hit": {
+        "tags": [
+          "piercing",
+          "ice"
+        ],
+        "family": "barb"
+      },
+      "damage": [
+        1,
+        2,
+        2,
+        3
+      ],
+      "traits": [
+        "pierce",
+        "chill"
+      ],
+      "stats": [
+        {
+          "stat": "piercing.resistance",
+          "v": 10
+        },
+        {
+          "stat": "ice.resistance",
+          "v": 10
+        },
+        {
+          "stat": "coldWard",
+          "v": 15
+        },
+        {
+          "stat": "bossDrain",
+          "v": 10
+        }
+      ],
+      "does": "An axe on a pole, spiked and frosted. Kills what you run into, punches through boss armor and freezes the boss a moment.",
+      "strong": "The Cinder Wyrm, Ashwing, armored bosses",
+      "weak": "Two tags, two chances to be resisted: frost sprites and urchins barely notice.",
+      "legend": "Three harder on every blow."
+    },
+    {
+      "family": "gear",
+      "piece": "weapon",
+      "acts": "sword",
+      "uses": [
+        1,
+        3,
+        5,
+        5
+      ],
+      "id": "sunsickle",
+      "name": "Sunreaper Sickle",
+      "hit": {
+        "tags": [
+          "slashing",
+          "fire"
+        ],
+        "family": "edge"
+      },
+      "damage": [
+        1,
+        2,
+        2,
+        3
+      ],
+      "traits": [
+        "cleave",
+        "burn"
+      ],
+      "stats": [
+        {
+          "stat": "slashing.resistance",
+          "v": 10
+        },
+        {
+          "stat": "fire.resistance",
+          "v": 10
+        },
+        {
+          "stat": "heatWard",
+          "v": 15
+        },
+        {
+          "stat": "applePoints",
+          "v": 4
+        }
+      ],
+      "does": "A golden sickle that holds the noon sun. Reaps what you run into and what's beside it, and sets bosses alight.",
+      "strong": "Swarms, brambles, ghosts, Gorgemaw",
+      "weak": "Fire-born foes don't feel the burn, and crabs turn the edge.",
+      "legend": "Three harder on every blow, and the burn."
+    },
+    {
+      "family": "gear",
+      "piece": "weapon",
+      "acts": "sword",
+      "uses": [
+        1,
+        3,
+        5,
+        5
+      ],
+      "id": "trident",
+      "name": "Tidecaller Trident",
+      "hit": {
+        "tags": [
+          "piercing",
+          "electricity"
+        ],
+        "family": "spark"
+      },
+      "damage": [
+        1,
+        2,
+        2,
+        3
+      ],
+      "traits": [
+        "pierce",
+        "shock"
+      ],
+      "stats": [
+        {
+          "stat": "spark.resistance",
+          "v": 10
+        },
+        {
+          "stat": "electricity.resistance",
+          "v": 10
+        },
+        {
+          "stat": "spellPower",
+          "v": 8
+        },
+        {
+          "stat": "electricity.spells",
+          "v": 10
+        }
+      ],
+      "does": "Three prongs and a storm in the shaft. Kills what you run into, the spark leaps to the next enemy, and it goes through boss armor.",
+      "strong": "Leviathorn, eels, crabs, knightlings",
+      "weak": "Spark beetles drink it up, and the Stormwright is immune.",
+      "legend": "Three harder on every blow."
+    },
+    {
+      "family": "gear",
+      "piece": "weapon",
+      "acts": "sword",
+      "uses": [
+        1,
+        3,
+        5,
+        5
+      ],
+      "id": "bonescythe",
+      "name": "Ossuary Scythe",
+      "hit": {
+        "tags": [
+          "slashing",
+          "venom"
+        ],
+        "family": "toxin"
+      },
+      "damage": [
+        1,
+        1,
+        2,
+        3
+      ],
+      "traits": [
+        "cleave",
+        "toxin"
+      ],
+      "stats": [
+        {
+          "stat": "toxin.resistance",
+          "v": 10
+        },
+        {
+          "stat": "venom.resistance",
+          "v": 10
+        },
+        {
+          "stat": "stingGuard",
+          "v": 15
+        },
+        {
+          "stat": "venom.spells",
+          "v": 10
+        }
+      ],
+      "does": "A bone blade dripping green. Cuts down what you run into and what's beside it; a boss it strikes is poisoned and tires faster.",
+      "strong": "Swarms, rival snakes, the Bramble Queen",
+      "weak": "Venomous foes are used to it, and ghosts don't bleed.",
+      "legend": "Three harder on every blow, and the poison."
+    },
+    {
+      "family": "gear",
+      "piece": "weapon",
+      "acts": "sword",
+      "uses": [
+        1,
+        3,
+        5,
+        5
+      ],
+      "id": "kingsbane",
+      "name": "Kingsbane Greatsword",
+      "hit": {
+        "tags": [
+          "slashing"
+        ],
+        "family": "edge"
+      },
+      "damage": [
+        2,
+        2,
+        3,
+        4
+      ],
+      "traits": [
+        "cleave"
+      ],
+      "stats": [
+        {
+          "stat": "slashing.resistance",
+          "v": 12
+        },
+        {
+          "stat": "edge.resistance",
+          "v": 12
+        },
+        {
+          "stat": "bossDrain",
+          "v": 15
+        },
+        {
+          "stat": "hearts",
+          "v": 0.5
+        }
+      ],
+      "does": "A sword as long as you are. Kills what you run into, takes the ones beside it too, and hits bosses hardest of all.",
+      "strong": "Every boss, every swarm",
+      "weak": "Heavy: hitting a hazard snaps it like any blade, and walls stop it cold.",
+      "legend": "Four harder on every blow."
+    },
+    {
+      "id": "duelisthat",
+      "family": "gear",
+      "piece": "helmet",
+      "set": "duelist",
+      "name": "Feathered Duelist's Hat",
+      "stats": [
+        {
+          "stat": "graceSecs",
+          "v": 0.25
+        },
+        {
+          "stat": "points",
+          "v": 3
+        },
+        {
+          "stat": "piercing.resistance",
+          "v": 6
+        },
+        {
+          "stat": "loot",
+          "v": 8
+        }
+      ],
+      "does": "A wide hat with a red plume. Looks good, dodges better.",
+      "strong": "Quick pokes",
+      "weak": "Decent armor: it's a hat.",
+      "legend": "All four of its lines."
+    },
+    {
+      "id": "duelistcoat",
+      "family": "gear",
+      "piece": "body",
+      "set": "duelist",
+      "name": "Duelist's Brigandine",
+      "stats": [
+        {
+          "stat": "piercing.resistance",
+          "v": 8
+        },
+        {
+          "stat": "barb.resistance",
+          "v": 8
+        },
+        {
+          "stat": "applePoints",
+          "v": 4
+        },
+        {
+          "stat": "thiefGuard",
+          "v": 15
+        }
+      ],
+      "does": "Leather lined with little brass plates.",
+      "strong": "Spines, stings, thieves",
+      "weak": "Decent armor: fire goes right through leather.",
+      "legend": "All four of its lines."
+    },
+    {
+      "id": "tidehelm",
+      "family": "gear",
+      "piece": "helmet",
+      "set": "tidewarden",
+      "name": "Tidewarden Helm",
+      "stats": [
+        {
+          "stat": "electricity.resistance",
+          "v": 12
+        },
+        {
+          "stat": "spark.resistance",
+          "v": 12
+        },
+        {
+          "stat": "ice.resistance",
+          "v": 8
+        },
+        {
+          "stat": "electricity.spells",
+          "v": 10
+        }
+      ],
+      "does": "A finned helm from the sea-guard of the reef.",
+      "strong": "Sparks, eels, storms",
+      "weak": "Good armor, but salt-crusted: fire bakes it.",
+      "legend": "All four of its lines."
+    },
+    {
+      "id": "tidemail",
+      "family": "gear",
+      "piece": "body",
+      "set": "tidewarden",
+      "name": "Tidewarden Scalemail",
+      "stats": [
+        {
+          "stat": "electricity.resistance",
+          "v": 12
+        },
+        {
+          "stat": "spark.resistance",
+          "v": 12
+        },
+        {
+          "stat": "coldWard",
+          "v": 15
+        },
+        {
+          "stat": "spark.immunity",
+          "v": 1
+        }
+      ],
+      "does": "Fish-scale mail that drinks lightning.",
+      "strong": "Sparks, eels, storms",
+      "weak": "Good armor, but salt-crusted: fire bakes it.",
+      "legend": "Spark Immunity."
+    },
+    {
+      "id": "boneskull",
+      "family": "gear",
+      "piece": "helmet",
+      "set": "ossuary",
+      "name": "Ossuary Skullcap",
+      "stats": [
+        {
+          "stat": "venom.resistance",
+          "v": 15
+        },
+        {
+          "stat": "toxin.resistance",
+          "v": 15
+        },
+        {
+          "stat": "slashing.resistance",
+          "v": 8
+        },
+        {
+          "stat": "stingGuard",
+          "v": 15
+        }
+      ],
+      "does": "Something's skull, worn as a helmet. Something big.",
+      "strong": "Poison, stings, blades",
+      "weak": "Fine armor, and dry as tinder.",
+      "legend": "All four of its lines."
+    },
+    {
+      "id": "boneplate",
+      "family": "gear",
+      "piece": "body",
+      "set": "ossuary",
+      "name": "Ossuary Ribplate",
+      "stats": [
+        {
+          "stat": "venom.resistance",
+          "v": 15
+        },
+        {
+          "stat": "toxin.resistance",
+          "v": 15
+        },
+        {
+          "stat": "piercing.resistance",
+          "v": 8
+        },
+        {
+          "stat": "venom.immunity",
+          "v": 1
+        }
+      ],
+      "does": "A ribcage strapped over a padded shirt.",
+      "strong": "Poison, stings, spears",
+      "weak": "Fine armor, and dry as tinder.",
+      "legend": "Venom Immunity."
+    },
+    {
+      "id": "sunhelm",
+      "family": "gear",
+      "piece": "helmet",
+      "set": "sunforged",
+      "name": "Sunforged Crown-Helm",
+      "stats": [
+        {
+          "stat": "fire.resistance",
+          "v": 20
+        },
+        {
+          "stat": "ember.resistance",
+          "v": 15
+        },
+        {
+          "stat": "slashing.resistance",
+          "v": 15
+        },
+        {
+          "stat": "spellPower",
+          "v": 10
+        }
+      ],
+      "does": "A gold helm crowned with flame, forged at noon on the longest day.",
+      "strong": "Almost everything",
+      "weak": "Great armor, and it costs like it.",
+      "legend": "All four of its lines."
+    },
+    {
+      "id": "sunplate",
+      "family": "gear",
+      "piece": "body",
+      "set": "sunforged",
+      "name": "Sunforged Plate",
+      "stats": [
+        {
+          "stat": "fire.resistance",
+          "v": 20
+        },
+        {
+          "stat": "piercing.resistance",
+          "v": 15
+        },
+        {
+          "stat": "slashing.resistance",
+          "v": 15
+        },
+        {
+          "stat": "ember.immunity",
+          "v": 1
+        }
+      ],
+      "does": "Gold plate with a sun burning in its chest.",
+      "strong": "Almost everything",
+      "weak": "Great armor, and it costs like it.",
+      "legend": "Ember Immunity."
+    }
+  ]
+}

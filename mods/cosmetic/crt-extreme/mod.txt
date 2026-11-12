@@ -1,0 +1,7 @@
+# A mod is a folder that adds to, or changes, the game's content (docs/MODDING.md).
+# It's in mods/cosmetic/, so it's a cosmetic mod: switch it on or off for any save, any time.
+name    = Extreme CRT
+version = "1.0"
+author  = Mark
+type    = cosmetic
+about   = Turns your screen into a cheap, overdriven 1980s TV: bent glass, fat scanlines, a phosphor grille, colors bleeding apart, glow, static, a rolling bar and a picture that won't sit still. F4 switches it off and on while you play.

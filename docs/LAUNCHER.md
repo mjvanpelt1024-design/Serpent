@@ -4,14 +4,21 @@
 Microsoft Edge engine that ships with Windows 11 and with Windows 10 through Windows Update. The game
 itself stays HTML, CSS and JavaScript; the launcher is its home on the desktop (and, later, on Steam).
 
-It has two windows. Run with no arguments, it shows **Snake Saves**: the list of saves, with **New** and
-**Play**. **Play** starts the game in a window of its own, on that save (`SnakeGame.exe --world <key>`).
+It has two windows. Run with no arguments, it shows **Snake Saves**: the list of saves, with **Quit** and
+**New**; pick a save and it's **Cancel**, **Edit** and **Play**. **Edit** renames a save and changes its
+picture and its mods; **New** opens the same view for a new save. **Play** starts the game in a window
+of its own, on that save (`SnakeGame.exe --world <key>`).
 The saves themselves are described in [`WORLDS.md`](WORLDS.md).
 
 ## Building it
 
 The game ships with a ready-made `SnakeGame.exe`. You only need to build it again after changing the
-launcher's own code (`launcher\src\main.cpp`). There are two ways.
+launcher's own code (`launcher\src\main.cpp`). There are three ways.
+
+**`launcher\build-msvc.cmd`**, the quickest if Visual Studio (any edition with C++) is installed: run it
+from a command prompt or by double-clicking. It finds Visual Studio's compiler on its own, uses the
+open-source WebView2 loader in `launcher\third_party` (so nothing is downloaded), and puts
+`SnakeGame.exe` in the game folder. The current `SnakeGame.exe` was built this way.
 
 **Visual Studio 2022** (with the *Desktop development with C++* workload):
 
@@ -26,7 +33,7 @@ game folder on their own; press F5 in Visual Studio to run one under the debugge
 
 **MinGW (clang)**, with no Visual Studio: `launcher\mingw\build.sh` builds it with
 [llvm-mingw](https://github.com/mstorsjo/llvm-mingw), using the open-source WebView2 loader in
-`launcher\third_party\OpenWebView2Loader` (ISC license). The shipped `SnakeGame.exe` was built this way.
+`launcher\third_party\OpenWebView2Loader` (ISC license).
 
 Either way the `.exe` has everything built in: it's the only file the launcher needs.
 
@@ -35,7 +42,7 @@ Either way the `.exe` has everything built in: it's the only file the launcher n
 | | |
 |---|---|
 | Serves the game | the game folder is `https://game.snakegame.example/` inside the window, so the game reads `content/` straight from disk, never cached, so F5 shows every edit |
-| Serves mods | the mods folder is `https://mods.snakegame.example/` |
+| Serves mods | the mods folder is `https://mods.snakegame.example/`; the saves window asks it for the installed mods (each `mod.txt` in `mods\content` and `mods\cosmetic`). A mod that comes with a newer game is copied into `Documents\SnakeGame\mods` once (`%APPDATA%\SnakeGame\mods-offered.dat` remembers it, so a mod you delete stays deleted) |
 | Keeps saves | each save is a `.world` file in `%APPDATA%\SnakeGame\worlds` (see [`WORLDS.md`](WORLDS.md)); the browser's own data is in `%APPDATA%\SnakeGame\WebView2`. Both are separate from the game folder, so updating the game never touches them |
 | Remembers the window | size, position, maximized and full screen, in `%APPDATA%\SnakeGame\window.ini` |
 | Full screen | **F11** or **Alt+Enter**, and the game's own full screen button |
@@ -43,7 +50,7 @@ Either way the `.exe` has everything built in: it's the only file the launcher n
 | Links | anything outside the game opens in the player's browser |
 | One at a time | starting it again brings the open window forward |
 | Missing WebView2 | on an old PC without it, offers the Microsoft download page |
-| Saves window | `SnakeGame.exe` with no arguments: the list of saves, **Delete**, **New** and **Play** |
+| Saves window | `SnakeGame.exe` with no arguments: the list of saves, **Quit** and **New**, then **Cancel**, **Edit** and **Play** for the one picked; Edit renames it and changes its picture and mods |
 | Game window | `SnakeGame.exe --world <key>`: the game on one save; closing it saves first |
 
 The game can also talk to the launcher with `window.chrome.webview.postMessage(...)`:

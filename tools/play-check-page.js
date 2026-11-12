@@ -357,6 +357,12 @@
       openScreen("main");
     }
 
+    // ----- mods: none on, so the game is untouched (the mods themselves: tools/mods/, docs/MODDING.md)
+    check(CONTENT.cosmetics && CONTENT.cosmetics.filter === null && CONTENT.cosmetics.overlay === null && MOD_FILTER === null && MOD_OVERLAY === null &&
+      !document.getElementById("mod-crt") && !document.getElementById("mod-overlay") && !document.documentElement.classList.contains("mod-crt"),
+      "mods: with none on, no screen filter and no stats overlay");
+    check(Object.keys(CONTENT.modTextures).length === 0 && !CAMP.itemById.rapier, "mods: with none on, no mod pictures or things");
+
     // ----- build 54: the title's arcade machine in 3D, its controls on the snake, and looking around
     if (typeof A3_OK !== "undefined" && A3_OK && arcadeFits()) {
       openScreen("main");

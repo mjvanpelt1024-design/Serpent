@@ -1,0 +1,7 @@
+# A mod is a folder that adds to, or changes, the game's content (docs/MODDING.md).
+# It's in mods/cosmetic/, so it's a cosmetic mod: switch it on or off for any save, any time.
+name    = Dev Stats
+version = "1.0"
+author  = Mark
+type    = cosmetic
+about   = An overlay with everything there is to look at: frame rate and a frame graph, slow frames, memory, the graphics card, screen and window, the PC, the run in progress, the snake, the save, mods, content, pictures, sound, input, storage, network, battery and warnings. F3 shows and hides it, Shift+F3 makes it bigger or smaller, Ctrl+F3 moves it to the next corner.

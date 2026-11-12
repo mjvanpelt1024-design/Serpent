@@ -1,0 +1,19 @@
+{
+  "_about": "The pictures for this mod's things, like the game's textures/index.json. Files are in this folder.",
+  "textures": {
+    "ci:rapier": "gear/rapier.png",
+    "ci:halberd": "gear/halberd.png",
+    "ci:sunsickle": "gear/sunsickle.png",
+    "ci:trident": "gear/trident.png",
+    "ci:bonescythe": "gear/bonescythe.png",
+    "ci:kingsbane": "gear/kingsbane.png",
+    "ci:duelisthat": "gear/duelisthat.png",
+    "ci:duelistcoat": "gear/duelistcoat.png",
+    "ci:tidehelm": "gear/tidehelm.png",
+    "ci:tidemail": "gear/tidemail.png",
+    "ci:boneskull": "gear/boneskull.png",
+    "ci:boneplate": "gear/boneplate.png",
+    "ci:sunhelm": "gear/sunhelm.png",
+    "ci:sunplate": "gear/sunplate.png"
+  }
+}

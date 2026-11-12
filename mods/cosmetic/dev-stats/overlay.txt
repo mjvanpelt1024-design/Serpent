@@ -1,0 +1,36 @@
+# ==================================================================
+#  The stats overlay (drawn by src/ui/mod-overlay.js)
+#  F3 (or the key below) shows and hides it, Shift+F3 makes it
+#  bigger or smaller, Ctrl+F3 moves it to the next corner.
+# ==================================================================
+
+corner   = top-left     # top-left, top-right, bottom-left or bottom-right
+size     = 1            # 1 = small; Shift+F3 steps through 1, 1.25, 1.5
+opacity  = 0.9
+every    = 250          # milliseconds between updates of the numbers
+graph    = true         # the frame-time graph at the top
+shown    = true         # on when the game starts
+toggleKey = F3
+accent   = #3ddc84      # headings and the graph
+warn     = #ffd23f      # a number that's getting bad
+bad      = #ff5a4a      # a number that's bad
+
+# Which panels, in order. Leave one out to hide it.
+#   frame     fps, frame times, 1% lows, slow frames, long tasks, refresh rate
+#   game      screen, state, run time, score, speed, the snake, things on the board
+#   campaign  island, gems, currencies, satchel, worn gear, hearts
+#   save      save title and id, profile, save size, last written
+#   mods      the mods on this save
+#   content   version, files read, content warnings, pictures loaded
+#   screen    window, screen, pixel ratio, board size, color depth, orientation
+#   gpu       the graphics card, WebGL version and limits
+#   system    processor cores, memory, platform, browser engine, language, time zone
+#   memory    the page's memory use, DOM nodes, canvases, timers
+#   audio     the sound engine, its state and rate, music
+#   input     last key, mouse position, buttons, gamepads, touch
+#   storage   storage used and free, local data
+#   network   online, connection type and speed
+#   power     battery and charging
+#   page      uptime, focus, visibility, motion and color preferences, settings
+#   warnings  the last few warnings and errors
+panels   = [frame, game, campaign, save, mods, content, screen, gpu, system, memory, audio, input, storage, network, power, page, warnings]

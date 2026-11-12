@@ -130,4 +130,6 @@ art/arcade-3d.js
 ui/look-around.js
 dev/terminal/cmd-camp.js
 game/save/world-save.js
+ui/mod-filter.js
+ui/mod-overlay.js
 game/start.js
