@@ -127,6 +127,8 @@ campaign/camp-story.js
 campaign/camp-title.js
 ../assets/vendor/three/three.min.js
 art/arcade-3d.js
+ui/map-3d.js
+art/room-3d.js
 ui/look-around.js
 dev/terminal/cmd-camp.js
 game/save/world-save.js

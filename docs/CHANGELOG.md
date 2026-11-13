@@ -1,5 +1,36 @@
 # Changelog
 
+## Unreleased: the map and the shops in 3D, and twenty new things
+
+- **The map is 3D** (three.js, `src/ui/map-3d.js`). Every island is still painted from its own pictures, but the
+  pictures are now wrapped on real shapes: the grassy top is a slab that tilts away from you, the rock under it tapers
+  to a point (both worked out from the island's outline), the trees, houses and signposts stand up out of the grass,
+  and the stops and shopkeepers stand at the depth of the row they belong to. Clouds, birds and the Coil sit on layers
+  far behind, the mist and the sea of clouds in front. Move the mouse and the world turns a little: near things slide
+  one way, far things the other; it sways gently with no mouse too. Light falls on the relief from the upper left, a
+  little differently as the world turns. The pins ride the same slide, so a click always lands where you see the
+  thing. It's the same low-resolution picture shown with chunky pixels; the camera, pins, fog, quests and the
+  Nightmare's tunnels all work as before (while the world is turned around for the Nightmare the flat painter draws it).
+- **The shops, the bank and the challenger's tent are 3D** (`src/art/room-3d.js`): the same pictures, cut into cards
+  (walls, shelf or tent or vault, keeper, counter, a vignette) at different depths, sliding past each other with the
+  mouse, with dust drifting at every depth. The buttons laid over the shop (the shelf's things, the bell, the crate,
+  the workshop's tools) ride the slide at the depth of what they sit on.
+- **Settings > Audio & display > 3D scenes** turns it all off (the flat pictures come back). Without WebGL, or with
+  reduced motion asked for, they stay flat or still.
+- **Twenty new things**, all in the system that was already there (each borrows an old item's behavior with `acts`,
+  and has its own 12 x 12 picture, `tools/textures/more-items-art.py`):
+  - Weapons: **Dune Scimitar** (slashing, cleave), **Cinder Whip** (fire and slashing, burn and cleave), **Glacier Pick**
+    (ice and piercing, chill and pierce), **Hornet Lance** (piercing and venom, pierce and toxin).
+  - Armor: three new sets of a helmet and a body piece each. **Mossback** (venom and stings; fire weakness), **Glasswing**
+    (ice, speed and a longer safe moment; blades and barbs weakness) and **Pilgrim's** (money and trinkets; you take
+    more damage).
+  - Spells: **Rime Ward** (a forcefield that gives Ice Immunity), **Thorn Ring** (a forcefield that gives Piercing
+    Immunity), **Razor Gust** (a slashing fireball, cleave) and **Skip Step** (a short blink with more charges).
+  - Snacks: **Honey Cake** (apples worth double), **Ghost Chili** (heat can't hurt you) and **Cool Mint Tea** (slow down).
+  - Familiars: **Pip the Hermit Crab** (takes a hit), **Dart the Gecko** (snaps up stingers) and **Lamplight Moth**
+    (fetches apples).
+  The Armory, Arcana, Kitchen and Familiars merchants stock them like the rest.
+
 ## Unreleased: the saves window, and mods on each save
 
 - **The saves window, reworked.** Quit and New at the bottom; pick a save and it's Cancel, Edit and Play. **Edit**

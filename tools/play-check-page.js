@@ -416,6 +416,19 @@
       check(g2 && g2.trinketR === it.rarity, "trinkets: the save check keeps a fitted trinket's rarity");
     }
 
+    // ----- build 55: the new things, and the 3D map's and rooms' fallbacks (this browser has no graphics card)
+    {
+      const newIds = ["scimitar", "cinderwhip", "glacierpick", "hornetlance", "mosscap", "mosscloak", "glasshood", "glassvest", "pilgrimhat", "pilgrimcoat",
+        "frostward", "thornring", "razorgust", "skipstep", "honeycake", "chili", "minttea", "hermit", "gecko", "moth"];
+      check(newIds.every(id => CAMP.itemById[id]), "items: all twenty of build 55's things exist");
+      check(newIds.every(id => !!texResolve("ci:" + id)), "items: each has its own picture");
+      check(["moss", "glass", "pilgrim"].every(sid => CAMP.items.filter(i => i.set === sid).map(i => i.piece).sort().join() === "body,helmet"), "items: each new armor set is a helmet and a body piece");
+      check(CAMP.items.filter(i => i.acts).every(i => CAMP.itemById[i.acts]), "items: everything that borrows a behavior borrows a real one");
+      check(typeof M3 !== "undefined" && typeof R3 !== "undefined", "3D: the map's and the rooms' modules are loaded");
+      const sword = campItemActs("scimitar") === "sword" && campItemActs("frostward") === "forcefield" && campItemActs("moth") === "firefly";
+      check(sword, "items: new weapons, spells and familiars act like the ones they borrow from");
+    }
+
     check(errors.length === 0, "no errors in the console" + (errors.length ? ": " + errors.slice(0, 5).join(" | ") : ""));
   } catch (e) {
     problems.push("the check stopped: " + (e.stack || e.message));

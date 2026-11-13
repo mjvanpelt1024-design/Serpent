@@ -19,6 +19,7 @@ This file is the design and the map of where things live. The numbers themselves
 | The signatures of all of the above | `content/campaign/manifest.dat` (made by a tool, never by hand) |
 | The save, its schema and the data check | `src/campaign/integrity.js`, `src/campaign/camp-save.js` |
 | The map: islands, paths, stops, pins, camera | `src/ui/map.js` (the Coil and the sky: `map-coil.js`) |
+| The map in 3D (the Settings' "3D scenes" switch) | `src/ui/map-3d.js`; the shops, bank and tent: `src/art/room-3d.js` |
 | What's painted on each island, and each island's shape | `src/ui/map-isles.js` (`ISLE_SHAPE`) |
 | Playing a level on the old engine | `src/campaign/camp-run.js`, `camp-levels.js`, `camp-boss.js`, `camp-items.js` |
 | The hub beside the board, the result card | `src/campaign/camp-hud.js`, `camp-screens.js` |

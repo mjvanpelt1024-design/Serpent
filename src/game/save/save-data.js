@@ -92,6 +92,7 @@ function defaultSettings() {
     bgMotion: true,
     particles: true,
     menuDemo: true,
+    map3d: true,
     font: "default"
   };
 }
@@ -296,7 +297,7 @@ function sanitizeSave(raw) {
   if (Array.isArray(raw.badges)) s.badges = Array.from(new Set(raw.badges.filter(id => BADGE_IDS.has(id))));
 
   const set = raw.settings || {};
-  ["sound", "showScore", "showBest", "keysArrows", "keysWasd", "themedPage", "googly", "confetti", "intros", "details", "extras", "scenes", "music", "chatter", "vibration", "awake", "crt", "bgMotion", "particles", "menuDemo"].forEach(k => {
+  ["sound", "showScore", "showBest", "keysArrows", "keysWasd", "themedPage", "googly", "confetti", "intros", "details", "extras", "scenes", "music", "chatter", "vibration", "awake", "crt", "bgMotion", "particles", "menuDemo", "map3d"].forEach(k => {
     if (typeof set[k] === "boolean") s.settings[k] = set[k];
   });
   if (!s.settings.keysArrows && !s.settings.keysWasd) s.settings.keysArrows = true;

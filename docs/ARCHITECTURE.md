@@ -108,6 +108,8 @@ and checked against a signed manifest at startup; the save goes through `SAVE_SC
 | Unlocking islands and the Nightmare Realm | `src/game/world/unlocks.js` |
 | Story book pictures for the build 46 islands | `src/art/island-art-46.js` |
 | The map: islands, camera, pins, landmarks | `src/ui/map.js` |
+| The map in 3D: each island's pictures wrapped on a relief, depth layers, the slide with the mouse (three.js) | `src/ui/map-3d.js` |
+| The shops, the bank and the challenger's tent in 3D: pictures on cards at different depths (three.js) | `src/art/room-3d.js` |
 | The Coil (the glowing road joining the islands) and the parallax sky | `src/ui/map-coil.js` |
 | Moving the snake | `src/game/flow/snake.js` |
 | Nightmare twists, Inferno walls, portals | `src/game/flow/nightmares.js` |

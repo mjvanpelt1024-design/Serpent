@@ -56,6 +56,7 @@ const SETTINGS_TABS = [
       { type: "action", action: "fullscreen", id: "set-fullscreen", label: "Full screen", help: "Fill the whole screen with the game. The F key does this too.", button: () => document.fullscreenElement ? "Exit" : "Go full" },
       { type: "cycle", key: "font", id: "set-font", label: "Font", help: () => `${escapeAttr((FONT_OPTIONS.find(o => o[0] === save.settings.font) || FONT_OPTIONS[0])[2])}. Titles stay in Jacquarda Bastarda.`, options: FONT_OPTIONS },
       { type: "switch", key: "crt", label: "Retro screen", help: "Faint scanlines and darker corners, like an old monitor." },
+      { type: "switch", key: "map3d", label: "3D scenes", help: "The map, the shops, the bank and the tent in 3D, turning a little as you move the mouse. Off is the flat pictures, easier on slow graphics." },
       { type: "switch", key: "menuDemo", label: "Title screen snake", help: "Your snake plays by itself behind the main menu." },
       { type: "cycle", key: "shake", id: "set-shake", label: "Screen shake on crash", help: "From barely-there to seismic.", options: SHAKE_OPTIONS }
     ]
