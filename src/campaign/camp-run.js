@@ -175,7 +175,9 @@ function campStart(isl, n, challengeIdx = -1, nmDef = null) {
   const mult = (1 + upPct("scoremult")) * (1 + rv("points") / 100);
   const speed = def.speed * (mods.includes("swift") ? 1.2 : 1) * (1 - upPct("calm")) * (1 + rv("speed") / 100);
   const apples = 1 + upVal("orchard") + rv("apples");
-  const edge = { tunnel: "endless", maze: "maze", field: "maze" }[def.layout] || def.edge;
+  // build 56: a level with its own sides runs on the engine's wall edge; camp-edges.js does each side itself
+  const sidesOwn = !!(def.edges && typeof campEdgeSpec === "function" && !campEdgesPlain(campEdgeSpec(def)) && !{ tunnel: 1, maze: 1, field: 1 }[def.layout]);
+  const edge = sidesOwn ? "wall" : ({ tunnel: "endless", maze: "maze", field: "maze" }[def.layout] || def.edge);
   const island = CAMP.islandById[isl];
   modes.campaign = { label: def.name, speed, edge, multiplier: mult, startOrbs: 0, orbChance: 0, apples, hunter: !!def.hunter, rules: "" };
 

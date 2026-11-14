@@ -38,7 +38,8 @@ test("every board is size x size, has one start and only known characters", () =
     L.board.forEach(row => assert.equal(row.length, T, name + " row length"));
     const starts = L.board.join("").split("S").length - 1;
     assert.equal(starts, 1, name + " start");
-    assert.match(L.board.join(""), /^[.#PS123]*$/, name + " characters");
+    // build 56's letters: gates, doors, turrets, belts, hazards and the marks a goal or a boss arena wants (docs/BUILD-56.md)
+    assert.match(L.board.join(""), /^[.#PS123><^vabcd45678GEZWN~x*Bplmoh]*$/, name + " characters");
   }
 });
 

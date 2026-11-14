@@ -227,6 +227,11 @@ p01 = "3,20-22 > 4,20-22"     # a square x,y, or a line x,y1-y2 (a column) or x1
 Below the `---`, one row per line: `.` open · `#` red wall · `P` portal wall · `S` snake start (exactly one) · `1 2 3` pulse walls.
 A portal wall lets you through to its exit; a red wall in a dead end can be turned into one.
 
+**Build 56's letters** (campaign boards, `docs/BUILD-56.md`): `> < ^ v` one-way gates, `a b c d` linked doors (two squares with the same letter),
+`4 5 6 7` turrets facing east, south, west, north, `8` a cannon, `G` a geyser, `E Z W N` belts running east, south, west, north, `~` tar, `x` crumbling
+floor, `*` a mine, `B` a saw blade, and the marks a boss arena or a goal wants: `p` crystal, `l` lamp, `m` snare or pool, `o` bait, `h` the ring's middle.
+A level's sides (`edges`) are in its island file, not in the `.level` file.
+
 **Not in a `.level` file yet:** the island's spawns, speed, theme, skin and loadout. Those still come from
 `world.txt`, `levels.dat` and the player's own settings.
 

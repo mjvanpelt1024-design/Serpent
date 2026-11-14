@@ -104,23 +104,33 @@ const lurkerOut = (e, ts = performance.now()) => ts < (e.outUntil || 0);
 BEAST_ENEMIES.forEach(def => {
   FOES[def.id] = Object.assign({}, def);
   const kind = def.kind || "chaser";
+  const brain = typeof BRAINS !== "undefined" ? BRAINS[kind] : null;     // build 56: camp-brains.js
   const T = {
     kind: "hazard", color: def.color || "#ffffff", label: def.label || def.id, life: def.life || [10000, 14000], smash: true, fact: def.fact || "",
-    tick: (BEAST_TICK[kind] || BEAST_TICK.chaser)(def.id),
+    tick: brain ? brain.tick(def.id) : (BEAST_TICK[kind] || BEAST_TICK.chaser)(def.id),
     touch(e, ts) {
+      if (brain && brain.touch) return brain.touch(e, ts, FOES[def.id]);
       // an urchin with its spines in is a snack: eat it for points
       if (kind === "lurker" && !lurkerOut(e, ts)) { removeEntity(e); addScore(40 * scoreMultiplier); sfx("pop"); campBonusEvent("kill"); return false; }
       biteHead(e, FOES[def.id]);
       return gameState !== "PLAYING";
     },
     draw(g, x, y, w, ts, e) {
+      let alpha = kind === "lurker" && !lurkerOut(e, ts) ? 0.75 : 1, lift = 0;
+      if (brain) {
+        if (brain.draw && brain.draw(g, e, x, y, w, ts, FOES[def.id]) === true) return;
+        if (brain.dim) alpha = brain.dim(e);
+        if (brain.lift) lift = brain.lift(e, ts);
+      }
       if (kind === "blinker" && e.blinked && ts - e.blinked < 300) { g.fillStyle = "rgba(200,232,255,0.5)"; g.fillRect(x - 2, y - 2, w + 4, w + 4); }
       if (kind === "charger" && e.dashing) { g.fillStyle = "rgba(255,80,60,0.35)"; g.fillRect(x - 1, y - 1, w + 2, w + 2); }
       if (kind === "lurker" && lurkerOut(e, ts)) { g.fillStyle = "rgba(255,255,255,0.35)"; g.fillRect(x - 2, y - 2, w + 4, w + 4); }
-      const bob = kind === "drifter" || kind === "blinker" ? Math.round(Math.sin(ts / 150) * 1.5) : kind === "charger" && e.dashing ? 0 : Math.sin(ts / 90) > 0 ? -1 : 0;
-      foeSprite(def.id, w, g, x, y + bob, kind === "lurker" && !lurkerOut(e, ts) ? 0.75 : 1);
+      const calmKinds = ["drifter", "blinker", "ambusher", "mirror", "orbiter", "bomber", "gale", "watcher", "shadow"];
+      const bob = calmKinds.includes(kind) ? Math.round(Math.sin(ts / 150) * 1.5) : kind === "charger" && e.dashing ? 0 : kind === "sleeper" && e.asleep ? 0 : Math.sin(ts / 90) > 0 ? -1 : 0;
+      foeSprite(def.id, w, g, x, y + bob + lift, alpha);
     }
   };
+  if (brain && brain.spawn) T.spawn = brain.spawn(def);
   if (kind === "lurker") T.placed = false;
   ENTITY_TYPES[def.id] = T;
   if (!ENTITY_KEYS.includes(def.id)) ENTITY_KEYS.push(def.id);
@@ -134,7 +144,7 @@ BEAST_ENEMIES.forEach(def => {
 
 /* Chasers, chargers and drifters come in from the edges, far from your head */
 (() => {
-  const edgy = new Set(BEAST_ENEMIES.filter(d => ["chaser", "charger", "drifter"].includes(d.kind || "chaser")).map(d => d.id));
+  const edgy = new Set(BEAST_ENEMIES.filter(d => ["chaser", "charger", "drifter"].includes(d.kind || "chaser") || (typeof BRAINS !== "undefined" && BRAINS[d.kind] && BRAINS[d.kind].edge)).map(d => d.id));
   const orig = spawnEntity;
   window.spawnEntity = function (type) {
     if (edgy.has(type) && !endless && !maze && typeof edgeSpot === "function") {
@@ -177,8 +187,8 @@ BEAST_POWERS.forEach(P => {
   const orig = campZoneSpawns;
   window.campZoneSpawns = function (isl, n, def, spawns) {
     // the island's own new enemies first, so the power-ups that answer them follow
-    if (def.kind === "enemy") BEAST_ENEMIES.forEach(e => {
-      if ((e.islands || []).includes(isl) && n >= (e.from || 6) && !spawns[e.id]) spawns[e.id] = e.placedCount ? { count: e.placedCount } : { max: e.max || 1, delay: (e.delay || [9000, 13000]).slice() };
+    if (def.kind === "enemy" && !def.exact) BEAST_ENEMIES.forEach(e => {
+      if (!e.explicit && (e.islands || []).includes(isl) && n >= (e.from || 6) && !spawns[e.id]) spawns[e.id] = e.placedCount ? { count: e.placedCount } : { max: e.max || 1, delay: (e.delay || [9000, 13000]).slice() };
     });
     return orig.apply(this, arguments);
   };
@@ -349,7 +359,7 @@ function due(id, t, ts, range) {
     }
     const dev = bossTrait("devour");
     if (dev) {
-      const a = apples.find(x => x.x === h.x && x.y === h.y);
+      const a = apples.find(x => x.x === h.x && x.y === h.y && !x.bait);
       if (a) {
         apples.splice(apples.indexOf(a), 1);
         maintainApples();

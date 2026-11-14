@@ -4,27 +4,655 @@
   "name": "Arcanum Spire",
   "theme": "wizard",
   "blurb": "A floating tower of libraries, storms and spells that misfire on purpose.",
-  "colors": {"grass": "#5a5aa8", "edge": "#3e3e80", "rock": "#6a5a8a", "accent": "#b36bff", "water": "#2a2a6a"},
-  "currency": {"id": "slithers", "name": "Slither", "plural": "Slithers", "short": "s", "color": "#b98cff", "tale": "They say this coin is imbued with a touch of magic itself! Hold a Slither to your ear on a quiet night and it hums the first bar of a spell nobody remembers."},
-  "npcs": {"merchant": {"name": "Zaltor the Arcane", "shop": "Zaltor's Curio", "line": "Spells! Spells for the spellless! Press Space and pray, that's my motto.", "look": {"body": "#4a4aa8", "belly": "#b8b8f0", "hat": "wizard", "extra": "beard", "eye": "#ffd23f"}}, "challenger": {"name": "Sibyl Nightcoil", "shop": "The Scrying Pool", "line": "I have seen your future. It contains three trials and a great deal of yelling.", "look": {"body": "#2a2a4a", "belly": "#8a8ac8", "hat": "hood", "extra": "none", "eye": "#7fe3ff"}}, "banker": {"name": "Goldtongue", "shop": "The Alchemist's Vault", "line": "I turn Slithers into Snaycoins, and Snaycoins into regret. Mostly the first one.", "look": {"body": "#8a6a2a", "belly": "#f0d890", "hat": "fez", "extra": "monocle", "eye": "#3ddc84"}}},
-  "boss": {"name": "Hexfang the Archmage", "body": "#5e2e94", "belly": "#9a6ad0", "eye": "#7fe3ff", "hearts": 3, "armor": 3, "length": 9, "speed": 0.66, "stamina": 34, "drain": [1.0, 1.7, 1.35], "exhaustMs": 3000, "resist": ["frost"], "taunt": "I have read every book about snakes. You are a footnote."},
-  "story": {"arrive": {"title": "Up the Coil to the Arcanum Spire", "text": ""}, "boss1": {"title": "Hexfang's first spell fizzles", "text": ""}, "boss2": {"title": "Hexfang's wards break", "text": ""}, "boss3": {"title": "The Archmage is undone", "text": ""}},
+  "colors": {
+    "grass": "#5a5aa8",
+    "edge": "#3e3e80",
+    "rock": "#6a5a8a",
+    "accent": "#b36bff",
+    "water": "#2a2a6a"
+  },
+  "currency": {
+    "id": "slithers",
+    "name": "Slither",
+    "plural": "Slithers",
+    "short": "s",
+    "color": "#b98cff",
+    "tale": "They say this coin is imbued with a touch of magic itself! Hold a Slither to your ear on a quiet night and it hums the first bar of a spell nobody remembers."
+  },
+  "npcs": {
+    "merchant": {
+      "name": "Zaltor the Arcane",
+      "shop": "Zaltor's Curio",
+      "line": "Spells! Spells for the spellless! Press Space and pray, that's my motto.",
+      "look": {
+        "body": "#4a4aa8",
+        "belly": "#b8b8f0",
+        "hat": "wizard",
+        "extra": "beard",
+        "eye": "#ffd23f"
+      }
+    },
+    "challenger": {
+      "name": "Sibyl Nightcoil",
+      "shop": "The Scrying Pool",
+      "line": "I have seen your future. It contains three trials and a great deal of yelling.",
+      "look": {
+        "body": "#2a2a4a",
+        "belly": "#8a8ac8",
+        "hat": "hood",
+        "extra": "none",
+        "eye": "#7fe3ff"
+      }
+    },
+    "banker": {
+      "name": "Goldtongue",
+      "shop": "The Alchemist's Vault",
+      "line": "I turn Slithers into Snaycoins, and Snaycoins into regret. Mostly the first one.",
+      "look": {
+        "body": "#8a6a2a",
+        "belly": "#f0d890",
+        "hat": "fez",
+        "extra": "monocle",
+        "eye": "#3ddc84"
+      }
+    }
+  },
+  "boss": {
+    "name": "Hexfang the Archmage",
+    "body": "#5e2e94",
+    "belly": "#9a6ad0",
+    "eye": "#7fe3ff",
+    "hearts": 3,
+    "armor": 3,
+    "length": 9,
+    "speed": 0.66,
+    "stamina": 34,
+    "drain": [
+      1.0,
+      1.7,
+      1.35
+    ],
+    "exhaustMs": 3000,
+    "resist": [
+      "frost"
+    ],
+    "taunt": "I have read every book about snakes. You are a footnote."
+  },
+  "story": {
+    "arrive": {
+      "title": "Up the Coil to the Arcanum Spire",
+      "text": ""
+    },
+    "boss1": {
+      "title": "Hexfang's first spell fizzles",
+      "text": ""
+    },
+    "boss2": {
+      "title": "Hexfang's wards break",
+      "text": ""
+    },
+    "boss3": {
+      "title": "The Archmage is undone",
+      "text": ""
+    }
+  },
   "merchantFamily": "spell",
   "levels": [
-    {"n": 1, "name": "Apprentice Courtyard", "kind": "static", "layout": "open", "edge": "wall", "speed": 7, "goal": {"type": "score", "need": 2500}, "text": "Spilled potions turned to molasses. Slow is not always bad. Reach 2,500.", "spawns": {"molasses": {"max": 2, "delay": [6000, 10000], "s": 30}, "golden": {"max": 1, "delay": [12000, 20000]}}, "bonus": {"type": "streak", "need": 4, "secs": 15, "reward": {"points": 300}}},
-    {"n": 2, "name": "Rune Circle", "kind": "static", "layout": "ring", "edge": "wall", "speed": 7, "goal": {"type": "apples", "need": 15}, "text": "Spike runes flash up on a beat. Learn the rhythm. Eat 15 apples.", "spawns": {"spikes": {"count": 6}}, "bonus": {"type": "fast", "need": 85, "reward": {"coins": 20}}},
-    {"n": 3, "name": "Storm Library", "kind": "static", "layout": "comb", "edge": "wall", "speed": 7.5, "goal": {"type": "survive", "need": 45}, "text": "Lightning strikes where the floor glows first. Survive 45 seconds.", "spawns": {"lightning": {"max": 2, "delay": [2500, 5000]}}, "bonus": {"type": "length", "need": 26, "reward": {"gems": 1}}},
-    {"n": 4, "name": "Hall of Mirrors", "kind": "static", "layout": "diamond", "edge": "mirror", "speed": 7.5, "goal": {"type": "score", "need": 4000}, "text": "Leave by one wall and the hall sends you out of another. Reach 4,000.", "spawns": {"spikes": {"count": 4}, "molasses": {"max": 1, "delay": [8000, 12000]}}, "bonus": {"type": "length", "need": 28, "reward": {"coins": 26}}},
-    {"n": 5, "name": "Lair: The First Hunt", "kind": "boss", "layout": "arena", "edge": "wall", "speed": 7.5, "goal": {"type": "boss", "fight": 1}, "text": "Hexfang blinks around the arena. Outlast him until his stamina breaks.", "spawns": {"lightning": {"max": 1, "delay": [5000, 9000]}}, "bonus": {"type": "streak", "need": 4, "secs": 20, "reward": {"points": 500}}},
-    {"n": 6, "name": "Wisp Wood", "kind": "enemy", "layout": "pillars", "edge": "wall", "speed": 8, "goal": {"type": "apples", "need": 18}, "text": "Wisps drift through walls and through you, if you let them. Eat 18.", "spawns": {"ghost": {"max": 2, "delay": [5000, 9000]}}, "bonus": {"type": "kills", "need": 2, "reward": {"coins": 32}}},
-    {"n": 7, "name": "The Familiar's Den", "kind": "enemy", "layout": "rooms", "edge": "wall", "speed": 8, "goal": {"type": "thief", "need": 3}, "text": "A runaway familiar stole the headmaster's spoon. Catch it three times.", "spawns": {"wasp": {"max": 2, "delay": [6000, 10000]}}, "bonus": {"type": "untouched", "reward": {"coins": 35}}},
-    {"n": 8, "name": "Spellbound Stacks", "kind": "enemy", "layout": "lanes", "edge": "wall", "speed": 8, "goal": {"type": "keys", "need": 3}, "text": "Three library keys, one locked reading room. Mind the wisps and the weather.", "spawns": {"ghost": {"max": 2, "delay": [6000, 10000]}, "lightning": {"max": 1, "delay": [4000, 7000]}}, "bonus": {"type": "streak", "need": 6, "secs": 20, "reward": {"points": 650}}},
-    {"n": 9, "name": "Astral Observatory", "kind": "enemy", "layout": "cross", "edge": "wall", "speed": 8.5, "goal": {"type": "score", "need": 6000}, "text": "A rival apprentice snake hunts the same apples. Bite its body to stun it. Reach 6,000.", "spawns": {"spikes": {"count": 4}}, "hunter": true, "bonus": {"type": "fast", "need": 110, "reward": {"gems": 1}}},
-    {"n": 10, "name": "Lair: The Armored Duel", "kind": "boss", "layout": "arena", "edge": "wall", "speed": 8.5, "goal": {"type": "boss", "fight": 2}, "text": "Hexfang's wards shine silver. Drain him, then bite through the wards.", "spawns": {"lightning": {"max": 1, "delay": [5000, 8000]}}, "bonus": {"type": "untouched", "reward": {"gems": 1}}},
-    {"n": 11, "name": "Ley Line Tunnel", "kind": "static", "layout": "comb", "edge": "wall", "speed": 7.5, "goal": {"type": "apples", "need": 12}, "text": "Weave through the comb and eat 12.", "spawns": {"flea": {"max": 2, "delay": [5000, 8000]}}, "bonus": {"type": "length", "need": 28, "reward": {"coins": 47}}},
-    {"n": 12, "name": "The Twisting Archive", "kind": "dynamic", "layout": "maze", "edge": "maze", "speed": 8, "goal": {"type": "relic", "item": "grimoire", "need": 1}, "text": "The Forbidden Grimoire is shelved somewhere in the endless stacks. Find it.", "spawns": {"ghost": {"max": 2, "delay": [6000, 10000]}}, "bonus": {"type": "fast", "need": 130, "reward": {"gems": 1}}},
-    {"n": 13, "name": "Glyph Field", "kind": "dynamic", "layout": "field", "edge": "maze", "speed": 8, "goal": {"type": "buttons", "need": 5, "ordered": true}, "text": "Five glyph plates, numbered. Press them in order or the field resets them.", "spawns": {"spikes": {"count": 6}}, "bonus": {"type": "spells", "need": 2, "reward": {"coins": 53}}},
-    {"n": 14, "name": "Pulse of the Spire", "kind": "dynamic", "layout": "pulse", "edge": "wall", "speed": 8.5, "goal": {"type": "score", "need": 7000}, "text": "The tower breathes walls in and out. Reach 7,000 between breaths.", "spawns": {"lightning": {"max": 1, "delay": [4000, 7000]}}, "bonus": {"type": "untouched", "reward": {"gems": 1}}},
-    {"n": 15, "name": "Lair: The Last Stand", "kind": "boss", "layout": "arena", "edge": "wall", "speed": 9, "goal": {"type": "boss", "fight": 3}, "text": "The wards are gone. Wear him out and bite until the Archmage falls.", "spawns": {"lightning": {"max": 2, "delay": [4000, 7000]}}, "bonus": {"type": "fast", "need": 195, "reward": {"gems": 2}}}
+    {
+      "n": 1,
+      "name": "Apprentice Courtyard",
+      "kind": "static",
+      "layout": "open",
+      "edge": "wall",
+      "speed": 7,
+      "goal": {
+        "type": "score",
+        "need": 2500
+      },
+      "text": "The courtyard is a spiral stair: out the right side, in the left one row lower. Top and bottom are walls. Reach 2,500 points.",
+      "edges": {
+        "left": "stair",
+        "right": "stair"
+      },
+      "exact": true,
+      "spawns": {
+        "molasses": {
+          "max": 2,
+          "delay": [
+            6000,
+            10000
+          ]
+        },
+        "golden": {
+          "max": 1,
+          "delay": [
+            12000,
+            18000
+          ]
+        }
+      },
+      "bonus": {
+        "type": "streak",
+        "need": 4,
+        "reward": {
+          "points": 300
+        },
+        "secs": 15
+      }
+    },
+    {
+      "n": 2,
+      "name": "Rune Circle",
+      "kind": "static",
+      "layout": "ring",
+      "edge": "wall",
+      "speed": 7,
+      "goal": {
+        "type": "apples",
+        "need": 15
+      },
+      "text": "Every side of the circle is a stair: out the right and you come in the left a row lower, out the bottom and you come in the top a column over. The runes (the spikes) beat on a time. Eat 15 apples.",
+      "edges": {
+        "top": "stair",
+        "bottom": "stair",
+        "left": "stair",
+        "right": "stair"
+      },
+      "exact": true,
+      "spawns": {
+        "spikes": {
+          "count": 6
+        }
+      },
+      "bonus": {
+        "type": "fast",
+        "need": 85,
+        "reward": {
+          "coins": 20
+        }
+      }
+    },
+    {
+      "n": 3,
+      "name": "Storm Library",
+      "kind": "static",
+      "layout": "comb",
+      "edge": "wall",
+      "speed": 7.5,
+      "goal": {
+        "type": "survive",
+        "need": 45
+      },
+      "text": "The shelves climb: leave through the top and you come out of the bottom a column to the right. The storm over the stacks flashes before it strikes. Survive 45 seconds.",
+      "edges": {
+        "top": "stair",
+        "bottom": "stair"
+      },
+      "exact": true,
+      "spawns": {
+        "lightning": {
+          "max": 2,
+          "delay": [
+            6000,
+            9500
+          ]
+        }
+      },
+      "bonus": {
+        "type": "length",
+        "need": 26,
+        "reward": {
+          "gems": 1
+        }
+      }
+    },
+    {
+      "n": 4,
+      "name": "Hall of Mirrors",
+      "kind": "static",
+      "layout": "diamond",
+      "edge": "wall",
+      "speed": 7.5,
+      "goal": {
+        "type": "score",
+        "need": 4000
+      },
+      "text": "The mirrors here aren't random any more: the left and right glass lead to each other, but flipped, so what leaves at the top of one comes in at the bottom of the other. Reach 4,000 points.",
+      "edges": {
+        "left": {
+          "kind": "link",
+          "to": "right",
+          "flip": true
+        },
+        "right": {
+          "kind": "link",
+          "to": "left",
+          "flip": true
+        }
+      },
+      "exact": true,
+      "spawns": {
+        "spikes": {
+          "count": 4
+        },
+        "molasses": {
+          "max": 1,
+          "delay": [
+            7000,
+            11000
+          ]
+        }
+      },
+      "bonus": {
+        "type": "length",
+        "need": 28,
+        "reward": {
+          "coins": 26
+        }
+      }
+    },
+    {
+      "n": 5,
+      "name": "Lair: The First Hunt",
+      "kind": "boss",
+      "layout": "arena",
+      "edge": "wall",
+      "speed": 7.5,
+      "goal": {
+        "type": "boss",
+        "fight": 1
+      },
+      "text": "Hexfang's shield is powered by crystals that flare up around the arena. Touch both of them before they dim and it knocks the wind out of him. Dodge until his stamina runs dry.",
+      "spawns": {
+        "lightning": {
+          "max": 1,
+          "delay": [
+            9000,
+            13000
+          ]
+        }
+      },
+      "bonus": {
+        "type": "streak",
+        "need": 4,
+        "secs": 20,
+        "reward": {
+          "points": 500
+        }
+      }
+    },
+    {
+      "n": 6,
+      "name": "Wisp Wood",
+      "kind": "enemy",
+      "layout": "pillars",
+      "edge": "wall",
+      "speed": 8,
+      "goal": {
+        "type": "apples",
+        "need": 18
+      },
+      "text": "Ghosts drift through the trees, and a mirror shade copies your every move from across the glade: when you go right it goes left, so don't meet it in the middle. Eat 18 apples.",
+      "exact": true,
+      "spawns": {
+        "ghost": {
+          "max": 2,
+          "delay": [
+            7000,
+            11000
+          ]
+        },
+        "reflection": {
+          "max": 1,
+          "delay": [
+            9000,
+            13000
+          ]
+        }
+      },
+      "bonus": {
+        "type": "kills",
+        "need": 2,
+        "reward": {
+          "coins": 32
+        }
+      }
+    },
+    {
+      "n": 7,
+      "name": "The Familiar's Den",
+      "kind": "enemy",
+      "layout": "rooms",
+      "edge": "wall",
+      "speed": 8,
+      "goal": {
+        "type": "thief",
+        "need": 3
+      },
+      "text": "Wardrobe doors link the four rooms (the glowing ones: go in one and come out past the other of its color). Stone gargoyles creep when you look away. Corner the thief three times.",
+      "exact": true,
+      "spawns": {
+        "wasp": {
+          "max": 2,
+          "delay": [
+            6000,
+            10000
+          ]
+        },
+        "gargoyle": {
+          "max": 1,
+          "delay": [
+            9000,
+            13000
+          ]
+        }
+      },
+      "bonus": {
+        "type": "untouched",
+        "reward": {
+          "coins": 35
+        }
+      }
+    },
+    {
+      "n": 8,
+      "name": "Spellbound Stacks",
+      "kind": "enemy",
+      "layout": "lanes",
+      "edge": "wall",
+      "speed": 8,
+      "goal": {
+        "type": "keys",
+        "need": 3
+      },
+      "text": "The stacks loop top to bottom, flipped. A gale sprite sits in the aisles and tugs you toward it a square at a time (the streaks show first). Find three keys, then the gate.",
+      "edges": {
+        "top": {
+          "kind": "link",
+          "to": "bottom",
+          "flip": true
+        },
+        "bottom": {
+          "kind": "link",
+          "to": "top",
+          "flip": true
+        }
+      },
+      "exact": true,
+      "spawns": {
+        "ghost": {
+          "max": 2,
+          "delay": [
+            7000,
+            11000
+          ]
+        },
+        "lightning": {
+          "max": 1,
+          "delay": [
+            8000,
+            12000
+          ]
+        },
+        "galesprite": {
+          "max": 1,
+          "delay": [
+            9000,
+            13000
+          ]
+        }
+      },
+      "bonus": {
+        "type": "streak",
+        "need": 6,
+        "reward": {
+          "points": 650
+        },
+        "secs": 20
+      }
+    },
+    {
+      "n": 9,
+      "name": "Astral Observatory",
+      "kind": "enemy",
+      "layout": "cross",
+      "edge": "wall",
+      "speed": 8.5,
+      "goal": {
+        "type": "score",
+        "need": 6000
+      },
+      "text": "The dome turns: each side leads to the next, clockwise (top to the right side, right to the bottom, bottom to the left, left to the top). Warding orbs circle the apples. Reach 6,000.",
+      "edges": {
+        "top": {
+          "kind": "link",
+          "to": "right"
+        },
+        "right": {
+          "kind": "link",
+          "to": "bottom"
+        },
+        "bottom": {
+          "kind": "link",
+          "to": "left"
+        },
+        "left": {
+          "kind": "link",
+          "to": "top"
+        }
+      },
+      "exact": true,
+      "spawns": {
+        "spikes": {
+          "count": 4
+        },
+        "orb": {
+          "max": 1,
+          "delay": [
+            8000,
+            12000
+          ]
+        }
+      },
+      "bonus": {
+        "type": "fast",
+        "need": 110,
+        "reward": {
+          "gems": 1
+        }
+      }
+    },
+    {
+      "n": 10,
+      "name": "Lair: The Armored Duel",
+      "kind": "boss",
+      "layout": "arena",
+      "edge": "wall",
+      "speed": 8.5,
+      "goal": {
+        "type": "boss",
+        "fight": 2
+      },
+      "text": "Three crystals flare at a time: touch them all within 24 seconds and his shield falls for a few seconds. Strike while it's down.",
+      "spawns": {
+        "lightning": {
+          "max": 1,
+          "delay": [
+            8000,
+            12000
+          ]
+        }
+      },
+      "bonus": {
+        "type": "untouched",
+        "reward": {
+          "gems": 1
+        }
+      }
+    },
+    {
+      "n": 11,
+      "name": "Ley Line Tunnel",
+      "kind": "static",
+      "layout": "comb",
+      "edge": "wall",
+      "speed": 7.5,
+      "goal": {
+        "type": "apples",
+        "need": 12
+      },
+      "text": "Ley lines run round the tunnel: the belts shove you an extra square the way their arrows point. Eat 12 apples.",
+      "exact": true,
+      "spawns": {
+        "flea": {
+          "max": 2,
+          "delay": [
+            5000,
+            9000
+          ]
+        }
+      },
+      "bonus": {
+        "type": "length",
+        "need": 28,
+        "reward": {
+          "coins": 47
+        }
+      }
+    },
+    {
+      "n": 12,
+      "name": "The Twisting Archive",
+      "kind": "dynamic",
+      "layout": "maze",
+      "edge": "maze",
+      "speed": 8,
+      "goal": {
+        "type": "relic",
+        "item": "grimoire",
+        "need": 1
+      },
+      "text": "The archive is dark, and gargoyles hold still while you look at them. Find the Forbidden Grimoire.",
+      "exact": true,
+      "dark": true,
+      "spawns": {
+        "ghost": {
+          "max": 1,
+          "delay": [
+            8000,
+            12000
+          ]
+        },
+        "gargoyle": {
+          "max": 1,
+          "delay": [
+            9000,
+            13000
+          ]
+        }
+      },
+      "bonus": {
+        "type": "fast",
+        "need": 130,
+        "reward": {
+          "gems": 1
+        }
+      }
+    },
+    {
+      "n": 13,
+      "name": "Glyph Field",
+      "kind": "dynamic",
+      "layout": "field",
+      "edge": "maze",
+      "speed": 8,
+      "goal": {
+        "type": "buttons",
+        "need": 5,
+        "ordered": true
+      },
+      "text": "An endless hall of glyphs. Press the plates in order, 1 to 5 (a wrong one resets them all), then the seal. Your reflection stalks you.",
+      "exact": true,
+      "spawns": {
+        "spikes": {
+          "count": 6
+        },
+        "reflection": {
+          "max": 1,
+          "delay": [
+            9000,
+            13000
+          ]
+        }
+      },
+      "bonus": {
+        "type": "spells",
+        "need": 2,
+        "reward": {
+          "coins": 53
+        }
+      }
+    },
+    {
+      "n": 14,
+      "name": "Pulse of the Spire",
+      "kind": "dynamic",
+      "layout": "pulse",
+      "edge": "wall",
+      "speed": 8.5,
+      "goal": {
+        "type": "score",
+        "need": 7000
+      },
+      "text": "The walls beat in diagonals, and the wizards' cannons turn a quarter after every shot. Reach 7,000 points.",
+      "exact": true,
+      "spawns": {
+        "lightning": {
+          "max": 1,
+          "delay": [
+            8000,
+            12000
+          ]
+        },
+        "cannon": {
+          "count": 2
+        }
+      },
+      "bonus": {
+        "type": "untouched",
+        "reward": {
+          "gems": 1
+        }
+      }
+    },
+    {
+      "n": 15,
+      "name": "Lair: The Last Stand",
+      "kind": "boss",
+      "layout": "arena",
+      "edge": "wall",
+      "speed": 9,
+      "goal": {
+        "type": "boss",
+        "fight": 3
+      },
+      "text": "Four crystals, and they have to be touched in order, 1 to 4. A wrong one darkens them all. His shield falls for only a moment.",
+      "spawns": {
+        "lightning": {
+          "max": 2,
+          "delay": [
+            7000,
+            11000
+          ]
+        }
+      },
+      "bonus": {
+        "type": "fast",
+        "need": 195,
+        "reward": {
+          "gems": 2
+        }
+      }
+    }
   ]
 }

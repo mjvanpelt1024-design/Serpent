@@ -244,7 +244,7 @@ function campHudUpdate() {
   const gp = goalProgress();
   $(".cp-goal .cp-bar span").style.width = (gp.f * 100).toFixed(1) + "%";
   $(".cp-goal .cp-bar").hidden = campGoal.type === "relic" || campGoal.type === "boss";
-  $(".cp-goal-n").textContent = campGoal.type === "boss" ? "" : gp.text;
+  $(".cp-goal-n").textContent = campGoal.type === "boss" ? (typeof bossObjLine === "function" ? bossObjLine(ts) : "") : gp.text;
   // time, distance, the challenge's twists
   const extra = [];
   if (campGoal.type === "survive" || campRun.mods.includes("clock")) extra.push(`<span class="cp-k">Time</span><span class="cp-big">${Math.floor(runMs / 1000)}s${campRun.mods.includes("clock") ? " <small>/ 90s</small>" : ""}</span>`);
@@ -286,7 +286,7 @@ function campHudUpdate() {
     const tired = bossExhausted(ts), charging = bossCharging(ts);
     st.classList.toggle("tired", tired);
     st.classList.toggle("charge", charging);
-    const st2 = boss.beaten ? "Beaten!" : ts < (boss.hardenUntil || 0) ? "Stone: nothing lands" : ts < (boss.phaseUntil || 0) ? "Mist: it passes through you" : tired ? "Exhausted: bite it!" : charging ? "Charging! Let it crash into you" : ts < boss.frozenUntil ? "Frozen" : ts < (boss.poisonUntil || 0) ? "Poisoned: tiring fast" : "Dodge its head, let it ram you";
+    const st2 = boss.beaten ? "Beaten!" : ts < (boss.hardenUntil || 0) ? "Stone: nothing lands" : ts < (boss.phaseUntil || 0) ? "Mist: it passes through you" : tired ? "Exhausted: bite it!" : charging ? "Charging! Let it crash into you" : ts < boss.frozenUntil ? "Frozen" : ts < (boss.poisonUntil || 0) ? "Poisoned: tiring fast" : (typeof bossObjLine === "function" && bossObjLine(ts)) || "Dodge its head, let it ram you";
     const res = boss.resist.length ? `<span class="cp-resist">Shrugs off ${boss.resist.map(id => escapeAttr((campItemDef(id) || { name: id }).name)).join(", ")}</span>` : "";
     // build 52: its traits, and how it takes damage tags
     const R = boss.rules || {}, word = l => (l || []).map(t => DAMAGE_NAMES[t].broad).join(", ");
@@ -296,7 +296,7 @@ function campHudUpdate() {
   }
 
   // the pointer to whatever the quest wants you to find
-  const tgt = ["keys", "buttons", "relic", "shards", "thief"].includes(campGoal.type) ? goalTarget() : null;
+  const tgt = ["keys", "buttons", "relic", "shards", "thief", "beacons", "hold", "haul"].includes(campGoal.type) ? goalTarget() : null;
   $(".cp-point").hidden = !tgt;
   if (tgt) {
     const ang = Math.atan2(tgt.dy, tgt.dx) * 180 / Math.PI + 90;

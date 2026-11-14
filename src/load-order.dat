@@ -112,7 +112,11 @@ campaign/camp-scenes.js
 campaign/camp-shops.js
 campaign/camp-shop-stage.js
 campaign/camp-arsenal.js
+campaign/camp-brains.js
 campaign/camp-bestiary.js
+campaign/camp-edges.js
+campaign/camp-objectives.js
+campaign/camp-hazards.js
 campaign/camp-kit.js
 campaign/camp-tree.js
 campaign/camp-home.js

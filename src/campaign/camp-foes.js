@@ -504,10 +504,11 @@ function campZoneSpawns(isl, n, def, spawns) {
   const F = ISLAND_FOES[isl] || {};
   const endlessLv = def.edge === "endless" || def.layout === "tunnel";
   Object.entries(F.swap || {}).forEach(([a, b]) => { if (spawns[a]) { spawns[b] = spawns[a]; delete spawns[a]; } });
-  if (F.add && (def.kind === "enemy" || (def.kind === "dynamic" && !endlessLv && n % 2 === 0))) Object.entries(F.add).forEach(([k, v]) => { if (!spawns[k]) spawns[k] = Object.assign({}, v); });
-  if (F.placed && def.kind === "static" && n > 1 && !endlessLv) Object.entries(F.placed).forEach(([k, v]) => { if (!spawns[k]) spawns[k] = Object.assign({}, v); });
+  // build 56: a level marked `exact` is designed spawn by spawn: only the swaps above and the zones it lists (`zones`) apply
+  if (!def.exact && F.add && (def.kind === "enemy" || (def.kind === "dynamic" && !endlessLv && n % 2 === 0))) Object.entries(F.add).forEach(([k, v]) => { if (!spawns[k]) spawns[k] = Object.assign({}, v); });
+  if (!def.exact && F.placed && def.kind === "static" && n > 1 && !endlessLv) Object.entries(F.placed).forEach(([k, v]) => { if (!spawns[k]) spawns[k] = Object.assign({}, v); });
   // the zones every island shares
-  if (!endlessLv) zoneOf(n).forEach(z => {
+  if (!endlessLv) (def.zones || zoneOf(n)).forEach(z => {
     if (z === "edge" && !spawns.sinkhole) spawns.sinkhole = { max: 1, delay: [9000, 14000] };
     if (z === "shop" && !spawns.popsicle) spawns.popsicle = { max: 2, delay: [5000, 9000], s: 40 };
     if (z === "trap" && !spawns.trap) spawns.trap = { count: 3 + (n % 2) };

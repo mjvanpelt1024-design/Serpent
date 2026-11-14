@@ -42,7 +42,7 @@
         const want = new Set();
         let start = null;
         F.board.forEach((row, y) => [...row].forEach((ch, x) => {
-          if (ch === "#" || ch === "P" || ch === "1" || ch === "3") want.add(cellKey(x * cell, y * cell));
+          if (ch === "#" || ch === "P" || ch === "1" || ch === "3" || ">v<^abcd".includes(ch)) want.add(cellKey(x * cell, y * cell));
           if (ch === "S") start = [x, y];
         }));
         // a pressure plate is placed at random and clears the wall under it (placePlates)
@@ -429,6 +429,160 @@
       check(dressed, "shops: every island's shop, tent and vault has its dressing pictures");
       const sword = campItemActs("scimitar") === "sword" && campItemActs("frostward") === "forcefield" && campItemActs("moth") === "firefly";
       check(sword, "items: new weapons, spells and familiars act like the ones they borrow from");
+    }
+
+    // ----- build 56: edges, tiles, enemy brains, hazards, boss objectives, new goals (docs/BUILD-56.md)
+    {
+      const here = (isl, n, goal) => { stop(); campStart(isl, n); entities = []; apples = []; rocks = []; popsicles = []; hazards = []; if (!goal) campObjs = []; currentHearts = 3; paused = false; reviveCountdown = 0; graceUntil = 0; Object.assign(campRun, { secondWind: false, echoReady: false, phoenix: false, pet: null, wards: {}, jellyUntil: 0 }); };
+      const put = (cx, cy, dx, dy, len = 1) => { snake.x = cx * cell; snake.y = cy * cell; snake.dx = dx * cell; snake.dy = dy * cell; snake.cells = [{ x: snake.x, y: snake.y }]; snake.maxCells = len; turnQueue = []; };
+      const hp = () => currentHearts * 8 + (campRun ? campRun.armor || 0 : 0);
+      const hd = () => [snake.x / cell, snake.y / cell];
+      const alive = () => !!campRun && !campRun.over && gameState === "PLAYING";
+      const dbg = () => `[state ${gameState}, run ${!!campRun}, over ${campRun && campRun.over}, hp ${hp()}, pos ${hd()}, dir ${snake.dx / cell},${snake.dy / cell}]`;
+      // edges
+      here("spire", 1); put(19, 5, 1, 0); stepSnake();
+      check(alive() && hd().join() === "0,6" && snake.dx > 0, "edges: a stair comes out the other side one row lower " + hd());
+      here("spire", 1); put(5, 0, 0, -1); stepSnake();
+      check(!alive(), "edges: a side left as a wall is still deadly");
+      here("spire", 4); put(0, 5, -1, 0); stepSnake();
+      check(alive() && hd().join() === "19,14" && snake.dx < 0, "edges: a flipped link comes out the far side, flipped " + hd());
+      here("spire", 9); put(5, 0, 0, -1); stepSnake();
+      check(alive() && hd().join() === "19,5" && snake.dx < 0, "edges: a link can lead to a chosen side (top to the right, heading in) " + hd());
+      here("hollow", 1); put(5, 0, 0, -1); stepSnake();
+      check(alive() && snake.dy === 0 && snake.dx !== 0 && snake.y === 0, "edges: a bumper turns you along the edge");
+      here("hollow", 2); const h0 = hp(); let turned = true;
+      for (let k = 0; k < 12 && hp() >= h0 && alive(); k++) { put(19, 5, 1, 0); stepSnake(); turned = turned && snake.dx === 0; }      // (a hazard ward in the test save can turn a prick aside)
+      check(alive() && hp() < h0 && turned, "edges: a briar pricks, then turns you " + dbg());
+      here("hollow", 4); put(19, 5, 1, 0); score = 100; stepSnake();
+      check(alive() && hd().join() === "0,5" && score === 60, "edges: a toll lets you through for its price (" + score + ")");
+      here("reef", 1); runMs = 0; put(0, 5, -1, 0); stepSnake();
+      check(alive() && hd().join() === "19,5", "edges: the tide is out and the side is open " + hd());
+      here("reef", 1); runMs = 6000; put(0, 5, -1, 0); stepSnake();
+      check(!alive(), "edges: the tide is in and the side is a wall");
+      here("crown", 1); put(19, 5, 1, 0); stepSnake();
+      check(!alive(), "edges: a lock holds until its condition is met");
+      here("crown", 1); campRun.apples = 8; put(19, 5, 1, 0); stepSnake();
+      check(alive() && hd().join() === "0,5", "edges: ...and then it's open " + hd());
+      // tiles inside the board
+      here("keep", 7); put(7, 4, -1, 0); stepSnake();
+      check(!alive(), "tiles: a one-way gate is a wall the wrong way");
+      here("keep", 7); put(5, 4, 1, 0); stepSnake();
+      check(alive() && hd().join() === "6,4", "tiles: ...and open the right way " + hd());
+      here("spire", 7); put(4, 9, 0, 1); stepSnake();
+      check(alive() && hd().join() === "15,11" && snake.dy > 0, "tiles: a linked door comes out past its partner " + hd());
+      // hazards
+      here("keep", 1); entities.push({ type: "conveyor", x: 5 * cell, y: 5 * cell, size: 1, small: false, spawnAt: 0, dir: 0 }); put(4, 5, 1, 0); stepSnake();
+      check(alive() && hd().join() === "6,5", "hazards: a belt shoves you an extra square " + hd());
+      here("keep", 1); put(8, 10, 1, 0);
+      { const t = { type: "turret", x: 0, y: 10 * cell, size: 1, small: false, spawnAt: 0, dir: 0, dir0: 0, nextAt: 1, fireAt: 1 }; entities.push(t); const hh = hp();
+        for (let k = 0; k < 12 && hp() >= hh; k++) { t.fireAt = 1; ENTITY_TYPES.turret.tick(t, performance.now() + 50); }      // (a hazard ward in the test save can turn a shot aside)
+        check(hp() < hh, "hazards: a turret's shot hits what's in its line " + dbg()); }
+      here("keep", 1); put(8, 3, 1, 0);
+      { const t = { type: "turret", x: 0, y: 10 * cell, size: 1, small: false, spawnAt: 0, dir: 0, dir0: 0, nextAt: 1, fireAt: 1 }; entities.push(t); const hh = hp(); ENTITY_TYPES.turret.tick(t, performance.now() + 50);
+        check(hp() === hh, "hazards: ...and misses what isn't"); }
+      here("keep", 1); put(6, 6, 1, 0);
+      { const m = { type: "mine", x: 6 * cell, y: 6 * cell, size: 1, small: false, spawnAt: 0 }; entities.push(m); ENTITY_TYPES.mine.touch(m, performance.now()); const hh = hp(); ENTITY_TYPES.mine.tick(m, performance.now() + 5000);
+        check(m.armed && hp() < hh, "hazards: a mine blows a moment after it's stepped on " + dbg()); }
+      here("keep", 1);
+      { const c = { type: "crumble", x: 6 * cell, y: 6 * cell, size: 1, small: false, spawnAt: 0 }; entities.push(c); const T = ENTITY_TYPES.crumble, t0 = performance.now(); T.touch(c, t0); T.tick(c, t0 + 2000);
+        check(c.pit === true, "hazards: a cracked flagstone falls a moment after it's stepped on"); put(6, 5, 0, 1); stepSnake(); check(!alive(), "hazards: ...and a pit is deadly"); }
+      here("keep", 1);
+      { const g = { type: "geyser", x: 8 * cell, y: 8 * cell, size: 1, small: false, spawnAt: 0 }; entities.push(g); put(8, 9, 0, 1, 1); const T = ENTITY_TYPES.geyser, t0 = performance.now(); g.nextAt = t0 - 1; T.tick(g, t0); const hh = hp(); T.tick(g, t0 + 2000);
+        check(g.state === "erupt" && g.plus && g.plus.length === 5, "hazards: a geyser bubbles, then erupts in a plus (a fire-immune test save may not feel it: " + (hh - hp()) + ")"); }
+      here("keep", 1);
+      { const b = { type: "blade", x: 10 * cell, y: 10 * cell, size: 1, small: false, spawnAt: 0 }; entities.push(b); put(2, 2, 1, 0); const T = ENTITY_TYPES.blade; let t0 = performance.now(); const xs = new Set(); for (let i = 0; i < 40; i++) { T.tick(b, t0 += 400); xs.add(b.x + "," + b.y); }
+        check(xs.size >= 3 && b.rail, "hazards: a saw blade rides back and forth along its rail"); }
+      // enemies: every new one thinks, moves where it should and never leaves the board
+      {
+        const ids = ["hound", "crow", "warden", "reflection", "gargoyle", "orb", "galesprite", "gnasher", "locust", "boar", "angler", "squid", "flyingfish", "shark", "golem", "cinderknight", "blastimp", "emberhound"];
+        const bad = [];
+        for (const id of ids) {
+          here("keep", 1);
+          for (let k = 0; k < 6; k++) apples.push({ x: (3 + k * 2) * cell, y: (4 + (k % 3) * 4) * cell, size: 1, small: false });
+          put(10, 10, 1, 0, 6);
+          for (let k = 0; k < 12; k++) brainTrail.push({ x: (4 + k) * cell, y: 10 * cell });
+          const T = ENTITY_TYPES[id], ts0 = performance.now();
+          if (!T) { bad.push(id + " missing"); continue; }
+          const e = { type: id, x: 3 * cell, y: 3 * cell, size: 1, small: false, spawnAt: ts0, expiresAt: ts0 + 1e9 };
+          if (T.spawn) T.spawn(e, ts0);
+          entities.push(e);
+          let moved = false, t = ts0;
+          const startPos = e.x + "," + e.y;
+          try {
+            for (let i = 0; i < 400; i++) {
+              t += 90;
+              if (i % 7 === 0) { snake.x = Math.max(0, Math.min(19, Math.round(snake.x / cell) + (i % 14 === 0 ? 1 : -1))) * cell; snake.cells[0] = { x: snake.x, y: snake.y }; }
+              if (i % 40 === 20) snake.dx = -snake.dx || cell;
+              currentHearts = 3; graceUntil = 0;
+              T.tick(e, t);
+              if (e.x + "," + e.y !== startPos) moved = true;
+              if (e.x < 0 || e.y < 0 || e.x >= boardSize || e.y >= boardSize) bad.push(`${id} left the board (${e.x},${e.y})`);
+              if (!alive()) break;
+            }
+          } catch (err) { bad.push(`${id} threw: ${err.message}`); }
+          if (!moved && !["gale", "sleeper"].includes((FOES[id] || {}).kind)) bad.push(`${id} never moved`);
+        }
+        check(!bad.length, "enemies: every new one thinks, moves and stays on the board" + (bad.length ? ": " + bad.join("; ") : ""));
+      }
+      // enemies that need a particular thing to happen
+      here("keep", 1); put(10, 10, 1, 0, 3);
+      { const e = { type: "reflection", x: 3 * cell, y: 3 * cell, size: 1, small: false, spawnAt: 0, expiresAt: 1e12 }; entities.push(e); let t = performance.now(); for (let i = 0; i < 60; i++) { t += 200; ENTITY_TYPES.reflection.tick(e, t); }
+        check(e.x === boardSize - cell - snake.x && e.y === snake.y, "enemies: a mirror shade ends up exactly across the board from you " + [e.x / cell, e.y / cell]); }
+      here("keep", 1); put(10, 10, 1, 0, 3);
+      { const e = { type: "gargoyle", x: 14 * cell, y: 10 * cell, size: 1, small: false, spawnAt: 0, expiresAt: 1e12 }; entities.push(e); const t0 = performance.now(); ENTITY_TYPES.gargoyle.tick(e, t0 + 2000); ENTITY_TYPES.gargoyle.tick(e, t0 + 3000);
+        check(e.x === 14 * cell && e.watched, "enemies: a gargoyle holds still while you face it");
+        snake.dx = -cell; ENTITY_TYPES.gargoyle.tick(e, t0 + 4000); ENTITY_TYPES.gargoyle.tick(e, t0 + 5000);
+        check(e.x < 14 * cell || e.y !== 10 * cell, "enemies: ...and creeps when you look away " + [e.x / cell, e.y / cell, e.watched, e.moveAt]); }
+      here("keep", 1); put(10, 10, 1, 0, 3);
+      { const e = { type: "boar", x: 4 * cell, y: 4 * cell, size: 1, small: false, spawnAt: 0, expiresAt: 1e12, asleep: true, sleeper: true }; entities.push(e); const t0 = performance.now(); ENTITY_TYPES.boar.tick(e, t0 + 1000); const was = e.asleep;
+        snake.x = 5 * cell; snake.y = 4 * cell; apples.push({ x: 6 * cell, y: 4 * cell, size: 1, small: false }); eatApple(1, false);
+        check(was === true && e.asleep === false, "enemies: a sleeper stays asleep until an apple is eaten near it"); }
+      here("keep", 1); put(10, 10, 1, 0, 3); apples.push({ x: 5 * cell, y: 5 * cell, size: 1, small: false });
+      { const e = { type: "crow", x: 5 * cell, y: 6 * cell, size: 1, small: false, spawnAt: 0, expiresAt: 1e12 }; entities.push(e); let t = performance.now(); for (let i = 0; i < 6 && !e.loaded; i++) { t += 600; ENTITY_TYPES.crow.tick(e, t); }
+        check(e.loaded && !apples.some(a => a.x === 5 * cell && a.y === 5 * cell), "enemies: a crow takes an apple off the board"); }
+      // boss objectives
+      {
+        const results = [];
+        for (const I of CAMP.islands) {
+          for (const fight of [1, 2, 3]) {
+            here(I.id, fight * 5);
+            if (!boss || !boss.obj) { results.push(`${I.id} ${fight}: no objective`); continue; }
+            const B = boss, O = boss.obj, t0 = performance.now() + 5000;
+            boss.objAt = 0; boss.retreatUntil = 0; tickBossObjective(t0);
+            const spawned = boss.objState === "active" && (O.kind === "bait" ? apples.some(a => a.bait) : campObjs.length > 0);
+            if (!spawned) results.push(`${I.id} ${fight}: nothing spawned`);
+            if (O.kind === "pylons") campObjs.filter(o => o.kind === "pylon").forEach(o => { o.on = true; });
+            if (O.kind === "beacons") campObjs.filter(o => o.kind === "beacon").forEach(o => { o.litUntil = t0 + 5000; });
+            if (O.kind === "lure") { for (let i = 0; i < O.n; i++) { const m = campObjs.find(o => o.kind === "mark"); if (!m) break; boss.cells[0] = { x: m.x, y: m.y }; tickBossObjective(t0 + 100 * i); } }
+            if (O.kind === "bait") { for (let i = 0; i < O.n; i++) { const b = apples.find(a => a.bait); if (!b) break; boss.cells[0] = { x: b.x, y: b.y }; tickBossObjective(t0 + 100 * i); } }
+            tickBossObjective(t0 + 500);
+            if (fight === 1) { if (!(boss.stamina < 1 || boss.beaten)) results.push(`${I.id} ${fight}: no wind knocked out`); }
+            else {
+              if (!(boss.openUntil > t0)) results.push(`${I.id} ${fight}: shield didn't drop`);
+              const before = fight === 2 ? B.armor : B.hearts;
+              boss.openUntil = 0; boss.exhaustedUntil = 0;
+              damageBoss(1, "bite");
+              const held = (fight === 2 ? B.armor : B.hearts) === before;
+              boss.openUntil = performance.now() + 5000;
+              damageBoss(1, "bite"); damageBoss(1, "bite");          // (Grimscale's last rally shrugs the first one off)
+              const landed = (fight === 2 ? B.armor : B.hearts) < before || B.beaten;
+              if (!held || !landed) results.push(`${I.id} ${fight}: shield held ${held}, then the blow landed ${landed}`);
+            }
+          }
+        }
+        check(!results.length, "bosses: every island's three fights run their objective, shield and window" + (results.length ? ": " + results.join("; ") : ""));
+      }
+      // new goals
+      here("reef", 8, true);
+      { const lamps = campObjs.filter(o => o.kind === "beacon"); lamps.forEach(l => touchCampObjs(l.x, l.y));
+        check(lamps.length === 3 && goalMet(), "goals: lighting every lamp at once wins the lamp level (" + lamps.length + ") " + JSON.stringify(campGoal)); }
+      here("reef", 3, true);
+      { const z = campObjs.find(o => o.kind === "zone"); snake.x = z.x; snake.y = z.y; const g = campGoal; tickHold(performance.now(), 1000); const a = g.have; snake.x = 0; snake.y = 0; tickHold(performance.now(), 1000);
+        check(!!z && a >= 0.99 && g.have < a, "goals: time in the ring counts, and time out of it drains"); }
+      here("hollow", 3, true);
+      { const g = campGoal; const pouch = campObjs.find(o => o.kind === "pouch"); touchCampObjs(pouch.x, pouch.y); const carried = g.carry; const d = campObjs.find(o => o.kind === "dropoff"); touchCampObjs(d.x, d.y);
+        check(carried && !g.carry && g.have === 1, "goals: carry a pouch to the drop-off"); }
+      stop();
     }
 
     check(errors.length === 0, "no errors in the console" + (errors.length ? ": " + errors.slice(0, 5).join(" | ") : ""));

@@ -367,3 +367,11 @@ the rooms at sixty moments each, every shop with and without stock and orders, a
 every one of its looks, and home base piece by piece; that only passes for pictures that haven't been repainted.
 `export <set>` (`icons`, `rooms`, `shops`, `keepers`, `home`, `coins`, `frames`, `map`, `emblems`, `stops`, `tree`, `npc`, `story`) writes a set from that old game into this folder and its index: it's
 how the folder was made, and with `--force` it overwrites files, repaints and all.
+
+## Build 56's pictures
+
+`tools/textures/content-pass-art.py` draws the 18 new enemies (`foes/`), eight hazards (`hazards/`), six power-ups (`powerups/`), the boss
+objectives' pieces and the haul goal's (`board/`: pylon, pylon-on, beacon, beacon-on, snare, pool, pouch, dropoff) and the **flea and popsicle**
+(`board/items/flea-9|19|39.png`, `popsicle-9|19|39.png`, `icons/popsicle.png`), each registered as `foe:<id>`, `board:<name>` or `item:<type>:<size>`.
+`tools/textures/items56-art.py` draws the 36 new items and the six runes' 48 stones. Both only write files that don't exist yet (`--force` redraws).
+Board items are one square (19 pixels, 9 for half-size squares, 39 for double) with the anchor at the square's corner; a popsicle's stick may poke into the square below.

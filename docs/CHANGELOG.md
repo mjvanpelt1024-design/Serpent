@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased: build 56, the content pass (docs/BUILD-56.md)
+
+- **New sides for the board.** A level can now name each of its four sides: besides open, wall and mirror there are
+  **stairs** (come out the other side one row lower, a spiral), **link** (always come out of a chosen side, optionally
+  flipped: the controlled version of the random mirror), **bumper** (turned along the edge), **briar** (pricks, then
+  turns you), **toll** (open for a price), **tide** (open, then a wall, as the sea comes and goes) and **lock** (a wall until
+  you've done something). Inside a board, **one-way gates** (`> < ^ v`) and **linked doors** (`a b c d`). Only the Keep is
+  plain; the others bring them in island by island (`src/campaign/camp-edges.js`).
+- **Enemies that think differently.** Fourteen new brains (`src/campaign/camp-brains.js`): one that aims where you are going,
+  one that follows your trail, your reflection, a patrolling sentry with a sight line, a watcher that only moves when
+  you are not facing it, an orbiter, knight-jumpers, a burrower that cracks the ground under where you will be, sleepers that
+  wake when you eat an apple near them, an apple thief, a pack that closes the ring, a bomb lobber, a gale that tugs you, and a
+  tail-biter. Eighteen new enemies use them (hound, crow, warden, mirror shade, gargoyle, warding orb, gale sprite, gnasher,
+  locust, boar, anglerfish, bomb squid, flying fish, shark, golem, cinder knight, bomb imp, ember hound). Each shows its tell
+  before it acts. Traps now catch enemies that walk onto them.
+- **Eight new hazards** (turret, cannon, geyser, conveyor belt, saw blade, mine, tar, crumbling floor), each with a tell, and
+  **six new power-ups** (sprout, shrink potion, boots, lantern, bell, anchor): `src/campaign/camp-hazards.js`.
+- **Bosses must be solved.** Fight 1 is a lesson (each success knocks a third off the boss's wind); fights 2 and 3 are shielded: blows
+  only land after you do that boss's own thing. Grimscale: lure him over snares. Hexfang: touch the crystals before they dim (in order in
+  the last fight). Gorgemaw: let him gorge on spoiled fruit. Leviathorn: light every lamp at once. Pyrrhus: lure him through pools
+  (`src/campaign/camp-objectives.js`). The map's card for a lair says what the weakness is.
+- **Three new goals**: light N lamps at once (lit lamps light the dark), hold the moving ring for N seconds, haul a pouch to the drop-off N times.
+- **Every level redesigned** (60 levels and 15 arenas, `tools/design-levels-56.py`): one idea each, a board of its own, the hazards and
+  enemies it wants and nothing automatic. The old per-island auto-spawns and the zones that put the same hazards in the same levels of
+  every island don't apply to them. Nightmare boards were re-baked from the new boards.
+- **36 new things**: weapons (Reef Cutlass, Gatehouse Halberd, Tide Trident, Reaper's Scythe, Arc Rapier, Magma Cleaver), four armor sets
+  (Tidecaller, Obsidian, Runeweave, Gleaner's), spells (Tidal Surge, Ember Rain, Shadow Step, Storm Aegis, Harvest Call, Hex Bolt), snacks
+  (Harvest Pie, Smoked Fish, Bee Balm, Crunch Bar), familiars (a ferret, a raven, a mole, an axolotl, a bat, a pup) and runes (Mending, the Anvil,
+  Thorns, the Tide, the Scholar, the Hunt).
+- **Art lined up.** The flea is a compact outlined bug inside its square at all three sizes (it was a 29 x 29 sprawl), the popsicle is a cone on a stick,
+  and 40 new sprites match the house style.
+- Checks: `node tools/play-check.mjs` runs every new system. Everything is explained in **docs/BUILD-56.md**.
+
 ## Unreleased: the map and the shops in 3D, and twenty new things
 
 - **The shops, the tents and the vaults are dressed** (`tools/textures/shop-rooms-art.py`). Every island's shop and

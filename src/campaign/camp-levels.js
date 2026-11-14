@@ -131,9 +131,16 @@ function campBoardFile(key) {
 /* A .level board -> { cells, purple, start, pulse: [setA, setB] }. Sandbox files (Play > Sandbox) read
    the same way: their walls, portal walls and start; their food and hazard squares count as open. */
 function campBoardFromFile(F) {
-  const out = { cells: [], purple: [], start: [3, 10], pulse: [[], []] };
+  const out = { cells: [], purple: [], start: [3, 10], pulse: [[], []], tiles: [], spots: {}, ents: [] };
+  const SPOT = { p: "pylon", l: "beacon", m: "mark", o: "bait", h: "hold" };
+  const GATE = { ">": "gate:r", "<": "gate:l", "^": "gate:u", "v": "gate:d" };
   F.board.forEach((row, y) => [...row].forEach((ch, x) => {
-    if (ch === "#") out.cells.push([x, y]);
+    // build 56: one-way gates (> < ^ v) and linked doors (a b c d), see camp-edges.js
+    if (typeof BOARD_ENTS !== "undefined" && BOARD_ENTS[ch]) out.ents.push([x, y, BOARD_ENTS[ch][0], BOARD_ENTS[ch][1]]);
+    else if (SPOT[ch]) (out.spots[SPOT[ch]] = out.spots[SPOT[ch]] || []).push([x, y]);
+    else if (GATE[ch]) out.tiles.push([x, y, GATE[ch]]);
+    else if ("abcd".includes(ch)) out.tiles.push([x, y, "door:" + ch]);
+    else if (ch === "#") out.cells.push([x, y]);
     else if (ch === "P") out.purple.push([x, y]);
     else if (ch === "S") out.start = [x, y];
     else if (ch === "1" || ch === "3") out.pulse[0].push([x, y]);
@@ -155,6 +162,9 @@ function campBuildStatic(def) {
   L.cells.forEach(([x, y]) => { if (x >= 0 && y >= 0 && x < N20 && y < N20) walls.set(cellKey(x * cell, y * cell), "red"); });
   // portal walls only lead somewhere in a maze; on a 20 x 20 board they stand as red walls
   (L.purple || []).forEach(([x, y]) => { if (x >= 0 && y >= 0 && x < N20 && y < N20) walls.set(cellKey(x * cell, y * cell), "red"); });
+  campSpots = L.spots || {};
+  if (typeof campBoardEnts !== "undefined") campBoardEnts = L.ents || [];
+  (L.tiles || []).forEach(([x, y, kind]) => { if (x >= 0 && y >= 0 && x < N20 && y < N20) walls.set(cellKey(x * cell, y * cell), kind); });
   const [sx, sy] = L.start;
   walls.delete(cellKey(sx * cell, sy * cell));
   snake.x = sx * cell;

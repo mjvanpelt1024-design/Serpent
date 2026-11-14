@@ -39,6 +39,10 @@ This file is the design and the map of where things live. The numbers themselves
 | Stat lines, armor sets, two-line trinkets, your resistances, weapon and spell tags and traits (build 52) | `camp-arsenal.js` |
 | Build 52's enemies, resistance power-ups, boss traits, champions, the sandbox's boss | `camp-bestiary.js` |
 | The title screen's numbers, posters, stickers and pins | `camp-title.js` |
+| Build 56: each side of the board its own kind, one-way gates, linked doors | `camp-edges.js` |
+| Build 56: fourteen enemy brains | `camp-brains.js` |
+| Build 56: boss objectives and shields, the lamp, ring and haul goals | `camp-objectives.js` |
+| Build 56: eight new hazards, six new power-ups | `camp-hazards.js` |
 | Story placeholder pages | `camp-story.js` |
 | The terminal's campaign commands, Shift+Alt+C | `src/dev/terminal/cmd-camp.js` |
 
@@ -619,6 +623,18 @@ crossed out after the fifth, and then its sticker (`textures/icons/stickers/maw.
 `nm`: `open`, `levels` ("crown:3" wins; 11 is the Maw), `maw` (the tunnels whose Maw is beaten), `roots`.
 Pictures: `tools/textures/nightmare-art.py` recolors each item's `look` into the deep's colors. **All the
 numbers are placeholders for playtesting.**
+
+## Build 56: the content pass
+
+Everything is explained, with every level, enemy and item in a table, in **docs/BUILD-56.md**. In short:
+
+- **Sides.** A level's `edges` (`top`, `right`, `bottom`, `left`) names each side: `open`, `wall`, `mirror`, `stair`, `link` (`to`, `flip`),
+  `bounce`, `briar`, `toll` (`pay`), `tide`, `lock` (`after`, `then`). Letters in a `.level` file: `> < ^ v` gates, `a b c d` linked doors.
+- **Levels** are written by `tools/design-levels-56.py`; a level with `"exact": true` spawns only what it lists (no island auto-spawns), and
+  `"zones": [...]` picks which of the shared zones apply to it.
+- **Enemies** have a `kind` from `camp-brains.js` and `"explicit": true` (only levels that list them have them).
+- **Bosses** have an objective per island in `foes.json` `objectives`; fights 2 and 3 are shielded until it is done.
+- **Goals** `beacons`, `hold` and `haul` join the others.
 
 ## Decided, and not done yet
 

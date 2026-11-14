@@ -1283,7 +1283,12 @@ function openMapGoal(key, j) {
   const modOf = m => CAMP.rules.challenge.mods.find(x => x.id === m) || { name: m, text: "" };
   // a boss: how to hurt it, and any spell it shrugs off
   const bossRes = def.goal.type === "boss" && I.boss.resist && I.boss.resist.length ? I.boss.resist.map(id => (campItemDef(id) || { name: id }).name).join(", ") : "";
-  const bossTip = def.goal.type === "boss" ? `<div class="mg-row"><span class="mg-k">How</span><span>Let its head crash into your body; don't run into it yourself.${def.goal.fight > 1 ? " Bite it while it's worn out." : ""} Swords, fireballs and force fields hurt it too.</span></div>` +
+  // build 56: each boss's own thing to do (content/campaign/foes.json "objectives"), and the level's special sides
+  const objective = def.goal.type === "boss" ? ((CAMP.foes || {}).objectives || {})[key] : null;
+  const objText = objective ? (def.goal.fight === 1 ? `${objective.hint} Each success knocks the wind out of it.` : `Its shield is up until you do this: ${objective.hint.charAt(0).toLowerCase()}${objective.hint.slice(1)} Strike while it's down.`) : "";
+  const sides = typeof campEdgeLines === "function" ? campEdgeLines(def) : [];
+  const sideRow = sides.length ? `<div class="mg-row"><span class="mg-k">Sides</span><span>${sides.map(escapeAttr).join("<br>")}</span></div>` : "";
+  const bossTip = def.goal.type === "boss" ? (objText ? `<div class="mg-row"><span class="mg-k">Its weakness</span><span>${escapeAttr(objText)}</span></div>` : "") + `<div class="mg-row"><span class="mg-k">How</span><span>Let its head crash into your body; don't run into it yourself.${def.goal.fight > 1 ? " Bite it while it's worn out." : ""} Swords, fireballs and force fields hurt it too.</span></div>` +
     (bossRes ? `<div class="mg-row"><span class="mg-k">Shrugs off</span><span>${escapeAttr(bossRes)}</span></div>` : "") : "";
   const quest = qi >= 0 ? `<div class="mg-quest"><p class="mg-label">Quest trial ${qi + 1} of ${Q.levels.length} · ${escapeAttr(I.npcs.challenger.name)}</p>` +
     Q.mods[qi].map(m => `<p class="mg-twist"><b>${escapeAttr(modOf(m).name)}</b> ${escapeAttr(modOf(m).text)}</p>`).join("") + `</div>` : "";
@@ -1293,7 +1298,7 @@ function openMapGoal(key, j) {
       <p class="mg-label">Objective</p>
       <p class="mg-goal">${escapeAttr(goalText(def.goal))}</p>
       <p class="mg-text">${escapeAttr(def.text || "")}</p>
-      ${quest}${bossTip}${bonus}
+      ${quest}${bossTip}${sideRow}${bonus}
       <div class="mg-row"><span class="mg-k">Reward</span><span>${coinHtml(key)} ${fmtInt(campRewardPreview(key, j, first))}${first ? " (first win)" : ""}, plus your points</span></div>
       ${rec && rec.wins ? `<div class="mg-row"><span class="mg-k">Best</span><span>${fmtInt(rec.best)}${rec.flawless ? " · flawless" : ""}</span></div>` : ""}
       <div class="mg-acts"><button class="btn" data-mg="back">Back</button>${qi >= 0 ? `<button class="btn btn-small" data-mg="plain">Normal run</button><button class="btn btn-purple" data-mg="go">Start trial</button>` : `<button class="btn btn-primary" data-mg="go">Start</button>`}</div>

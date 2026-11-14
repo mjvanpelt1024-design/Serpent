@@ -11,7 +11,10 @@ const LEVEL_FILE_EDGES = { wrap: "w", walls: "a", mirror: "m" };
 const LEVEL_FILE_SPEEDS = [5, 7, 10];
 const LEVEL_FILE_SPAWNERS = ["popsicle", "flea", "fire", "molasses",
   // build 52: the campaign's new enemies (content/campaign/foes.json; tools/tests/arsenal.test.js keeps the two in step)
-  "knightling", "scorpion", "sparkbeetle", "inkwraith", "mantis", "viper", "frostsprite", "urchin", "firebat"];
+  "knightling", "scorpion", "sparkbeetle", "inkwraith", "mantis", "viper", "frostsprite", "urchin", "firebat",
+  // build 56: eighteen more, on new brains (camp-brains.js)
+  "hound", "crow", "warden", "reflection", "gargoyle", "orb", "galesprite", "gnasher", "locust", "boar", "angler", "squid", "flyingfish", "shark",
+  "golem", "cinderknight", "blastimp", "emberhound"];
 
 /* Level object -> .level text. L must already be normalized. */
 function levelFileText(L) {

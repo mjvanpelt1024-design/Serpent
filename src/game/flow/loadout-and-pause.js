@@ -279,7 +279,10 @@ function resumeFromPause() {
   ["fastUntil", "slowUntil", "pauseUntil"].forEach(k => { if (fx[k] > pauseStartedAt) fx[k] += d; });
   if (graceUntil > pauseStartedAt) graceUntil += d;
   // build 46: every clock on the board waits while you're paused
-  entities.forEach(e => ["spawnAt", "expiresAt", "strikeAt", "blowAt", "openAt", "moveAt", "growAt", "hopAt"].forEach(k => { if (e[k]) e[k] += d; }));
+  entities.forEach(e => ["spawnAt", "expiresAt", "strikeAt", "blowAt", "openAt", "moveAt", "growAt", "hopAt",
+    // build 56: the new hazards' and enemies' clocks (camp-hazards.js, camp-brains.js)
+    "nextAt", "fireAt", "erupt", "upUntil", "crackAt", "mendAt", "warnAt", "alertUntil", "jumpAt", "wakeAt", "awakeUntil", "chaseUntil", "stunUntil", "throwAt", "windAt", "blowIn", "cool", "blinkAt", "nextOut", "outUntil", "upAt"
+  ].forEach(k => { if (e[k]) e[k] += d; }));
   apples.forEach(a => { if (a.bornAt) a.bornAt += d; if (a.rotUntil) a.rotUntil += d; });
   husks.forEach(h => { h.expiresAt += d; });
   ["shieldUntil", "freezeUntil", "starUntil", "phantomUntil", "lodeUntil", "frenzyUntil"].forEach(k => { if (buffs[k] > pauseStartedAt) buffs[k] += d; });

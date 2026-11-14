@@ -24,15 +24,20 @@ KIND_AT = {n: "static" for n in (1, 2, 3, 4, 11)} | {n: "enemy" for n in (6, 7, 
 LAYOUTS = {"open", "pillars", "rooms", "cross", "lanes", "ring", "comb", "diamond", "checker", "spiral", "arena", "tunnel", "maze", "field", "pulse"}
 STATIC_LAYOUTS = LAYOUTS - {"tunnel", "maze", "field", "pulse"}
 EDGES = {"wrap", "wall", "mirror", "endless", "maze"}
-GOALS = {"apples", "score", "length", "survive", "distance", "keys", "buttons", "relic", "shards", "thief", "boss"}
+GOALS = {"apples", "score", "length", "survive", "distance", "keys", "buttons", "relic", "shards", "thief", "boss", "beacons", "hold", "haul"}
 # a level's bonus challenge: type -> does it need a number to reach
 BONUSES = {"streak": True, "fast": True, "rocks": True, "length": True, "points": True, "untouched": False, "kills": True, "spells": True, "loot": True}
 BONUS_REWARDS = {"gems": (1, 10), "coins": (1, 5000), "points": (1, 100000)}
 RELICS = {"crown", "grimoire", "ladle", "pearl", "eye"}
 SPAWNS = {"popsicle", "flea", "fire", "molasses", "rock", "apple", "xp",
           "bramble", "wasp", "lightning", "ice", "bomb", "ghost", "spikes", "gust", "sinkhole",
-          "golden", "shears", "armor", "shield", "hourglass", "star", "phantom", "lodestone", "frenzy"}
-PLACED = {"rock", "bramble", "ice", "spikes"}          # these use count, not max + delay
+          "golden", "shears", "armor", "shield", "hourglass", "star", "phantom", "lodestone", "frenzy",
+          # build 56: the new hazards, the old ones the islands add, and the new power-ups (the new enemies come from foes.json)
+          "lava", "trap", "ember", "acid", "frost", "turret", "cannon", "geyser", "conveyor", "blade", "mine", "tar", "crumble",
+          "sprout", "shrink", "boots", "lantern", "bell", "anchor"}
+EDGE_KINDS = {"open", "wrap", "wall", "mirror", "stair", "link", "bounce", "briar", "toll", "tide", "lock"}
+SIDES = {"top", "right", "bottom", "left"}
+PLACED = {"rock", "bramble", "ice", "spikes", "lava", "trap", "turret", "cannon", "geyser", "conveyor", "blade", "mine", "tar", "crumble"}          # these use count, not max + delay
 ENDLESS_SPAWNS = {"rock", "flea", "popsicle"}         # the tunnel only rolls these, by rate
 FAMILIES = {"gear", "spell", "food", "pet", "rune"}     # sold by merchants, five or more items each (the shelf shows three at a time)
 # build 52: damage types (src/game/damage/damage.js, docs/DAMAGE.md). Each tag has a broad word and a narrow word.
@@ -44,7 +49,8 @@ DAMAGE_STATS = {f"{w}.{k}" for pair in DAMAGE_WORDS.values() for w in pair for k
 SPELL_STATS = {f"{w}.spells" for pair in DAMAGE_WORDS.values() for w in pair} | {"spellPower", "spellCharges"}
 WEAPON_TRAITS = {"burn", "chill", "shock", "toxin", "pierce", "cleave"}
 PIECES = {"weapon", "helmet", "body"}
-ENEMY_KINDS = {"chaser", "crawler", "charger", "drifter", "blinker", "lurker"}
+ENEMY_KINDS = {"chaser", "crawler", "charger", "drifter", "blinker", "lurker",
+               "ambusher", "shadow", "mirror", "sentry", "watcher", "orbiter", "leaper", "burrower", "sleeper", "pilferer", "pincer", "bomber", "gale", "tailbiter"}
 BOSS_TRAITS = {"charger", "blink", "summon", "trail", "enrage", "regen", "rally", "devour", "tide"}
 CHAMPION_ABILITIES = BOSS_TRAITS | {"stormcall", "frostbreath", "venomspit", "quake", "swarm", "phase", "harden"}
 # what a rune can do: src/campaign/camp-runes.js has the effect and the words for each
@@ -53,7 +59,9 @@ RUNE_STATS = {"applePoints", "points", "apples", "hazards", "speed", "money", "h
 SPECIAL_FAMILIES = {"vessel"}                         # never sold: found on the board or won
 CAUSES = {"boss", "bomb", "spikes", "hunter", "lightning", "ghost", "poison", "wasp", "bramble", "flea", "fire", "echo",
           "bee", "yellowjacket", "imp", "mole", "crab", "wisp", "ember", "acid", "frost", "lava", "trap", "rivalbonk",
-          "popsicle", "ice", "shears", "knightling", "scorpion", "sparkbeetle", "inkwraith", "mantis", "viper", "frostsprite", "urchin", "firebat"}
+          "popsicle", "ice", "shears", "knightling", "scorpion", "sparkbeetle", "inkwraith", "mantis", "viper", "frostsprite", "urchin", "firebat",
+          "briar", "turret", "cannon", "geyser", "blade", "mine",
+          "hound", "crow", "warden", "reflection", "gargoyle", "orb", "galesprite", "gnasher", "locust", "boar", "angler", "squid", "flyingfish", "shark", "golem", "cinderknight", "blastimp", "emberhound"}
 NPC_KINDS = ("merchant", "challenger", "banker")
 HATS = {"helm", "hennin", "tophat", "wizard", "hood", "fez", "chef", "beret", "straw", "shell", "tricorn", "horns", "crown", ""}
 EXTRAS = {"beard", "monocle", "mustache", "eyepatch", "none", ""}
@@ -63,6 +71,13 @@ STATS = {"levelsWon", "uniqueWins", "bossFights", "bossesSlain", "islandsOpen", 
 UPGRADE_IDS = {"applevalue", "orchard", "scoremult", "hearts", "bounty", "golden", "plating", "calm", "hazardward", "enemyward",
                "shorten", "recharge", "sturdy", "potent", "hearty", "lucky", "haggle", "restock", "wear", "exhaust", "bite",
                "petbond", "treasure", "salvage", "secondwind", "passive", "gemfinder", "runecraft", "mastery", "armorcap"}
+
+try:
+    with open(os.path.join(CAMP, "foes.json"), encoding="utf-8") as _f:
+        FOE_IDS = {e["id"] for e in json.load(_f).get("enemies", [])}
+except (OSError, ValueError):
+    FOE_IDS = set()
+SPAWNS |= FOE_IDS                                   # build 56: a level can name any enemy in foes.json
 
 problems = []
 
@@ -156,6 +171,23 @@ def check_island(isl, rel, families_used, currencies):
             check(layout == "tunnel", where, "distance goals only work in the tunnel")
         if gt == "buttons":
             check(num(g.get("need"), 1, 8), where, "buttons need 1-8 plates")
+        if gt == "beacons":
+            check(num(g.get("need"), 1, 6) and num(g.get("lit", 12), 4, 60), where, "beacons need 1-6 lamps and a lit time (4-60 s)")
+        if gt == "hold":
+            check(num(g.get("need"), 5, 300), where, "hold needs 5-300 seconds")
+        if gt == "haul":
+            check(num(g.get("need"), 1, 8), where, "haul needs 1-8 deliveries")
+        edges = lv.get("edges")
+        if edges is not None:
+            check(isinstance(edges, dict) and set(edges) <= SIDES, where, f"edges names sides: {sorted(SIDES)}")
+            for side, e in (edges or {}).items():
+                kind = e if isinstance(e, str) else (e or {}).get("kind")
+                check(kind in EDGE_KINDS, where, f"edges.{side}: \"{kind}\" isn't one of {sorted(EDGE_KINDS)}")
+                if isinstance(e, dict) and kind == "link":
+                    check(e.get("to") in SIDES, where, f"edges.{side}: a link needs `to` (a side)")
+                if isinstance(e, dict) and kind == "lock":
+                    check(isinstance(e.get("after"), dict), where, f"edges.{side}: a lock needs `after` (apples, score, secs or pieces)")
+            check(layout not in ("maze", "field", "tunnel"), where, "a maze, a field or a road has no sides of its own")
         bonus = lv.get("bonus")
         if check(isinstance(bonus, dict), where, "missing its bonus challenge (\"bonus\")"):
             bt = bonus.get("type")
@@ -379,9 +411,9 @@ def check_foes(fo, island_ids):
         ids.add(e.get("id"))
         check(e.get("kind") in ENEMY_KINDS, where, f"kind must be one of {sorted(ENEMY_KINDS)}")
         check(e.get("name") and e.get("label") and e.get("fact"), where, "needs a name, a label and a fact")
-        check(num(e.get("bite"), 0.5, 3) and num(e.get("steal", 0), 0, 1000), where, "bite (hearts) and steal (points) out of range")
+        check(num(e.get("bite"), 0, 3) and num(e.get("steal", 0), 0, 1000), where, "bite (hearts) and steal (points) out of range")
         check(all(i in island_ids for i in e.get("islands", [])) and e.get("islands"), where, "islands must be island ids")
-        check(num(e.get("from", 6), 1, 15), where, "from must be a level 1-15")
+        check(e.get("explicit") or num(e.get("from", 6), 1, 15), where, "from must be a level 1-15 (or the enemy is \"explicit\": only the levels that list it have it)")
         check_hit(e.get("hit"), where)
         check_rules_tags(e, where)
         if e.get("drops"):
