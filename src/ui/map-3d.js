@@ -98,7 +98,7 @@ function m3Init() {
     M3.layers.clouds = m3Layer(M3.sceneBack, M3_DEPTH.clouds, 0);
     M3.layers.coil = m3Layer(M3.sceneBack, M3_DEPTH.coil, 1);
     M3.layers.fog = m3Layer(M3.sceneFront, M3_DEPTH.fog, 0);
-    M3.layers.sea = m3Layer(M3.sceneFront, M3_DEPTH.sea, 1);
+    M3.layers.sea = m3Layer(M3.sceneFront, M3_DEPTH.sea, 1, 90);
     MAP_ORDER.forEach(key => { M3.isl[key] = m3MakeIsland(key); });
     M3.ready = true;
   } catch (e) {
@@ -117,18 +117,19 @@ function m3Tex(canvas) {
 }
 
 /* A card as big as the map (and a margin), at a depth: the picture on it is painted in map pixels */
-function m3Layer(scene, w, order) {
+function m3Layer(scene, w, order, strip = 0) {
   const c = document.createElement("canvas");
-  c.width = MAP_W + M3_PAD[0] * 2; c.height = MAP_H + M3_PAD[1] * 2;
-  const g = c.getContext("2d");
+  // strip: only this many map pixels at the very bottom (the sea), so very little is sent to the graphics card
+  c.width = MAP_W + M3_PAD[0] * 2; c.height = strip || MAP_H + M3_PAD[1] * 2;
+  const g = c.getContext("2d", { willReadFrequently: true });
   g.imageSmoothingEnabled = false;
   const tex = m3Tex(c);
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(c.width, c.height), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
-  mesh.position.set(MAP_W / 2, -MAP_H / 2, w);
+  mesh.position.set(MAP_W / 2, strip ? -(MAP_H + M3_PAD[1] - strip / 2) : -MAP_H / 2, w);
   mesh.renderOrder = order;
   mesh.frustumCulled = false;
   scene.add(mesh);
-  return { c, g, tex, mesh };
+  return { c, g, tex, mesh, strip };
 }
 function m3Clear(L) {
   L.g.setTransform(1, 0, 0, 1, 0, 0);
@@ -285,19 +286,21 @@ function m3MakeIsland(key) {
   // what's drawn live: the living details and the trail (one card), and the stops by row (back, middle, front)
   const rx = 250, y0 = Math.round(I.y - 140), y1 = Math.round(I.y + form.front + 120);
   O.rect = { x0: Math.round(I.x - rx), y0, w: rx * 2, h: y1 - y0 };
-  const card = (order, w) => {
-    const c = document.createElement("canvas"); c.width = O.rect.w; c.height = O.rect.h;
-    const g = c.getContext("2d"); g.imageSmoothingEnabled = false;
+  const card = (order, w, R = O.rect) => {
+    const c = document.createElement("canvas"); c.width = R.w; c.height = R.h;
+    const g = c.getContext("2d", { willReadFrequently: true }); g.imageSmoothingEnabled = false;
     const tex = m3Tex(c);
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(c.width, c.height), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
     mesh.renderOrder = order;
     mesh.frustumCulled = false;
-    mesh.position.set(O.rect.x0 + c.width / 2, -(O.rect.y0 + c.height / 2), w);
+    mesh.position.set(R.x0 + c.width / 2, -(R.y0 + c.height / 2), w);
     scene.add(mesh);
-    return { c, g, tex, mesh, w };
+    return { c, g, tex, mesh, w, R };
   };
-  O.live = card(12, 30);
-  O.band = { b: card(13, -23 * M3.C), m: card(14, -5 * M3.C), f: card(15, 17 * M3.C) };
+  O.live = card(12, 30, O.rect);
+  // the stops reach 150 to either side of the middle, a boss's banner or the home tree up to ~170 above their feet
+  O.brect = { x0: Math.round(I.x - 180), y0: Math.round(I.y - 175), w: 360, h: Math.round(form.front + 175 + 40) };
+  O.band = { b: card(13, -23 * M3.C, O.brect), m: card(14, -5 * M3.C, O.brect), f: card(15, 17 * M3.C, O.brect) };
   return O;
 }
 
@@ -358,9 +361,12 @@ function m3Look(t) {
 
 /* The part of the map on screen, in map pixels */
 function m3View() {
+  if (M3.view && M3.frame % 5) return M3.view;              // the screen's own measuring is slow: a few times a second is plenty
   const m = new DOMMatrix(getComputedStyle(mapWorldEl).transform);
   const s = (m.a || 1) * 2, vw = mapEl.clientWidth, vh = mapEl.clientHeight;
-  return { x0: (0 - m.e) / s - 40, x1: (vw - m.e) / s + 40, y0: (0 - m.f) / s - 40, y1: (vh - m.f) / s + 40 };
+  const v = { x0: (0 - m.e) / s - 60, x1: (vw - m.e) / s + 60, y0: (0 - m.f) / s - 60, y1: (vh - m.f) / s + 60 };
+  v.far = v.x1 - v.x0 > 560 || v.y1 - v.y0 > 700;          // the whole map in view
+  return (M3.view = v);
 }
 
 function m3Clouds(t) {
@@ -392,7 +398,7 @@ function m3FogSea(t) {
   MAP_ORDER.forEach(k => {
     const target = placeFogged(k) ? 1 : 0;
     if (mapFog[k] === undefined) mapFog[k] = target;
-    mapFog[k] += (target - mapFog[k]) * 0.06;
+    mapFog[k] += (target - mapFog[k]) * 0.12;
   });
   m3Clear(F);
   const g = F.g;
@@ -411,8 +417,10 @@ function m3FogSea(t) {
   });
   F.mesh.visible = any;
   if (any) F.tex.needsUpdate = true;
-  m3Clear(S);
   const sg = S.g;
+  sg.setTransform(1, 0, 0, 1, 0, 0);
+  sg.clearRect(0, 0, S.c.width, S.c.height);
+  sg.setTransform(1, 0, 0, 1, M3_PAD[0], -(MAP_H + M3_PAD[1] - S.strip));          // the strip's top is this far down the map
   for (let x = -M3_PAD[0]; x < MAP_W + M3_PAD[0]; x++) {
     const h = 10 + Math.round(Math.sin((x + t * 4) * 0.13) * 2 + Math.sin((x - t * 2.5) * 0.31) * 1.5);
     mapRect(sg, x, MAP_H - h, 1, h + M3_PAD[1], "#fbe9dc");
@@ -439,9 +447,11 @@ function m3Traveler(g, t, key, id) {
 function m3Island(O, t, view, trav) {
   const { key, I } = O;
   const fogged = placeFogged(key);
-  const art = islandArt(key);                    // keeps the old cache (its drips, the deep side) up to date
-  const tag = fogged ? "fog" : "on:" + pathTag(key);
-  if (O.tag !== tag) m3Rebuild(O, fogged, tag);
+  if (O.tag === null || (M3.frame + O.order) % 6 === 0) {
+    islandArt(key);                              // keeps the old cache (its drips, the deep side) up to date
+    const tag = fogged ? "fog" : "on:" + pathTag(key);
+    if (O.tag !== tag) m3Rebuild(O, fogged, tag);
+  }
   const by = bob(I, t);
   O.grp.position.set(I.x - O.cx, -(I.y - O.cy) - by, 0);
   O.props.visible = !fogged;
@@ -456,11 +466,14 @@ function m3Island(O, t, view, trav) {
   const R = O.rect;
   const seen = !(view.x1 < R.x0 || view.x0 > R.x0 + R.w || view.y1 < R.y0 || view.y0 > R.y0 + R.h);
   const cards = [O.live, O.band.b, O.band.m, O.band.f];
-  cards.forEach(c => { c.mesh.visible = !fogged; c.mesh.position.y = -(R.y0 + R.h / 2) - by; });
-  if (fogged || !seen || (M3.frame % 2 && O.drawn)) return;
+  cards.forEach(c => { c.mesh.visible = !fogged; c.mesh.position.y = -(c.R.y0 + c.R.h / 2) - by; });
+  // what moves is repainted (and sent to the graphics card) a few times a second, each island on its own beat;
+  // far out, where it's tiny, even less often
+  const every = view.far ? 6 : 3;
+  if (fogged || !seen || ((M3.frame + O.order) % every && O.drawn)) return;
   O.drawn = true;
   // clear the cards and paint what moves
-  cards.forEach(c => { c.g.setTransform(1, 0, 0, 1, 0, 0); c.g.clearRect(0, 0, c.c.width, c.c.height); c.g.setTransform(1, 0, 0, 1, -R.x0, -R.y0); });
+  cards.forEach(c => { c.g.setTransform(1, 0, 0, 1, 0, 0); c.g.clearRect(0, 0, c.c.width, c.c.height); c.g.setTransform(1, 0, 0, 1, -c.R.x0, -c.R.y0); });
   const lg = O.live.g;
   drawIsleLiving(lg, key, t, 0);
   try { if (typeof drawZoneCues === "function") drawZoneCues(lg, key, t); } catch (e) { /* the map can paint without them */ }
@@ -483,7 +496,9 @@ function m3PinW(pin) {
   return w;
 }
 function m3Pins(t, on) {
-  mapPinsEl.querySelectorAll(".map-pin").forEach(pin => {
+  if (!M3.pins || M3.pinsN !== mapPinsEl.childElementCount) { M3.pins = Array.from(mapPinsEl.querySelectorAll(".map-pin")); M3.pinsN = mapPinsEl.childElementCount; }
+  M3.pins.forEach(pin => {
+    if (pin.hidden && pin._m3s === "") return;
     const v = bob(ISLANDS[pin.dataset.area], t) * 2;
     if (pin._bob !== v) { pin._bob = v; pin.style.setProperty("--bob", v + "px"); }
     let ox = 0, oy = 0;
@@ -520,9 +535,10 @@ window.drawMap = function (ts) {
   drawSky(t);
   m3Look(t);
   const view = m3View();
-  if (M3.frame % 4 === 1 || !M3.cloudsDone) { m3Clouds(t); M3.cloudsDone = true; }
-  if (M3.frame % 2 === 0 || !M3.coilDone) { m3Coil(t); M3.coilDone = true; }
-  if (M3.frame % 2 === 0 || !M3.fogDone) { m3FogSea(t); M3.fogDone = true; }
+  // the big cards are sent to the graphics card only a few times a second: the clouds crawl, the sea rolls slowly
+  if (M3.frame % 8 === 1 || !M3.cloudsDone) { m3Clouds(t); M3.cloudsDone = true; }
+  if (M3.frame % 4 === 0 || !M3.coilDone) { m3Coil(t); M3.coilDone = true; }
+  if (M3.frame % 4 === 0 || !M3.fogDone) { m3FogSea(t); M3.fogDone = true; }
   const trav = camp ? travelerSpot() : null;
   MAP_ORDER.forEach(k => m3Island(M3.isl[k], t, view, trav));
   const r = M3.renderer;

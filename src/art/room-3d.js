@@ -57,7 +57,7 @@ function r3Room(key, w, h, flat, cls, mode) {
 function r3Layer(room, z, order) {
   const c = document.createElement("canvas");
   c.width = room.w + R3_PAD * 2; c.height = room.h + R3_PAD * 2;
-  const g = c.getContext("2d");
+  const g = c.getContext("2d", { willReadFrequently: true });
   g.imageSmoothingEnabled = false;
   const tex = new THREE.CanvasTexture(c);
   tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.generateMipmaps = false;
@@ -122,9 +122,12 @@ function r3Look(room, t, k = 0.1) {
     0, 0, -1 / R3_ZR, 0,
     0, 0, 0, 1);
   room.cam.projectionMatrixInverse.copy(room.cam.projectionMatrix).invert();
+  room.k = room.canvas.clientWidth / room.w || 1;     // measured once a frame, before anything is moved
 }
 function r3Render(room) {
-  room.L.forEach(L => { L.tex.needsUpdate = true; });
+  room.n = (room.n || 0) + 1;
+  // the walls and the shelf change slowly: they go to the graphics card every other frame
+  room.L.forEach((L, i) => { L.tex.needsUpdate = L.still ? room.n === 1 : !(L.slow && room.n % 2); });
   room.r.render(room.scene, room.cam);
   if (!room.shown) {
     room.shown = true;
@@ -141,7 +144,7 @@ function r3Hide(room) {
 }
 /* A button laid over a card rides the card's slide: its offset in the room's pixels, scaled to the screen */
 function r3Ride(room, el, z) {
-  const k = room.canvas.clientWidth / room.w || 1;
+  const k = room.k || 1;
   const s = `${(room.sx * z * k).toFixed(1)}px ${(room.sy * z * k).toFixed(1)}px`;
   if (el._r3 !== s) { el._r3 = s; el.style.translate = s; }
 }
@@ -153,12 +156,12 @@ const r3FlatStage = drawStage;
 function r3ShopRoom() {
   const room = r3Room("shop", SS_W, SS_H, ssCanvas, "ss-3d", "overlay");
   if (!room || room.L.length) return room;
-  room.B = r3Layer(room, R3_SHOP_Z.back, 0);
+  room.B = r3Layer(room, R3_SHOP_Z.back, 0); room.B.slow = true;
   room.farDust = r3Dust(room, 22, -45, -30, 1, 0xfff0c8);
-  room.M = r3Layer(room, R3_SHOP_Z.mid, 2);
+  room.M = r3Layer(room, R3_SHOP_Z.mid, 2); room.M.slow = true;
   room.I = r3Layer(room, R3_SHOP_Z.items, 3);
   room.K = r3Layer(room, R3_SHOP_Z.keeper, 4);
-  room.F = r3Layer(room, R3_SHOP_Z.front, 5);
+  room.F = r3Layer(room, R3_SHOP_Z.front, 5); room.F.slow = true;
   room.nearDust = r3Dust(room, 14, 34, 52, 6, 0xffffff);
   return room;
 }
@@ -224,13 +227,13 @@ function r3NpcRoom() {
   const flat = document.getElementById("cs-art");
   const room = r3Room("npc", ART_W, ART_H, flat, "book-art scene-banner ss-3d-npc", "swap");
   if (!room || room.L.length) return room;
-  room.B = r3Layer(room, R3_NPC_Z.back, 0);
+  room.B = r3Layer(room, R3_NPC_Z.back, 0); room.B.slow = true;
   room.farDust = r3Dust(room, 14, -40, -25, 1, 0xfff0c8);
-  room.M = r3Layer(room, R3_NPC_Z.mid, 2);
+  room.M = r3Layer(room, R3_NPC_Z.mid, 2); room.M.slow = true;
   room.K = r3Layer(room, R3_NPC_Z.keeper, 3);
-  room.F = r3Layer(room, R3_NPC_Z.front, 4);
+  room.F = r3Layer(room, R3_NPC_Z.front, 4); room.F.slow = true;
   room.nearDust = r3Dust(room, 8, 30, 44, 5, 0xffffff);
-  room.V = r3Layer(room, 0, 6);
+  room.V = r3Layer(room, 0, 6); room.V.still = true;           // the vignette never changes: sent once
   return room;
 }
 /* The same room drawScene paints flat (drawNpcScene), cut into its cards */
