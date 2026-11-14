@@ -105,9 +105,9 @@ body.menu-full #stage > #screen-campinv { --side: max(0.75em, calc((100vw - 64em
 body.menu-full #stage > #screen-campshop.ss-on { --side: max(0.6em, calc((100vw - 60em) / 2)); }
 .ss-view {
   position: relative;
-  width: 100%;
+  /* square pixels: as wide as the window allows, but never taller than the window (a wide window used to squash it) */
+  width: min(100%, calc((100vh - var(--bar) - 9em) * 1.6));
   aspect-ratio: 160 / 100;
-  max-height: calc(100vh - var(--bar) - 9em);
   margin: 0 auto 1em;
   overflow: hidden;
   box-shadow: 0 0 0 calc(2 * var(--px)) #0b0907, 0 0 0 calc(4 * var(--px)) var(--isl, #c8a050), 0 calc(5 * var(--px)) 0 rgba(0, 0, 0, 0.45);
@@ -131,8 +131,9 @@ body.menu-full #stage > #screen-campshop.ss-on { --side: max(0.6em, calc((100vw 
   display: inline-flex; align-items: center; gap: 0.2em;
 }
 .ss-tag .coin { width: 1em; height: 1em; }
-.ss-tag.price.can { color: #ffe08a; }
-.ss-tag.sold { color: #9a9088; }
+.ss-tag.price, .ss-tag.sold { font-size: clamp(9px, 0.82em, 15px); font-weight: 700; color: #7a2a1a; background: #f0e0b0; box-shadow: 0 0 0 var(--px) #3a2410, 0 calc(2 * var(--px)) 0 var(--px) rgba(0, 0, 0, 0.4); }
+.ss-tag.price.can { color: #1f5a1a; background: #fff0c0; }
+.ss-tag.sold { color: #7a6a58; background: #cfc2a2; }
 .ss-tag.empty { color: #c8b8a0; bottom: -1.2em; }
 .ss-tag.gems, .ss-tag.sell { bottom: auto; top: -1.4em; }
 .ss-tag.ws { bottom: auto; top: 0.2em; font-size: clamp(8px, 0.68em, 12px); }

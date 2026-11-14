@@ -175,6 +175,7 @@ window.drawStage = function (t, ts) {
   // the walls, then the shelf and awning and the workshop's things
   texDraw(B.g, `shop:${shopIsl}:back`, 0, 0);
   if (SS_WALL_FX[shopIsl]) SS_WALL_FX[shopIsl](B.g, t);
+  texDraw(B.g, `shop:${shopIsl}:decor`, 0, 0);
   r3Edges(room, B);
   texLayer(M.g, `shop:${shopIsl}:middle`, 0, 0);
   texPaint(M.g, "shop:awning-shadow", SS_ROOM, 10);
@@ -186,6 +187,7 @@ window.drawStage = function (t, ts) {
     const x = SPOT_X(i), o = m && m.stock.find(s => s.spot === i);
     if (!o) { texDraw(I.g, "shop:sold-out", x - 8, 21); continue; }
     const bob = o.sold ? 0 : Math.round(Math.sin(t * 2 + i) * 0.7);
+    if (!o.sold) ssItemGlow(I.g, x, 27, rarityColor(o.rarity), t, i);
     I.g.globalAlpha = o.sold ? 0.3 : 1;
     const id = o.recipe ? "scroll" : CAMP.itemById[o.id].family === "rune" ? `ci:${o.id}:${RUNE_GRADES8[rarityIdx(o.rarity) * 2]}` : "ci:" + o.id;
     I.g.drawImage(texCanvas(id, "gift"), x - 12, 16 + bob, 24, 24);
@@ -200,7 +202,7 @@ window.drawStage = function (t, ts) {
   const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
   k.x = k.from + (k.to - k.from) * e;
   const moving = p < 1 && k.from !== k.to;
-  const kx = Math.round(k.x), ky = Math.round(98 - 16 * Math.max(0, Math.min(1, (k.x - 92) / 196))) + (moving ? Math.round(Math.sin(t * 22) * 1) : 0);
+  const kx = Math.round(k.x), ky = Math.round(98 - 6 * Math.max(0, Math.min(1, (k.x - 92) / 196))) + (moving ? Math.round(Math.sin(t * 22) * 1) : 0);
   K.g.save();
   if (moving && k.to < k.from) { K.g.translate(kx * 2, 0); K.g.scale(-1, 1); }
   K.g.scale(4, 4);
@@ -256,14 +258,17 @@ function r3NpcPaint(room, key, kind, t) {
     r3Edges(room, F);
   } else if (kind === "challenger") {
     texLayer(M.g, `npc:${key}:challenger`, 0, 0);
+    texDraw(M.g, `npc:${key}:challenger-decor`, 0, 0);
     for (let i = 0; i < 12; i++) { const x = 4 + i * 14, d = Math.round(Math.sin(t * 2 + i) * 0.8); R(x, 3, 1, 1, "#5a3a20"); for (let j = 0; j < 4; j++) R(x - 3 + j, 4 + j + d, 7 - j * 2, 1, i % 2 ? "#ffd23f" : "#c0392b"); }
     const tx = 128, ty = 30;
     if (Math.sin(t * 0.8) > 0.2) { R(tx - 12, ty - 1, 11, 1, "#8a6a4a"); R(tx - 13, ty - 2, 2, 3, "#e8e8e8"); }
     [20, 152].forEach((x, i) => { km.flame(x + 1, 30, 7, i * 2); km.glow(x + 1, 26, 12, "rgba(255,170,60,ALPHA)", 0.3); });
     npcKeeper(K.g, key, kind, 72, 57, t);
-    r3Edges(room, M);
+    texDraw(F.g, `npc:${key}:challenger-front`, 0, 0);
+    r3Edges(room, M); r3Edges(room, F);
   } else {
     texLayer(M.g, `npc:${key}:banker`, 0, 0);
+    texDraw(M.g, `npc:${key}:banker-decor`, 0, 0);
     const vx = 118, vy = 24, a = t * 0.4;
     for (let s = 0; s < 6; s++) { const ang = a + s * Math.PI / 3; for (let r = 2; r < 10; r++) R(vx + Math.cos(ang) * r, vy + Math.sin(ang) * r, 1, 1, "#d8d8e0"); }
     texLayer(F.g, `npc:${key}:banker-front`, 0, 0);

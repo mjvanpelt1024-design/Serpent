@@ -2,6 +2,19 @@
 
 ## Unreleased: the map and the shops in 3D, and twenty new things
 
+- **The shops, the tents and the vaults are dressed** (`tools/textures/shop-rooms-art.py`). Every island's shop and
+  workshop now has things on its walls (banners, a crossed-swords shield and wall lamps at the Keep; a moon window and
+  hanging stars at the Spire; herbs and pans at the Hollow; portholes, a net and a life ring at the Reef; chains, a
+  skull and ember vents at the Crown), a window or lamp with its light, a tool rack or hood over the forge, barrels
+  and sacks, and a proper counter of its own (carved panels, the island's trim, a cloth runner, a ledger and a coin
+  dish) instead of one plain brown one for everybody. The things on the shelf breathe a glow in their rarity's color,
+  and their prices are little parchment tags. The challenger's tent has a rug, a weapon rack, banners, hay and sacks;
+  the vault a tiled floor, hanging lamps and sacks of coin. The cards and workshop windows have a clearer layout
+  (a heading with a gold rule, the item's picture in its rarity's glow, good / weak / legendary lines with a colored
+  edge), and the quest and bank panels share the card's gold frame, with a brass slider. The shop's picture no longer
+  gets squashed in a wide, short window (its pixels are square now and it keeps its shape), and it sits centered
+  (it had been shifted a little to one side, cutting off the first thing on the shelf). The keeper stands lower
+  behind the counter so it doesn't hide the shelf.
 - **The map is 3D** (three.js, `src/ui/map-3d.js`). Every island is still painted from its own pictures, but the
   pictures are now wrapped on real shapes: the grassy top is a slab that tilts away from you, the rock under it tapers
   to a point (both worked out from the island's outline), the trees, houses and signposts stand up out of the grass,

@@ -240,6 +240,16 @@ const SS_WORK_FX = {
     ssParcels(g, "forge", 110, 22, 42, t);
   }
 };
+/* A soft glow in the thing's rarity color behind it on the shelf, breathing a little (build 56) */
+function ssItemGlow(g, x, y, color, t, i) {
+  const [r, gg, b] = hexRgb(color);
+  const a = 0.2 + Math.sin(t * 1.6 + i * 1.3) * 0.05;
+  const gr = g.createRadialGradient(x, y, 1, x, y, 19);
+  gr.addColorStop(0, `rgba(${r},${gg},${b},${a})`);
+  gr.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+  g.fillStyle = gr;
+  g.fillRect(x - 20, y - 20, 40, 40);
+}
 function drawStage(t, ts) {
   const g = ssCanvas.getContext("2d");
   g.imageSmoothingEnabled = false;
@@ -247,6 +257,7 @@ function drawStage(t, ts) {
   const fl = n => Math.round(Math.sin(t * 9 + n) * 1);
   texDraw(g, `shop:${shopIsl}:back`, 0, 0);
   if (SS_WALL_FX[shopIsl]) SS_WALL_FX[shopIsl](g, t);
+  texDraw(g, `shop:${shopIsl}:decor`, 0, 0);           // build 56: what hangs and stands on the walls
   texLayer(g, `shop:${shopIsl}:middle`, 0, 0);
   texPaint(g, "shop:awning-shadow", SS_ROOM, 10);
   SS_WORK_FX[ws](g, t, fl);
@@ -257,6 +268,7 @@ function drawStage(t, ts) {
     const x = SPOT_X(i), o = m && m.stock.find(s => s.spot === i);
     if (!o) { texDraw(g, "shop:sold-out", x - 8, 21); continue; }
     const bob = o.sold ? 0 : Math.round(Math.sin(t * 2 + i) * 0.7);
+    if (!o.sold) ssItemGlow(g, x, 27, rarityColor(o.rarity), t, i);
     g.globalAlpha = o.sold ? 0.3 : 1;
     const id = o.recipe ? "scroll" : CAMP.itemById[o.id].family === "rune" ? `ci:${o.id}:${RUNE_GRADES8[rarityIdx(o.rarity) * 2]}` : "ci:" + o.id;
     g.drawImage(texCanvas(id, "gift"), x - 12, 16 + bob, 24, 24);
@@ -272,7 +284,7 @@ function drawStage(t, ts) {
   k.x = k.from + (k.to - k.from) * e;
   const moving = p < 1 && k.from !== k.to;
   // behind the counter in the shop, standing on the floor in the workshop
-  const kx = Math.round(k.x), ky = Math.round(98 - 16 * Math.max(0, Math.min(1, (k.x - 92) / 196))) + (moving ? Math.round(Math.sin(t * 22) * 1) : 0);
+  const kx = Math.round(k.x), ky = Math.round(98 - 6 * Math.max(0, Math.min(1, (k.x - 92) / 196))) + (moving ? Math.round(Math.sin(t * 22) * 1) : 0);
   g.save();
   if (moving && k.to < k.from) { g.translate(kx * 2, 0); g.scale(-1, 1); }
   // the keeper, four times the size of the one on the map

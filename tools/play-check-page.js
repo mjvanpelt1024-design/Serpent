@@ -425,6 +425,8 @@
       check(["moss", "glass", "pilgrim"].every(sid => CAMP.items.filter(i => i.set === sid).map(i => i.piece).sort().join() === "body,helmet"), "items: each new armor set is a helmet and a body piece");
       check(CAMP.items.filter(i => i.acts).every(i => CAMP.itemById[i.acts]), "items: everything that borrows a behavior borrows a real one");
       check(typeof M3 !== "undefined" && typeof R3 !== "undefined", "3D: the map's and the rooms' modules are loaded");
+      const dressed = CAMP.islands.every(I => ["decor", "front"].every(n => !!texResolve(`shop:${I.id}:${n}`)) && ["challenger-decor", "challenger-front", "banker-decor"].every(n => !!texResolve(`npc:${I.id}:${n}`)));
+      check(dressed, "shops: every island's shop, tent and vault has its dressing pictures");
       const sword = campItemActs("scimitar") === "sword" && campItemActs("frostward") === "forcefield" && campItemActs("moth") === "firefly";
       check(sword, "items: new weapons, spells and familiars act like the ones they borrow from");
     }

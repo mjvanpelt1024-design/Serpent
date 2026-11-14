@@ -76,9 +76,13 @@ textures/
 │   │                     accent)
 │   ├── keepers/          the fifteen shopkeepers, <island>-<role>.png, as sprite sheets (below)
 │   └── shops/            each island's shop and workshop: <island>/back.png (the walls),
-│                         middle.png (the workshop and the shop's shelf), the things that move in that
-│                         workshop; counter.png (in front of the keeper, every shop); shared/ for the
-│                         order parcels, the glint, the sold-out box, sale tag, rarity ribbon, lantern
+│                         decor.png (what hangs and stands on the walls, over back.png), middle.png (the
+│                         workshop and the shop's shelf), the things that move in that workshop;
+│                         <island>/counter.png (in front of the keeper; counter.png in shops/ is the
+│                         old shared one it was drawn from); shared/ for the order parcels, the glint,
+│                         the sold-out box, sale tag, rarity ribbon, lantern. The tent and the vault
+│                         have challenger-decor.png, challenger-front.png and banker-decor.png next to
+│                         their other pictures in npc/<island>/ (all drawn by tools/textures/shop-rooms-art.py)
 └── icons/                everything else: pictures asked for by name (avatars, the old-style
     ├── badges/           upgrades and items), the corner marks over some of them,
     ├── cursors/          the brass pointer and the gloved hand,

@@ -263,6 +263,5 @@
 #map-world { translate: calc(var(--mx) * var(--look) * -1) calc(var(--my) * var(--look) * -1); }
 #map-sky { translate: calc(var(--mx) * var(--look) * -0.35) calc(var(--my) * var(--look) * -0.35); scale: 1.05; }
 #home-world { translate: calc(var(--mx) * var(--look) * -1) calc(var(--my) * var(--look) * -1); }
-.ss-track { translate: calc(var(--mx) * var(--look) * -0.8) calc(var(--my) * var(--look) * -0.8); scale: 1.05; transform-origin: 75% 50%; }
-.shop-stage.on-work .ss-track { transform-origin: 25% 50%; }
+.ss-track { translate: calc(var(--mx) * var(--look) * -0.8) calc(var(--my) * var(--look) * -0.8); scale: 1.05; transform-origin: 25% 50%; }
 #screen-campshop #cs-art { translate: calc(var(--mx) * var(--look) * -0.5) calc(var(--my) * var(--look) * -0.5); }
