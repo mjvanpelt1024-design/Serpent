@@ -39,7 +39,7 @@
 .node-arrow.quest { --fxb: var(--fx-btn-purple); --fxbd: var(--fx-btn-purple-down); color: #fff; }
 
 /* a trial's objective card: violet, with its twists */
-.map-goal.quest .mg-card { border-image-source: var(--fx-plate-violet); }
+.map-goal.quest .mg-card { border-image-source: var(--fx-window-violet); }
 .mg-quest { margin: 0.4em 0; padding: 0.35em 0.5em; background: rgba(122, 42, 208, 0.22); box-shadow: inset 0 0 0 var(--px) rgba(192, 112, 255, 0.55); text-align: left; }
 .mg-quest .mg-label { color: #e2b4ff; margin: 0 0 0.2em; }
 .mg-twist { margin: 0.15em 0; font-size: 0.78em; line-height: 1.3; }

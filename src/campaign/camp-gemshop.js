@@ -16,7 +16,8 @@
 "use strict";
 
 CAMP_REPAIRS.push(c => {
-  if (!c.boosts) c.boosts = { surge: 0, lucky: 0 };
+  if (!c.boosts) c.boosts = { surge: 0, lucky: 0, revive: 0 };
+  if (c.boosts.revive == null) c.boosts.revive = 0;
   if (!c.gemBought) c.gemBought = {};
   if (!c.gemDaily) c.gemDaily = 0;
 });
@@ -55,17 +56,21 @@ function gemOfferWhat(o) {
   if (o.gems) bits.push(`+${fmtInt(o.gems)} gems`);
   if (o.boosts && o.boosts.surge) bits.push(`${o.boosts.surge} levels of power-up surge`);
   if (o.boosts && o.boosts.lucky) bits.push(`${o.boosts.lucky} levels of lucky finds`);
+  if (o.boosts && o.boosts.revive) bits.push(`${o.boosts.revive} revives`);
   return bits.join(", ");
 }
 
 /* Called as a campaign level starts: uses up one level of each booster that's running.
    Returns the multipliers for this level. */
+/* Boosters are switched on by hand now (build 57): the card before a level has a switch for each one,
+   campArmed says which. Only a switched-on booster is used up. */
+const campArmed = { surge: false, lucky: false, revive: false };
 function gemBoostsForLevel() {
   const G = CAMP.rules.gems, b = camp && camp.boosts;
-  if (!b) return { surge: 1, lucky: 1 };
-  const out = { surge: b.surge > 0 ? (G.surgeRate || 2) : 1, lucky: b.lucky > 0 ? (G.luckyRate || 1.5) : 1 };
-  if (b.surge > 0) b.surge--;
-  if (b.lucky > 0) b.lucky--;
+  if (!b) return { surge: 1, lucky: 1, revive: false };
+  const on = k => campArmed[k] && b[k] > 0;
+  const out = { surge: on("surge") ? (G.surgeRate || 2) : 1, lucky: on("lucky") ? (G.luckyRate || 1.5) : 1, revive: on("revive") };
+  ["surge", "lucky", "revive"].forEach(k => { if (on(k)) b[k]--; campArmed[k] = false; });
   return out;
 }
 
@@ -108,6 +113,7 @@ let gemClockTimer = 0;
 function closeGemShop() {
   if (gemShopEl) gemShopEl.classList.remove("active");
   campWalletUpdate();
+  if (typeof mapGoalFor !== "undefined" && mapGoalFor) openMapGoal(mapGoalFor.key, mapGoalFor.j);   // the card before a level shows what you have
 }
 
 function renderGemShop() {
@@ -118,7 +124,7 @@ function renderGemShop() {
     const price = o.daily ? (ready ? "Free" : `Next in <span data-gs-clock>${fmtLeft(gemDailyLeft())}</span>`) : "Free (dev)";
     return `<div class="gs-offer${o.daily ? " daily" : ""}${ready ? "" : " spent"}">
       ${o.tag ? `<span class="gs-tag">${escapeAttr(ready ? o.tag : "Taken")}</span>` : ""}
-      <div class="gs-pic">${o.gems && !o.daily ? gem(o.gems >= 500 ? 4 : 3) : ""}${o.daily ? `<img class="gs-ico" src="${iconUrl("gift", 3)}" alt="">` : ""}${o.boosts && o.boosts.surge ? `<img class="gs-ico" src="${iconUrl("bolt", 3)}" alt="">` : ""}${o.boosts && o.boosts.lucky ? `<img class="gs-ico" src="${iconUrl("clover", 3)}" alt="">` : ""}</div>
+      <div class="gs-pic">${o.gems && !o.daily ? gem(o.gems >= 500 ? 4 : 3) : ""}${o.daily ? `<img class="gs-ico" src="${iconUrl("gift", 3)}" alt="">` : ""}${o.boosts && o.boosts.surge ? `<img class="gs-ico" src="${iconUrl("bolt", 3)}" alt="">` : ""}${o.boosts && o.boosts.lucky ? `<img class="gs-ico" src="${iconUrl("clover", 3)}" alt="">` : ""}${o.boosts && o.boosts.revive ? `<img class="gs-ico" src="${iconUrl("heart-gold", 3)}" alt="">` : ""}</div>
       <div class="gs-name">${escapeAttr(o.name)}</div>
       <div class="gs-what">${escapeAttr(o.text || gemOfferWhat(o))}</div>
       <button class="btn btn-small ${ready ? "btn-gold" : ""}" data-gs-buy="${o.id}" ${ready ? "" : "disabled"} title="${o.daily ? "Once a day" : "In development every offer is free"}">${price}</button>
@@ -126,7 +132,7 @@ function renderGemShop() {
   };
   gemShopEl.innerHTML = `<div class="modal-box gs-box">
     <div class="gs-head">${gem(4)}<b class="gs-count">${fmtInt(camp.gems)}</b>
-      <span class="gs-boosts">${b.surge ? `<span title="Power-up surge: levels left"><img class="gs-ico" src="${iconUrl("bolt", 2)}" alt="">${b.surge}</span>` : ""}${b.lucky ? `<span title="Lucky finds: levels left"><img class="gs-ico" src="${iconUrl("clover", 2)}" alt="">${b.lucky}</span>` : ""}</span>
+      <span class="gs-boosts">${b.surge ? `<span title="Power-up surge: levels left"><img class="gs-ico" src="${iconUrl("bolt", 2)}" alt="">${b.surge}</span>` : ""}${b.lucky ? `<span title="Lucky finds: levels left"><img class="gs-ico" src="${iconUrl("clover", 2)}" alt="">${b.lucky}</span>` : ""}${b.revive ? `<span title="Revives left"><img class="gs-ico" src="${iconUrl("heart-gold", 2)}" alt="">${b.revive}</span>` : ""}</span>
       <button class="btn btn-small gs-x" data-gs-close aria-label="Close">✕</button></div>
     <div class="gs-grid">${gemOffers().map(card).join("")}</div>
     <p class="gs-note">Development build: every offer is free and only adds to this save.</p>

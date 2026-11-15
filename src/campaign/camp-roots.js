@@ -238,7 +238,7 @@ function renderRootsTree() {
   if (treeCanvas.width !== TREE_W || treeCanvas.height !== TREE_H) { treeCanvas.width = TREE_W; treeCanvas.height = TREE_H; }
   document.getElementById("screen-tree").style.setProperty("--tree-ar", (TREE_W / TREE_H).toFixed(4));
   document.getElementById("tree-title").textContent = R.name;
-  document.getElementById("tree-medals").innerHTML = `<span class="cw-chip plate">${coinHtml(isl)}<b>${fmtInt(campWallet(isl))}</b></span>`;
+  document.getElementById("tree-medals").innerHTML = "";   // the money is in the top bar, nowhere else
   treePinsEl.innerHTML = "";
   const tips = rootTips(rootsList(isl).map(u => rootTier(u.id)), rootsList(isl).map(u => u.v.length));
   rootsList(isl).forEach((u, i) => {

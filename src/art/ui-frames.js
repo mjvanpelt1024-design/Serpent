@@ -91,6 +91,8 @@ function paintUiFrames() {
   set("--fx-plate-violet", fxPlate(fxMix("#3a1462", panel, 0.4), FX_METALS.violet));
   set("--fx-chip", fxPlate(panel3, FX_METALS.brass, 3));
   set("--fx-window", fxWindow(panel, accent));
+  set("--fx-window-violet", fxWindow(fxMix("#3a1462", panel, 0.4), "#c070ff", FX_METALS.violet));
+  set("--fx-window-red", fxWindow(fxMix("#4a1020", panel, 0.45), "#ff6a5a", FX_METALS.blood));
   set("--fx-parch", fxParchment());
   // buttons in every face color the game uses, pressed and not
   [["green", "--green", "--green-lip", "#4bc27a"], ["red", "--red", "--red-lip", "#ff5a4d"], ["blue", "--blue", "--blue-lip", "#2f9bff"],

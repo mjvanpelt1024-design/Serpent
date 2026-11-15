@@ -108,6 +108,7 @@ campaign/camp-hud.js
 campaign/camp-run.js
 campaign/camp-foes.js
 campaign/camp-screens.js
+campaign/camp-runend.js
 campaign/camp-scenes.js
 campaign/camp-shops.js
 campaign/camp-shop-stage.js

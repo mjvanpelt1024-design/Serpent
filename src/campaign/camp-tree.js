@@ -139,7 +139,7 @@ function renderCampTree() {
   if (treeCanvas.width !== TREE_W || treeCanvas.height !== TREE_H) { treeCanvas.width = TREE_W; treeCanvas.height = TREE_H; }
   document.getElementById("screen-tree").style.setProperty("--tree-ar", (TREE_W / TREE_H).toFixed(4));
   document.getElementById("tree-title").textContent = I.tree.name;
-  document.getElementById("tree-medals").innerHTML = `<span class="cw-chip plate">${coinHtml(isl)}<b>${fmtInt(campWallet(isl))}</b></span>`;
+  document.getElementById("tree-medals").innerHTML = "";   // the money is in the top bar, nowhere else
   treePinsEl.innerHTML = "";
   I.tree.upgrades.forEach((u, i) => {
     const pin = document.createElement("button");

@@ -184,6 +184,7 @@ function campPay(isl, n) {
 function campSpend(isl, n) {
   if (campWallet(isl) < n) return false;
   camp.wallet[campCurrency(isl).id] -= n;
+  if (typeof campWalletUpdate === "function") campWalletUpdate();   // the top bar is the one place the money shows
   return true;
 }
 function addGems(n) {

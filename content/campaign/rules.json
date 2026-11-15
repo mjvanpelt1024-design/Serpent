@@ -46,7 +46,7 @@
   },
   "bank": {"rateToPrev": 10, "feePrev": 5, "snaycoinPerGem": 500, "gemFee": 1},
   "gems": {"startGems": 0, "storeSoon": "Gem packs arrive when the game launches. Until then gems come from achievements, quests, level challenges and the bank.",
-    "_store": "Build 53: the gem shop (click your gems in the top bar). price is what a real store will charge, in cents; in development every offer is free and only adds to the save. gems: gems added. boosts: levels of each booster (surge = power-ups turn up more often, lucky = more loot). daily: once a day, free.",
+    "_store": "Build 53: the gem shop (click your gems in the top bar). price is what a real store will charge, in cents; in development every offer is free and only adds to the save. gems: gems added. boosts: levels of each booster (surge = power-ups turn up more often, lucky = more loot; revive counts single uses, switched on before a level). daily: once a day, free.",
     "store": [
       {"id": "daily", "name": "Daily gift", "daily": true, "gems": 5, "price": 0, "tag": "Free today"},
       {"id": "g10", "name": "Pouch of gems", "gems": 10, "price": 0},
@@ -57,7 +57,8 @@
       {"id": "g2500", "name": "Dragon's hoard", "gems": 2500, "price": 0, "tag": "Best value"},
       {"id": "surge5", "name": "Power-up surge", "boosts": {"surge": 5}, "price": 0, "text": "Power-ups turn up twice as often for your next 5 levels."},
       {"id": "lucky5", "name": "Lucky finds", "boosts": {"lucky": 5}, "price": 0, "text": "Loot drops half again as often for your next 5 levels."},
-      {"id": "bundle", "name": "Power-up bundle", "gems": 50, "boosts": {"surge": 10, "lucky": 10}, "price": 0, "tag": "Bundle", "text": "50 gems, and both boosters for your next 10 levels."}
+      {"id": "revive3", "name": "Second chance", "boosts": {"revive": 3}, "price": 0, "text": "3 revives. Switch one on before a level and a deadly blow gets you back up with half your hearts."},
+      {"id": "bundle", "name": "Power-up bundle", "gems": 50, "boosts": {"surge": 10, "lucky": 10, "revive": 3}, "price": 0, "tag": "Bundle", "text": "50 gems, surge and lucky for 10 levels, and 3 revives."}
     ],
     "surgeRate": 2, "luckyRate": 1.5},
   "cosmetics": {

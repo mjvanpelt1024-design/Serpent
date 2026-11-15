@@ -67,6 +67,9 @@ function campWalletUpdate() {
   if (campWalletEl._h !== html) { campWalletEl.innerHTML = html; campWalletEl._h = html; }
 }
 
+// whatever is bought or sold, the top bar follows within a blink (it only redraws when the numbers change)
+setInterval(() => { if (camp && !campRun) campWalletUpdate(); }, 250);
+
 let campHudAt = 0;
 function campHudBuild() {
   cpLeft.hidden = cpRight.hidden = false;

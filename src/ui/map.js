@@ -1292,6 +1292,11 @@ function openMapGoal(key, j) {
     (bossRes ? `<div class="mg-row"><span class="mg-k">Shrugs off</span><span>${escapeAttr(bossRes)}</span></div>` : "") : "";
   const quest = qi >= 0 ? `<div class="mg-quest"><p class="mg-label">Quest trial ${qi + 1} of ${Q.levels.length} · ${escapeAttr(I.npcs.challenger.name)}</p>` +
     Q.mods[qi].map(m => `<p class="mg-twist"><b>${escapeAttr(modOf(m).name)}</b> ${escapeAttr(modOf(m).text)}</p>`).join("") + `</div>` : "";
+  // build 57: before you go. Switch on boosters (used up as the level starts), change what you carry, or visit the workshop
+  const BOOSTS = [["surge", "bolt", "Power-up surge", "Power-ups turn up twice as often this level."], ["lucky", "clover", "Lucky finds", "Loot drops half again as often this level."], ["revive", "heart-gold", "Second chance", "A deadly blow gets you back up with half your hearts."]];
+  const prepHtml = typeof campArmed === "undefined" ? "" : `<div class="mg-prep"><p class="mg-label">Before you go</p>
+      <div class="mg-boosts">${BOOSTS.map(([k, ico, name, tip]) => { const have = (camp.boosts && camp.boosts[k]) || 0; return `<button class="mg-boost${campArmed[k] && have ? " on" : ""}${have ? "" : " none"}" data-boost="${k}" aria-pressed="${!!(campArmed[k] && have)}" title="${escapeAttr(tip)}${have ? "" : " You have none: tap to get more from the gem shop."}"><img src="${iconUrl(ico, 2)}" alt=""><span>${escapeAttr(name)}</span><small>${have ? "&times;" + have : "get"}</small></button>`; }).join("")}</div>
+      <div class="mg-prep-btns"><button class="btn btn-small" data-mg="items">Items &amp; gear</button>${campShopOpen(key, "merchant") && typeof workshopOf === "function" ? `<button class="btn btn-small" data-mg="work">${workshopOf(key) === "armory" ? "Armory" : escapeAttr(WORKSHOP_NAME[workshopOf(key)])}</button>` : ""}</div></div>`;
   mapGoalEl.innerHTML = `<div class="mg-card">
       <p class="mg-kicker">${escapeAttr(I.name)} · level ${j} · ${escapeAttr(levelKindText(def))}</p>
       <h3 class="mg-title">${isBossLevel(j) ? SKULL_SVG : ""}${escapeAttr(def.name)}</h3>
@@ -1301,6 +1306,7 @@ function openMapGoal(key, j) {
       ${quest}${bossTip}${sideRow}${bonus}
       <div class="mg-row"><span class="mg-k">Reward</span><span>${coinHtml(key)} ${fmtInt(campRewardPreview(key, j, first))}${first ? " (first win)" : ""}, plus your points</span></div>
       ${rec && rec.wins ? `<div class="mg-row"><span class="mg-k">Best</span><span>${fmtInt(rec.best)}${rec.flawless ? " · flawless" : ""}</span></div>` : ""}
+      ${prepHtml}
       <div class="mg-acts"><button class="btn" data-mg="back">Back</button>${qi >= 0 ? `<button class="btn btn-small" data-mg="plain">Normal run</button><button class="btn btn-purple" data-mg="go">Start trial</button>` : `<button class="btn btn-primary" data-mg="go">Start</button>`}</div>
     </div>`;
   mapGoalEl.classList.add("open");
@@ -1310,6 +1316,23 @@ function openMapGoal(key, j) {
   const plain = mapGoalEl.querySelector('[data-mg="plain"]');
   if (plain) plain.addEventListener("click", e => { e.stopPropagation(); playLevel(key, j); });
   mapGoalEl.querySelector('[data-mg="back"]').addEventListener("click", e => { e.stopPropagation(); closeMapGoal(); });
+  mapGoalEl.querySelectorAll("[data-boost]").forEach(btn => btn.addEventListener("click", e => {
+    e.stopPropagation();
+    const k = btn.dataset.boost;
+    if (!(camp.boosts && camp.boosts[k] > 0)) { if (typeof openGemShop === "function") openGemShop(); return; }
+    campArmed[k] = !campArmed[k];
+    sfx("click");
+    openMapGoal(key, j);
+  }));
+  const items = mapGoalEl.querySelector('[data-mg="items"]');
+  if (items) items.addEventListener("click", e => { e.stopPropagation(); openCampLoadout(); });
+  const work = mapGoalEl.querySelector('[data-mg="work"]');
+  if (work) work.addEventListener("click", e => {
+    e.stopPropagation();
+    closeMapGoal();
+    openCampShop(key, "merchant");
+    if (typeof ssSwitch === "function") ssSwitch("work");
+  });
   mapGoalEl.onclick = e => { if (e.target === mapGoalEl) closeMapGoal(); };
   setTimeout(() => { const b = mapGoalEl.querySelector('[data-mg="go"]'); if (b) b.focus({ preventScroll: true }); }, 40);
 }

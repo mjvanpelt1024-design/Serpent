@@ -313,7 +313,7 @@ const ENTITY_TYPES = {
     touch(e) {
       removeEntity(e);
       const pts = 100 * scoreMultiplier * getTrackValue("apple") * 10 * (1 + getTrackValue("goldleaf") / 100);
-      if (!endless) snake.maxCells += 2;
+      if (!endless) snake.maxCells += 5;   // golden apples grow you by five, a big apple's worth
       addFever(0.4);
       runCount("golden");
       runCount("apples");

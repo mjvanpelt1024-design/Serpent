@@ -223,7 +223,7 @@ const SAVE_SCHEMA = S.obj({
   tutOff: S.bool(false),
   tutInit: S.bool(false),
   gemBought: S.map(/^[a-z0-9]+$/, S.int(0, 1e6, 0), 40),
-  boosts: S.obj({ surge: S.int(0, 9999, 0), lucky: S.int(0, 9999, 0) }),
+  boosts: S.obj({ surge: S.int(0, 9999, 0), lucky: S.int(0, 9999, 0), revive: S.int(0, 9999, 0) }),
   // build 53: nightmare mode (camp-nightmare.js): open once seen, wins per tunnel level ("crown:3", 11 = the Maw),
   // the tunnels whose Maw is beaten, and the roots' upgrade tiers
   nm: S.obj({

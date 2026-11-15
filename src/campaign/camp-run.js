@@ -163,7 +163,7 @@ function campStart(isl, n, challengeIdx = -1, nmDef = null) {
     if (s.rate) s.rate *= hz;
   });
   // build 53: the gem shop's boosters, each used up one level at a time (camp-gemshop.js)
-  const boostFx = typeof gemBoostsForLevel === "function" ? gemBoostsForLevel() : { surge: 1, lucky: 1 };
+  const boostFx = typeof gemBoostsForLevel === "function" ? gemBoostsForLevel() : { surge: 1, lucky: 1, revive: false };
   if (boostFx.surge !== 1) Object.entries(spawns).forEach(([k, s]) => {
     if (HAZARD_SPAWNS.includes(k) || k === "apple") return;
     if (s.delay) s.delay = s.delay.map(d => Math.round(d / boostFx.surge));
@@ -185,7 +185,7 @@ function campStart(isl, n, challengeIdx = -1, nmDef = null) {
     isl, islandN: island.n, n, def, mods, challenge: challengeIdx, rune, extra,
     apples: 0, lostHeart: false, loot: [], canisters: [], lootAt: performance.now() + 6000,
     castReadyAt: 0, fieldUntil: 0, pet: null, gearFx: 0, blinkFx: 0,
-    lucky: boostFx.lucky, secondWind: upVal("secondwind") > 0, echoReady: rv("echo") > 0, echoUsed: false, freeCasts: rv("freeCasts"), dmgCarry: 0,
+    lucky: boostFx.lucky, boostRevive: !!boostFx.revive, secondWind: upVal("secondwind") > 0, echoReady: rv("echo") > 0, echoUsed: false, freeCasts: rv("freeCasts"), dmgCarry: 0,
     over: false, speed, prevBest: nmDef ? 0 : (camp.levels[campLevelId(isl, n)] || { best: 0 }).best,
     // which .level board it plays on (content/levels/index.dat), and whether it's a nightmare level
     board: nmDef ? nmDef.board : `${isl}-${n}`, nmRun: !!(nmDef && nmDef.nightmare), sandbox: !!(nmDef && nmDef.sandbox)
@@ -410,6 +410,7 @@ function campTryRevive(cause) {
     return true;
   };
   if (campRun.secondWind) { campRun.secondWind = false; showToast("Second Wind! Not today."); return back(upVal("secondwind")); }
+  if (campRun.boostRevive) { campRun.boostRevive = false; showToast("Second chance! Back on your feet."); return back(Math.max(1, Math.ceil((campRun.startHearts || 3) / 2))); }
   if (campRun.phoenix) { const h = campRun.phoenix; campRun.phoenix = 0; showToast("The Phoenix Tart! You rise from the crumbs."); return back(h); }
   if (campRun.echoReady) {
     campRun.echoReady = false; campRun.echoUsed = true;

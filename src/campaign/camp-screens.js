@@ -15,7 +15,7 @@
    close-up (renderNodeSide in map.js). */
 let campResultShown = false;
 const BOSS_SHOP_AFTER = { 5: "merchant", 10: "challenger", 15: "banker" };
-function showCampResult(won, lines, notes, line = "") {
+function campResultPlan(won, lines, notes, line = "") {
   const { isl, n, def } = campRun;
   const rec = camp.levels[campLevelId(isl, n)];
   const report = {
@@ -28,6 +28,16 @@ function showCampResult(won, lines, notes, line = "") {
   else if (won && BOSS_SHOP_AFTER[n] && campShopOpen(isl, BOSS_SHOP_AFTER[n])) target = { key: isl, id: BOSS_SHOP_AFTER[n] };
   else if (won && n < LEVEL_COUNT && campLevelOpen(isl, n + 1)) target = { key: isl, id: n + 1 };
   else if (won && n === LEVEL_COUNT) target = { key: isl, id: "bridge" };
+  return { report, target };
+}
+/* A win or a loss: the end-of-run screen (camp-runend.js) says how it went, then Continue goes on to the map.
+   Leaving a level on purpose goes straight back. */
+function showCampResult(won, lines, notes, line = "") {
+  const { report, target } = campResultPlan(won, lines, notes, line);
+  if (line === "You left the level." || typeof showRunEnd !== "function") { campResultLeave(report, target); return; }
+  showRunEnd(report, target);
+}
+function campResultLeave(report, target) {
   campLeaveRun();
   clearPauseState();
   campBackToMap(report, target);
