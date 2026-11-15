@@ -63,7 +63,7 @@ function campWalletUpdate() {
   const html = CAMP.islands.map(I =>
     `<span class="cw-chip${I.id === key ? " here" : ""}" title="${escapeAttr(I.currency.plural)}, the money of ${escapeAttr(I.name)}">${coinHtml(I.id, 20)}<b>${fmtInt(campWallet(I.id))}</b></span>`).join("") +
     // the gems open the gem shop (camp-gemshop.js); they glint while its daily gift waits
-    `<span class="cw-chip gems${typeof gemDailyReady === "function" && gemDailyReady() ? " gift" : ""}" role="button" tabindex="0" title="Gems: the gem shop"><img class="gem-ico" src="${iconUrl("gem", 3)}" alt=""><b>${fmtInt(camp.gems)}</b></span>`;
+    `<span class="cw-chip gems${typeof gemDailyReady === "function" && gemDailyReady() ? " gift" : ""}" role="button" tabindex="0" title="Gems: the gem shop${typeof gemDailyReady === "function" && !gemDailyReady() ? ` (next free gift in ${fmtLeft(gemDailyLeft())})` : ""}"><img class="gem-ico" src="${iconUrl("gem", 3)}" alt=""><b>${fmtInt(camp.gems)}</b>${typeof gemDailyReady === "function" && !gemDailyReady() ? `<small class="gift-clock">${fmtLeft(gemDailyLeft())}</small>` : ""}</span>`;
   if (campWalletEl._h !== html) { campWalletEl.innerHTML = html; campWalletEl._h = html; }
 }
 

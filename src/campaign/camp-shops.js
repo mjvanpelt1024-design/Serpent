@@ -102,13 +102,11 @@ function shopTimerText() {
   return "";
 }
 
+/* A countdown in hours and minutes, always: "1h 59m", "0h 07m"; a week-long one adds its days: "6d 23h 59m" */
 function fmtLeft(ms) {
-  ms = Math.max(0, ms);
-  const s = Math.ceil(ms / 1000);
-  if (s >= 86400) return `${Math.floor(s / 86400)}d ${Math.floor((s % 86400) / 3600)}h`;
-  if (s >= 3600) return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
-  if (s >= 60) return `${Math.floor(s / 60)}m ${s % 60}s`;
-  return `${s}s`;
+  const m = Math.ceil(Math.max(0, ms) / 60000);
+  const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60;
+  return d ? `${d}d ${h}h ${String(mm).padStart(2, "0")}m` : `${h}h ${String(mm).padStart(2, "0")}m`;
 }
 
 /* What an item does, as shop-row text */

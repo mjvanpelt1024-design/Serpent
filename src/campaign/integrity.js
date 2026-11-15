@@ -217,6 +217,11 @@ const SAVE_SCHEMA = S.obj({
   // build 53: the gem shop (camp-gemshop.js): the day its daily gift was last taken, what was bought,
   // and the boosters' levels left (surge: power-ups more often; lucky: more loot)
   gemDaily: S.int(0, 1e7, 0),
+  // build 57: the tutorial (src/ui/tour.js, camp-tutorial.js): chapters already shown, whether the tips are off,
+  // and tutInit: a save from before build 57 counts what it has already done as seen
+  tut: S.list(S.str(24), 40),
+  tutOff: S.bool(false),
+  tutInit: S.bool(false),
   gemBought: S.map(/^[a-z0-9]+$/, S.int(0, 1e6, 0), 40),
   boosts: S.obj({ surge: S.int(0, 9999, 0), lucky: S.int(0, 9999, 0) }),
   // build 53: nightmare mode (camp-nightmare.js): open once seen, wins per tunnel level ("crown:3", 11 = the Maw),

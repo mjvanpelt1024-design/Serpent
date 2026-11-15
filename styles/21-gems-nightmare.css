@@ -9,6 +9,8 @@
 #camp-wallet .cw-chip.gems:focus-visible { filter: brightness(1.2); outline: none; }
 /* the daily gift is waiting: the gem glints */
 #camp-wallet .cw-chip.gems.gift .gem-ico { animation: gs-glint 1.6s steps(4) infinite; }
+/* the daily gift is taken: a small clock to the next one, in hours and minutes */
+#camp-wallet .cw-chip.gems .gift-clock { margin-left: 0.35em; font-size: 0.72em; font-weight: 700; color: var(--ink-dim); white-space: nowrap; }
 @keyframes gs-glint { 50% { filter: brightness(1.6) drop-shadow(0 0 3px var(--xp)); } }
 
 /* ---------- The gem shop ---------- */

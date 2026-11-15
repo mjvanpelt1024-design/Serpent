@@ -1,132 +1,87 @@
 /* =========================================================
    src/ui/tour.js
-   The hands-on tutorial
+   The tutorial engine (back in build 57).
+
+   The screen darkens except for the one thing to press, and a teal box at
+   the bottom says what it is. A tutorial is made of CHAPTERS, each a short
+   list of steps for one part of the game (the map, home, the merchant, the
+   upgrade tree, the daily gift...). The chapters themselves are written in
+   src/campaign/camp-tutorial.js and pushed onto TUT_CHAPTERS; this file only
+   runs them:
+
+     chapter  { id, title, when(), steps[], after(), skipIf() }
+              when()   true while the chapter should start (checked twice in a row, half a second apart)
+              skipIf() true if there is nothing left to teach (marks it done without showing it)
+     step     { text, target, until, next, enter, pass, skip, arrow }
+              text     a string, or a function that returns one ({name} is the snake's name)
+              target   what to light up: an element, a list of them (one hole around all), or a function that returns either
+              until    a function: the step is over when it returns true
+              next     show a Next button as well
+              enter    runs when the step starts
+              pass     the board behind stays clickable and keys go through
+              skip     a function: leave this step out when it returns true
+              arrow    a bouncing arrow beside the target, for the one thing you must not miss
+
+   Which chapters are done is kept in the save (camp.tut). "Skip" leaves the
+   chapter being shown; "Skip all" turns the tips off (camp.tutOff); Settings
+   can replay them.
    ========================================================= */
 "use strict";
 
-/* =========================================================
-   The tour: a hands-on tutorial. The screen darkens except for the one thing
-   to press, and the narrator explains it in the teal tutorial box at the bottom.
-   It walks through the map, both kinds of tree, the Tailor (where the first of
-   each cosmetic is free), the Satchel, the Trophy Hall, the loadout, and then
-   the first level, where every new thing is pointed out as it appears.
-   ========================================================= */
 let tutorial = null;            // the old in-run tutorial is gone; the engine still checks this
 function tutorialEvent() {}
 function tutorialFail() {}
-let guide = null;               // { i, step } while the tour runs
-let guideRun = false;           // the first level, played as the tour's last step
+let guide = null;               // { ch, i, step } while a chapter runs
+let guideRun = false;           // the first level, played right after the welcome chapter
 let guideRaf = 0;
+const TUT_CHAPTERS = [];
 const guideEl = document.getElementById("guide");
 const guideShadeEl = document.getElementById("guide-shade");
 const guideRingEl = document.getElementById("guide-ring");
+const guideArrowEl = document.getElementById("guide-arrow");
 const guideBoxEl = document.getElementById("guide-box");
 
 const qs = sel => document.querySelector(sel);
-const visible = el => el && el.isConnected && el.offsetParent !== null && !el.closest("[hidden]");
+const qsa = sel => Array.from(document.querySelectorAll(sel));
+const visible = el => !!(el && el.isConnected && el.getClientRects().length && !el.closest("[hidden]") && getComputedStyle(el).visibility !== "hidden");
 
-/* A little XP from the narrator, so the first upgrades are free */
-function guideGift(n, why) {
-  if (n <= 0 || !guide || guide.replay) return;
-  save.xp += n;
-  persist();
-  updateHud();
-  showToast(`The narrator slipped you ${fmtInt(n)} XP ${why}.`);
+/* ----- Which chapters are done ----- */
+const tutSeen = id => !!(camp && camp.tut && camp.tut.includes(id));
+function tutMark(id) {
+  if (!camp || tutSeen(id)) return;
+  camp.tut.push(id);
+  saveCamp();
 }
 
-const GUIDE_SKINS = ["zest", "glacier", "sunset", "royal", "tropical", "rainbow"];
-const GUIDE_THEME = "auroranight";
+/* A target can be an element, a list of them, or a function that returns either: the ones on screen */
+function tutTargets(st) {
+  let t = typeof st.target === "function" ? st.target() : st.target;
+  if (!t) return [];
+  if (!Array.isArray(t) && !(t instanceof NodeList)) t = [t];
+  return Array.from(t).filter(visible);
+}
 
-const nmRun = () => save.kind === "nightmare";
-const tourGifted = () => save.freebies.includes("tour");
-
-const GUIDE_STEPS = [
-  { text: () => nmRun()
-      ? "This is the map, and this save is a Nightmare run: no gentle levels, only the ones underneath. Tap the Garden, which is gentle only by comparison."
-      : "This is the map. Every floating island is somewhere {name} can play. Tap the Garden, the gentlest place in the sky.",
-    target: () => qs('[data-key="place-easy"]'), until: () => mapSel === "easy" },
-  { text: () => nmRun()
-      ? "Here are the Garden's three Nightmares. Finish one and the next opens. New islands still cost XP, and open straight onto their first Nightmare."
-      : "Up close you can see the Garden's three levels on top. Nightmares hang underneath, later, when you are ready. You will not be ready.",
-    target: () => qs(nmRun() ? '[data-key="nm-easy-0"]' : '[data-key="lv-easy-0"]'), next: true },
-  { text: "Every island grows its own tree of upgrades, paid for in XP. Tap the Garden's tree.",
-    enter: () => guideGift(nextTierCost(TREES.easy[0]), "for a seedling"),
-    target: () => qs('[data-key="tree-easy"]'), until: () => currentScreen === "tree" && treeArea === "easy" },
-  { text: "Each fruit is an upgrade, with a picture of what it does. Branches only grow once the fruit below them does. This one is the trunk, Snack Time.",
-    target: () => qs('[data-key="node-snack"]'), next: true, enter: () => { treeSel = "snack"; if (currentScreen === "tree") renderTree(); } },
-  { text: "Now grow it. Snack Time makes Garden apples worth more. I have paid, this once. Do not get used to it.",
-    target: () => qs("#tree-card [data-buy]"), until: () => (save.tiers.snack || 0) > 0 || nextTierCost("snack") === null },
-  { text: "The fruit lying in the grass is a one-time item. This is a Golden Heart, which soaks up one hit. Have one, on the house.",
-    enter: () => { if (!guide.replay) { save.consumables.goldheart = Math.min(999, save.consumables.goldheart + 1); persist(); } },
-    target: () => qs('[data-key="node-item:goldheart"]'), next: true },
-  { text: "Back to the map.",
-    target: () => qs("#screen-tree [data-back]"), until: () => currentScreen === "modes" },
-  { text: "Tap here to see the whole map again. You can also pinch, scroll out, or swipe between islands.",
-    target: () => qs("#map-out"), until: () => currentScreen === "modes" && !mapSel },
-  { text: "Down below is the Commons. The Satchel holds everything this save owns. Tap it.",
-    target: () => qs('[data-key="prop-inventory"]'), until: () => currentScreen === "inventory" },
-  { text: "There is your Golden Heart. Before each run, you choose which items to bring.",
-    target: () => qs('[data-key="inv-item-goldheart"]'), next: true },
-  { text: "Back to the map.",
-    target: () => qs("#screen-inventory [data-back]"), until: () => currentScreen === "modes" },
-  { text: "XP is paid at the end of every run, from your final score. At the Exchange, XP becomes Snakebucks, which every save shares. Here is some XP to trade. Tap the booth.",
-    enter: () => guideGift(Math.max(0, nextTierCost("xp") * xpPerBuck() - save.snakebucks * xpPerBuck()), "for the Exchange"),
-    target: () => qs('[data-key="prop-exchange"]'), until: () => exchangeOpen },
-  { text: "Slide to choose how much to trade, then press Trade.",
-    target: () => qs("#ex-go"), until: () => save.snakebucks >= (nextTierCost("xp") || 0) },
-  { text: "Done here.",
-    target: () => qs("#ex-close"), until: () => !exchangeOpen },
-  { text: "The shared things live with your saves. Back you go.",
-    target: () => qs("#screen-modes [data-back]"), until: () => currentScreen === "profiles" },
-  { text: "Every save shares the Great Tree, whose upgrades work on every island. It is paid for in Snakebucks. Tap it.",
-    target: () => qs('[data-key="land-global"]'), until: () => currentScreen === "tree" && treeArea === "global" },
-  { text: "Its trunk is the Experience Booster: fewer points for every XP. Tap it, then grow it with your Snakebucks.",
-    enter: () => { guide.xpAt = save.tiers.xp || 0; },
-    target: () => (treeSel === "xp" ? qs("#tree-card [data-buy]") : qs('[data-key="node-xp"]')), until: () => (save.tiers.xp || 0) > guide.xpAt || nextTierCost("xp") === null },
-  { text: "Splendid. Everything else on this tree grows from that trunk. Back to your saves.",
-    target: () => qs("#screen-tree [data-back]"), until: () => currentScreen === "profiles" },
-  { text: "The Tailor sells skins, themes, things to wear, and faces for your saves. Tap the Tailor.",
-    target: () => qs('[data-key="land-cosmetics"]'), until: () => currentScreen === "upgrades" },
-  { text: "First, a skin. Pick the one you like. The others will wait, in the way that unsold things always wait.", pick: "skin", skip: tourGifted },
-  { text: "And a theme, which repaints the board and the menus. This one is yours: Aurora Night. Tap it to wear it.", pick: "theme", skip: tourGifted },
-  { text: "Something to wear. Googly eyes. They suit {name}, which is the first unkind thing I have said about it.", pick: "flair", skip: tourGifted },
-  { text: "And a face for this save, so you can tell your saves apart. Pick one.", pick: "avatar" },
-  { text: "Back to your saves.",
-    target: () => qs("#screen-upgrades [data-back]"), until: () => currentScreen === "profiles" },
-  { text: "The Trophy Hall is where a tortoise records every badge you earn, on every save. Some of them are flattering. Most are not.",
-    target: () => qs('[data-key="land-achievements"]'), next: true },
-  { text: "That is everything. Continue this save.",
-    target: () => qs(`[data-play-slot="${activeSlot}"]`), until: () => currentScreen === "modes" },
-  { text: () => `Tap the Garden, then its first ${nmRun() ? "Nightmare" : "level"}, and press Play.`,
-    target: () => {
-      const lv = nmRun() ? '[data-key="nm-easy-0"]' : '[data-key="lv-easy-0"]';
-      return mapSel !== "easy" ? qs('[data-key="place-easy"]') : mapPop ? qs("#map-pop [data-play]") : qs(lv);
-    },
-    until: () => loadoutOpen || gameState === "PLAYING" },
-  { text: "Before each run you can bring one-time items. Bring the Golden Heart, then start.",
-    target: () => qs("#loadout .modal-box"), until: () => gameState === "PLAYING", pass: true }
-];
-
-function startTutorial() {
+/* ----- Running a chapter ----- */
+function tutStart(id) {
+  const ch = TUT_CHAPTERS.find(c => c.id === id);
+  if (!ch || guide) return false;
   clearPauseState();
-  if (sceneOpen) { sceneDone = null; closeScene(); }
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
-  save.named = true;
-  persist();
-  guide = { i: -1, replay: !!save.tutorialDone };
-  openScreen("modes");
+  guide = { ch, i: -1, step: null, since: 0 };
   guideEl.hidden = false;
   document.body.classList.add("guiding");
   guideStep(0);
   if (!guideRaf) guideRaf = requestAnimationFrame(guideLoop);
+  return true;
 }
 
 function guideStep(i) {
   if (!guide) return;
-  if (i >= GUIDE_STEPS.length) { guideIntoRun(); return; }
-  if (GUIDE_STEPS[i].skip && GUIDE_STEPS[i].skip()) { guideStep(i + 1); return; }
+  const steps = guide.ch.steps;
+  if (i >= steps.length) { guideEnd(true); return; }
+  if (steps[i].skip && steps[i].skip()) { guideStep(i + 1); return; }
   guide.i = i;
-  const st = GUIDE_STEPS[i];
+  const st = steps[i];
   guide.step = st;
   guide.since = performance.now();
   if (st.enter) st.enter();
@@ -134,126 +89,124 @@ function guideStep(i) {
 }
 
 function renderGuideBox() {
-  const st = guide.step;
-  let extra = "";
-  if (st.pick === "skin") {
-    extra = `<div class="gb-picks">${GUIDE_SKINS.map(id => `<button class="gb-pick" data-gpick="${id}" aria-label="${escapeAttr(skinById[id].name)}"></button>`).join("")}</div>`;
-  } else if (st.pick === "theme") {
-    extra = `<div class="gb-picks"><button class="gb-pick wide" data-gpick="${GUIDE_THEME}" aria-label="Aurora Night"></button></div>`;
-  } else if (st.pick === "flair") {
-    extra = `<div class="gb-picks"><button class="gb-pick wide" data-gpick="googly" aria-label="Googly Eyes"></button></div>`;
-  } else if (st.pick === "avatar") {
-    extra = `<div class="gb-picks">${FREE_AVATARS.map(id => `<button class="gb-pick av" data-gpick="${id}" aria-label="${escapeAttr(AVATAR_BY_ID[id].name)}">${avatarHtml(id)}<span class="gb-name">${escapeAttr(AVATAR_BY_ID[id].name)}</span></button>`).join("")}</div>`;
-  }
-  guideBoxEl.innerHTML = `<div class="gb-top"><span class="gb-who">Tutorial · ${guide.i + 1} of ${GUIDE_STEPS.length}</span><button class="gb-skip" data-gskip>Skip tutorial</button></div>
-    <p class="gb-text">${escapeAttr(withName(typeof st.text === "function" ? st.text() : st.text))}</p>${extra}
-    ${st.next ? `<div class="gb-act"><button class="btn btn-small gb-next" data-gnext>Next</button></div>` : ""}`;
-  guideBoxEl.querySelector("[data-gskip]").addEventListener("click", skipTutorial);
+  const st = guide.step, ch = guide.ch;
+  const text = typeof st.text === "function" ? st.text() : st.text;
+  guideBoxEl.innerHTML = `<div class="gb-top"><span class="gb-who">${escapeAttr(ch.title)} · ${guide.i + 1} of ${ch.steps.length}</span>
+      <span class="gb-skips"><button class="gb-skip" data-gskip>Skip</button><button class="gb-skip" data-gskipall title="Turn the tutorial tips off. Settings can bring them back.">Skip all tips</button></span></div>
+    <p class="gb-text">${escapeAttr(withName(text))}</p>
+    ${st.next ? `<div class="gb-act"><button class="btn btn-small gb-next" data-gnext>${guide.i === ch.steps.length - 1 ? "Got it" : "Next"}</button></div>` : ""}`;
+  guideBoxEl.querySelector("[data-gskip]").addEventListener("click", () => guideEnd(true));
+  guideBoxEl.querySelector("[data-gskipall]").addEventListener("click", skipTutorial);
   const nx = guideBoxEl.querySelector("[data-gnext]");
   if (nx) { nx.addEventListener("click", () => guideStep(guide.i + 1)); setTimeout(() => nx.focus({ preventScroll: true }), 30); }
-  guideBoxEl.querySelectorAll("[data-gpick]").forEach(b => {
-    const id = b.dataset.gpick;
-    let art;
-    if (st.pick === "avatar") { b.addEventListener("click", () => guidePick("avatar", id)); return; }
-    if (st.pick === "skin") art = skinBubbleArt(skinById[id], 56);
-    else if (st.pick === "theme") art = themePreview(backdropById[id]);
-    else art = flairPreview({ face: "googly" }, 120, 52);
-    art.classList.add("gb-art");
-    b.appendChild(art);
-    if (st.pick === "skin") b.insertAdjacentHTML("beforeend", `<span class="gb-name">${escapeAttr(skinById[id].name)}</span>`);
-    b.addEventListener("click", () => guidePick(st.pick, id));
-  });
   guideBoxEl.classList.remove("pop");
   void guideBoxEl.offsetWidth;
   guideBoxEl.classList.add("pop");
 }
 
-/* The free cosmetics: given and worn on the spot */
-function guidePick(kind, id) {
-  if (kind === "skin") {
-    if (!save.ownedSkins.includes(id)) save.ownedSkins.push(id);
-    save.selectedSkin = id;
-    upgradeTab = "skins";
-  } else if (kind === "theme") {
-    if (!save.ownedBackdrops.includes(id)) save.ownedBackdrops.push(id);
-    save.selectedBackdrop = id;
-    applyBackdrop();
-    upgradeTab = "backdrops";
-  } else if (kind === "avatar") {
-    if (!save.ownedAvatars.includes(id)) save.ownedAvatars.push(id);
-    save.avatar = id;
-    upgradeTab = "avatars";
-  } else {
-    if (!save.ownedFlair.includes("googly")) save.ownedFlair.push("googly");
-    save.flair.face = "googly";
-    if (!save.freebies.includes("tour")) save.freebies.push("tour");
-    upgradeTab = "flair";
-  }
-  persist();
-  sfx("buy");
-  confetti();
-  if (currentScreen === "upgrades") renderUpgradeBody();
-  guideStep(guide.i + 1);
-}
-
-/* Follows the thing to press every frame (the map zooms, the trees sway) */
+/* Follows the thing to press every frame (the map zooms, the trees sway, the shop pans) */
 function guideLoop() {
   guideRaf = 0;
   if (!guide) return;
   guideRaf = requestAnimationFrame(guideLoop);
   const st = guide.step;
   if (!st) return;
+  // a level started under it: the chapter is over (the welcome chapter ends on exactly that)
+  if (typeof campRun !== "undefined" && campRun && gameState === "PLAYING" && !guide.ch.inRun) { guideEnd(false); return; }
   if (st.until && performance.now() - guide.since > 250 && st.until()) { guideStep(guide.i + 1); return; }
-  const el = st.target ? st.target() : null;
+  const els = !sceneOpen && !confirmOpen ? tutTargets(st) : [];
   const vw = window.innerWidth, vh = window.innerHeight;
-  if (visible(el) && !sceneOpen && !confirmOpen) {
-    const r = el.getBoundingClientRect();
+  // a button below the fold of a scrolling shop page: bring it up (once per step)
+  if (els.length && guide.scrolled !== guide.i) {
+    const r0 = els[0].getBoundingClientRect();
+    if ((r0.bottom > vh || r0.top < 0) && els[0].closest("#screen-campshop, #gemshop")) {
+      guide.scrolled = guide.i;
+      els[0].scrollIntoView({ block: "center", inline: "nearest" });
+    }
+  }
+  if (els.length) {
+    const rects = els.map(e => e.getBoundingClientRect());
+    const l = Math.min(...rects.map(r => r.left)), t = Math.min(...rects.map(r => r.top));
+    const r = Math.max(...rects.map(r => r.right)), b = Math.max(...rects.map(r => r.bottom));
     const pad = 8;
-    const x = Math.max(0, r.left - pad), y = Math.max(0, r.top - pad), w = Math.min(vw, r.width + pad * 2), h = Math.min(vh, r.height + pad * 2);
+    const x = Math.max(0, l - pad), y = Math.max(0, t - pad), w = Math.min(vw - x, r - l + pad * 2), h = Math.min(vh - y, b - t + pad * 2);
     guideShadeEl.style.clipPath = `path(evenodd, "M0 0H${vw}V${vh}H0Z M${x} ${y}h${w}v${h}h${-w}Z")`;
     guideRingEl.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
     guideRingEl.hidden = false;
     guideShadeEl.classList.toggle("pass", !!st.pass);
     // keep the box out of the way of the thing it points at
-    guideBoxEl.classList.toggle("top", r.top + r.height / 2 > vh * 0.58);
+    const mid = y + h / 2;
+    guideBoxEl.classList.toggle("top", mid > vh * 0.58);
+    if (st.arrow) {
+      const below = mid < vh * 0.5;
+      guideArrowEl.hidden = false;
+      guideArrowEl.classList.toggle("up", below);
+      guideArrowEl.style.left = (x + w / 2) + "px";
+      guideArrowEl.style.top = (below ? y + h + 4 : y - 4) + "px";
+    } else guideArrowEl.hidden = true;
   } else {
-    guideShadeEl.style.clipPath = st.pick ? `path(evenodd, "M0 0H${vw}V${vh}H0Z")` : "none";
+    guideShadeEl.style.clipPath = "none";
+    guideShadeEl.classList.remove("pass");
     guideRingEl.hidden = true;
+    guideArrowEl.hidden = true;
     guideBoxEl.classList.remove("top");
   }
 }
 
-/* The tour ends by playing the Garden's first level, where each new thing is pointed out */
-function guideIntoRun() {
-  const first = !save.tutorialDone;
+/* The chapter is over: done = it counts as seen (finished or skipped), else it will come back */
+function guideEnd(done) {
+  if (!guide) return;
+  const ch = guide.ch;
   guide = null;
   guideEl.hidden = true;
+  guideRingEl.hidden = true;
+  guideArrowEl.hidden = true;
   document.body.classList.remove("guiding");
-  save.tutorialDone = true;
-  if (first) save.consumables.revive = Math.min(999, save.consumables.revive + 1);
-  ["shop", "inventory", "achievements", "easy"].forEach(id => { if (!save.seenScenes.includes(id)) save.seenScenes.push(id); });
-  persist();
-  if (first) showToast("Tutorial complete! A free Revive is in your Satchel.");
-  guideRun = gameState === "PLAYING";
-  // point out the snake itself, before anything else
-  // once the snake has slithered a few squares, so there's something to look at
-  if (guideRun) setTimeout(() => {
-    if (gameState === "PLAYING" && !introOpen && !paused) openIntroCard("controls", { x: snake.x, y: snake.y, size: 1 }, makeView(performance.now()));
-  }, 900);
+  if (done) tutMark(ch.id);
+  if (ch.after) ch.after(done);
 }
 
+/* "Skip all tips": the whole tutorial is off until Settings turns it back on */
 function skipTutorial() {
   if (!guide) return;
-  guide = null;
-  guideEl.hidden = true;
-  document.body.classList.remove("guiding");
-  save.tutorialDone = true;
-  persist();
-  if (loadoutOpen) return;
-  if (gameState !== "PLAYING") openScreen("modes");
+  const ch = guide.ch;
+  if (camp) { camp.tutOff = true; TUT_CHAPTERS.forEach(c => tutMark(c.id)); saveCamp(); }
+  guideEnd(true);
+  if (typeof showToast === "function") showToast("Tutorial tips are off. Settings can turn them back on.");
+  void ch;
 }
 
-/* While the tour runs, keys only do what the tour is asking */
+/* ----- The watcher: starts a chapter when its moment comes ----- */
+let tutReady = "";               // the chapter that was ready at the last look
+function tutWatch() {
+  if (guide || !camp || !camp.named || camp.tutOff) { tutReady = ""; return; }
+  // never over a story page, a scene, a dialog, or a level in play
+  const busy = sceneOpen || confirmOpen || loadoutOpen || introOpen || (typeof campRun !== "undefined" && campRun) || gameState === "PLAYING"
+    || (typeof storyEl !== "undefined" && storyEl.classList.contains("open")) || (typeof coinCard !== "undefined" && coinCard);
+  if (busy) { tutReady = ""; return; }
+  for (const ch of TUT_CHAPTERS) {
+    if (tutSeen(ch.id)) continue;
+    if (ch.skipIf && ch.skipIf()) { tutMark(ch.id); continue; }
+    if (!ch.when()) continue;
+    if (tutReady === ch.id) { tutReady = ""; tutStart(ch.id); } else tutReady = ch.id;
+    return;
+  }
+  tutReady = "";
+}
+setInterval(tutWatch, 500);
+
+/* Playing the tutorial again (Settings): every chapter comes round once more */
+function startTutorial() {
+  if (!camp) return;
+  if (guide) guideEnd(false);
+  camp.tut = [];
+  camp.tutOff = false;
+  saveCamp();
+  clearPauseState();
+  if (currentScreen !== "modes") openScreen("modes");
+}
+
+/* While a chapter runs, keys only do what it is asking */
 document.addEventListener("keydown", e => {
   if (!guide || !guide.step) return;
   const st = guide.step;
@@ -264,8 +217,8 @@ document.addEventListener("keydown", e => {
   e.stopImmediatePropagation();
   if (!go) return;
   if (st.next) { guideStep(guide.i + 1); return; }
-  const el = st.target && st.target();
-  if (visible(el)) el.click();
+  const el = tutTargets(st)[0];
+  if (el) el.click();
 }, true);
 
 /* Used by automated tests to jump straight to the menu on a fresh save */
@@ -274,7 +227,7 @@ function skipFirstRun() {
   save.named = true;
   save.tutorialDone = true;
   if (sceneOpen) { sceneDone = null; closeScene(); }
-  if (guide) { guide = null; guideEl.hidden = true; document.body.classList.remove("guiding"); }
+  if (guide) guideEnd(false);
   persist();
   openScreen("main");
 }

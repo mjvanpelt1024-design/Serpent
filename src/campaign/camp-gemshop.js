@@ -23,6 +23,8 @@ CAMP_REPAIRS.push(c => {
 
 const gemOffers = () => (CAMP.rules.gems.store || []);
 const gemDailyReady = () => !!camp && (camp.gemDaily || 0) < dayNumber();
+/* How long until the next daily gift: it comes back at midnight, local time (build 57: shown in hours and minutes) */
+const gemDailyLeft = () => Math.max(0, (dayNumber() + 1) * 86400000 + new Date().getTimezoneOffset() * 60000 - Date.now());
 
 /* The one payment door. Development: always approved, nothing is charged.
    Later: call the store here with offer.id and offer.price, and resolve true only on a cleared payment. */
@@ -92,7 +94,16 @@ function openGemShop() {
   renderGemShop();
   gemShopEl.classList.add("active");
   sfx("click");
+  // the daily gift's clock ticks while the shop is open, and the card comes back to life when it runs out
+  clearInterval(gemClockTimer);
+  gemClockTimer = setInterval(() => {
+    if (!gemShopEl.classList.contains("active")) { clearInterval(gemClockTimer); return; }
+    const clock = gemShopEl.querySelector("[data-gs-clock]");
+    if (!clock) return;
+    if (gemDailyReady()) renderGemShop(); else clock.textContent = fmtLeft(gemDailyLeft());
+  }, 1000);
 }
+let gemClockTimer = 0;
 
 function closeGemShop() {
   if (gemShopEl) gemShopEl.classList.remove("active");
@@ -104,7 +115,7 @@ function renderGemShop() {
   const b = camp.boosts || {};
   const card = o => {
     const ready = !o.daily || gemDailyReady();
-    const price = o.daily ? (ready ? "Free" : "Tomorrow") : "Free (dev)";
+    const price = o.daily ? (ready ? "Free" : `Next in <span data-gs-clock>${fmtLeft(gemDailyLeft())}</span>`) : "Free (dev)";
     return `<div class="gs-offer${o.daily ? " daily" : ""}${ready ? "" : " spent"}">
       ${o.tag ? `<span class="gs-tag">${escapeAttr(ready ? o.tag : "Taken")}</span>` : ""}
       <div class="gs-pic">${o.gems && !o.daily ? gem(o.gems >= 500 ? 4 : 3) : ""}${o.daily ? `<img class="gs-ico" src="${iconUrl("gift", 3)}" alt="">` : ""}${o.boosts && o.boosts.surge ? `<img class="gs-ico" src="${iconUrl("bolt", 3)}" alt="">` : ""}${o.boosts && o.boosts.lucky ? `<img class="gs-ico" src="${iconUrl("clover", 3)}" alt="">` : ""}</div>
@@ -127,3 +138,6 @@ document.addEventListener("click", e => {
   const chip = e.target.closest && e.target.closest("#camp-wallet .cw-chip.gems");
   if (chip) { e.stopPropagation(); openGemShop(); }
 }, true);
+
+/* The clock beside the gems (hours and minutes to the next free gift) moves on every so often */
+setInterval(() => { if (camp && typeof campWalletUpdate === "function" && !campRun) campWalletUpdate(); }, 15000);
