@@ -271,8 +271,15 @@ function r3NpcPaint(room, key, kind, t) {
     texDraw(M.g, `npc:${key}:banker-decor`, 0, 0);
     const vx = 118, vy = 24, a = t * 0.4;
     for (let s = 0; s < 6; s++) { const ang = a + s * Math.PI / 3; for (let r = 2; r < 10; r++) R(vx + Math.cos(ang) * r, vy + Math.sin(ang) * r, 1, 1, "#d8d8e0"); }
+    // banker-front.png holds the shelf of coin (above y 40) and the counter (below it): the shelf and its glints
+    // go on the middle card, behind the snake; only the counter stays in front of it
+    M.g.save(); M.g.beginPath(); M.g.rect(0, 0, ART_W, 40); M.g.clip();
+    texLayer(M.g, `npc:${key}:banker-front`, 0, 0);
+    M.g.restore();
+    F.g.save(); F.g.beginPath(); F.g.rect(0, 40, ART_W, ART_H - 40); F.g.clip();
     texLayer(F.g, `npc:${key}:banker-front`, 0, 0);
-    for (let i = 0; i < 8; i++) { const h = 2 + (i * 3) % 7; if (Math.sin(t * 3 + i) > 0.9) Rf(25 + i * 8, 29 - h, 1, 1, "#ffffff"); }
+    F.g.restore();
+    for (let i = 0; i < 8; i++) { const h = 2 + (i * 3) % 7; if (Math.sin(t * 3 + i) > 0.9) R(25 + i * 8, 29 - h, 1, 1, "#ffffff"); }
     npcKeeper(K.g, key, kind, 54, 52, t);
     r3Edges(room, M); r3Edges(room, F);
   }
