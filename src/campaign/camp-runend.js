@@ -36,6 +36,7 @@ function showRunEnd(report, target) {
       <p class="re-hint">Enter to continue · R to ${won ? "play again" : "try again"}</p>
     </div>`;
   document.body.classList.add(won ? "re-won" : "re-lost");
+  document.body.classList.remove("cursor-off");
   runEndEl.classList.add("active");
   // the score counts up while the card settles
   const total = Math.max(0, R.score), el = runEndEl.querySelector("[data-re-score]"), t0 = performance.now() + 350;

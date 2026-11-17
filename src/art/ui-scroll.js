@@ -35,6 +35,6 @@ function cursorUrl(name) {
   const orig = updatePauseButton;
   window.updatePauseButton = function () {
     orig.apply(this, arguments);
-    document.body.classList.toggle("cursor-off", gameState === "PLAYING" && !pauseOpen && !loadoutOpen);
+    document.body.classList.toggle("cursor-off", gameState === "PLAYING" && !pauseOpen && !loadoutOpen && !document.body.classList.contains("re-won") && !document.body.classList.contains("re-lost"));
   };
 })();
