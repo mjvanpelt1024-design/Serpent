@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <ProjectGuid>{CBC60CC4-C020-433A-862A-0375C3A162F1}</ProjectGuid>
-    <RootNamespace>SnakeGame</RootNamespace>
+    <RootNamespace>SerpentGame</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <!-- Link the WebView2 loader into the .exe, so the game folder needs no extra DLL -->
@@ -41,7 +41,7 @@
     <OutDir Condition="'$(Configuration)'=='Release'">$(ProjectDir)..\</OutDir>
     <OutDir Condition="'$(Configuration)'=='Debug'">$(ProjectDir)build\Debug\</OutDir>
     <IntDir>$(ProjectDir)build\obj\$(Configuration)\</IntDir>
-    <TargetName>SnakeGame</TargetName>
+    <TargetName>SerpentGame</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <!-- Debugging runs the launcher from the game folder so it finds index.html -->
@@ -61,7 +61,7 @@
       <AdditionalDependencies>shell32.lib;shlwapi.lib;ole32.lib;user32.lib;gdi32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>res\SnakeGame.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>res\SerpentGame.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -94,11 +94,11 @@
     <ClInclude Include="src\resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="src\SnakeGame.rc" />
+    <ResourceCompile Include="src\SerpentGame.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\SnakeGame.ico" />
-    <None Include="res\SnakeGame.manifest" />
+    <Image Include="res\SerpentGame.ico" />
+    <None Include="res\SerpentGame.manifest" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

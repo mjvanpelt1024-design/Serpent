@@ -1,8 +1,8 @@
 // Resources for the MinGW build (Visual Studio embeds the manifest itself)
 #include <windows.h>
 #include "resource.h"
-IDI_APPICON ICON "../res/SnakeGame.ico"
-1 RT_MANIFEST "../res/SnakeGame.manifest"
+IDI_APPICON ICON "../res/SerpentGame.ico"
+1 RT_MANIFEST "../res/SerpentGame.manifest"
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION 1,0,0,0
  PRODUCTVERSION 1,0,0,0
@@ -15,11 +15,11 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "FileDescription", "Snake"
+            VALUE "FileDescription", "Serpent"
             VALUE "FileVersion", "1.0.0.0"
-            VALUE "InternalName", "SnakeGame"
-            VALUE "OriginalFilename", "SnakeGame.exe"
-            VALUE "ProductName", "Snake"
+            VALUE "InternalName", "SerpentGame"
+            VALUE "OriginalFilename", "SerpentGame.exe"
+            VALUE "ProductName", "Serpent"
             VALUE "ProductVersion", "1.0.0.0"
         END
     END

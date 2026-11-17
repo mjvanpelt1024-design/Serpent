@@ -111,7 +111,7 @@ function a3SideArt(w, h) {
   });
 }
 
-/* The marquee: SNAKE in lights, and the readout under it (your money) */
+/* The marquee: SERPENT in lights, and the readout under it (your money) */
 function a3MarqueeArt() { return a3Tex(256, 64, a3PaintMarquee); }
 function a3PaintMarquee(g, w, h) {
   {
@@ -122,8 +122,8 @@ function a3PaintMarquee(g, w, h) {
     // little circuit snakes either side
     [[10, 1], [w - 10, -1]].forEach(([x0, d]) => { for (let r = 0; r < 4; r++) for (let k = 0; k < 6; k++) { g.fillStyle = (r + k) % 2 ? "#7ff0a8" : "#3fbf6f"; g.fillRect(x0 + d * k * 6 - (d < 0 ? 5 : 0), 6 + r * 6, 5, 4); } });
     g.font = `16px ${A3_FONT}`; g.textAlign = "center"; g.textBaseline = "top";
-    g.fillStyle = "#0b2a18"; g.fillText("SNAKE", w / 2 + 2, 6);
-    g.fillStyle = "#eafff0"; g.fillText("SNAKE", w / 2, 4);
+    g.fillStyle = "#0b2a18"; g.fillText("SERPENT", w / 2 + 2, 6);
+    g.fillStyle = "#eafff0"; g.fillText("SERPENT", w / 2, 4);
     // the readout
     g.fillStyle = "#06120c"; g.fillRect(44, 30, w - 88, 26);
     g.strokeStyle = "#b8902a"; g.lineWidth = 2; g.strokeRect(44, 30, w - 88, 26);

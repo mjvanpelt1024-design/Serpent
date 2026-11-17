@@ -1,6 +1,6 @@
 # Worlds: the save files
 
-A **world** is one save. Each one is a `.world` file in `%APPDATA%\SnakeGame\worlds`, named after its
+A **world** is one save. Each one is a `.world` file in `%APPDATA%\SerpentGame\worlds`, named after its
 save key (`w` plus 16 hex digits, e.g. `w0c445a815cafb8ca.world`). The saves window lists them, makes
 new ones, renames them, gives them a picture and mods, and starts the game on one; the game holds its
 save in memory and asks the launcher to write the file back.
@@ -9,8 +9,8 @@ save in memory and asks the launcher to write the file back.
 
 | Run as | Window |
 |---|---|
-| `SnakeGame.exe` | **Snake Saves**: the list of worlds. At the bottom, **Quit** and **New**; once a save is picked, **Cancel**, **Edit** and **Play** |
-| `SnakeGame.exe --world <key>` | the game, on that world. **Play** starts it, in a window of its own |
+| `SerpentGame.exe` | **Serpent Saves**: the list of worlds. At the bottom, **Quit** and **New**; once a save is picked, **Cancel**, **Edit** and **Play** |
+| `SerpentGame.exe --world <key>` | the game, on that world. **Play** starts it, in a window of its own |
 
 Several games can be open at once, one per world. Two windows never share a world (a second open of
 the same save says so and does nothing), so a save is never written by two games at once.
@@ -66,7 +66,7 @@ doesn't list it, and the game never writes to a file it couldn't read.
 | `src/engine/core/storage.js`: `store` is `localStorage`, or a memory stand-in if the browser blocks it | Inside a world, `store` is a memory map loaded from the `.world` file (`worldStore`). Outside one (opening `index.html` in a browser), it is still `localStorage`. |
 | Every save and campaign read/write goes through `store` (`profiles-storage.js`, `save-data.js`, `camp-save.js`, `backups.js`, ...) | Unchanged. None of them touched `localStorage` directly. |
 | `SAVE_KEY`, `META_KEY`, `ACTIVE_KEY`, `profileKey(n)`, `CAMP_KEY` | Unchanged. They are the keys inside `data`. |
-| One save in the browser's storage, under `%APPDATA%\SnakeGame\WebView2` | Each world is its own file. The old browser storage is no longer read by the game. |
+| One save in the browser's storage, under `%APPDATA%\SerpentGame\WebView2` | Each world is its own file. The old browser storage is no longer read by the game. |
 
 **Migration.** The first time the saves window opens and there are no worlds, it copies the old save
 (every `snake*` key in the browser's storage, skipping `_rescue_` copies) into a new world titled
@@ -111,7 +111,7 @@ Pages talk to the launcher with `window.chrome.webview.postMessage`:
 |---|---|---|
 | saves window | `worlds:list` | asks for every readable world |
 | saves window | `world:write:<key>:<json>` | writes a world's file |
-| saves window | `world:play:<key>` | starts `SnakeGame.exe --world <key>` |
+| saves window | `world:play:<key>` | starts `SerpentGame.exe --world <key>` |
 | saves window | `world:delete:<key>` | moves the world's file to the Recycle Bin, unless a game has it open |
 | saves window | `mods:list` | asks for every installed mod |
 | saves window | `mods:open` | shows the mods folder in Explorer |

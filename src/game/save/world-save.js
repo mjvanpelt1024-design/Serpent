@@ -45,7 +45,7 @@ function writeWorldFile() {
 
 if (!WORLD && window.SNAKE_WORLD_ERROR) {
   // The launcher's file couldn't be read: the game can't save to it, so say so
-  setTimeout(() => { if (typeof showToast === "function") showToast("This save file can't be read, so nothing is written to it. Open Snake Saves to choose another."); }, 1500);
+  setTimeout(() => { if (typeof showToast === "function") showToast("This save file can't be read, so nothing is written to it. Open Serpent Saves to choose another."); }, 1500);
 }
 
 // A mod this save was made with isn't in the mods folder any more: it plays without it, and says so

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake Saves</title>
+<title>Serpent Saves</title>
 <style>
   @font-face { font-family: "Silkscreen"; src: url("../assets/fonts/Silkscreen.woff2") format("woff2"); font-display: block; }
 
@@ -236,7 +236,7 @@
 <body>
 
 <header>
-  <h1>SNAKE SAVES</h1>
+  <h1>SERPENT SAVES</h1>
   <span class="subtitle" id="count"></span>
 </header>
 
@@ -247,7 +247,7 @@
     Press <b>New</b> to start a save. Every save keeps its own snake, bucks, progress and mods.
   </div>
   <div id="notice" class="notice" hidden>
-    Open this window from SnakeGame.exe to see your saves.
+    Open this window from SerpentGame.exe to see your saves.
   </div>
 
   <form id="edit" hidden autocomplete="off">
@@ -319,7 +319,7 @@
 
 /* =========================================================
    The saves window. It has no access to files: the launcher
-   (SnakeGame.exe) reads and writes the .world files for it,
+   (SerpentGame.exe) reads and writes the .world files for it,
    and this page talks to it through the WebView2 message bridge.
    Protocol (docs/WORLDS.md):
      page -> launcher   "worlds:list"   "world:write:<id>:<json>"   "world:play:<id>"   "world:delete:<id>"

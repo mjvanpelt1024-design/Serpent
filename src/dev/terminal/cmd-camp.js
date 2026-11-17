@@ -723,7 +723,7 @@ window.bootTerminal = function () {
   renderTermGroups();
   if (campTermBooted) return;
   campTermBooted = true;
-  consolePrint("SNAKE//TERMINAL  " + BUILD_NUMBER + "  (campaign)", "hdr");
+  consolePrint("SERPENT//TERMINAL  " + BUILD_NUMBER + "  (campaign)", "hdr");
   consolePrint("every command reads:  group subject.action value", "dim");
   consolePrint("groups: " + GROUP_IDS.join("  "), "dim");
   consolePrint("try: help   help item   item sword.give legendary   dev run.play keep 5 hold   attribute money.set 5000 all", "dim");

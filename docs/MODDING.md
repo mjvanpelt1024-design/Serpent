@@ -18,7 +18,7 @@ folder at the top of `mods\` (from before the two folders) still works: its `mod
 
 ## Where mods live
 
-- **With the launcher:** `Documents\SnakeGame\mods`. The first time the launcher runs, it creates that
+- **With the launcher:** `Documents\SerpentGame\mods`. The first time the launcher runs, it creates that
   folder and copies in the game's `mods` folder. A mod that comes with a newer version of the game is
   copied in once, the first time that version runs (deleting it afterwards keeps it deleted).
 - To keep mods next to the game instead, set `folder = game` under `[mods]` in `launcher.ini`.

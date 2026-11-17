@@ -15,7 +15,7 @@
   panel.id = "boot-panel";
   panel.style.cssText = "position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;" +
     "background:#0a1c16;color:#cfe9d8;font:14px/1.5 'Pixelify Sans',monospace;padding:24px;text-align:center";
-  panel.innerHTML = `<div><div style="font-size:28px;color:#3ddc3d;letter-spacing:2px">SNAKE</div><div id="boot-line">Loading</div></div>`;
+  panel.innerHTML = `<div><div style="font-size:28px;color:#3ddc3d;letter-spacing:2px">SERPENT</div><div id="boot-line">Loading</div></div>`;
   document.body.appendChild(panel);
   const line = text => { const el = document.getElementById("boot-line"); if (el) el.textContent = text; };
 
@@ -47,7 +47,7 @@
   if (content.source === "bundle" && content.filesRead === 0) {
     fail("Open the game with the launcher", [
       "Browsers won't let a page opened straight from disk read the content folder.",
-      "Run SnakeGame.exe, or run <b>tools/bundle-content.py</b> once to make content.bundle.js and open index.html again."],
+      "Run SerpentGame.exe, or run <b>tools/bundle-content.py</b> once to make content.bundle.js and open index.html again."],
       "Opening index.html from disk is only for quick tests; the launcher is the real way to play.");
     return;
   }

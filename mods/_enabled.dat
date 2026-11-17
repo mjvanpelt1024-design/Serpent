@@ -1,6 +1,6 @@
 # ==================================================================
 #  MODS FOR PLAYING WITHOUT THE LAUNCHER (index.html in a browser)
-#  With SnakeGame.exe, each save has its own mods: choose them in the
+#  With SerpentGame.exe, each save has its own mods: choose them in the
 #  saves window (Edit > Mods), and this file isn't read.
 #
 #  One mod per line, as its folder inside mods/: content/<name> or

@@ -1,19 +1,19 @@
-# Snake
+# Serpent
 
 A snake game with five floating islands up the Coil, fifteen levels and three boss fights on each,
 shopkeepers, upgrade trees, and a narrator with opinions.
 
-**Build:** see [`version.txt`](version.txt) · **Runs on:** Windows 10 and 11, through its own launcher (`SnakeGame.exe`)
+**Build:** see [`version.txt`](version.txt) · **Runs on:** Windows 10 and 11, through its own launcher (`SerpentGame.exe`)
 
 ---
 
 ## Quick start
 
-1. **Extract** the zip somewhere you own, such as `C:\Projects\SnakeGame` or `Documents\Projects\SnakeGame`.
+1. **Extract** the zip somewhere you own, such as `C:\Projects\SerpentGame` or `Documents\Projects\SerpentGame`.
    Avoid `Program Files`: Windows blocks programs from writing there.
-2. **The launcher is ready:** `SnakeGame.exe` sits right next to `index.html`. To change the launcher
-   itself, run `launcher\build-msvc.cmd`, or rebuild it from `launcher\SnakeGame.sln` in Visual Studio (details: [`docs/LAUNCHER.md`](docs/LAUNCHER.md)).
-3. **Make a shortcut.** Right-click `SnakeGame.exe` > *Send to* > *Desktop (create shortcut)*, or pin it to Start.
+2. **The launcher is ready:** `SerpentGame.exe` sits right next to `index.html`. To change the launcher
+   itself, run `launcher\build-msvc.cmd`, or rebuild it from `launcher\SerpentGame.sln` in Visual Studio (details: [`docs/LAUNCHER.md`](docs/LAUNCHER.md)).
+3. **Make a shortcut.** Right-click `SerpentGame.exe` > *Send to* > *Desktop (create shortcut)*, or pin it to Start.
 4. **Play.** Edit any file under `content/`, press **F5** in the game, and the change is live.
 
 | Key | In the launcher |
@@ -27,8 +27,8 @@ shopkeepers, upgrade trees, and a narrator with opinions.
 ## The folder at a glance
 
 ```
-SnakeGame/
-├── SnakeGame.exe        the launcher: double-click to open your saves and play
+SerpentGame/
+├── SerpentGame.exe        the launcher: double-click to open your saves and play
 ├── launcher.ini         launcher settings: window size, F5/F12, where mods live
 ├── version.txt          the build number shown in Settings
 ├── index.html           the page the launcher opens: screens and buttons
@@ -67,7 +67,7 @@ SnakeGame/
 │
 ├── styles/              CSS, in the order index.html links them
 ├── assets/              the fonts (with their licenses), icons, and three.js (vendor/three, MIT) for the title's 3D arcade, the 3D map and the 3D shops
-├── mods/                mods that come with the game: content\ and cosmetic\ (copied to Documents\SnakeGame\mods)
+├── mods/                mods that come with the game: content\ and cosmetic\ (copied to Documents\SerpentGame\mods)
 ├── tools/               check-campaign.py, sign-content.py, check-content.py, bundle-content.py, serve.py,
 │                        textures/textures.mjs (check or export the pictures)
 ├── launcher/            the C++ launcher: Visual Studio solution and source
@@ -116,8 +116,8 @@ If something is wrong anyway, the game shows a panel naming the file and line in
 
 ## Saves
 
-Each save is a `.world` file in `%APPDATA%\SnakeGame\worlds`, listed by **Snake Saves** (the window that opens
-when you run `SnakeGame.exe`). **New** makes an empty save; **Play** opens the game on it. The game saves every
+Each save is a `.world` file in `%APPDATA%\SerpentGame\worlds`, listed by **Serpent Saves** (the window that opens
+when you run `SerpentGame.exe`). **New** makes an empty save; **Play** opens the game on it. The game saves every
 minute when something changed, and again when its window closes. Replacing the game folder with a new build
 never touches them. Settings > "Back up your progress" copies a save code you can keep. The save is signed and
 checked on every load, so edits made outside the game don't stick. Details: [`docs/WORLDS.md`](docs/WORLDS.md).

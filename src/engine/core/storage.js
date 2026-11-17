@@ -6,7 +6,7 @@
 
 /* =========================================================
    Storage: localStorage, or an in-memory stand-in if blocked
-   A world (SnakeGame.exe --world <id>, see docs/WORLDS.md) keeps
+   A world (SerpentGame.exe --world <id>, see docs/WORLDS.md) keeps
    its keys in memory instead, loaded from its .world file, and
    src/game/save/world-save.js writes them back to that file.
    ========================================================= */

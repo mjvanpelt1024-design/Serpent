@@ -8,10 +8,10 @@ two kinds, each in its own folder here:
 - **`cosmetic\`**: how the game looks (a screen filter, a stats overlay, pictures, music). Switched on
   and off for any save, any time.
 
-To add a mod, put its folder in `content` or `cosmetic`. Then, in **Snake Saves**: **New** (or pick a
+To add a mod, put its folder in `content` or `cosmetic`. Then, in **Serpent Saves**: **New** (or pick a
 save and press **Edit**), **Choose mods…**, and tick it.
 
-When you run **SnakeGame.exe**, mods are read from `Documents\SnakeGame\mods`, not from this folder.
+When you run **SerpentGame.exe**, mods are read from `Documents\SerpentGame\mods`, not from this folder.
 The launcher copies this folder there the first time, and any mod that comes with a newer version of the
 game once. To keep mods next to the game instead, set `folder = game` under `[mods]` in `launcher.ini`.
 

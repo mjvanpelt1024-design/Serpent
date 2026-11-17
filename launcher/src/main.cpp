@@ -1,20 +1,20 @@
 // =====================================================================
-//  SnakeGame launcher
+//  SerpentGame launcher
 //
 //  A small Windows program that opens its windows with WebView2 (the Edge
 //  engine built into Windows 10 and 11). Run with no arguments it shows the
 //  saves window (list, New, Edit, Play, the mods on each save); with
 //  "--world <id>" it opens the game on that save. It:
-//    - serves the game folder at https://game.snakegame.example/ so the
+//    - serves the game folder at https://game.serpentgame.example/ so the
 //      game can read its content files straight from disk
-//    - serves the mods folder at https://mods.snakegame.example/
-//    - keeps saves (.world files, docs\WORLDS.md) and browser data in %APPDATA%\SnakeGame
+//    - serves the mods folder at https://mods.serpentgame.example/
+//    - keeps saves (.world files, docs\WORLDS.md) and browser data in %APPDATA%\SerpentGame
 //    - handles full screen (F11, Alt+Enter, or the game's own toggle),
 //      reload (F5) and developer tools (F12), per launcher.ini
 //    - remembers the window's size and position
 //
-//  Build: open launcher\SnakeGame.sln in Visual Studio 2022 and build
-//  Release | x64. SnakeGame.exe lands in the game folder, next to
+//  Build: open launcher\SerpentGame.sln in Visual Studio 2022 and build
+//  Release | x64. SerpentGame.exe lands in the game folder, next to
 //  index.html. See docs\LAUNCHER.md.
 // =====================================================================
 
@@ -96,24 +96,24 @@ static ComPtr<Interface> Callback(Function function) {
 //  each site's saved data under its address, so a new host name would
 //  start everyone from scratch.
 // ---------------------------------------------------------------------
-static const wchar_t* kGameHost = L"game.snakegame.example";
-static const wchar_t* kModsHost = L"mods.snakegame.example";
-static const wchar_t* kGameUrl = L"https://game.snakegame.example/index.html";
-static const wchar_t* kLauncherUrl = L"https://game.snakegame.example/world-launcher/index.html";
-static const wchar_t* kAppFolder = L"SnakeGame";
-static const wchar_t* kWorldsFolder = L"worlds";      // %APPDATA%\SnakeGame\worlds\<id>.world
-static const wchar_t* kWindowClass = L"SnakeGameLauncherWindow";
-static const wchar_t* kLauncherTitle = L"Snake Saves";
+static const wchar_t* kGameHost = L"game.serpentgame.example";
+static const wchar_t* kModsHost = L"mods.serpentgame.example";
+static const wchar_t* kGameUrl = L"https://game.serpentgame.example/index.html";
+static const wchar_t* kLauncherUrl = L"https://game.serpentgame.example/world-launcher/index.html";
+static const wchar_t* kAppFolder = L"SerpentGame";
+static const wchar_t* kWorldsFolder = L"worlds";      // %APPDATA%\SerpentGame\worlds\<id>.world
+static const wchar_t* kWindowClass = L"SerpentGameLauncherWindow";
+static const wchar_t* kLauncherTitle = L"Serpent Saves";
 static const int kLauncherWidth = 760;                // the saves window, at 96 DPI
 static const int kLauncherHeight = 540;
 static const COLORREF kBackground = RGB(10, 28, 22);  // matches the game's loading screen
 static const UINT_PTR kQuitTimer = 1;                 // gives the game a moment to write its save on close
 
 // ---------------------------------------------------------------------
-//  Settings from launcher.ini (next to SnakeGame.exe)
+//  Settings from launcher.ini (next to SerpentGame.exe)
 // ---------------------------------------------------------------------
 struct Settings {
-    std::wstring title = L"Snake";
+    std::wstring title = L"Serpent";
     bool devTools = true;
     bool reloadKey = true;
     bool startFullscreen = true;
@@ -123,8 +123,8 @@ struct Settings {
 };
 
 // The launcher has two windows, chosen by the command line:
-//   SnakeGame.exe              the saves window (Launcher): list, New, Play
-//   SnakeGame.exe --world <id> the game, on one save (Game). Play starts it.
+//   SerpentGame.exe              the saves window (Launcher): list, New, Play
+//   SerpentGame.exe --world <id> the game, on one save (Game). Play starts it.
 enum class Mode { Launcher, Game };
 
 static HWND g_window = nullptr;
@@ -208,16 +208,16 @@ static std::wstring Hex(HRESULT value) {
 }
 
 static void Fail(const std::wstring& message) {
-    MessageBoxW(g_window, message.c_str(), L"Snake", MB_OK | MB_ICONERROR);
+    MessageBoxW(g_window, message.c_str(), L"Serpent", MB_OK | MB_ICONERROR);
 }
 
 // ---------------------------------------------------------------------
-//  The mods folder: Documents\SnakeGame\mods by default. On first run it
+//  The mods folder: Documents\SerpentGame\mods by default. On first run it
 //  is created with a copy of the game's own mods folder. Mods live in two
 //  folders there, content\ and cosmetic\ (docs\MODDING.md).
 //
 //  A mod that comes with a later version of the game is copied in too, once:
-//  %APPDATA%\SnakeGame\mods-offered.dat remembers each one offered, so a mod
+//  %APPDATA%\SerpentGame\mods-offered.dat remembers each one offered, so a mod
 //  the player deleted stays deleted.
 // ---------------------------------------------------------------------
 static const wchar_t* kModKinds[] = { L"content", L"cosmetic" };
@@ -277,7 +277,7 @@ static void PrepareModsFolder() {
 }
 
 // ---------------------------------------------------------------------
-//  Window size and position, kept in %APPDATA%\SnakeGame\window.ini
+//  Window size and position, kept in %APPDATA%\SerpentGame\window.ini
 // ---------------------------------------------------------------------
 static fs::path WindowStateFile() { return g_dataDir / L"window.ini"; }
 
@@ -346,7 +346,7 @@ static void ResizeWebView() {
 }
 
 // ---------------------------------------------------------------------
-//  Worlds: one save per .world file in %APPDATA%\SnakeGame\worlds.
+//  Worlds: one save per .world file in %APPDATA%\SerpentGame\worlds.
 //  The file is JSON (docs\WORLDS.md). The launcher only moves its text:
 //  the game and the saves window build and read it.
 // ---------------------------------------------------------------------
@@ -423,7 +423,7 @@ static void WriteWorld(const std::wstring& id, const std::wstring& text) {
 
 // Is a game window open on this save? (Each one holds a mutex named for it.)
 static bool WorldIsOpen(const std::wstring& id) {
-    HANDLE open = OpenMutexW(SYNCHRONIZE, FALSE, (L"SnakeGame.World." + id).c_str());
+    HANDLE open = OpenMutexW(SYNCHRONIZE, FALSE, (L"SerpentGame.World." + id).c_str());
     if (!open) return false;
     CloseHandle(open);
     return true;
@@ -606,7 +606,7 @@ static std::wstring DocumentScript(const std::wstring& worldText) {
     std::wstring mode = g_mode == Mode::Game ? L"game" : L"launcher";
     std::wstring script = L"window.SNAKE_LAUNCHER = Object.freeze({ launcher: '" + version + L"', mode: '" + mode +
            L"', worldId: '" + g_worldId + L"', modsUrl: 'https://" + std::wstring(kModsHost) +
-           L"/', dataFolder: '%APPDATA%\\\\SnakeGame', modsFolder: " + JsStringLiteral(g_modsDir.wstring()) + L" });";
+           L"/', dataFolder: '%APPDATA%\\\\SerpentGame', modsFolder: " + JsStringLiteral(g_modsDir.wstring()) + L" });";
     if (g_mode == Mode::Game) {
         script += L"try { window.SNAKE_WORLD = JSON.parse(" + JsStringLiteral(worldText) + L"); }"
                   L" catch (e) { window.SNAKE_WORLD_ERROR = String(e); }";
@@ -615,8 +615,8 @@ static std::wstring DocumentScript(const std::wstring& worldText) {
 }
 
 // ---------------------------------------------------------------------
-//  The local file server: https://game.snakegame.example/<path> is the file
-//  <game folder>\<path>, and https://mods.snakegame.example/<path> is the
+//  The local file server: https://game.serpentgame.example/<path> is the file
+//  <game folder>\<path>, and https://mods.serpentgame.example/<path> is the
 //  file in the mods folder. Nothing outside those two folders is served.
 // ---------------------------------------------------------------------
 static std::wstring MimeFor(const fs::path& file) {
@@ -681,7 +681,7 @@ static ComPtr<ICoreWebView2WebResourceResponse> ServeFile(const std::wstring& ur
     fs::path file = (root / fs::path(rest)).lexically_normal();
     // never step outside the folder (no "..")
     // Compare against the folder *with* its trailing separator, so a neighbouring folder whose
-    // name merely starts the same way (SnakeGame-old, mods-backup) is never treated as inside
+    // name merely starts the same way (SerpentGame-old, mods-backup) is never treated as inside
     std::wstring rootText = root.lexically_normal().wstring(), fileText = file.wstring();
     if (!rootText.empty() && rootText.back() != L'\\' && rootText.back() != L'/') rootText += L'\\';
     bool inside = fileText.size() > rootText.size() && _wcsnicmp(fileText.c_str(), rootText.c_str(), rootText.size()) == 0;
@@ -876,9 +876,9 @@ static HRESULT OnEnvironmentCreated(HRESULT result, ICoreWebView2Environment* en
     if (FAILED(result) || !environment) {
         if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
             int choice = MessageBoxW(g_window,
-                L"Snake needs the Microsoft Edge WebView2 Runtime, which comes with Windows 11 and most Windows 10 PCs.\n\n"
+                L"Serpent needs the Microsoft Edge WebView2 Runtime, which comes with Windows 11 and most Windows 10 PCs.\n\n"
                 L"It isn't installed on this PC. Open the download page now?",
-                L"Snake", MB_YESNO | MB_ICONINFORMATION);
+                L"Serpent", MB_YESNO | MB_ICONINFORMATION);
             if (choice == IDYES) OpenInBrowser(L"https://go.microsoft.com/fwlink/p/?LinkId=2124703");
         } else {
             Fail(L"WebView2 couldn't start (error " + Hex(result) + L").");
@@ -954,14 +954,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR, 
     }
     if (argv) LocalFree(argv);
     if (g_mode == Mode::Game && !ValidWorldId(g_worldId)) {
-        MessageBoxW(nullptr, L"That save can't be opened: its name isn't valid.", L"Snake", MB_OK | MB_ICONERROR);
+        MessageBoxW(nullptr, L"That save can't be opened: its name isn't valid.", L"Serpent", MB_OK | MB_ICONERROR);
         return 1;
     }
 
     // One copy of the saves window at a time (a second launch brings it forward), and one
     // game window per save (two windows writing one save would overwrite each other)
-    std::wstring mutexName = (g_mode == Mode::Game) ? (L"SnakeGame.World." + g_worldId)
-                                                    : std::wstring(L"SnakeGame.Launcher.SingleInstance");
+    std::wstring mutexName = (g_mode == Mode::Game) ? (L"SerpentGame.World." + g_worldId)
+                                                    : std::wstring(L"SerpentGame.Launcher.SingleInstance");
     HANDLE single = CreateMutexW(nullptr, TRUE, mutexName.c_str());
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         if (g_mode == Mode::Launcher) {
@@ -971,7 +971,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR, 
                 SetForegroundWindow(existing);
             }
         } else {
-            MessageBoxW(nullptr, L"This save is already open in another game window.", L"Snake", MB_OK | MB_ICONINFORMATION);
+            MessageBoxW(nullptr, L"This save is already open in another game window.", L"Serpent", MB_OK | MB_ICONINFORMATION);
         }
         return 0;
     }
@@ -986,8 +986,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR, 
         probe = probe.parent_path();
     }
     if (!fs::exists(g_gameDir / L"index.html")) {
-        MessageBoxW(nullptr, (L"SnakeGame.exe has to sit in the game folder, next to index.html.\n\nIt is in:\n" + g_gameDir.wstring()).c_str(),
-                    L"Snake", MB_OK | MB_ICONERROR);
+        MessageBoxW(nullptr, (L"SerpentGame.exe has to sit in the game folder, next to index.html.\n\nIt is in:\n" + g_gameDir.wstring()).c_str(),
+                    L"Serpent", MB_OK | MB_ICONERROR);
         return 1;
     }
     LoadSettings();
@@ -1004,8 +1004,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR, 
     if (g_mode == Mode::Game) {
         std::ifstream in(WorldFile(g_worldId), std::ios::binary);
         if (!in) {
-            MessageBoxW(nullptr, L"That save can't be found. It may have been moved or deleted.\n\nOpen Snake Saves to choose another.",
-                        L"Snake", MB_OK | MB_ICONERROR);
+            MessageBoxW(nullptr, L"That save can't be found. It may have been moved or deleted.\n\nOpen Serpent Saves to choose another.",
+                        L"Serpent", MB_OK | MB_ICONERROR);
             return 1;
         }
         std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());

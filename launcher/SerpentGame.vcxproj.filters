@@ -15,11 +15,11 @@
     <ClInclude Include="src\resource.h"><Filter>Source</Filter></ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="src\SnakeGame.rc"><Filter>Resources</Filter></ResourceCompile>
+    <ResourceCompile Include="src\SerpentGame.rc"><Filter>Resources</Filter></ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\SnakeGame.ico"><Filter>Resources</Filter></Image>
-    <None Include="res\SnakeGame.manifest"><Filter>Resources</Filter></None>
+    <Image Include="res\SerpentGame.ico"><Filter>Resources</Filter></Image>
+    <None Include="res\SerpentGame.manifest"><Filter>Resources</Filter></None>
     <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -185,7 +185,7 @@ function bootTerminal() {
   renderTermGroups();
   if (terminalBooted) return;
   terminalBooted = true;
-  consolePrint("SNAKE//TERMINAL  " + BUILD_NUMBER, "hdr");
+  consolePrint("SERPENT//TERMINAL  " + BUILD_NUMBER, "hdr");
   consolePrint("every command reads:  group subject.action value", "dim");
   consolePrint("groups: dev  debug  attribute  upgrade  data", "dim");
   consolePrint("try: help   help dev   dev damage.godmode true   attribute xp.set 150", "dim");

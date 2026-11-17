@@ -28,7 +28,7 @@ next step whenever one of them needs real work anyway.
 
 ## How the game starts
 
-1. The launcher opens `index.html` at `https://game.snakegame.example/` (the game folder, served locally).
+1. The launcher opens `index.html` at `https://game.serpentgame.example/` (the game folder, served locally).
 2. `index.html` loads the stylesheets, then three scripts:
    - `src/engine/content/formats.js`: the readers for each kind of content file
    - `src/engine/content/loader.js`: reads every file in `content/`, then any enabled mods
